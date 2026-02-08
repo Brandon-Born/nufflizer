@@ -19,6 +19,12 @@ The repository now contains a working project scaffold:
 
 Analysis logic is intentionally simple in this first pass and designed to be replaced with richer Blood Bowl-specific heuristics.
 
+## Demo Replay
+
+1. Sanitized demo replay: `demo-replays/demo1.bbr`.
+2. This replay is intended for parser/analysis development and agent inspection.
+3. Sensitive values have been anonymized (names, gamer/account IDs, lobby/match IDs, IP addresses).
+
 ## Tech Stack
 
 1. Next.js (App Router)
@@ -108,4 +114,3 @@ See:
 
 1. `AGENTS.md` for operating rules.
 2. `docs/PROJECT_BLUEPRINT.md` for milestones and acceptance criteria.
-

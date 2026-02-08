@@ -123,6 +123,11 @@ Acceptance:
 3. Explainability: every score/recommendation traces back to explicit rule results.
 4. Privacy: only process files required for analysis; no silent third-party transfer.
 
+## Replay Fixtures
+
+1. Sanitized demo replay is available at `demo-replays/demo1.bbr`.
+2. Agents can inspect this replay to understand real BB3 replay structure and evolve parsing rules.
+
 ## Best Practices for Coding Agents
 
 1. Implement core logic as pure functions under `src/domain`.
