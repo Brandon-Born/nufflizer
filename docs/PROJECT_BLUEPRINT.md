@@ -13,6 +13,12 @@ Output: constructive coaching report with overall advice and turn-level improvem
 3. Analysis approach: deterministic rules first, optional AI narration later.
 4. Safety: offline replay analysis only, no game hooking.
 
+## Implementation Progress (2026-02-08)
+
+1. M0 scaffold is complete: app bootstrapped with lint/test/build/CI foundations.
+2. M1 foundation is in progress: XML upload endpoint, parser, and timeline pipeline are implemented.
+3. Remaining M1 work: broaden replay schema coverage with real BB3 samples and tighten rule quality.
+
 ## Proposed Folder Structure
 
 ```text
@@ -132,4 +138,3 @@ Acceptance:
 1. Update `AGENTS.md` when stack/architecture decisions change.
 2. Update this blueprint when milestones are added/reordered.
 3. Add a short dated note for major heuristic changes to preserve analysis history.
-

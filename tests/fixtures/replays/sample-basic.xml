@@ -1,0 +1,38 @@
+<MatchReplay>
+  <Metadata>
+    <MatchId>fixture-001</MatchId>
+  </Metadata>
+  <Sides>
+    <Side>
+      <SideId>home</SideId>
+      <SideName>Reikland Reavers</SideName>
+      <CoachName>Coach A</CoachName>
+    </Side>
+    <Side>
+      <SideId>away</SideId>
+      <SideName>Gouged Eye</SideName>
+      <CoachName>Coach B</CoachName>
+    </Side>
+  </Sides>
+  <GameTurns>
+    <GameTurn>
+      <turnNumber>1</turnNumber>
+      <sideId>home</sideId>
+      <Actions>
+        <Action>Move</Action>
+        <Action>Dodge</Action>
+        <Action>Block</Action>
+      </Actions>
+      <Result>Turnover</Result>
+    </GameTurn>
+    <GameTurn>
+      <turnNumber>2</turnNumber>
+      <sideId>away</sideId>
+      <Actions>
+        <Action>ReRoll</Action>
+        <Action>Blitz</Action>
+      </Actions>
+      <Result>Safe</Result>
+    </GameTurn>
+  </GameTurns>
+</MatchReplay>

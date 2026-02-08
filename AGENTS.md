@@ -13,9 +13,11 @@ The app must be deployable on Vercel.
 
 ## 2) Current State (as of 2026-02-08)
 
-1. Repository has no app code yet.
-2. No frontend, backend, parser, or analysis engine has been implemented.
-3. This document and `docs/PROJECT_BLUEPRINT.md` define the implementation baseline.
+1. Base Next.js + TypeScript + Tailwind app scaffold is implemented.
+2. Upload route (`/upload`) and replay API endpoint (`/api/replay`) are implemented.
+3. Initial replay parser, timeline builder, heuristic analyzer, and coaching renderer are implemented.
+4. Fixture-based unit tests and CI workflow are present.
+5. Current analysis logic is a starter ruleset and requires BB3-specific heuristic expansion.
 
 ## 3) Required Tech Stack (Vercel-Oriented)
 
