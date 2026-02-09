@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type TurnRow = {
   turnNumber: number;
+  category: string;
+  severity: "low" | "medium" | "high";
   happened: string;
   riskyBecause: string;
   saferAlternative: string;
@@ -14,6 +16,15 @@ type TurnRow = {
     code?: string;
     detail?: string;
   }>;
+};
+
+type PriorityRow = {
+  id: string;
+  turnNumber?: number;
+  severity: "low" | "medium" | "high";
+  category: string;
+  score: number;
+  text: string;
 };
 
 type TeamReport = {
@@ -28,7 +39,7 @@ type TeamReport = {
   };
   coaching: {
     headline: string;
-    priorities: string[];
+    priorities: PriorityRow[];
     turnByTurn: TurnRow[];
   };
 };
@@ -64,6 +75,12 @@ export default function UploadPage() {
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<ReportResponse["report"] | null>(null);
   const [coachTeamId, setCoachTeamId] = useState<string | null>(null);
+  const [adviceSort, setAdviceSort] = useState<"turn" | "severity">("turn");
+  const [canShare, setCanShare] = useState(false);
+
+  useEffect(() => {
+    setCanShare(typeof navigator !== "undefined" && "share" in navigator);
+  }, []);
 
   const selectedTeamReport = useMemo(() => {
     if (!report) {
@@ -76,6 +93,30 @@ export default function UploadPage() {
 
     return report.teamReports.find((teamReport) => teamReport.teamId === coachTeamId) ?? null;
   }, [report, coachTeamId]);
+
+  const sortedTurnRows = useMemo(() => {
+    if (!selectedTeamReport) {
+      return [];
+    }
+
+    const score = { high: 3, medium: 2, low: 1 } as const;
+    const rows = [...selectedTeamReport.coaching.turnByTurn];
+
+    if (adviceSort === "severity") {
+      rows.sort((a, b) => {
+        const delta = score[b.severity] - score[a.severity];
+        if (delta !== 0) {
+          return delta;
+        }
+
+        return a.turnNumber - b.turnNumber;
+      });
+      return rows;
+    }
+
+    rows.sort((a, b) => a.turnNumber - b.turnNumber);
+    return rows;
+  }, [adviceSort, selectedTeamReport]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -138,6 +179,18 @@ export default function UploadPage() {
     return "bg-emerald-700/70 text-emerald-100 border-emerald-200/40";
   }
 
+  function severityBadgeClass(severity: TurnRow["severity"]): string {
+    if (severity === "high") {
+      return "bg-red-700/80 text-red-100 border-red-300/40";
+    }
+
+    if (severity === "medium") {
+      return "bg-amber-700/70 text-amber-100 border-amber-200/40";
+    }
+
+    return "bg-emerald-700/70 text-emerald-100 border-emerald-200/40";
+  }
+
   function contextLabel(mode: TeamReport["analysis"]["context"]["mode"]): string {
     if (mode === "offense") {
       return "Mostly offense";
@@ -157,6 +210,43 @@ export default function UploadPage() {
     }
 
     return parts.join(" | ");
+  }
+
+  async function copyReportSummary(): Promise<void> {
+    if (!selectedTeamReport || !report) {
+      return;
+    }
+
+    const summary = [
+      `Replay Coach Report`,
+      `Match: ${report.replay.matchId}`,
+      `Team: ${selectedTeamReport.teamName}`,
+      ``,
+      `Top things to improve:`,
+      ...selectedTeamReport.coaching.priorities.map((priority, index) => `${index + 1}. [${priority.severity.toUpperCase()}] ${priority.text}`),
+      ``,
+      `Turn by turn help:`,
+      ...selectedTeamReport.coaching.turnByTurn.map((turn) => `Turn ${turn.turnNumber} (${turn.severity.toUpperCase()}): ${turn.saferAlternative}`)
+    ].join("\n");
+
+    await navigator.clipboard.writeText(summary);
+    setStatus("Copied coaching summary to clipboard.");
+  }
+
+  async function shareReportSummary(): Promise<void> {
+    if (!selectedTeamReport || !report || !canShare) {
+      return;
+    }
+
+    const text = [
+      `Replay Coach: ${selectedTeamReport.teamName}`,
+      ...selectedTeamReport.coaching.priorities.slice(0, 3).map((priority) => `- [${priority.severity.toUpperCase()}] ${priority.text}`)
+    ].join("\n");
+
+    await navigator.share({
+      title: "Replay Coach Summary",
+      text
+    });
   }
 
   return (
@@ -254,25 +344,69 @@ export default function UploadPage() {
                   Learning mode: {contextLabel(selectedTeamReport.analysis.context.mode)} ({Math.round(selectedTeamReport.analysis.context.ballControlRate * 100)}%
                   ball control on your tracked turns)
                 </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void copyReportSummary();
+                    }}
+                    className="rounded-md border border-amber-200/40 px-3 py-1 text-xs font-semibold text-amber-100 hover:bg-amber-100/10"
+                  >
+                    Copy Report
+                  </button>
+                  {canShare ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void shareReportSummary();
+                      }}
+                      className="rounded-md border border-amber-200/40 px-3 py-1 text-xs font-semibold text-amber-100 hover:bg-amber-100/10"
+                    >
+                      Share
+                    </button>
+                  ) : null}
+                </div>
               </div>
 
               <div>
                 <h4 className="text-sm font-semibold text-amber-100">Top things to improve</h4>
-                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-50/90">
+                <ul className="mt-2 space-y-2 text-sm text-amber-50/90">
                   {selectedTeamReport.coaching.priorities.map((priority) => (
-                    <li key={priority}>{priority}</li>
+                    <li key={priority.id} className="flex items-start gap-2 rounded-md border border-amber-300/20 bg-black/20 px-3 py-2">
+                      <span className={`mt-0.5 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${severityBadgeClass(priority.severity)}`}>
+                        {priority.severity}
+                      </span>
+                      <span>{priority.text}</span>
+                    </li>
                   ))}
                 </ul>
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold text-amber-100">Turn by turn help</h4>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h4 className="text-sm font-semibold text-amber-100">Turn by turn help</h4>
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-amber-100/80">Sort</label>
+                    <select
+                      value={adviceSort}
+                      onChange={(event) => setAdviceSort(event.target.value as "turn" | "severity")}
+                      className="rounded-md border border-amber-200/40 bg-black/40 px-2 py-1 text-xs text-amber-50"
+                    >
+                      <option value="turn">By turn</option>
+                      <option value="severity">By severity</option>
+                    </select>
+                  </div>
+                </div>
+                <p className="mt-2 text-xs text-amber-100/75">
+                  Confidence means how sure the app is that this was a key mistake, based on replay clues. High means strong replay evidence.
+                </p>
                 <div className="mt-3 overflow-x-auto">
                   <table className="min-w-full border-collapse text-sm text-amber-50">
                     <thead>
                       <tr className="border-b border-amber-300/20 text-left">
                         <th className="px-2 py-2">Turn</th>
                         <th className="px-2 py-2">What happened</th>
+                        <th className="px-2 py-2">Severity</th>
                         <th className="px-2 py-2">Confidence</th>
                         <th className="px-2 py-2">Why this was risky</th>
                         <th className="px-2 py-2">Better play next time</th>
@@ -280,10 +414,15 @@ export default function UploadPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {selectedTeamReport.coaching.turnByTurn.map((turn) => (
+                      {sortedTurnRows.map((turn) => (
                         <tr key={`${turn.turnNumber}-${turn.happened}`} className="border-b border-amber-300/10 align-top" id={`turn-${turn.turnNumber}`}>
                           <td className="px-2 py-3 font-semibold">{turn.turnNumber}</td>
                           <td className="px-2 py-3">{turn.happened}</td>
+                          <td className="px-2 py-3">
+                            <span className={`inline-flex rounded-full border px-2 py-1 text-xs font-semibold uppercase ${severityBadgeClass(turn.severity)}`}>
+                              {turn.severity}
+                            </span>
+                          </td>
                           <td className="px-2 py-3">
                             <span className={`inline-flex rounded-full border px-2 py-1 text-xs font-semibold uppercase ${confidenceBadgeClass(turn.confidence)}`}>
                               {turn.confidence}
@@ -295,11 +434,14 @@ export default function UploadPage() {
                             {turn.evidence.length === 0 ? (
                               <span className="text-amber-100/70">No replay clues attached</span>
                             ) : (
-                              <ul className="list-disc space-y-1 pl-4 text-xs text-amber-100/85">
-                                {turn.evidence.slice(0, 3).map((evidence, index) => (
-                                  <li key={`${turn.turnNumber}-${index}-${evidence.sourceTag ?? "marker"}`}>{formatEvidenceItem(evidence)}</li>
-                                ))}
-                              </ul>
+                              <details>
+                                <summary className="cursor-pointer text-xs font-semibold text-amber-100/90">Show clues</summary>
+                                <ul className="mt-1 list-disc space-y-1 pl-4 text-xs text-amber-100/85">
+                                  {turn.evidence.slice(0, 4).map((evidence, index) => (
+                                    <li key={`${turn.turnNumber}-${index}-${evidence.sourceTag ?? "marker"}`}>{formatEvidenceItem(evidence)}</li>
+                                  ))}
+                                </ul>
+                              </details>
                             )}
                           </td>
                         </tr>

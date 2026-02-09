@@ -318,6 +318,46 @@ function extractTeamsFromGameInfos(rootNode: unknown): ReplayTeam[] {
   return dedupeTeams(teams);
 }
 
+function normalizePlayerName(raw: unknown): string | undefined {
+  if (raw === undefined || raw === null) {
+    return undefined;
+  }
+
+  const decoded = decodeReadableText(String(raw)).trim();
+  if (decoded === "" || /^\d+$/.test(decoded)) {
+    return undefined;
+  }
+
+  return decoded;
+}
+
+function extractPlayerNames(rootNode: unknown): Record<string, string> {
+  const result: Record<string, string> = {};
+  const teamStates = toArray(valueAtPath(rootNode, ["NotificationGameJoined", "InitialBoardState", "ListTeams", "TeamState"]));
+
+  for (const state of teamStates) {
+    if (!isRecord(state)) {
+      continue;
+    }
+
+    const playerStates = toArray(valueAtPath(state, ["ListPitchPlayers", "PlayerState"]));
+    for (const playerState of playerStates) {
+      if (!isRecord(playerState)) {
+        continue;
+      }
+
+      const playerId = playerState.Id ?? playerState.PlayerId ?? playerState.id;
+      const playerName = normalizePlayerName(valueAtPath(playerState, ["Data", "Name"]) ?? playerState.Name);
+
+      if (playerId !== undefined && playerName) {
+        result[String(playerId)] = playerName;
+      }
+    }
+  }
+
+  return result;
+}
+
 function normalizeTeams(rawTeams: unknown[]): ReplayTeam[] {
   const normalized = rawTeams.map(normalizeTeam);
   const deduped = dedupeTeams(normalized);
@@ -389,6 +429,7 @@ export function parseReplayXml(xml: string): ReplayModel {
   const teamsFromGameInfos = extractTeamsFromGameInfos(rootNode);
   const fallbackTeams = normalizeTeams(collectTeamCandidates(rootNode));
   const teams = teamsFromGameInfos.length >= 2 ? teamsFromGameInfos : fallbackTeams;
+  const playerNamesById = extractPlayerNames(rootNode);
 
   const turns =
     structured.turns.length > 0
@@ -408,6 +449,7 @@ export function parseReplayXml(xml: string): ReplayModel {
     rootTag,
     replayVersion,
     teams,
+    playerNamesById,
     turns,
     unknownCodes: structured.unknownCodes,
     raw: rootNode

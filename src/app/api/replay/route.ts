@@ -7,11 +7,84 @@ import { analyzeReplayInput } from "@/server/services/analyzeReplay";
 
 export const runtime = "nodejs";
 
+type RateBucket = {
+  count: number;
+  resetAt: number;
+};
+
+const replayRateLimiter = new Map<string, RateBucket>();
+
 function hasAllowedExtension(name: string): boolean {
   return name.endsWith(".xml") || name.endsWith(".bbr");
 }
 
+function getClientIdentifier(request: Request): string {
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    return forwardedFor.split(",")[0]?.trim() ?? "unknown";
+  }
+
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp) {
+    return realIp.trim();
+  }
+
+  return "unknown";
+}
+
+function consumeReplayRateLimit(clientKey: string): boolean {
+  const now = Date.now();
+
+  if (replayRateLimiter.size > 1000) {
+    for (const [key, bucket] of replayRateLimiter.entries()) {
+      if (bucket.resetAt <= now) {
+        replayRateLimiter.delete(key);
+      }
+    }
+  }
+
+  const existing = replayRateLimiter.get(clientKey);
+
+  if (!existing || existing.resetAt <= now) {
+    replayRateLimiter.set(clientKey, {
+      count: 1,
+      resetAt: now + appConfig.replayRateLimitWindowMs
+    });
+    return true;
+  }
+
+  if (existing.count >= appConfig.replayRateLimitMaxRequests) {
+    return false;
+  }
+
+  existing.count += 1;
+  replayRateLimiter.set(clientKey, existing);
+  return true;
+}
+
 export async function POST(request: Request) {
+  const clientId = getClientIdentifier(request);
+  if (!consumeReplayRateLimit(clientId)) {
+    logger.warn("Replay API rate limit exceeded", {
+      clientId,
+      windowMs: appConfig.replayRateLimitWindowMs,
+      maxRequests: appConfig.replayRateLimitMaxRequests
+    });
+
+    return NextResponse.json({ error: "Too many replay uploads right now. Please wait about a minute and try again." }, { status: 429 });
+  }
+
+  const contentLength = Number(request.headers.get("content-length") ?? "0");
+  if (Number.isFinite(contentLength) && contentLength > appConfig.maxReplayBytes * 2) {
+    logger.warn("Replay upload rejected due to oversized request payload", {
+      clientId,
+      contentLength,
+      maxReplayBytes: appConfig.maxReplayBytes
+    });
+
+    return NextResponse.json({ error: "Upload payload is too large." }, { status: 413 });
+  }
+
   let formData: FormData;
   try {
     formData = await request.formData();
@@ -31,6 +104,12 @@ export async function POST(request: Request) {
   }
 
   if (replayFile.size > appConfig.maxReplayBytes) {
+    logger.warn("Replay file rejected due to size", {
+      clientId,
+      fileSize: replayFile.size,
+      maxReplayBytes: appConfig.maxReplayBytes
+    });
+
     return NextResponse.json(
       { error: `Replay file too large. Max size is ${Math.floor(appConfig.maxReplayBytes / (1024 * 1024))}MB.` },
       { status: 413 }
@@ -73,12 +152,28 @@ export async function POST(request: Request) {
         reportId: report.id,
         unknownCodes: report.replay.unknownCodes.slice(0, 10)
       });
+
+      const unknownCount = report.replay.unknownCodes.reduce((sum, item) => sum + item.occurrences, 0);
+      if (unknownCount >= 50) {
+        logger.warn("Replay has high unknown-code volume", {
+          reportId: report.id,
+          unknownCount
+        });
+      }
     }
 
     if (report.analysis.findings.length === 0) {
       logger.info("Replay produced no coaching findings", {
         reportId: report.id,
         turnCount: report.replay.turnCount
+      });
+    }
+
+    const highSeverityFindings = report.analysis.findings.filter((finding) => finding.severity === "high").length;
+    if (highSeverityFindings >= 6) {
+      logger.warn("Replay generated unusually high number of high-severity findings", {
+        reportId: report.id,
+        highSeverityFindings
       });
     }
 

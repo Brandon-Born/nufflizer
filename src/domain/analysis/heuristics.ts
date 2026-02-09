@@ -5,8 +5,11 @@ import {
   evaluateBallSafety,
   evaluateCageSafety,
   evaluateFoulTiming,
+  evaluateKickoffSetup,
   evaluateRerollTiming,
+  evaluateScoringWindow,
   evaluateScreenLanes,
+  evaluateSurfRisk,
   evaluateTurnoverCause,
   findingsToTurnAdvice
 } from "@/domain/analysis/rules";
@@ -103,7 +106,10 @@ export function analyzeReplayTimeline(replay: ReplayModel, timeline: TimelineTur
     ...evaluateCageSafety(replay, context),
     ...evaluateScreenLanes(replay, context),
     ...evaluateBlitzValue(replay, context),
-    ...evaluateFoulTiming(replay, context)
+    ...evaluateFoulTiming(replay, context),
+    ...evaluateKickoffSetup(replay, context),
+    ...evaluateSurfRisk(replay),
+    ...evaluateScoringWindow(replay, context)
   ]);
 
   const turnAdvice = findingsToTurnAdvice(findings);

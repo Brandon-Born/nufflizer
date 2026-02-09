@@ -24,6 +24,8 @@ describe("analyzeReplayXml", () => {
     expect(report.analysis.metrics.blitzSignals).toBeGreaterThanOrEqual(0);
     expect(report.analysis.metrics.foulSignals).toBeGreaterThanOrEqual(0);
     expect(report.coaching.priorities.length).toBeGreaterThan(0);
+    expect(report.coaching.priorities[0]).toHaveProperty("severity");
+    expect(report.coaching.priorities[0]).toHaveProperty("score");
   });
 
   it("builds team-specific reports with coach turn numbers", () => {

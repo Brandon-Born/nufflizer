@@ -9,18 +9,27 @@ export default function HomePage() {
         </p>
         <h1 className="text-4xl font-black tracking-tight text-amber-100 md:text-5xl">BB Trainer</h1>
         <p className="max-w-3xl text-lg text-amber-50/90">
-          Upload your replay, pick your team, and get clear turn-by-turn advice in plain language.
+          BB Trainer is a replay coach for Blood Bowl 3. Upload one replay, pick your team, and get simple match feedback to help
+          you learn safer play patterns turn by turn.
         </p>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2">
+      <section className="grid gap-4 md:grid-cols-3">
         <div className="rounded-xl border border-amber-300/20 bg-black/30 p-5 shadow-sm">
           <h2 className="text-lg font-semibold text-amber-100">How it works</h2>
-          <p className="mt-2 text-sm text-amber-50/90">Upload once, review your advice, then move on to the next replay.</p>
+          <p className="mt-2 text-sm text-amber-50/90">Upload once, read your coaching report, then upload your next game.</p>
         </div>
         <div className="rounded-xl border border-amber-300/20 bg-black/30 p-5 shadow-sm">
-          <h2 className="text-lg font-semibold text-amber-100">What you get</h2>
-          <p className="mt-2 text-sm text-amber-50/90">Simple tips on safer move order, reroll use, and ball protection.</p>
+          <h2 className="text-lg font-semibold text-amber-100">Privacy</h2>
+          <p className="mt-2 text-sm text-amber-50/90">
+            Replays are processed in one shot for coaching output. The app does not store replay files for long-term history.
+          </p>
+        </div>
+        <div className="rounded-xl border border-amber-300/20 bg-black/30 p-5 shadow-sm">
+          <h2 className="text-lg font-semibold text-amber-100">Project Scope</h2>
+          <p className="mt-2 text-sm text-amber-50/90">
+            This is a for-fun learning app, not an official competitive tool. Advice is educational and may miss context.
+          </p>
         </div>
       </section>
 
@@ -29,6 +38,32 @@ export default function HomePage() {
           Start Replay Coaching
         </Link>
       </div>
+
+      <section className="rounded-xl border border-amber-300/20 bg-black/30 p-5 shadow-sm">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-amber-100">Links</h2>
+        <p className="mt-2 text-sm text-amber-50/90">
+          Source code:{" "}
+          <a
+            href="https://github.com/Brandon-Born/bb-trainer"
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold text-amber-200 underline decoration-amber-300/60 underline-offset-2 hover:text-amber-100"
+          >
+            github.com/Brandon-Born/bb-trainer
+          </a>
+        </p>
+        <p className="mt-1 text-sm text-amber-50/90">
+          Built by:{" "}
+          <a
+            href="https://bborn.dev/"
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold text-amber-200 underline decoration-amber-300/60 underline-offset-2 hover:text-amber-100"
+          >
+            bborn.dev
+          </a>
+        </p>
+      </section>
     </main>
   );
 }

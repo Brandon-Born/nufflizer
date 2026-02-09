@@ -8,7 +8,10 @@ export type AnalysisCategory =
   | "cage_safety"
   | "screen_lanes"
   | "blitz_value"
-  | "foul_timing";
+  | "foul_timing"
+  | "kickoff_setup"
+  | "surf_risk"
+  | "scoring_window";
 
 export type AnalysisEvidence = {
   eventType?: string;
@@ -30,6 +33,8 @@ export type AnalysisFinding = {
 
 export type TurnAdvice = {
   turnNumber: number;
+  category: AnalysisCategory;
+  severity: AnalysisSeverity;
   happened: string;
   riskyBecause: string;
   saferAlternative: string;

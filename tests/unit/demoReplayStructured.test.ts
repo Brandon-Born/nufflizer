@@ -61,6 +61,9 @@ describe("demo replay structured extraction", () => {
       expect(firstTeam).toBeDefined();
       expect(firstTeam!.coaching.turnByTurn.every((turn) => turn.turnNumber <= 16)).toBe(true);
       expect(firstTeam!.coaching.turnByTurn.every((turn) => ["low", "medium", "high"].includes(turn.confidence))).toBe(true);
+      expect(firstTeam!.coaching.turnByTurn.every((turn) => !/Result[A-Za-z]+/.test(turn.happened))).toBe(true);
+      expect(firstTeam!.coaching.priorities.every((priority) => ["low", "medium", "high"].includes(priority.severity))).toBe(true);
+      expect(firstTeam!.coaching.priorities.every((priority, index, arr) => index === 0 || arr[index - 1]!.score >= priority.score)).toBe(true);
     });
   }
 
