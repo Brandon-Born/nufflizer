@@ -16,13 +16,17 @@ export type ReplayEventType =
 export type ReplayEvent = {
   type: ReplayEventType;
   sourceTag: string;
+  sourceLabel?: string;
   playerId?: string;
   targetId?: string;
   teamId?: string;
   gamerId?: string;
   actionCode?: number;
+  actionLabel?: string;
   stepType?: number;
+  stepLabel?: string;
   reasonCode?: number;
+  reasonLabel?: string;
   finishingTurnType?: number;
   payload?: Record<string, unknown>;
 };
@@ -34,6 +38,7 @@ export type ReplayTurn = {
   ballCarrierPlayerId?: string;
   possibleTurnover: boolean;
   endTurnReason?: number;
+  endTurnReasonLabel?: string;
   finishingTurnType?: number;
   events: ReplayEvent[];
   actionTexts: string[];
@@ -41,11 +46,19 @@ export type ReplayTurn = {
   raw: unknown;
 };
 
+export type ReplayUnknownCode = {
+  category: "step" | "action" | "roll" | "end_turn_reason";
+  code: number;
+  occurrences: number;
+};
+
 export type ReplayModel = {
   matchId: string;
   rootTag: string;
+  replayVersion?: string;
   teams: ReplayTeam[];
   turns: ReplayTurn[];
+  unknownCodes: ReplayUnknownCode[];
   raw: unknown;
 };
 

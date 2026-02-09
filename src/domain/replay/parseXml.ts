@@ -178,6 +178,7 @@ function normalizeTurn(rawTurn: unknown, index: number): ReplayTurn {
     ballCarrierPlayerId: undefined,
     possibleTurnover: false,
     endTurnReason: undefined,
+    endTurnReasonLabel: undefined,
     finishingTurnType: undefined,
     events: [],
     actionTexts,
@@ -204,6 +205,21 @@ function resolveMatchId(rootNode: unknown): string {
   return matchCandidate ? String(matchCandidate) : `match-${Date.now()}`;
 }
 
+function resolveReplayVersion(rootNode: unknown): string | undefined {
+  const version = valueAtPath(rootNode, ["ReplayVersion"]);
+  return version ? String(version) : undefined;
+}
+
+function validateReplayVersion(version: string | undefined): void {
+  if (!version) {
+    return;
+  }
+
+  if (!/^\d+-\d+-\d+-\d+$/.test(version)) {
+    throw new ReplayValidationError(`Unsupported replay version format: ${version}`);
+  }
+}
+
 export function parseReplayXml(xml: string): ReplayModel {
   const validatedXml = ReplayXmlSchema.parse(xml);
   const xmlValidation = XMLValidator.validate(validatedXml);
@@ -228,7 +244,10 @@ export function parseReplayXml(xml: string): ReplayModel {
 
   const rootTag = Object.keys(parsed)[0] ?? "Replay";
   const rootNode = parsed[rootTag] ?? parsed;
-  const structuredTurns = extractStructuredTurnsFromReplayXml(validatedXml);
+  const replayVersion = resolveReplayVersion(rootNode);
+  validateReplayVersion(replayVersion);
+
+  const structured = extractStructuredTurnsFromReplayXml(validatedXml);
 
   const teams = collectCandidates(
     rootNode,
@@ -241,8 +260,8 @@ export function parseReplayXml(xml: string): ReplayModel {
   ).map(normalizeTeam);
 
   const turns =
-    structuredTurns.length > 0
-      ? structuredTurns
+    structured.turns.length > 0
+      ? structured.turns
       : collectCandidates(
           rootNode,
           [
@@ -256,8 +275,10 @@ export function parseReplayXml(xml: string): ReplayModel {
   return {
     matchId: resolveMatchId(rootNode),
     rootTag,
+    replayVersion,
     teams,
     turns,
+    unknownCodes: structured.unknownCodes,
     raw: rootNode
   };
 }

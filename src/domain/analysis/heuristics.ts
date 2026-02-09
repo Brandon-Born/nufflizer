@@ -1,24 +1,24 @@
 import type { AnalysisFinding, AnalysisResult } from "@/domain/analysis/types";
-import { evaluateTurn } from "@/domain/analysis/evaluateTurn";
-import type { TimelineTurn } from "@/domain/replay/types";
+import {
+  evaluateActionOrdering,
+  evaluateBallSafety,
+  evaluateRerollTiming,
+  evaluateTurnoverCause,
+  findingsToTurnAdvice
+} from "@/domain/analysis/rules";
+import type { ReplayModel, TimelineTurn } from "@/domain/replay/types";
 
-function createFinding(
-  id: string,
-  severity: AnalysisFinding["severity"],
-  title: string,
-  detail: string,
-  turnNumber?: number
-): AnalysisFinding {
-  return {
-    id,
-    severity,
-    title,
-    detail,
-    turnNumber
-  };
+function rankBySeverity(findings: AnalysisFinding[]): AnalysisFinding[] {
+  const score = {
+    high: 3,
+    medium: 2,
+    low: 1
+  } as const;
+
+  return [...findings].sort((a, b) => score[b.severity] - score[a.severity]);
 }
 
-export function analyzeReplayTimeline(timeline: TimelineTurn[]): AnalysisResult {
+export function analyzeReplayTimeline(replay: ReplayModel, timeline: TimelineTurn[]): AnalysisResult {
   const metrics = timeline.reduce(
     (acc, turn) => {
       acc.totalTurns += 1;
@@ -32,59 +32,27 @@ export function analyzeReplayTimeline(timeline: TimelineTurn[]): AnalysisResult 
       totalTurns: 0,
       turnoverSignals: 0,
       rerollSignals: 0,
-      aggressiveActionSignals: 0
+      aggressiveActionSignals: 0,
+      ballCarrierTransitions: 0
     }
   );
 
-  const findings: AnalysisFinding[] = [];
-
-  const turnoverRate = metrics.turnoverSignals / Math.max(metrics.totalTurns, 1);
-  if (turnoverRate > 0.4) {
-    findings.push(
-      createFinding(
-        "high-turnover-rate",
-        "high",
-        "Frequent turnover signals",
-        "Replay suggests repeated turnover-risk outcomes. Consider safer sequencing before high-variance actions."
-      )
-    );
+  for (let i = 1; i < replay.turns.length; i += 1) {
+    const current = replay.turns[i];
+    const previous = replay.turns[i - 1];
+    if (current?.ballCarrierPlayerId && previous?.ballCarrierPlayerId && current.ballCarrierPlayerId !== previous.ballCarrierPlayerId) {
+      metrics.ballCarrierTransitions += 1;
+    }
   }
 
-  if (metrics.totalTurns > 0 && metrics.rerollSignals === 0) {
-    findings.push(
-      createFinding(
-        "no-reroll-signals",
-        "medium",
-        "No reroll usage detected",
-        "Review reroll opportunities when critical actions fail early in the turn."
-      )
-    );
-  }
+  const findings = rankBySeverity([
+    ...evaluateTurnoverCause(replay),
+    ...evaluateRerollTiming(replay),
+    ...evaluateActionOrdering(replay),
+    ...evaluateBallSafety(replay)
+  ]);
 
-  if (metrics.aggressiveActionSignals > metrics.totalTurns * 3) {
-    findings.push(
-      createFinding(
-        "high-aggression",
-        "medium",
-        "Aggressive action density",
-        "High block/blitz/dodge density can increase volatility. Confirm objective-first sequencing each turn."
-      )
-    );
-  }
-
-  const turnAdvice = timeline.map(evaluateTurn).filter((entry): entry is NonNullable<typeof entry> => entry !== null);
-
-  for (const advice of turnAdvice.slice(0, 3)) {
-    findings.push(
-      createFinding(
-        `turn-${advice.turnNumber}-risk`,
-        advice.confidence === "medium" ? "medium" : "low",
-        `Risk signal on turn ${advice.turnNumber}`,
-        advice.recommendation,
-        advice.turnNumber
-      )
-    );
-  }
+  const turnAdvice = findingsToTurnAdvice(findings);
 
   return {
     metrics,

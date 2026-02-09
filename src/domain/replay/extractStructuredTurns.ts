@@ -1,6 +1,13 @@
 import { XMLParser } from "fast-xml-parser";
 
-import type { ReplayEvent, ReplayTurn } from "@/domain/replay/types";
+import {
+  ACTION_CODE_MAP,
+  END_TURN_REASON_MAP,
+  ROLL_TYPE_MAP,
+  STEP_TYPE_MAP,
+  labelForCode
+} from "@/domain/replay/mappings";
+import type { ReplayEvent, ReplayTurn, ReplayUnknownCode } from "@/domain/replay/types";
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -12,6 +19,14 @@ const parser = new XMLParser({
 const STRUCTURED_TOKEN_REGEX = /<(EventExecuteSequence|EventEndTurn|EventActiveGamerChanged|Carrier)>([\s\S]*?)<\/\1>/g;
 const STEP_MESSAGE_DATA_REGEX = /<Step><Name>[^<]*<\/Name><MessageData>([^<]*)<\/MessageData>/;
 const RESULT_MESSAGE_DATA_REGEX = /<StringMessage><Name>[^<]*<\/Name><MessageData>([^<]*)<\/MessageData><\/StringMessage>/g;
+
+type Context = {
+  stepType?: number;
+  playerId?: string;
+  targetId?: string;
+  teamId?: string;
+  gamerId?: string;
+};
 
 function toNumber(input: unknown): number | undefined {
   const parsed = Number(input);
@@ -49,7 +64,42 @@ function parseDecodedXml(input: string): Record<string, unknown> | null {
   }
 }
 
-function collectSequenceEvents(block: string): ReplayEvent[] {
+function incrementUnknownCode(
+  unknownCodeCounters: Map<string, ReplayUnknownCode>,
+  category: ReplayUnknownCode["category"],
+  code: number
+): void {
+  const key = `${category}:${code}`;
+  const existing = unknownCodeCounters.get(key);
+
+  if (existing) {
+    existing.occurrences += 1;
+    return;
+  }
+
+  unknownCodeCounters.set(key, {
+    category,
+    code,
+    occurrences: 1
+  });
+}
+
+function registerKnownOrUnknown(
+  unknownCodeCounters: Map<string, ReplayUnknownCode>,
+  category: ReplayUnknownCode["category"],
+  code: number | undefined,
+  knownMap: Record<number, string>
+): void {
+  if (code === undefined) {
+    return;
+  }
+
+  if (!(code in knownMap)) {
+    incrementUnknownCode(unknownCodeCounters, category, code);
+  }
+}
+
+function collectSequenceEvents(block: string, unknownCodeCounters: Map<string, ReplayUnknownCode>): ReplayEvent[] {
   const events: ReplayEvent[] = [];
 
   const stepMessageData = block.match(STEP_MESSAGE_DATA_REGEX)?.[1];
@@ -58,7 +108,7 @@ function collectSequenceEvents(block: string): ReplayEvent[] {
   const stepRootTag = stepParsed ? Object.keys(stepParsed)[0] : undefined;
   const stepPayload = stepRootTag ? (stepParsed?.[stepRootTag] as Record<string, unknown> | undefined) : undefined;
 
-  const sequenceContext = {
+  const sequenceContext: Context = {
     stepType: toNumber(stepPayload?.StepType),
     playerId: toStringValue(stepPayload?.PlayerId),
     targetId: toStringValue(stepPayload?.TargetId),
@@ -66,11 +116,15 @@ function collectSequenceEvents(block: string): ReplayEvent[] {
     gamerId: toStringValue(stepPayload?.GamerId)
   };
 
+  registerKnownOrUnknown(unknownCodeCounters, "step", sequenceContext.stepType, STEP_TYPE_MAP);
+
   if (stepRootTag === "BallStep") {
     events.push({
       type: "ball_state",
       sourceTag: "BallStep",
+      sourceLabel: "ball_state_change",
       stepType: sequenceContext.stepType,
+      stepLabel: labelForCode(STEP_TYPE_MAP, sequenceContext.stepType, "step"),
       playerId: sequenceContext.playerId,
       targetId: sequenceContext.targetId,
       teamId: sequenceContext.teamId,
@@ -104,29 +158,46 @@ function collectSequenceEvents(block: string): ReplayEvent[] {
     const teamId = toStringValue(payload?.TeamId ?? sequenceContext.teamId);
     const gamerId = toStringValue(payload?.GamerId ?? sequenceContext.gamerId);
     const actionCode = toNumber(payload?.Action);
+    const rollType = toNumber(payload?.RollType);
+
+    registerKnownOrUnknown(unknownCodeCounters, "action", actionCode, ACTION_CODE_MAP);
+    registerKnownOrUnknown(unknownCodeCounters, "roll", rollType, ROLL_TYPE_MAP);
+
+    const baseEvent = {
+      sourceTag: rootTag,
+      stepType,
+      stepLabel: labelForCode(STEP_TYPE_MAP, stepType, "step"),
+      playerId,
+      targetId,
+      teamId,
+      gamerId,
+      actionCode,
+      actionLabel: labelForCode(ACTION_CODE_MAP, actionCode, "action"),
+      payload
+    } satisfies Omit<ReplayEvent, "type">;
 
     if (rootTag === "ResultBlockRoll" || rootTag === "ResultBlockOutcome" || rootTag === "ResultPushBack") {
-      events.push({ type: "block", sourceTag: rootTag, stepType, playerId, targetId, teamId, gamerId, payload });
+      events.push({ type: "block", sourceLabel: "block_resolution", ...baseEvent });
     }
 
     if (rootTag === "ResultUseAction" && actionCode === 2) {
-      events.push({ type: "blitz", sourceTag: rootTag, stepType, playerId, targetId, teamId, gamerId, actionCode, payload });
+      events.push({ type: "blitz", sourceLabel: "declared_blitz", ...baseEvent });
     }
 
     if (rootTag === "ResultRoll" && sequenceContext.stepType === 1) {
-      events.push({ type: "dodge", sourceTag: rootTag, stepType, playerId, targetId, teamId, gamerId, payload });
+      events.push({ type: "dodge", sourceLabel: "dodge_roll", ...baseEvent });
     }
 
     if (rootTag === "QuestionTeamRerollUsage" || rootTag === "ResultTeamRerollUsage") {
-      events.push({ type: "reroll", sourceTag: rootTag, stepType, playerId, targetId, teamId, gamerId, payload });
+      events.push({ type: "reroll", sourceLabel: "team_reroll", ...baseEvent });
     }
 
     if (rootTag === "ResultInjuryRoll" || rootTag === "ResultCasualtyRoll" || rootTag === "ResultPlayerRemoval") {
-      events.push({ type: "casualty", sourceTag: rootTag, stepType, playerId, targetId, teamId, gamerId, payload });
+      events.push({ type: "casualty", sourceLabel: "injury_chain", ...baseEvent });
     }
 
-    if (rootTag === "BallStep" || rootTag === "ResultTouchBack") {
-      events.push({ type: "ball_state", sourceTag: rootTag, stepType, playerId, targetId, teamId, gamerId, payload });
+    if (rootTag === "ResultTouchBack") {
+      events.push({ type: "ball_state", sourceLabel: "touchback", ...baseEvent });
     }
   }
 
@@ -141,6 +212,7 @@ function buildTurn(turnNumber: number, gamerId?: string): ReplayTurn {
     ballCarrierPlayerId: undefined,
     possibleTurnover: false,
     endTurnReason: undefined,
+    endTurnReasonLabel: undefined,
     finishingTurnType: undefined,
     events: [],
     actionTexts: [],
@@ -151,7 +223,8 @@ function buildTurn(turnNumber: number, gamerId?: string): ReplayTurn {
 
 function finalizeTurn(turn: ReplayTurn): ReplayTurn {
   const actionTexts = turn.events
-    .flatMap((event) => [event.type, event.sourceTag])
+    .flatMap((event) => [event.type, event.sourceTag, event.actionLabel, event.stepLabel])
+    .filter((value): value is string => Boolean(value))
     .map((value) => value.toLowerCase());
 
   return {
@@ -184,8 +257,9 @@ function applySequenceEventsToTurn(turn: ReplayTurn, events: ReplayEvent[]): voi
   }
 }
 
-export function extractStructuredTurnsFromReplayXml(xml: string): ReplayTurn[] {
+export function extractStructuredTurnsFromReplayXml(xml: string): { turns: ReplayTurn[]; unknownCodes: ReplayUnknownCode[] } {
   const turns: ReplayTurn[] = [];
+  const unknownCodeCounters = new Map<string, ReplayUnknownCode>();
 
   let activeGamerId: string | undefined;
   let currentTurn = buildTurn(1, activeGamerId);
@@ -215,6 +289,7 @@ export function extractStructuredTurnsFromReplayXml(xml: string): ReplayTurn[] {
         currentTurn.events.push({
           type: "ball_state",
           sourceTag: "Carrier",
+          sourceLabel: "ball_carrier",
           playerId: carrierId
         });
       }
@@ -224,7 +299,7 @@ export function extractStructuredTurnsFromReplayXml(xml: string): ReplayTurn[] {
     }
 
     if (tag === "EventExecuteSequence") {
-      const sequenceEvents = collectSequenceEvents(body);
+      const sequenceEvents = collectSequenceEvents(body, unknownCodeCounters);
       applySequenceEventsToTurn(currentTurn, sequenceEvents);
 
       foundStructuredData = true;
@@ -236,15 +311,19 @@ export function extractStructuredTurnsFromReplayXml(xml: string): ReplayTurn[] {
       const finishingTurnType = toNumber(body.match(/<FinishingTurnType>(-?\d+)<\/FinishingTurnType>/)?.[1]);
 
       currentTurn.endTurnReason = reason;
+      currentTurn.endTurnReasonLabel = labelForCode(END_TURN_REASON_MAP, reason, "end_turn_reason");
       currentTurn.finishingTurnType = finishingTurnType;
 
-      // BB3 replay end-turn reasons 2/4 generally indicate non-manual turn termination events.
+      registerKnownOrUnknown(unknownCodeCounters, "end_turn_reason", reason, END_TURN_REASON_MAP);
+
       if (reason !== undefined && reason !== 1) {
         currentTurn.possibleTurnover = true;
         currentTurn.events.push({
           type: "turnover",
           sourceTag: "EventEndTurn",
+          sourceLabel: "turn_end_non_manual",
           reasonCode: reason,
+          reasonLabel: labelForCode(END_TURN_REASON_MAP, reason, "end_turn_reason"),
           finishingTurnType
         });
       }
@@ -259,5 +338,8 @@ export function extractStructuredTurnsFromReplayXml(xml: string): ReplayTurn[] {
     turns.push(finalizeTurn(currentTurn));
   }
 
-  return foundStructuredData ? turns : [];
+  return {
+    turns: foundStructuredData ? turns : [],
+    unknownCodes: Array.from(unknownCodeCounters.values()).sort((a, b) => b.occurrences - a.occurrences)
+  };
 }

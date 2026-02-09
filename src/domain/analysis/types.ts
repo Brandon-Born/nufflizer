@@ -1,16 +1,32 @@
+export type AnalysisSeverity = "low" | "medium" | "high";
+
+export type AnalysisCategory = "turnover_cause" | "reroll_timing" | "action_ordering" | "ball_safety";
+
+export type AnalysisEvidence = {
+  eventType?: string;
+  sourceTag?: string;
+  code?: string;
+  detail?: string;
+};
+
 export type AnalysisFinding = {
   id: string;
-  severity: "low" | "medium" | "high";
+  severity: AnalysisSeverity;
+  category: AnalysisCategory;
   title: string;
   detail: string;
+  recommendation: string;
   turnNumber?: number;
+  evidence: AnalysisEvidence[];
 };
 
 export type TurnAdvice = {
   turnNumber: number;
-  summary: string;
-  recommendation: string;
-  confidence: "low" | "medium";
+  happened: string;
+  riskyBecause: string;
+  saferAlternative: string;
+  confidence: "low" | "medium" | "high";
+  evidence: AnalysisEvidence[];
 };
 
 export type AnalysisMetrics = {
@@ -18,6 +34,7 @@ export type AnalysisMetrics = {
   turnoverSignals: number;
   rerollSignals: number;
   aggressiveActionSignals: number;
+  ballCarrierTransitions: number;
 };
 
 export type AnalysisResult = {

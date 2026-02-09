@@ -6,24 +6,38 @@ export type CoachingReport = {
   priorities: string[];
   turnByTurn: Array<{
     turnNumber: number;
-    note: string;
-    betterLine: string;
+    happened: string;
+    riskyBecause: string;
+    saferAlternative: string;
+    confidence: "low" | "medium" | "high";
+    evidence: Array<{
+      eventType?: string;
+      sourceTag?: string;
+      code?: string;
+      detail?: string;
+    }>;
   }>;
 };
 
 export function renderCoaching(analysis: AnalysisResult): CoachingReport {
   const headline = summarizeMatch(analysis);
 
-  const priorities = analysis.findings.slice(0, 5).map((finding) => `${finding.title}: ${finding.detail}`);
+  const priorities = analysis.findings.slice(0, 5).map((finding) => {
+    const turnRef = finding.turnNumber ? `Turn ${finding.turnNumber}` : "Match";
+    return `${turnRef} - ${finding.title}: ${finding.recommendation}`;
+  });
 
   if (priorities.length === 0) {
     priorities.push("No major issues detected by current ruleset. Expand heuristic coverage for deeper review.");
   }
 
-  const turnByTurn = analysis.turnAdvice.slice(0, 16).map((advice) => ({
+  const turnByTurn = analysis.turnAdvice.slice(0, 32).map((advice) => ({
     turnNumber: advice.turnNumber,
-    note: advice.summary,
-    betterLine: advice.recommendation
+    happened: advice.happened,
+    riskyBecause: advice.riskyBecause,
+    saferAlternative: advice.saferAlternative,
+    confidence: advice.confidence,
+    evidence: advice.evidence
   }));
 
   return {
