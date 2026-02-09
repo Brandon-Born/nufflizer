@@ -4,7 +4,6 @@ import { ReplayValidationError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import { appConfig } from "@/lib/config";
 import { analyzeReplayInput } from "@/server/services/analyzeReplay";
-import { saveReplayReport } from "@/server/services/reportStore";
 
 export const runtime = "nodejs";
 
@@ -36,7 +35,6 @@ export async function POST(request: Request) {
 
   try {
     const report = analyzeReplayInput(replayInput);
-    await saveReplayReport(report);
 
     if (report.replay.unknownCodes.length > 0) {
       logger.info("Replay contains unknown mapping codes", {

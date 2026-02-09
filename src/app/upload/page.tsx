@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 
 type TurnRow = {
@@ -94,7 +93,7 @@ export default function UploadPage() {
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-6 py-16">
       <section className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Upload Replay</h1>
-        <p className="text-slate-700">Upload Blood Bowl 3 replay files (`.xml` or `.bbr`) for evidence-backed coaching.</p>
+        <p className="text-slate-700">Upload Blood Bowl 3 replay files (`.xml` or `.bbr`) for one-shot evidence-backed coaching.</p>
       </section>
 
       <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -109,13 +108,29 @@ export default function UploadPage() {
           />
         </label>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isLoading ? "Analyzing..." : "Analyze Replay"}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isLoading ? "Analyzing..." : "Analyze Replay"}
+          </button>
+
+          {report ? (
+            <button
+              type="button"
+              onClick={() => {
+                setReport(null);
+                setError(null);
+                setStatus(null);
+              }}
+              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Analyze Another Replay
+            </button>
+          ) : null}
+        </div>
 
         {status ? <p className="text-xs text-slate-600">{status}</p> : null}
       </form>
@@ -127,15 +142,12 @@ export default function UploadPage() {
       {report ? (
         <section className="space-y-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <header className="space-y-1">
-            <h2 className="text-xl font-semibold">Report</h2>
+            <h2 className="text-xl font-semibold">Coaching Output</h2>
             <p className="text-sm text-slate-600">Generated at {new Date(report.generatedAt).toLocaleString()}</p>
             <p className="text-sm text-slate-700">{report.coaching.headline}</p>
             <p className="text-xs text-slate-500">
               Match: {report.replay.matchId} | Format: {report.replay.format.toUpperCase()} | Version: {report.replay.replayVersion ?? "unknown"}
             </p>
-            <Link href={`/report/${report.id}`} className="text-sm font-medium text-brand-700 hover:underline">
-              Open persisted report view
-            </Link>
           </header>
 
           <div>
@@ -175,7 +187,7 @@ export default function UploadPage() {
 
           {report.replay.unknownCodes.length > 0 ? (
             <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-              Unknown replay codes detected. Mapping coverage can be improved using this report.
+              Unknown replay codes detected. Mapping coverage can be improved using this replay.
             </div>
           ) : null}
         </section>
