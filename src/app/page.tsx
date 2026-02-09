@@ -1,17 +1,31 @@
+import Image from "next/image";
 import Link from "next/link";
+import bbTrainerLogo from "./bb-trainer-logo.png";
 
 export default function HomePage() {
   return (
     <main className="bb-shell mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-8 px-6 py-16">
-      <section className="space-y-4">
-        <p className="inline-flex rounded-full border border-amber-300/50 bg-amber-100/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-100">
-          Blood Bowl 3 Replay Coach
-        </p>
-        <h1 className="text-4xl font-black tracking-tight text-amber-100 md:text-5xl">BB Trainer</h1>
-        <p className="max-w-3xl text-lg text-amber-50/90">
-          BB Trainer is a replay coach for Blood Bowl 3. Upload one replay, pick your team, and get simple match feedback to help
-          you learn safer play patterns turn by turn.
-        </p>
+      <section className="grid items-center gap-6 md:grid-cols-[1fr_auto]">
+        <div className="space-y-4">
+          <p className="inline-flex rounded-full border border-amber-300/50 bg-amber-100/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-100">
+            Blood Bowl 3 Replay Coach
+          </p>
+          <h1 className="text-4xl font-black tracking-tight text-amber-100 md:text-5xl">BB Trainer</h1>
+          <p className="max-w-3xl text-lg text-amber-50/90">
+            BB Trainer is a replay coach for Blood Bowl 3. Upload one replay, pick your team, and get simple match feedback to help
+            you learn safer play patterns turn by turn.
+          </p>
+        </div>
+        <div className="mx-auto rounded-2xl border border-amber-300/40 bg-black/30 p-3 shadow-lg md:mx-0">
+          <Image
+            src={bbTrainerLogo}
+            alt="BB Trainer goblin coach logo"
+            width={176}
+            height={176}
+            priority
+            className="h-36 w-36 rounded-xl md:h-44 md:w-44"
+          />
+        </div>
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">

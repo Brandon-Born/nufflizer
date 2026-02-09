@@ -1,9 +1,10 @@
-import type { AnalysisFinding, AnalysisResult, TeamContext } from "@/domain/analysis/types";
+import type { AnalysisResult, TeamContext } from "@/domain/analysis/types";
 import {
   evaluateActionOrdering,
   evaluateBlitzValue,
   evaluateBallSafety,
   evaluateCageSafety,
+  evaluateExpandedChecks,
   evaluateFoulTiming,
   evaluateKickoffSetup,
   evaluateRerollTiming,
@@ -13,17 +14,8 @@ import {
   evaluateTurnoverCause,
   findingsToTurnAdvice
 } from "@/domain/analysis/rules";
+import { applyImpactScores, sortFindingsByImpact } from "@/domain/analysis/scoring";
 import type { ReplayModel, TimelineTurn } from "@/domain/replay/types";
-
-function rankBySeverity(findings: AnalysisFinding[]): AnalysisFinding[] {
-  const score = {
-    high: 3,
-    medium: 2,
-    low: 1
-  } as const;
-
-  return [...findings].sort((a, b) => score[b.severity] - score[a.severity]);
-}
 
 function buildTeamContext(replay: ReplayModel): TeamContext {
   const totalTurns = replay.turns.length;
@@ -98,19 +90,25 @@ export function analyzeReplayTimeline(replay: ReplayModel, timeline: TimelineTur
     }
   }
 
-  const findings = rankBySeverity([
-    ...evaluateTurnoverCause(replay, context),
-    ...evaluateRerollTiming(replay, context),
-    ...evaluateActionOrdering(replay, context),
-    ...evaluateBallSafety(replay, context),
-    ...evaluateCageSafety(replay, context),
+  const findings = sortFindingsByImpact(
+    applyImpactScores(
+      [
+        ...evaluateTurnoverCause(replay, context),
+        ...evaluateRerollTiming(replay, context),
+        ...evaluateActionOrdering(replay, context),
+        ...evaluateBallSafety(replay, context),
+        ...evaluateCageSafety(replay, context),
     ...evaluateScreenLanes(replay, context),
     ...evaluateBlitzValue(replay, context),
     ...evaluateFoulTiming(replay, context),
-    ...evaluateKickoffSetup(replay, context),
-    ...evaluateSurfRisk(replay),
-    ...evaluateScoringWindow(replay, context)
-  ]);
+        ...evaluateKickoffSetup(replay, context),
+        ...evaluateSurfRisk(replay),
+        ...evaluateScoringWindow(replay, context),
+        ...evaluateExpandedChecks(replay, context)
+      ],
+      context
+    )
+  );
 
   const turnAdvice = findingsToTurnAdvice(findings);
 

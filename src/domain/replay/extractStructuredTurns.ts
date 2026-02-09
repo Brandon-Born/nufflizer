@@ -119,6 +119,7 @@ function collectSequenceEvents(block: string, unknownCodeCounters: Map<string, R
   registerKnownOrUnknown(unknownCodeCounters, "step", sequenceContext.stepType, STEP_TYPE_MAP);
 
   if (stepRootTag === "BallStep") {
+    const ballActorTeamId = sequenceContext.teamId;
     events.push({
       type: "ball_state",
       sourceTag: "BallStep",
@@ -128,6 +129,8 @@ function collectSequenceEvents(block: string, unknownCodeCounters: Map<string, R
       playerId: sequenceContext.playerId,
       targetId: sequenceContext.targetId,
       teamId: sequenceContext.teamId,
+      actorTeamId: ballActorTeamId,
+      actorTeamSource: ballActorTeamId ? "explicit" : undefined,
       gamerId: sequenceContext.gamerId,
       payload: stepPayload
     });
@@ -170,6 +173,8 @@ function collectSequenceEvents(block: string, unknownCodeCounters: Map<string, R
       playerId,
       targetId,
       teamId,
+      actorTeamId: teamId,
+      actorTeamSource: teamId ? "explicit" : undefined,
       gamerId,
       actionCode,
       actionLabel: labelForCode(ACTION_CODE_MAP, actionCode, "action"),
@@ -216,6 +221,8 @@ function buildTurn(turnNumber: number, gamerId?: string): ReplayTurn {
   return {
     turnNumber,
     teamId: undefined,
+    inferredTeamId: undefined,
+    teamInferenceConfidence: undefined,
     gamerId,
     ballCarrierPlayerId: undefined,
     possibleTurnover: false,
@@ -255,8 +262,8 @@ function applySequenceEventsToTurn(turn: ReplayTurn, events: ReplayEvent[]): voi
   turn.events.push(...events);
 
   if (!turn.teamId) {
-    const teamEvent = events.find((event) => event.teamId !== undefined);
-    turn.teamId = teamEvent?.teamId;
+    const teamEvent = events.find((event) => event.teamId !== undefined || event.actorTeamId !== undefined);
+    turn.teamId = teamEvent?.teamId ?? teamEvent?.actorTeamId;
   }
 
   if (!turn.gamerId) {

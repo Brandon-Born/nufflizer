@@ -3,7 +3,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "BB Trainer",
-  description: "Upload Blood Bowl 3 replay XML and get constructive coaching feedback."
+  description: "Upload Blood Bowl 3 replay XML and get constructive coaching feedback.",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg"
+  }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

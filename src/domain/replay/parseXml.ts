@@ -1,9 +1,10 @@
 import { XMLParser, XMLValidator } from "fast-xml-parser";
 import { z } from "zod";
 
+import { annotateTurnAttribution, buildPlayerOwnershipIndex } from "@/domain/replay/attribution";
 import { extractStructuredTurnsFromReplayXml } from "@/domain/replay/extractStructuredTurns";
 import { ReplayValidationError } from "@/lib/errors";
-import type { ReplayModel, ReplayTeam, ReplayTurn } from "@/domain/replay/types";
+import type { ReplayModel, ReplayParserDiagnostics, ReplayTeam, ReplayTurn, ReplayUnknownCode } from "@/domain/replay/types";
 
 const ReplayXmlSchema = z.string().trim().min(1, "Replay XML cannot be empty.");
 
@@ -438,6 +439,83 @@ function validateReplayVersion(version: string | undefined): void {
   }
 }
 
+function summarizeUnknownCodes(unknownCodes: ReplayUnknownCode[]): ReplayParserDiagnostics["unknownCodesByCategory"] {
+  const summary: ReplayParserDiagnostics["unknownCodesByCategory"] = {
+    step: 0,
+    action: 0,
+    roll: 0,
+    end_turn_reason: 0
+  };
+
+  for (const unknownCode of unknownCodes) {
+    summary[unknownCode.category] += unknownCode.occurrences;
+  }
+
+  return summary;
+}
+
+function buildParserDiagnostics(
+  turns: ReplayTurn[],
+  unknownCodes: ReplayUnknownCode[],
+  explicitTeamTurnIndexes: Set<number>
+): ReplayParserDiagnostics {
+  const unknownCodesByCategory = summarizeUnknownCodes(unknownCodes);
+  const unknownCodeTotal = Object.values(unknownCodesByCategory).reduce((sum, count) => sum + count, 0);
+
+  const turnAttribution = {
+    totalTurns: turns.length,
+    explicitTeamTurns: explicitTeamTurnIndexes.size,
+    inferredTeamTurns: 0,
+    unresolvedTeamTurns: 0,
+    highConfidenceInferences: 0,
+    mediumConfidenceInferences: 0,
+    lowConfidenceInferences: 0
+  };
+
+  const eventAttribution = {
+    explicit: 0,
+    player_map: 0,
+    turn_inferred: 0,
+    unresolved: 0
+  };
+
+  for (const [index, turn] of turns.entries()) {
+    const hadExplicitTeam = explicitTeamTurnIndexes.has(index);
+
+    if (turn.inferredTeamId && !hadExplicitTeam) {
+      turnAttribution.inferredTeamTurns += 1;
+    }
+
+    if (!hadExplicitTeam && !turn.inferredTeamId) {
+      turnAttribution.unresolvedTeamTurns += 1;
+    }
+
+    if (turn.teamInferenceConfidence === "high") {
+      turnAttribution.highConfidenceInferences += 1;
+    } else if (turn.teamInferenceConfidence === "medium") {
+      turnAttribution.mediumConfidenceInferences += 1;
+    } else if (turn.teamInferenceConfidence === "low") {
+      turnAttribution.lowConfidenceInferences += 1;
+    }
+
+    for (const event of turn.events) {
+      if (!event.actorTeamId || !event.actorTeamSource) {
+        eventAttribution.unresolved += 1;
+        continue;
+      }
+
+      eventAttribution[event.actorTeamSource] += 1;
+    }
+  }
+
+  return {
+    unknownCodeTotal,
+    unknownCodesByCategory,
+    turnAttribution,
+    eventAttribution
+  };
+}
+
 export function parseReplayXml(xml: string): ReplayModel {
   const validatedXml = ReplayXmlSchema.parse(xml);
   const xmlValidation = XMLValidator.validate(validatedXml);
@@ -471,7 +549,7 @@ export function parseReplayXml(xml: string): ReplayModel {
   const teams = teamsFromGameInfos.length >= 2 ? teamsFromGameInfos : fallbackTeams;
   const playerNames = extractPlayerNames(rootNode);
 
-  const turns =
+  const baseTurns =
     structured.turns.length > 0
       ? structured.turns
       : collectCandidates(
@@ -484,6 +562,19 @@ export function parseReplayXml(xml: string): ReplayModel {
           TURN_KEYS
         ).map(normalizeTurn);
 
+  const explicitTeamTurnIndexes = new Set<number>();
+  for (const [index, turn] of baseTurns.entries()) {
+    if (turn.teamId) {
+      explicitTeamTurnIndexes.add(index);
+    }
+  }
+
+  const ownershipIndex = buildPlayerOwnershipIndex({
+    playerNamesByTeamAndId: playerNames.playerNamesByTeamAndId
+  });
+  const turns = baseTurns.map((turn) => annotateTurnAttribution(turn, ownershipIndex));
+  const parserDiagnostics = buildParserDiagnostics(turns, structured.unknownCodes, explicitTeamTurnIndexes);
+
   return {
     matchId: resolveMatchId(rootNode),
     rootTag,
@@ -493,6 +584,7 @@ export function parseReplayXml(xml: string): ReplayModel {
     playerNamesById: playerNames.playerNamesById,
     turns,
     unknownCodes: structured.unknownCodes,
+    parserDiagnostics,
     raw: rootNode
   };
 }

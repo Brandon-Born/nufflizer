@@ -1,5 +1,7 @@
 import type { AnalysisResult } from "@/domain/analysis/types";
 import { summarizeMatch } from "@/domain/analysis/summarizeMatch";
+import { sanitizeCoachingText } from "@/domain/coaching/languageGuard";
+import { buildNoMajorIssuesText, buildPriorityText, buildSimpleHeadline } from "@/domain/coaching/templates";
 
 export type CoachingPriority = {
   id: string;
@@ -7,6 +9,7 @@ export type CoachingPriority = {
   severity: "low" | "medium" | "high";
   category: string;
   score: number;
+  impactScore: number;
   text: string;
 };
 
@@ -17,6 +20,7 @@ export type CoachingReport = {
     turnNumber: number;
     category: string;
     severity: "low" | "medium" | "high";
+    impactScore: number;
     happened: string;
     riskyBecause: string;
     saferAlternative: string;
@@ -30,60 +34,47 @@ export type CoachingReport = {
   }>;
 };
 
-const CATEGORY_WEIGHT: Record<string, number> = {
-  turnover_cause: 100,
-  scoring_window: 90,
-  reroll_timing: 80,
-  ball_safety: 75,
-  cage_safety: 70,
-  blitz_value: 65,
-  surf_risk: 60,
-  kickoff_setup: 55,
-  action_ordering: 50,
-  foul_timing: 45,
-  screen_lanes: 40
-};
+function sortByImpact<T extends { impactScore: number; turnNumber?: number }>(items: T[]): T[] {
+  return [...items].sort((a, b) => {
+    if (b.impactScore !== a.impactScore) {
+      return b.impactScore - a.impactScore;
+    }
 
-function severityScore(severity: CoachingPriority["severity"]): number {
-  if (severity === "high") {
-    return 300;
-  }
-
-  if (severity === "medium") {
-    return 200;
-  }
-
-  return 100;
+    const aTurn = a.turnNumber ?? Number.MAX_SAFE_INTEGER;
+    const bTurn = b.turnNumber ?? Number.MAX_SAFE_INTEGER;
+    return aTurn - bTurn;
+  });
 }
 
 export function renderCoaching(analysis: AnalysisResult): CoachingReport {
-  const headline = summarizeMatch(analysis);
+  const headline = sanitizeCoachingText(buildSimpleHeadline(summarizeMatch(analysis)));
 
-  const priorities = analysis.findings
+  const priorities = sortByImpact(analysis.findings)
     .map((finding) => {
-      const turnRef = finding.turnNumber ? `Turn ${finding.turnNumber}` : "Match";
-      const score = severityScore(finding.severity) + (CATEGORY_WEIGHT[finding.category] ?? 0);
+      const text = sanitizeCoachingText(buildPriorityText(finding.turnNumber, finding.recommendation));
 
       return {
         id: finding.id,
         turnNumber: finding.turnNumber,
         severity: finding.severity,
         category: finding.category,
-        score,
-        text: `${turnRef}: ${finding.recommendation}`
+        score: finding.impactScore,
+        impactScore: finding.impactScore,
+        text
       } satisfies CoachingPriority;
     })
-    .sort((a, b) => b.score - a.score)
     .slice(0, 5);
 
   if (priorities.length === 0) {
+    const noMajorIssuesText = sanitizeCoachingText(buildNoMajorIssuesText());
     priorities.push({
       id: "no-major-issues",
       turnNumber: undefined,
       severity: "low",
       category: "action_ordering",
       score: 0,
-      text: "No major mistakes were found in this replay. Keep practicing the same safe turn order."
+      impactScore: 0,
+      text: noMajorIssuesText
     });
   }
 
@@ -91,9 +82,10 @@ export function renderCoaching(analysis: AnalysisResult): CoachingReport {
     turnNumber: advice.turnNumber,
     category: advice.category,
     severity: advice.severity,
-    happened: advice.happened,
-    riskyBecause: advice.riskyBecause,
-    saferAlternative: advice.saferAlternative,
+    impactScore: advice.impactScore,
+    happened: sanitizeCoachingText(advice.happened),
+    riskyBecause: sanitizeCoachingText(advice.riskyBecause),
+    saferAlternative: sanitizeCoachingText(advice.saferAlternative),
     confidence: advice.confidence,
     evidence: advice.evidence
   }));

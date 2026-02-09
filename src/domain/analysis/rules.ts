@@ -1,5 +1,12 @@
 import type { AnalysisFinding, TeamContext, TurnAdvice } from "@/domain/analysis/types";
 import type { ReplayEvent, ReplayModel, ReplayTurn } from "@/domain/replay/types";
+import {
+  evaluateEarlyRiskOrder,
+  evaluateFoulOvercommit,
+  evaluateHandoffProtection,
+  evaluatePickupTiming,
+  evaluateRedZoneClock
+} from "@/domain/analysis/rules/index";
 
 const SOURCE_TAG_LABELS: Record<string, string> = {
   ResultRoll: "a dice roll",
@@ -16,6 +23,13 @@ const SOURCE_TAG_LABELS: Record<string, string> = {
 
 function findingId(prefix: string, turn: number): string {
   return `${prefix}-turn-${turn}`;
+}
+
+function createFinding(input: Omit<AnalysisFinding, "impactScore">): AnalysisFinding {
+  return {
+    ...input,
+    impactScore: 0
+  };
 }
 
 function confidenceFromSeverity(severity: AnalysisFinding["severity"]): TurnAdvice["confidence"] {
@@ -35,6 +49,7 @@ function toTurnAdvice(finding: AnalysisFinding): TurnAdvice {
     turnNumber: finding.turnNumber ?? 0,
     category: finding.category,
     severity: finding.severity,
+    impactScore: finding.impactScore,
     happened: finding.title,
     riskyBecause: finding.detail,
     saferAlternative: finding.recommendation,
@@ -196,7 +211,7 @@ export function evaluateTurnoverCause(replay: ReplayModel, context: TeamContext)
 
     const happened = describeReplayEvent(replay, likelyCauseEvent, activeTeamId);
 
-    findings.push({
+    findings.push(createFinding({
       id: findingId("turnover-cause", turn.turnNumber),
       severity: "high",
       category: "turnover_cause",
@@ -215,7 +230,7 @@ export function evaluateTurnoverCause(replay: ReplayModel, context: TeamContext)
           code: turn.endTurnReasonLabel ?? String(turn.endTurnReason ?? "unknown")
         }
       ]
-    });
+    }));
   }
 
   return findings;
@@ -234,7 +249,7 @@ export function evaluateActionOrdering(replay: ReplayModel, context: TeamContext
       continue;
     }
 
-    findings.push({
+    findings.push(createFinding({
       id: findingId("action-order", turn.turnNumber),
       severity: turn.possibleTurnover ? "high" : "medium",
       category: "action_ordering",
@@ -252,7 +267,7 @@ export function evaluateActionOrdering(replay: ReplayModel, context: TeamContext
           detail: `risky_before_ball:${riskyBeforeBall}`
         }
       ]
-    });
+    }));
   }
 
   return limitFindings(findings);
@@ -280,7 +295,7 @@ export function evaluateRerollTiming(replay: ReplayModel, context: TeamContext):
       continue;
     }
 
-    findings.push({
+    findings.push(createFinding({
       id: findingId("reroll-timing", turn.turnNumber),
       severity: turn.possibleTurnover ? "high" : "medium",
       category: "reroll_timing",
@@ -305,7 +320,7 @@ export function evaluateRerollTiming(replay: ReplayModel, context: TeamContext):
           detail: `risky_actions_after_reroll:${riskyAfterReroll}`
         }
       ]
-    });
+    }));
   }
 
   return limitFindings(findings);
@@ -347,7 +362,7 @@ export function evaluateBallSafety(replay: ReplayModel, context: TeamContext): A
           ? `Turn ${turn.turnNumber}: opponent took the ball from ${previousName}`
           : `Turn ${turn.turnNumber}: ball moved from ${previousName} to ${nextName}`;
 
-      findings.push({
+      findings.push(createFinding({
         id: findingId("ball-safety", turn.turnNumber),
         severity: previousCarrierOnTeam === true && currentCarrierOnTeam === false ? "high" : "medium",
         category: "ball_safety",
@@ -369,7 +384,7 @@ export function evaluateBallSafety(replay: ReplayModel, context: TeamContext): A
             detail: `carrier:${previousCarrier}->${turn.ballCarrierPlayerId}`
           }
         ]
-      });
+      }));
     }
 
     if (turn.ballCarrierPlayerId) {
@@ -401,7 +416,7 @@ export function evaluateCageSafety(replay: ReplayModel, context: TeamContext): A
       continue;
     }
 
-    findings.push({
+    findings.push(createFinding({
       id: findingId("cage-safety", turn.turnNumber),
       severity: turn.possibleTurnover ? "high" : "medium",
       category: "cage_safety",
@@ -419,7 +434,7 @@ export function evaluateCageSafety(replay: ReplayModel, context: TeamContext): A
           detail: `support_actions:${supportActions}|risky_actions:${riskyActions}`
         }
       ]
-    });
+    }));
   }
 
   return limitFindings(findings);
@@ -440,7 +455,7 @@ export function evaluateScreenLanes(replay: ReplayModel, context: TeamContext): 
       continue;
     }
 
-    findings.push({
+    findings.push(createFinding({
       id: findingId("screen-lanes", turn.turnNumber),
       severity: "medium",
       category: "screen_lanes",
@@ -454,7 +469,7 @@ export function evaluateScreenLanes(replay: ReplayModel, context: TeamContext): 
           detail: `dodges:${dodges}|contact_actions:${blockAndBlitz}`
         }
       ]
-    });
+    }));
   }
 
   return limitFindings(findings);
@@ -481,7 +496,7 @@ export function evaluateBlitzValue(replay: ReplayModel, context: TeamContext): A
       continue;
     }
 
-    findings.push({
+    findings.push(createFinding({
       id: findingId("blitz-value", turn.turnNumber),
       severity: turn.possibleTurnover ? "high" : "medium",
       category: "blitz_value",
@@ -502,7 +517,7 @@ export function evaluateBlitzValue(replay: ReplayModel, context: TeamContext): A
           detail: `blitz:${blitzCount}|block:${blockCount}|casualty:${casualtyCount}`
         }
       ]
-    });
+    }));
   }
 
   return limitFindings(findings);
@@ -527,7 +542,7 @@ export function evaluateFoulTiming(replay: ReplayModel, context: TeamContext): A
 
     const foulEvent = turn.events.find((event) => event.type === "foul");
 
-    findings.push({
+    findings.push(createFinding({
       id: findingId("foul-timing", turn.turnNumber),
       severity: turn.possibleTurnover ? "high" : "medium",
       category: "foul_timing",
@@ -545,7 +560,7 @@ export function evaluateFoulTiming(replay: ReplayModel, context: TeamContext): A
           detail: `foul_before_ball_safety:${String(foulBeforeBallSafety)}`
         }
       ]
-    });
+    }));
   }
 
   return limitFindings(findings);
@@ -571,7 +586,7 @@ export function evaluateKickoffSetup(replay: ReplayModel, context: TeamContext):
       continue;
     }
 
-    findings.push({
+    findings.push(createFinding({
       id: findingId("kickoff-setup", turn.turnNumber),
       severity: "medium",
       category: "kickoff_setup",
@@ -585,7 +600,7 @@ export function evaluateKickoffSetup(replay: ReplayModel, context: TeamContext):
           detail: `blocks:${blocks}|blitzes:${blitzes}|dodges:${dodges}`
         }
       ]
-    });
+    }));
   }
 
   return limitFindings(findings, 2);
@@ -605,7 +620,7 @@ export function evaluateSurfRisk(replay: ReplayModel): AnalysisFinding[] {
       continue;
     }
 
-    findings.push({
+    findings.push(createFinding({
       id: findingId("surf-risk", turn.turnNumber),
       severity: turn.possibleTurnover ? "high" : "medium",
       category: "surf_risk",
@@ -623,7 +638,7 @@ export function evaluateSurfRisk(replay: ReplayModel): AnalysisFinding[] {
           detail: `pushes:${pushEvents.length}|dodges:${dodges}`
         }
       ]
-    });
+    }));
   }
 
   return limitFindings(findings, 3);
@@ -654,7 +669,7 @@ export function evaluateScoringWindow(replay: ReplayModel, context: TeamContext)
       continue;
     }
 
-    findings.push({
+    findings.push(createFinding({
       id: findingId("scoring-window", turn.turnNumber),
       severity: turn.possibleTurnover ? "high" : "medium",
       category: "scoring_window",
@@ -668,26 +683,33 @@ export function evaluateScoringWindow(replay: ReplayModel, context: TeamContext)
           detail: `late_turn_risky_actions:${riskyLateActions}|end_reason:${String(turn.endTurnReason ?? "unknown")}`
         }
       ]
-    });
+    }));
   }
 
   return limitFindings(findings, 3);
 }
 
-export function findingsToTurnAdvice(findings: AnalysisFinding[]): TurnAdvice[] {
-  const severityScore = { high: 3, medium: 2, low: 1 } as const;
+export function evaluateExpandedChecks(replay: ReplayModel, context: TeamContext): AnalysisFinding[] {
+  return [
+    ...evaluateEarlyRiskOrder(replay, context),
+    ...evaluatePickupTiming(replay, context),
+    ...evaluateHandoffProtection(replay, context),
+    ...evaluateFoulOvercommit(replay, context),
+    ...evaluateRedZoneClock(replay, context)
+  ];
+}
 
-  return findings
+export function findingsToTurnAdvice(findings: AnalysisFinding[]): TurnAdvice[] {
+  const prioritized = findings
     .filter((finding) => finding.turnNumber !== undefined)
     .sort((a, b) => {
-      const severityDelta = severityScore[b.severity] - severityScore[a.severity];
-      if (severityDelta !== 0) {
-        return severityDelta;
+      if (b.impactScore !== a.impactScore) {
+        return b.impactScore - a.impactScore;
       }
 
       return (a.turnNumber ?? 0) - (b.turnNumber ?? 0);
     })
-    .map(toTurnAdvice)
-    .sort((a, b) => a.turnNumber - b.turnNumber)
     .slice(0, 16);
+
+  return prioritized.map(toTurnAdvice).sort((a, b) => a.turnNumber - b.turnNumber);
 }

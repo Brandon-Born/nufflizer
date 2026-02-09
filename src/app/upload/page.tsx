@@ -6,6 +6,7 @@ type TurnRow = {
   turnNumber: number;
   category: string;
   severity: "low" | "medium" | "high";
+  impactScore: number;
   happened: string;
   riskyBecause: string;
   saferAlternative: string;
@@ -24,6 +25,7 @@ type PriorityRow = {
   severity: "low" | "medium" | "high";
   category: string;
   score: number;
+  impactScore: number;
   text: string;
 };
 
@@ -64,6 +66,10 @@ type ReportResponse = {
         code: number;
         occurrences: number;
       }>;
+      parserDiagnostics?: {
+        unknownCodeTotal: number;
+        unknownCodesByCategory: Record<"step" | "action" | "roll" | "end_turn_reason", number>;
+      };
     };
     teamReports: TeamReport[];
   };
@@ -372,9 +378,16 @@ export default function UploadPage() {
                 <h4 className="text-sm font-semibold text-amber-100">Top things to improve</h4>
                 <ul className="mt-2 space-y-2 text-sm text-amber-50/90">
                   {selectedTeamReport.coaching.priorities.map((priority) => (
-                    <li key={priority.id} className="flex items-start gap-2 rounded-md border border-amber-300/20 bg-black/20 px-3 py-2">
+                    <li
+                      key={priority.id}
+                      className="flex items-start gap-2 rounded-md border border-amber-300/20 bg-black/20 px-3 py-2"
+                      data-impact-score={priority.impactScore ?? priority.score}
+                    >
                       <span className={`mt-0.5 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${severityBadgeClass(priority.severity)}`}>
                         {priority.severity}
+                      </span>
+                      <span className="mt-0.5 inline-flex rounded-full border border-amber-200/40 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-100/90">
+                        impact {priority.impactScore ?? priority.score}
                       </span>
                       <span>{priority.text}</span>
                     </li>
@@ -407,7 +420,16 @@ export default function UploadPage() {
                         <th className="px-2 py-2">Turn</th>
                         <th className="px-2 py-2">What happened</th>
                         <th className="px-2 py-2">Severity</th>
-                        <th className="px-2 py-2">Confidence</th>
+                        <th className="px-2 py-2">
+                          Confidence{" "}
+                          <span
+                            className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-amber-200/50 text-[10px] text-amber-100/80"
+                            title="Confidence means how strong the replay clues were for this tip."
+                            aria-label="Confidence definition"
+                          >
+                            ?
+                          </span>
+                        </th>
                         <th className="px-2 py-2">Why this was risky</th>
                         <th className="px-2 py-2">Better play next time</th>
                         <th className="px-2 py-2">Replay clues</th>
@@ -453,7 +475,7 @@ export default function UploadPage() {
             </>
           )}
 
-          {report.replay.unknownCodes.length > 0 ? (
+          {(report.replay.parserDiagnostics?.unknownCodeTotal ?? report.replay.unknownCodes.length) > 0 ? (
             <div className="rounded-md border border-amber-300/30 bg-amber-900/20 p-3 text-xs text-amber-100">
               Some replay codes are still unknown. The parser handled this match, but code mapping can improve further.
             </div>

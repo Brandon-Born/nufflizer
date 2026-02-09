@@ -5,10 +5,10 @@ import { buildTimeline } from "@/domain/replay/buildTimeline";
 import type { ReplayModel, ReplayTurn } from "@/domain/replay/types";
 import { scopeReplayToTeam } from "@/server/services/analyzeReplay";
 
-function buildTurn(turnNumber: number, playerId: string): ReplayTurn {
+function buildTurn(turnNumber: number, playerId: string, teamId: string | undefined): ReplayTurn {
   return {
     turnNumber,
-    teamId: "0",
+    teamId,
     gamerId: "0",
     ballCarrierPlayerId: playerId,
     possibleTurnover: false,
@@ -16,8 +16,8 @@ function buildTurn(turnNumber: number, playerId: string): ReplayTurn {
     endTurnReasonLabel: undefined,
     finishingTurnType: undefined,
     events: [
-      { type: "dodge", sourceTag: "ResultRoll", playerId, teamId: "0" },
-      { type: "dodge", sourceTag: "ResultRoll", playerId, teamId: "0" }
+      { type: "dodge", sourceTag: "ResultRoll", playerId, teamId },
+      { type: "dodge", sourceTag: "ResultRoll", playerId, teamId }
     ],
     actionTexts: ["dodge"],
     eventCount: 2,
@@ -49,7 +49,7 @@ function buildReplay(turns: ReplayTurn[]): ReplayModel {
 
 describe("team scoping", () => {
   it("filters opponent-owned players and carrier data from the scoped replay", () => {
-    const replay = buildReplay([buildTurn(1, "3"), buildTurn(2, "3")]);
+    const replay = buildReplay([buildTurn(1, "3", "0"), buildTurn(2, "3", "0")]);
 
     const scoped = scopeReplayToTeam(replay, "1");
 
@@ -61,12 +61,22 @@ describe("team scoping", () => {
   });
 
   it("prevents opponent player names from appearing in scoped findings", () => {
-    const replay = buildReplay([buildTurn(1, "3"), buildTurn(2, "3")]);
+    const replay = buildReplay([buildTurn(1, "3", "0"), buildTurn(2, "3", "0")]);
     const scoped = scopeReplayToTeam(replay, "1");
 
     const timeline = buildTimeline(scoped);
     const analysis = analyzeReplayTimeline(scoped, timeline);
 
     expect(analysis.findings.some((finding) => finding.title.includes("Sir Chugs-a-Lot"))).toBe(false);
+  });
+
+  it("infers scoped turns even when turn.teamId is missing", () => {
+    const replay = buildReplay([buildTurn(1, "50", undefined), buildTurn(2, "50", undefined), buildTurn(3, "3", undefined)]);
+    const scoped = scopeReplayToTeam(replay, "1");
+
+    expect(scoped.turns.length).toBeGreaterThan(0);
+    expect(scoped.turns.every((turn) => turn.teamId === "1")).toBe(true);
+    expect(scoped.turns.some((turn) => turn.events.some((event) => event.playerId === "50"))).toBe(true);
+    expect(scoped.turns.every((turn) => turn.events.every((event) => event.playerId !== "3"))).toBe(true);
   });
 });

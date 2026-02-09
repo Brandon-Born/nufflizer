@@ -28,6 +28,8 @@ describe("parseReplayXml", () => {
     });
     expect(replay.turns[0]?.eventCount).toBeGreaterThanOrEqual(1);
     expect(replay.turns[0]?.actionTexts).toContain("turnover");
+    expect(replay.parserDiagnostics).toBeDefined();
+    expect(replay.parserDiagnostics?.turnAttribution.totalTurns).toBe(replay.turns.length);
   });
 
   it("parses basic explicit Team/Turn replay shape", () => {

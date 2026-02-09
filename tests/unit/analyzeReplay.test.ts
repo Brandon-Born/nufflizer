@@ -26,6 +26,9 @@ describe("analyzeReplayXml", () => {
     expect(report.coaching.priorities.length).toBeGreaterThan(0);
     expect(report.coaching.priorities[0]).toHaveProperty("severity");
     expect(report.coaching.priorities[0]).toHaveProperty("score");
+    expect(report.coaching.priorities[0]).toHaveProperty("impactScore");
+    expect(report.replay.parserDiagnostics).toBeDefined();
+    expect(report.replay.parserDiagnostics?.unknownCodeTotal).toBeGreaterThanOrEqual(0);
   });
 
   it("builds team-specific reports with coach turn numbers", () => {
@@ -38,6 +41,12 @@ describe("analyzeReplayXml", () => {
         expect(Math.max(...turns)).toBeLessThanOrEqual(16);
       }
       expect(["offense", "defense", "mixed"]).toContain(teamReport.analysis.context.mode);
+      expect(teamReport.parserDiagnostics).toBeDefined();
+      expect(
+        teamReport.coaching.priorities.every(
+          (priority, index, arr) => index === 0 || arr[index - 1]!.impactScore >= priority.impactScore
+        )
+      ).toBe(true);
     }
   });
 });

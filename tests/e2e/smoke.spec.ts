@@ -25,6 +25,20 @@ test("one-shot replay flow shows coaching advice", async ({ page }) => {
   await expect(page.getByText("Learning mode:")).toBeVisible();
   await expect(page.getByRole("columnheader", { name: "Confidence" })).toBeVisible();
   await expect(page.getByRole("columnheader", { name: "Replay clues" })).toBeVisible();
+  await expect(page.getByText(/ResultRoll/)).toHaveCount(0);
+
+  const impactRows = page.locator("[data-impact-score]");
+  const impactCount = await impactRows.count();
+  if (impactCount > 1) {
+    const values: number[] = [];
+    for (let index = 0; index < impactCount; index += 1) {
+      const value = Number((await impactRows.nth(index).getAttribute("data-impact-score")) ?? "0");
+      values.push(value);
+    }
+
+    const sorted = [...values].sort((a, b) => b - a);
+    expect(values).toEqual(sorted);
+  }
 
   await page.getByRole("button", { name: "Upload Another Replay" }).click();
   await expect(page.getByRole("heading", { name: "Match Coaching" })).toHaveCount(0);

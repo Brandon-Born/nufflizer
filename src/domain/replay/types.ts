@@ -21,6 +21,8 @@ export type ReplayEvent = {
   playerId?: string;
   targetId?: string;
   teamId?: string;
+  actorTeamId?: string;
+  actorTeamSource?: "explicit" | "player_map" | "turn_inferred";
   gamerId?: string;
   actionCode?: number;
   actionLabel?: string;
@@ -35,6 +37,8 @@ export type ReplayEvent = {
 export type ReplayTurn = {
   turnNumber: number;
   teamId?: string;
+  inferredTeamId?: string;
+  teamInferenceConfidence?: "low" | "medium" | "high";
   gamerId?: string;
   ballCarrierPlayerId?: string;
   possibleTurnover: boolean;
@@ -53,6 +57,26 @@ export type ReplayUnknownCode = {
   occurrences: number;
 };
 
+export type ReplayParserDiagnostics = {
+  unknownCodeTotal: number;
+  unknownCodesByCategory: Record<ReplayUnknownCode["category"], number>;
+  turnAttribution: {
+    totalTurns: number;
+    explicitTeamTurns: number;
+    inferredTeamTurns: number;
+    unresolvedTeamTurns: number;
+    highConfidenceInferences: number;
+    mediumConfidenceInferences: number;
+    lowConfidenceInferences: number;
+  };
+  eventAttribution: {
+    explicit: number;
+    player_map: number;
+    turn_inferred: number;
+    unresolved: number;
+  };
+};
+
 export type ReplayModel = {
   matchId: string;
   rootTag: string;
@@ -63,6 +87,7 @@ export type ReplayModel = {
   playerNamesById?: Record<string, string>;
   turns: ReplayTurn[];
   unknownCodes: ReplayUnknownCode[];
+  parserDiagnostics?: ReplayParserDiagnostics;
   raw: unknown;
 };
 

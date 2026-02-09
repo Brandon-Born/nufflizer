@@ -11,7 +11,12 @@ export type AnalysisCategory =
   | "foul_timing"
   | "kickoff_setup"
   | "surf_risk"
-  | "scoring_window";
+  | "scoring_window"
+  | "early_risk_order"
+  | "pickup_timing"
+  | "handoff_protection"
+  | "foul_overcommit"
+  | "red_zone_clock";
 
 export type AnalysisEvidence = {
   eventType?: string;
@@ -24,6 +29,7 @@ export type AnalysisFinding = {
   id: string;
   severity: AnalysisSeverity;
   category: AnalysisCategory;
+  impactScore: number;
   title: string;
   detail: string;
   recommendation: string;
@@ -35,6 +41,7 @@ export type TurnAdvice = {
   turnNumber: number;
   category: AnalysisCategory;
   severity: AnalysisSeverity;
+  impactScore: number;
   happened: string;
   riskyBecause: string;
   saferAlternative: string;

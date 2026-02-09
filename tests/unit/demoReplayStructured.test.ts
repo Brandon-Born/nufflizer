@@ -35,6 +35,14 @@ describe("demo replay structured extraction", () => {
 
       expect(replay.turns.some((turn) => turn.possibleTurnover)).toBe(true);
       expect(replay.turns.some((turn) => turn.ballCarrierPlayerId !== undefined)).toBe(true);
+      expect(replay.parserDiagnostics).toBeDefined();
+      expect(replay.parserDiagnostics!.unknownCodeTotal).toBeLessThanOrEqual(5);
+      expect(replay.parserDiagnostics!.turnAttribution.totalTurns).toBe(replay.turns.length);
+      const attributedEvents =
+        replay.parserDiagnostics!.eventAttribution.explicit +
+        replay.parserDiagnostics!.eventAttribution.player_map +
+        replay.parserDiagnostics!.eventAttribution.turn_inferred;
+      expect(attributedEvents).toBeGreaterThan(0);
     });
 
     it(`builds timeline metrics from ${replayName}`, () => {
@@ -63,7 +71,10 @@ describe("demo replay structured extraction", () => {
       expect(firstTeam!.coaching.turnByTurn.every((turn) => ["low", "medium", "high"].includes(turn.confidence))).toBe(true);
       expect(firstTeam!.coaching.turnByTurn.every((turn) => !/Result[A-Za-z]+/.test(turn.happened))).toBe(true);
       expect(firstTeam!.coaching.priorities.every((priority) => ["low", "medium", "high"].includes(priority.severity))).toBe(true);
-      expect(firstTeam!.coaching.priorities.every((priority, index, arr) => index === 0 || arr[index - 1]!.score >= priority.score)).toBe(true);
+      expect(firstTeam!.coaching.priorities.every((priority) => priority.impactScore >= 0)).toBe(true);
+      expect(firstTeam!.coaching.priorities.every((priority, index, arr) => index === 0 || arr[index - 1]!.impactScore >= priority.impactScore)).toBe(
+        true
+      );
     });
   }
 

@@ -40,6 +40,14 @@ These notes summarize observed structure from sanitized demo replay files:
 7. `possible turnover`:
    - `EventEndTurn` with `Reason != 1`
 
+## Mapping Provenance Notes
+
+1. The mapping tables in `src/domain/replay/mappings.ts` are based on:
+   - observed demo replay codes from `demo1.bbr`, `demo2.bbr`, and `demo3.bbr`;
+   - existing parser behavior that already classifies major event chains correctly.
+2. Additional labels were added for common BB3 action/step/roll families so unknown-code diagnostics remain stable as coverage expands.
+3. Code labels that are not yet behaviorally interpreted are intentionally descriptive placeholders and are only used for diagnostics/evidence.
+
 ## Observed Code Ranges
 
 Across the three demo replays:
@@ -50,4 +58,3 @@ Across the three demo replays:
 4. Additional observed `Action` values: `4`, `5`, `6`, `15`, `16`.
 
 These extra codes are not fully mapped yet and should be refined as more replay coverage is added.
-
