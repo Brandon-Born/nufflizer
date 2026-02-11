@@ -247,3 +247,43 @@ Explicit handoff next steps:
 1. Add fixture coverage for roll types `42` and `70` and only promote to explicit when deterministic thresholds are proven.
 2. Expand helper copy with concise per-category examples to improve novice readability.
 3. Continue append-only logging for each implementation milestone.
+
+## 2026-02-11 11:29 - Normalization hardening and parity checks
+Goal:
+1. Implement remaining plan slice for normalization transparency, argue-edge coverage, and cross-surface parity confidence.
+
+Changes made (files):
+1. Domain + types:
+- `src/domain/nufflizer/analyzeLuck.ts`
+- `src/domain/nufflizer/types.ts`
+2. CLI/UI explainability:
+- `src/cli/nufflizier.ts`
+- `src/app/nufflizier/NufflizierAnalyzer.tsx`
+3. Tests + fixtures:
+- `tests/unit/nufflizierProbability.test.ts`
+- `tests/unit/nufflizierNormalization.test.ts`
+- `tests/unit/nufflizierCliParity.test.ts`
+- `tests/e2e/smoke.spec.ts`
+- `tests/fixtures/models/argue-edge-replay.json`
+4. Docs/handoff:
+- `docs/PROJECT_PLAN.md`
+- `docs/PROJECT_BLUEPRINT.md`
+- `docs/REPLAY_INVESTIGATION.md`
+- `docs/CONVERSION_LOG.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+Commands run + outcomes:
+1. `corepack pnpm typecheck` -> passed.
+2. `corepack pnpm lint` -> passed.
+3. `corepack pnpm test` -> passed (17 files, 55 tests).
+4. `corepack pnpm build` -> passed.
+5. `corepack pnpm test:e2e` -> passed.
+
+Regressions/known gaps:
+1. `argue_call` variants `rollType=42` and `rollType=70` remain fallback until deterministic semantics are confirmed.
+2. Legacy coaching stack remains `legacy-kept` under `gate` policy.
+
+Explicit handoff next steps:
+1. Gather replay evidence for `rollType=42` and `70` to decide explicit promotion.
+2. Continue test-suite rebalance toward Nufflizier-first coverage.
+3. Keep append-only handoff logs current with each implementation milestone.

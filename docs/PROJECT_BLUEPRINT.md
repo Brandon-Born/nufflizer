@@ -32,7 +32,7 @@ Output:
 - CLI `nufflizier analyze`
 2. Parser + attribution foundation is production-usable for replay fixtures.
 3. Luck analysis domain exists (`src/domain/nufflizer/*`) with normalization, probability, and scoring.
-4. Report now includes explainability metadata (`explicit` vs `fallback`, coverage metrics, and “how scored” summaries).
+4. Report now includes explainability metadata (`explicit` vs `fallback`, coverage metrics, “how scored” summaries, and normalization flags for ambiguous contexts).
 5. Legacy coaching modules still exist and are tested but are not the primary product path.
 6. CI-quality checks pass for lint, typecheck, test, build, and e2e smoke.
 

@@ -74,6 +74,10 @@ The Nufflizier probability engine now distinguishes explicit calculators from fa
    - Used when event family lacks explicit mapping or replay context is insufficient.
    - For `argue_call`, `RollType=42` and `RollType=70` currently remain fallback pending deterministic fixture evidence.
    - Fallback usage is reported in `LuckReport.coverage` and per-event `calculationMethod` / `calculationReason`.
+3. Argue-call variant matrix:
+   - `RollType=71`: explicit (supported and tested).
+   - `RollType=42`: fallback (insufficient deterministic semantics).
+   - `RollType=70`: fallback (insufficient deterministic semantics).
 3. Transparency requirement:
    - Every scored event must indicate whether it used `explicit` or `fallback` calculation.
    - Coverage rate must be surfaced to UI and CLI users.

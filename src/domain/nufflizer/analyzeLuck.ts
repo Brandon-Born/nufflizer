@@ -274,6 +274,29 @@ function buildNormalizedEvent(
   const outcomeCode = toNumber(payload?.Outcome);
   const { rerollAvailable, rerollUsed } = extractRerollFlags(turnEvents, eventIndex);
   const inferredRerollAvailable = rerollAvailable || skillsUsed.length > 0;
+  const normalizationFlags: string[] = [];
+  const normalizationNotes: string[] = [];
+
+  if (event.actorTeamId && event.teamId && event.actorTeamId !== event.teamId) {
+    normalizationFlags.push("ambiguous_team_attribution");
+    normalizationNotes.push(`actorTeamId ${event.actorTeamId} differs from teamId ${event.teamId}`);
+  }
+
+  if (difficulty === undefined && requirement === undefined) {
+    normalizationFlags.push("missing_target_threshold");
+    normalizationNotes.push("difficulty and requirement were both missing; fallback target handling applied");
+  }
+
+  if (dice.length > 0 && dieTypes.some((dieType) => dieType === 0)) {
+    normalizationFlags.push("insufficient_dice_metadata");
+    normalizationNotes.push("one or more dice were missing die type; default die sides were inferred");
+  }
+
+  if (!rerollAvailable && skillsUsed.length > 0) {
+    normalizationFlags.push("inferred_reroll_from_skill_only");
+    normalizationNotes.push("reroll availability inferred from skill usage without explicit reroll question");
+  }
+
   const probability = computeProbabilityForEvent(type, {
     rollType,
     requirement,
@@ -337,7 +360,9 @@ function buildNormalizedEvent(
       modifiersSum: modifiers.reduce((sum, value) => sum + value, 0),
       rerollAvailable: inferredRerollAvailable,
       rerollUsed,
-      skillsUsed
+      skillsUsed,
+      normalizationFlags,
+      normalizationNotes
     }
   };
 }

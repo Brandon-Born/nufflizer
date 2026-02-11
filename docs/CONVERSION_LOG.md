@@ -164,3 +164,20 @@ Remaining follow-ups:
 Verification evidence:
 1. Full verification run passed: `corepack pnpm typecheck`, `corepack pnpm lint`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm test:e2e`.
 2. Updated tests cover explicit argue-call path and fallback roll-type reasoning.
+
+## 2026-02-11 - Edge normalization + parity coverage hardening
+Metadata: commit(s) `pending`; scope `Normalization transparency and test reliability`; status `partial`.
+
+Converted items:
+1. Added normalization metadata flags/notes in luck events for ambiguous attribution, missing targets, skill-only reroll inference, and incomplete dice metadata.
+2. Added argue-call edge fixture coverage for `rollType=42` and `rollType=70` while keeping both fallback-tagged by design.
+3. Added CLI/API parity test to verify stable verdict and aggregate consistency for the same replay input.
+4. Expanded explainability copy in UI and CLI with category-level examples for non-statistics readability.
+
+Remaining follow-ups:
+1. Promote argue-call variants (`42`, `70`) to explicit only after deterministic replay evidence is proven.
+2. Continue rebalancing suite emphasis toward Nufflizier while preserving legacy safety tests.
+
+Verification evidence:
+1. Validation commands passed: `corepack pnpm typecheck`, `corepack pnpm lint`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm test:e2e`.
+2. New tests/fixtures: `tests/unit/nufflizierNormalization.test.ts`, `tests/unit/nufflizierCliParity.test.ts`, `tests/fixtures/models/argue-edge-replay.json`.

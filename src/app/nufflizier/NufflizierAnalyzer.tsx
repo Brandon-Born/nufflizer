@@ -270,6 +270,10 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
               <li>
                 Explicit means we have a dedicated calculator for that roll family; fallback means we still scored it, but with generic odds.
               </li>
+              <li>
+                Category examples: block (dice faces), armor/injury (target rolls), dodge/ball handling (agility checks), argue call (ref
+                call roll).
+              </li>
             </ul>
           </section>
 

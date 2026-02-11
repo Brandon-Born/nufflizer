@@ -21,6 +21,8 @@ export type LuckEventMetadata = {
   rerollAvailable?: boolean;
   rerollUsed?: boolean;
   skillsUsed?: number[];
+  normalizationFlags?: string[];
+  normalizationNotes?: string[];
 };
 
 export type LuckEvent = {

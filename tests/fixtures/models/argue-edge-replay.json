@@ -1,0 +1,98 @@
+{
+  "matchId": "argue-edge-001",
+  "rootTag": "Replay",
+  "teams": [
+    { "id": "home", "name": "Home Team" },
+    { "id": "away", "name": "Away Team" }
+  ],
+  "turns": [
+    {
+      "turnNumber": 1,
+      "teamId": "home",
+      "inferredTeamId": "home",
+      "teamInferenceConfidence": "high",
+      "gamerId": "0",
+      "possibleTurnover": false,
+      "actionTexts": ["argue"],
+      "eventCount": 1,
+      "raw": {},
+      "events": [
+        {
+          "type": "roll",
+          "sourceTag": "ResultRoll",
+          "sourceLabel": "argue_call",
+          "teamId": "home",
+          "actorTeamId": "home",
+          "actorTeamSource": "explicit",
+          "rollType": 71,
+          "rollLabel": "secret_weapon",
+          "payload": {
+            "Requirement": 4,
+            "Difficulty": 4,
+            "Outcome": 1,
+            "Dice": { "Die": { "Value": 5 } }
+          }
+        }
+      ]
+    },
+    {
+      "turnNumber": 2,
+      "teamId": "away",
+      "inferredTeamId": "away",
+      "teamInferenceConfidence": "high",
+      "gamerId": "1",
+      "possibleTurnover": false,
+      "actionTexts": ["argue"],
+      "eventCount": 1,
+      "raw": {},
+      "events": [
+        {
+          "type": "roll",
+          "sourceTag": "ResultRoll",
+          "sourceLabel": "argue_call",
+          "teamId": "away",
+          "actorTeamId": "away",
+          "actorTeamSource": "explicit",
+          "rollType": 42,
+          "rollLabel": "secret_weapon_sent_off",
+          "payload": {
+            "Requirement": 4,
+            "Difficulty": 4,
+            "Outcome": 0,
+            "Dice": { "Die": { "DieType": 0, "Value": 2 } }
+          }
+        }
+      ]
+    },
+    {
+      "turnNumber": 3,
+      "teamId": "away",
+      "inferredTeamId": "away",
+      "teamInferenceConfidence": "high",
+      "gamerId": "1",
+      "possibleTurnover": false,
+      "actionTexts": ["argue"],
+      "eventCount": 1,
+      "raw": {},
+      "events": [
+        {
+          "type": "roll",
+          "sourceTag": "ResultRoll",
+          "sourceLabel": "argue_call",
+          "teamId": "away",
+          "actorTeamId": "home",
+          "actorTeamSource": "explicit",
+          "rollType": 70,
+          "rollLabel": "bribe",
+          "payload": {
+            "Outcome": 1,
+            "Dice": { "Die": { "Value": 4 } },
+            "Modifiers": { "Modifier": { "Value": 1, "Skill": 12 } }
+          }
+        }
+      ]
+    }
+  ],
+  "unknownCodes": [],
+  "raw": {}
+}

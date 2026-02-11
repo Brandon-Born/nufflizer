@@ -131,7 +131,7 @@ describe("nufflizier probability engine", () => {
   });
 
   it("falls back when no explicit mapping is available", () => {
-    const fallback = computeProbabilityForEvent("argue_call", {
+    const fallback42 = computeProbabilityForEvent("argue_call", {
       rollType: 42,
       requirement: 4,
       difficulty: 4,
@@ -139,9 +139,19 @@ describe("nufflizier probability engine", () => {
       dieTypes: [0],
       rerollAvailable: false
     });
+    const fallback70 = computeProbabilityForEvent("argue_call", {
+      rollType: 70,
+      requirement: 3,
+      difficulty: 3,
+      dice: [2],
+      dieTypes: [0],
+      rerollAvailable: false
+    });
 
-    expect(fallback.calculationMethod).toBe("fallback");
-    expect(fallback.calculationReason).toMatch(/fallback/i);
-    expect(fallback.calculationReason).toMatch(/rollType 42/i);
+    expect(fallback42.calculationMethod).toBe("fallback");
+    expect(fallback42.calculationReason).toMatch(/fallback/i);
+    expect(fallback42.calculationReason).toMatch(/rollType 42/i);
+    expect(fallback70.calculationMethod).toBe("fallback");
+    expect(fallback70.calculationReason).toMatch(/rollType 70/i);
   });
 });

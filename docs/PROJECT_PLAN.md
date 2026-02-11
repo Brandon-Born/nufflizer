@@ -48,7 +48,7 @@ Status taxonomy: `converted`, `partial`, `legacy-kept`, `pending`, `blocked`.
 | API: `/api/replay` | `legacy-kept` | Coaching endpoint retained; not primary product surface. | `src/app/api/replay/route.ts` |
 | UI routes (`/nufflizier`, `/upload`) | `converted` | Upload + verdict + team cards + key moments + filters + JSON export. | `src/app/nufflizier/*`, `src/app/upload/page.tsx` |
 | CLI entrypoint | `converted` | Text and JSON modes using shared report contract. | `src/cli/nufflizier.ts`, `bin/nufflizier` |
-| Automated tests | `partial` | Nufflizier unit/api/e2e coverage now includes explicit-vs-fallback coverage and explainability assertions; legacy coaching tests still dominate total suite and should be rebalanced. | `tests/unit/*`, `tests/e2e/smoke.spec.ts` |
+| Automated tests | `partial` | Nufflizier unit/api/e2e coverage now includes explicit-vs-fallback coverage, normalization metadata assertions, and CLI/API parity checks; legacy coaching tests still dominate total suite and should be rebalanced. | `tests/unit/*`, `tests/e2e/smoke.spec.ts` |
 | Documentation system | `partial` | README is updated; handoff docs and blueprint/agent alignment introduced in this pass. | `README.md`, `docs/*`, `AGENTS.md` |
 
 ## Prioritized Backlog
@@ -70,15 +70,15 @@ Status taxonomy: `converted`, `partial`, `legacy-kept`, `pending`, `blocked`.
 ### P1 - Legacy Surface Decision and Cleanup Plan
 - Why it matters: Keeping both Nufflizier and coaching pipelines increases maintenance burden and ambiguity for new agents.
 - Concrete tasks:
-1. Decide whether `/api/replay` remains indefinitely or moves behind explicit legacy mode.
-2. Add docs-level policy for legacy modules (`legacy-kept` vs scheduled removal).
-3. If removal chosen, create deprecation checklist and test migration plan.
+1. Apply the decided `gate` policy consistently in docs, tests, and contributor guidance.
+2. Add explicit triggers/checklist for future removal re-evaluation.
+3. Prevent new feature work from landing in legacy coaching modules unless explicitly requested.
 - Acceptance criteria:
-1. One clear decision documented in `docs/PROJECT_PLAN.md` and `docs/PROJECT_BLUEPRINT.md`.
-2. Legacy modules are either tagged with removal milestone or explicitly maintained with rationale.
+1. `gate` policy is consistently documented in `docs/PROJECT_PLAN.md`, `docs/PROJECT_BLUEPRINT.md`, and logs.
+2. Legacy modules are tagged with re-evaluation criteria and rationale.
 3. No conflicting product messaging across docs/UI.
 - Dependencies:
-- Product owner decision on backward compatibility needs.
+- Product owner decision when re-evaluating removal milestone.
 
 ### P2 - Reporting Explainability and UX Calibration
 - Why it matters: Users can only trust a for-fun analyzer if the “why” is transparent and understandable without statistics training.
@@ -96,9 +96,9 @@ Status taxonomy: `converted`, `partial`, `legacy-kept`, `pending`, `blocked`.
 - Stable metadata contract from `LuckEvent`.
 
 ## Next 3 Agent Tasks
-1. Add replay fixtures and unit cases covering argue-call edge variants (`rollType=42`, `70`) and keep unsupported variants explicitly fallback-tagged.
-2. Expand plain-language explainability copy from baseline helper text into concise per-category examples (block/armor/injury/dodge/ball/argue).
-3. Rebalance tests so Nufflizier-specific suite weight grows relative to legacy coaching tests, while preserving `legacy-kept` safety checks.
+1. Evaluate deterministic semantics for argue-call `rollType=42` and `rollType=70` using additional replay evidence before promoting either from fallback to explicit.
+2. Rebalance tests so Nufflizier-specific suite weight grows relative to legacy coaching tests, while preserving `legacy-kept` safety checks.
+3. Expand explainability UX copy with concise per-category examples in both UI and CLI as fixture coverage grows.
 
 ## Risks/Dependencies
 1. Replay payload variability across BB3 versions may reduce mapping confidence for less common events.
@@ -114,3 +114,4 @@ Done means all are true:
 2. Fallback usage remains measurable and disclosed in report metadata and UI/CLI explainability views.
 3. Unit + integration + e2e checks pass in CI.
 4. `docs/CONVERSION_LOG.md` and `docs/IMPLEMENTATION_LOG.md` contain append-only entries for all changes and verification outcomes.
+5. Legacy `gate` policy is reflected consistently across plan/blueprint/handoff docs.
