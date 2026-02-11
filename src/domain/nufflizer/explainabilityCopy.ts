@@ -10,5 +10,6 @@ export const CATEGORY_EXAMPLE_LINES = [
   "Injury: target roll for removal/severity outcomes.",
   "Dodge: agility-style roll to escape pressure.",
   "Ball handling: pickup/catch/pass/handoff style control rolls.",
-  "Argue call: referee call roll outcomes."
+  "Argue call: referee call roll outcomes.",
+  "Movement risk: 2+ movement/rush checks that can chain into consequence rolls on failure."
 ] as const;

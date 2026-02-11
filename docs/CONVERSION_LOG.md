@@ -289,3 +289,25 @@ Verification evidence:
 - `tests/unit/nufflizierScoring.test.ts`
 - `tests/unit/replayMappings.test.ts`
 - `tests/unit/nufflizierCoverageInventory.test.ts`
+
+## 2026-02-11 - RollType 1 promotion to movement-risk scoring
+Metadata: commit(s) `pending`; scope `Roll-family semantic resolution and scoring integration`; status `partial`.
+
+Converted items:
+1. Promoted `ResultRoll|1` from `excluded_deterministic` to `scored_deterministic` with scoring category `movement_risk`.
+2. Added new `movement_risk` category across core domain types, weight table, coverage maps, UI filters/cards, and explainability copy.
+3. Added strict evidence gating for rollType 1 with expanded fixture coverage (`demo1` through `demo11` plus `demo-goblins1`).
+4. Added machine-readable evidence artifacts and gate thresholds:
+- `tests/fixtures/evidence/rolltype1-expanded-summary.json`
+- `tests/fixtures/evidence/rolltype1-gate.json`
+5. Added rollType 1 evidence test suite enforcing deterministic invariants and snapshot parity:
+- `tests/unit/rollType1Evidence.test.ts`
+
+Remaining follow-ups:
+1. Resolve remaining high-impact excluded deterministic family `ResultRoll|67`.
+2. Continue semantic resolution for medium-frequency families (`7`, `33`, `88`) before promotion.
+3. Keep argue-call variants `42` and `70` excluded until deterministic evidence improves.
+
+Verification evidence:
+1. Validation commands passed in this session: `corepack pnpm typecheck`, `corepack pnpm test`, `corepack pnpm lint`, `corepack pnpm build`, `corepack pnpm test:e2e`.
+2. Evidence summary in expanded fixture set confirms deterministic rollType 1 invariants (single die, target 2+, zero modifier sum, zero outcome-threshold mismatches).

@@ -135,6 +135,7 @@ describe("nufflizier scoring", () => {
     expect(report.howScoredSummary.length).toBeGreaterThan(0);
     expect(report.weightTable.block).toBeGreaterThan(0);
     expect(report.coverage.scoredByType.dodge).toBe(0);
+    expect(report.coverage.scoredByType.movement_risk).toBe(0);
     expect(report.coverage.scoredByType.armor_break).toBeGreaterThanOrEqual(0);
     expect(report.coverage.excludedByType.block).toBeGreaterThanOrEqual(0);
     expect(

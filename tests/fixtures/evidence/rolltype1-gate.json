@@ -1,0 +1,12 @@
+{
+  "minRollType1Samples": 200,
+  "requiredRequirement": 2,
+  "requiredDifficulty": 2,
+  "requiredDieType": 0,
+  "requiredDiceCount": 1,
+  "requiredModifierSum": 0,
+  "allowedStepTypes": [0, 1, 6, 31],
+  "failureFollowupAllowedRollTypes": [10, 87],
+  "minFailureFollowupRollType10Share": 0.9,
+  "maxOutcomeDiceThresholdMismatches": 0
+}

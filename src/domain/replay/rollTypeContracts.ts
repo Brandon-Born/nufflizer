@@ -1,7 +1,7 @@
 export type RollContractKind = "scored_deterministic" | "excluded_deterministic" | "randomizer" | "summary";
 export type RollConfidence = "high" | "medium" | "low";
 export type RollKnowledgeStatus = "known" | "ambiguous" | "unknown";
-export type RollScoringCategory = "block" | "armor_break" | "injury" | "argue_call";
+export type RollScoringCategory = "block" | "armor_break" | "injury" | "argue_call" | "movement_risk";
 
 export type RollTypeContract = {
   sourceTag: string;
@@ -18,7 +18,7 @@ function contractKey(sourceTag: string, rollType: number): string {
   return `${sourceTag}|${rollType}`;
 }
 
-// Evidence-based contracts from demo1/demo2/demo3/demo-goblins1 replay analysis.
+// Evidence-based contracts from the sanitized demo replay fixture set under demo-replays/.
 const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
   {
     sourceTag: "ResultBlockRoll",
@@ -167,11 +167,13 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
   {
     sourceTag: "ResultRoll",
     rollType: 1,
-    label: "deterministic_check_1_provisional",
-    kind: "excluded_deterministic",
-    confidence: "medium",
-    status: "ambiguous",
-    notes: "Deterministic check pattern, but semantics conflict with prior armor assumptions."
+    label: "movement_risk_check",
+    kind: "scored_deterministic",
+    confidence: "high",
+    status: "known",
+    scoringCategory: "movement_risk",
+    notes:
+      "Single-die 2+ movement-risk check with stable deterministic threshold and outcome semantics across expanded fixtures."
   },
   {
     sourceTag: "ResultRoll",

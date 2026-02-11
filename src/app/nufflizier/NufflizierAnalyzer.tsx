@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 
 import { CATEGORY_EXAMPLE_LINES, HOW_TO_READ_LINES } from "@/domain/nufflizer/explainabilityCopy";
 
-type LuckEventType = "block" | "armor_break" | "injury" | "dodge" | "ball_handling" | "argue_call";
+type LuckEventType = "block" | "armor_break" | "injury" | "dodge" | "ball_handling" | "argue_call" | "movement_risk";
 type LuckMomentTag = "blessed" | "shaftaroonie";
 type LuckScoringStatus = "scored" | "excluded";
 
@@ -74,6 +74,7 @@ type LuckReport = {
       dodge: number;
       ballHandling: number;
       argueCall: number;
+      movementRisk: number;
     };
     eventCount: number;
   }>;
@@ -88,7 +89,8 @@ const EVENT_TYPE_OPTIONS: Array<{ value: "all" | LuckEventType; label: string }>
   { value: "injury", label: "Injury" },
   { value: "dodge", label: "Dodge" },
   { value: "ball_handling", label: "Ball handling" },
-  { value: "argue_call", label: "Argue call" }
+  { value: "argue_call", label: "Argue call" },
+  { value: "movement_risk", label: "Movement risk" }
 ];
 
 const TAG_OPTIONS = [
@@ -306,7 +308,8 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
             </ul>
             <p className="mt-3 text-xs text-amber-100/80">
               Weights: block {report.weightTable.block}, armor {report.weightTable.armor_break}, injury {report.weightTable.injury}, dodge{" "}
-              {report.weightTable.dodge}, ball handling {report.weightTable.ball_handling}, argue {report.weightTable.argue_call}.
+              {report.weightTable.dodge}, ball handling {report.weightTable.ball_handling}, argue {report.weightTable.argue_call}, movement{" "}
+              {report.weightTable.movement_risk}.
             </p>
             <div className="mt-3 overflow-x-auto">
               <table className="min-w-full border-collapse text-xs text-amber-50/90">
@@ -358,6 +361,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                   <div>Dodge: {team.categoryScores.dodge.toFixed(2)}</div>
                   <div>Ball: {team.categoryScores.ballHandling.toFixed(2)}</div>
                   <div>Argue: {team.categoryScores.argueCall.toFixed(2)}</div>
+                  <div>Move risk: {team.categoryScores.movementRisk.toFixed(2)}</div>
                 </dl>
               </article>
             ))}

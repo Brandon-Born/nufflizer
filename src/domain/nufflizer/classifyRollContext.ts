@@ -30,7 +30,13 @@ function hasTargetThreshold(context: ClassificationContext): boolean {
 }
 
 function mapContractCategory(category: RollScoringCategory | undefined): LuckEventType | null {
-  if (category === "block" || category === "armor_break" || category === "injury" || category === "argue_call") {
+  if (
+    category === "block" ||
+    category === "armor_break" ||
+    category === "injury" ||
+    category === "argue_call" ||
+    category === "movement_risk"
+  ) {
     return category;
   }
 

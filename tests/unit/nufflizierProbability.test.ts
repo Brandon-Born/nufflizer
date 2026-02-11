@@ -18,6 +18,21 @@ describe("nufflizier probability engine", () => {
     expect(result.rerollAdjustedOdds).toBeCloseTo(0.5, 6);
   });
 
+  it("computes movement-risk odds as single-die target checks", () => {
+    const result = computeProbabilityForEvent({
+      eventType: "movement_risk",
+      rollType: 1,
+      requirement: 2,
+      difficulty: 2,
+      dice: [4],
+      dieTypes: [0],
+      rerollAvailable: false
+    });
+
+    expect(result.baseOdds).toBeCloseTo(5 / 6, 6);
+    expect(result.rerollAdjustedOdds).toBeCloseTo(5 / 6, 6);
+  });
+
   it("applies reroll probability boost", () => {
     const result = computeProbabilityForEvent({
       eventType: "dodge",

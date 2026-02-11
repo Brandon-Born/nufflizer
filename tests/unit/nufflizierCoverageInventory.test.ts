@@ -8,6 +8,7 @@ const REQUIRED_NUFFLIZIER_TESTS = [
   "tests/unit/nufflizierClassification.test.ts",
   "tests/unit/nufflizierScoring.test.ts",
   "tests/unit/nufflizierNormalization.test.ts",
+  "tests/unit/rollType1Evidence.test.ts",
   "tests/unit/rollTypeEvidenceMatrix.test.ts",
   "tests/unit/nufflizierApi.test.ts",
   "tests/unit/nufflizierCliParity.test.ts",

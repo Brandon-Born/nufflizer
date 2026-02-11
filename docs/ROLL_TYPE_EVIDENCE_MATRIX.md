@@ -35,7 +35,7 @@ Status meanings:
 | `ResultRoll|26` | 16 | 2 dice (dieType 1 + 0), target 0 | stepType 10 kickoff/opening chains | paired kickoff randomizer | high | known | exclude randomizer |
 | `ResultRoll|87` | 52 | 1 die, target 0, outcome 2 | repeated in chainsaw-like chains, often stepType 31 | chain randomizer | high | known | exclude randomizer |
 | `ResultRoll|30` | 1 | 1 die, target 6, outcome 2 | one-off in catch/removal chain | special randomizer 30 | medium | ambiguous | exclude randomizer |
-| `ResultRoll|1` | 99 | 1 die, target 2 | appears in block/damage chain but semantics conflict with prior label | deterministic check 1 | medium | ambiguous | exclude deterministic |
+| `ResultRoll|1` | 99 | 1 die, target 2 | appears in movement-risk and block-adjacent chains with deterministic 2+ threshold | movement-risk check | high | known | score as movement_risk |
 | `ResultRoll|5` | 4 | 1 die, target 3-5 | low-frequency special chain | deterministic check 5 | low | unknown | exclude deterministic |
 | `ResultRoll|6` | 1 | 1 die, target 6 | one-off special-action chain | deterministic check 6 | low | unknown | exclude deterministic |
 | `ResultRoll|7` | 14 | 1 die, target 2-6 | mixed step contexts with negative modifiers | deterministic check 7 | medium | ambiguous | exclude deterministic |
@@ -50,8 +50,36 @@ Status meanings:
 | `ResultRoll|88` | 6 | 1 die, target 4 | bomb/special-action chain | deterministic check 88 | medium | ambiguous | exclude deterministic |
 
 ## High-Impact Problem Roll Types (count x uncertainty)
-1. `ResultRoll|1` (99): high frequency, ambiguous semantics.
-2. `ResultRoll|67` (11): repeated setup pattern before `rollType 10`, semantics unclear.
-3. `ResultRoll|7` (14): repeated with mixed contexts and modifiers.
-4. `ResultRoll|33` (5): stable deterministic shape, unclear gameplay meaning.
-5. `ResultRoll|88` (6): repeated special-action chain check, unclear meaning.
+1. `ResultRoll|7` (58 in expanded fixtures): highest-volume unresolved deterministic family.
+2. `ResultRoll|33` (39 in expanded fixtures): large unresolved deterministic family.
+3. `ResultRoll|88` (18 in expanded fixtures): repeated unresolved special-action chain.
+4. `ResultRoll|67` (15 in expanded fixtures): repeated setup chain before `rollType 10`, semantics unclear.
+
+## RollType 1 Expanded Evidence (2026-02-11)
+Expanded fixtures analyzed:
+1. `demo-replays/demo-goblins1.bbr`
+2. `demo-replays/demo1.bbr` through `demo-replays/demo11.bbr`
+
+Evidence artifact:
+1. `tests/fixtures/evidence/rolltype1-expanded-summary.json`
+2. `tests/fixtures/evidence/rolltype1-gate.json`
+
+Observed movement-risk invariants for `ResultRoll|1`:
+1. 216 total occurrences across 12 fixtures; all 216 are now scored as `movement_risk`.
+2. Requirement and difficulty are always `2`.
+3. Dice shape is always a single die (`diceCount=1`) with `dieType=0`.
+4. Modifier sum is always `0`.
+5. Outcome/dice-threshold mismatch count is `0` (explicit outcome aligns with deterministic threshold resolution).
+6. Failures are followed by `ResultRoll|10` in 17/18 cases and `ResultRoll|87` in 1/18 cases.
+
+Remaining unresolved deterministic families in expanded fixtures:
+1. `ResultRoll|7` -> 58
+2. `ResultRoll|33` -> 39
+3. `ResultRoll|88` -> 18
+4. `ResultRoll|67` -> 15
+5. `ResultRoll|5` -> 12
+6. `ResultRoll|73` -> 7
+7. `ResultRoll|6` -> 6
+8. `ResultRoll|45` -> 5
+9. `ResultRoll|31` -> 4
+10. `ResultRoll|41` and `ResultRoll|43` and `ResultRoll|74` -> 2 each

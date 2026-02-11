@@ -64,6 +64,10 @@ function eventTypeLabel(type: LuckEventType): string {
     return "Argue the call";
   }
 
+  if (type === "movement_risk") {
+    return "Movement risk";
+  }
+
   return type[0].toUpperCase() + type.slice(1);
 }
 
@@ -504,7 +508,8 @@ function initialAggregate(teamId: string, teamName: string): LuckTeamAggregate {
       injury: 0,
       dodge: 0,
       ballHandling: 0,
-      argueCall: 0
+      argueCall: 0,
+      movementRisk: 0
     },
     eventCount: 0
   };
@@ -517,7 +522,8 @@ function initialCoverageByType(): Record<LuckEventType, number> {
     injury: 0,
     dodge: 0,
     ball_handling: 0,
-    argue_call: 0
+    argue_call: 0,
+    movement_risk: 0
   };
 }
 
@@ -660,6 +666,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       aggregate.categoryScores.ballHandling += event.weightedDelta;
     } else if (event.type === "argue_call") {
       aggregate.categoryScores.argueCall += event.weightedDelta;
+    } else if (event.type === "movement_risk") {
+      aggregate.categoryScores.movementRisk += event.weightedDelta;
     }
 
     const categoryWeight = LUCK_CATEGORY_WEIGHTS[event.type];
@@ -677,7 +685,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       injury: roundTo(teamAggregate.categoryScores.injury, 3),
       dodge: roundTo(teamAggregate.categoryScores.dodge, 3),
       ballHandling: roundTo(teamAggregate.categoryScores.ballHandling, 3),
-      argueCall: roundTo(teamAggregate.categoryScores.argueCall, 3)
+      argueCall: roundTo(teamAggregate.categoryScores.argueCall, 3),
+      movementRisk: roundTo(teamAggregate.categoryScores.movementRisk, 3)
     };
   }
 

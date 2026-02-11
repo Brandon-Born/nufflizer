@@ -548,3 +548,52 @@ Regressions/known gaps:
 Explicit handoff next steps:
 1. Prioritize semantic resolution for high-volume ambiguous families: `ResultRoll|1` and `ResultRoll|67`.
 2. Add additional replay fixtures covering special-action and bomb/chainsaw chains to lift medium-confidence families.
+
+## 2026-02-11 15:14 - RollType 1 movement-risk promotion
+Goal:
+1. Use expanded demo fixture evidence to resolve `ResultRoll|1` semantics and integrate it as scored luck context with strict validation gates.
+
+Changes made (files):
+1. Domain scoring contracts/types:
+- `src/domain/replay/rollTypeContracts.ts`
+- `src/domain/nufflizer/types.ts`
+- `src/domain/nufflizer/constants.ts`
+- `src/domain/nufflizer/classifyRollContext.ts`
+- `src/domain/nufflizer/probability.ts`
+- `src/domain/nufflizer/analyzeLuck.ts`
+- `src/domain/nufflizer/explainabilityCopy.ts`
+2. UI/content surfaces:
+- `src/app/nufflizier/NufflizierAnalyzer.tsx`
+- `src/app/page.tsx`
+3. Tests and fixtures:
+- `tests/unit/nufflizierClassification.test.ts`
+- `tests/unit/nufflizierProbability.test.ts`
+- `tests/unit/nufflizierScoring.test.ts`
+- `tests/unit/analyzeNufflizier.test.ts`
+- `tests/unit/nufflizierCoverageInventory.test.ts`
+- `tests/unit/rollType1Evidence.test.ts` (new)
+- `tests/fixtures/evidence/rolltype1-expanded-summary.json` (new)
+- `tests/fixtures/evidence/rolltype1-gate.json` (new)
+4. Handoff docs:
+- `docs/ROLL_TYPE_CODE_COVERAGE.md`
+- `docs/ROLL_TYPE_EVIDENCE_MATRIX.md`
+- `docs/REPLAY_INVESTIGATION.md`
+- `docs/PROJECT_PLAN.md`
+- `docs/CONVERSION_LOG.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+Commands run + outcomes:
+1. `corepack pnpm typecheck` -> initially failed on strict typing in `tests/unit/rollType1Evidence.test.ts`; passed after payload-shape narrowing fix.
+2. `corepack pnpm test` -> passed (24 files, 76 tests).
+3. `corepack pnpm lint` -> passed.
+4. `corepack pnpm build` -> passed.
+5. `corepack pnpm test:e2e` -> passed (1 test).
+
+Regressions/known gaps:
+1. `ResultRoll|67` remains unresolved and excluded deterministic.
+2. Argue variants `rollType=42` and `rollType=70` remain intentionally excluded pending deterministic evidence.
+
+Explicit handoff next steps:
+1. Run the same evidence-gate workflow for `ResultRoll|67` with expanded fixtures before any promotion.
+2. Decide whether `movement_risk` weight needs recalibration after larger replay corpus analysis.
+3. Keep roll-type evidence docs synchronized whenever demo fixture corpus changes.

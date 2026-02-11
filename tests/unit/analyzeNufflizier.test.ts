@@ -29,6 +29,7 @@ describe("analyzeNufflizerInput", () => {
       Object.values(report.coverage.excludedByType).reduce((sum, count) => sum + count, 0);
     expect(byTypeTotal).toBe(report.events.length);
     expect(report.coverage.scoredByType.argue_call).toBeGreaterThanOrEqual(1);
+    expect(report.coverage.scoredByType.movement_risk).toBeGreaterThanOrEqual(1);
     expect(report.howScoredSummary.length).toBeGreaterThan(0);
   });
 
@@ -55,6 +56,10 @@ describe("analyzeNufflizerInput", () => {
     expect(report.events.some((event) => event.type === "argue_call" && event.scoringStatus === "scored" && event.metadata.rollType === 71)).toBe(
       true
     );
+    expect(report.events.some((event) => event.type === "movement_risk" && event.scoringStatus === "scored" && event.metadata.rollType === 1)).toBe(
+      true
+    );
+    expect(report.coverage.excludedByReason["excluded: unsupported ResultRoll context for rollType 1"] ?? 0).toBe(0);
     expect(report.coverage.rollCandidates.scoredRate).toBeGreaterThan(report.coverage.allEvents.scoredRate);
     expect(report.coverage.excludedByReason["excluded: merged into block anchor"]).toBeGreaterThan(0);
   });

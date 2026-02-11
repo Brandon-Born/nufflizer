@@ -119,7 +119,13 @@ function computeBaseOdds(input: ProbabilityInput): ProbabilityResult {
   if (input.eventType === "armor_break" || input.eventType === "injury") {
     baseOdds = input.dice.length === 1 ? probabilityBySingleDieTarget(target, sidesByDie[0] ?? 6) : probabilityBySumTarget(target, sidesByDie);
     reason = "sum-target roll";
-  } else if (input.eventType === "block" || input.eventType === "dodge" || input.eventType === "ball_handling" || input.eventType === "argue_call") {
+  } else if (
+    input.eventType === "block" ||
+    input.eventType === "dodge" ||
+    input.eventType === "ball_handling" ||
+    input.eventType === "argue_call" ||
+    input.eventType === "movement_risk"
+  ) {
     baseOdds = input.dice.length === 1 ? probabilityBySingleDieTarget(target, sidesByDie[0] ?? 6) : probabilityByAnyDieTarget(target, sidesByDie);
     reason = input.dice.length === 1 ? "single-die target" : "multi-die any-success target";
   }

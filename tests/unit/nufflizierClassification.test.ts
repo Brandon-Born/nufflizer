@@ -49,7 +49,7 @@ describe("nufflizier roll-context classification", () => {
     expect(result.eventType).toBe("armor_break");
   });
 
-  it("keeps rollType 1 excluded until semantics are confirmed", () => {
+  it("scores rollType 1 as movement-risk context", () => {
     const result = classifyRollContext({
       sourceTag: "ResultRoll",
       stepType: 0,
@@ -59,9 +59,10 @@ describe("nufflizier roll-context classification", () => {
       diceCount: 1
     });
 
-    expect(result.scored).toBe(false);
+    expect(result.scored).toBe(true);
     expect(result.rollCandidate).toBe(true);
-    expect(result.reason).toMatch(/pending semantic confirmation/i);
+    expect(result.eventType).toBe("movement_risk");
+    expect(result.reason).toMatch(/movement_risk_check/i);
   });
 
   it("excludes randomizer families from roll-candidate coverage", () => {

@@ -13,7 +13,7 @@ export default function HomePage() {
           <h1 className="text-4xl font-black tracking-tight text-amber-100 md:text-5xl">Nufflizier</h1>
           <p className="max-w-3xl text-lg text-amber-50/90">
             Nufflizier parses BB3 replays and scores luck swings across key moments like blocks, dodges, armor breaks, injuries, ball
-            handling, and argue-the-call style events.
+            handling, movement risk checks, and argue-the-call style events.
           </p>
         </div>
         <div className="mx-auto rounded-2xl border border-amber-300/40 bg-black/30 p-3 shadow-lg md:mx-0">

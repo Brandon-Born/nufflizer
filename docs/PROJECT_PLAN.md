@@ -6,7 +6,7 @@ Last updated: 2026-02-11
 Nufflizier analyzes Blood Bowl 3 replay files (`.xml` and `.bbr`) and outputs a one-shot luck report that identifies:
 1. Which team was luckier overall.
 2. Where low-probability events succeeded and high-probability events failed.
-3. Category-level luck contributions (block, armor break, injury, dodge, ball handling, argue-call style events).
+3. Category-level luck contributions (block, armor break, injury, dodge, ball handling, movement risk, argue-call style events).
 4. A clear, plain-language “why” explanation so non-statistics users can understand how verdicts were produced.
 
 ## Transparency Principle
@@ -99,9 +99,9 @@ Current decision note:
 - Stable metadata contract from `LuckEvent`.
 
 ## Next 3 Agent Tasks
-1. Collect additional replay evidence for excluded roll families (argue variants and special-action chains), then promote deterministic contexts to scored.
+1. Collect additional replay evidence for remaining excluded roll families (`67`, `7`, `33`, `88`, plus one-offs), then promote deterministic contexts to scored.
 2. Continue test-suite rebalance by migrating more shared behavior checks to Nufflizier-named tests while keeping `test:legacy` safety coverage intact.
-3. Refine explainability wording around exclusion reasons for non-statistics users.
+3. Refine explainability wording for `movement_risk` and exclusion reasons for non-statistics users.
 
 ## Risks/Dependencies
 1. Replay payload variability across BB3 versions may reduce mapping confidence for less common events.
@@ -137,8 +137,20 @@ Done means all are true:
 - `docs/ROLL_TYPE_CODE_COVERAGE.md`
 2. Rebased deterministic scoring to high-confidence families only:
 - promoted `ResultRoll|10` into scored armor-like checks.
-- demoted uncertain deterministic families (including `ResultRoll|1`) to explicit excluded status.
+- promoted `ResultRoll|1` to scored `movement_risk` checks after expanded fixture validation.
 - excluded known randomizer families from roll-candidate denominator.
 3. Next milestone focus:
-1. Resolve highest-impact uncertain families (`ResultRoll|1`, `ResultRoll|67`) with additional fixture evidence.
+1. Resolve highest-impact uncertain families (`ResultRoll|7` -> 58, `ResultRoll|33` -> 39, then `ResultRoll|88` -> 18) with additional fixture evidence.
 2. Maintain one-to-one contract coverage for newly observed `sourceTag|rollType` pairs.
+
+## Status Update (2026-02-11, rollType 1 promotion with expanded fixtures)
+1. Fixture expansion:
+- Added demo replay coverage through `demo11.bbr` and validated rollType-1 evidence across 12 fixtures.
+- Captured reproducible evidence artifact and strict gate config:
+  - `tests/fixtures/evidence/rolltype1-expanded-summary.json`
+  - `tests/fixtures/evidence/rolltype1-gate.json`
+2. Scoring promotion:
+- Promoted `ResultRoll|1` from excluded deterministic to scored deterministic as `movement_risk`.
+- Added `movement_risk` category to domain types, weight table, coverage maps, UI filters/cards, and explainability copy.
+3. Verification:
+- Full validation passed (`pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm test:e2e`).

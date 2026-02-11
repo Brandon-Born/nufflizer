@@ -6,7 +6,8 @@ export const LUCK_CATEGORY_WEIGHTS: Record<LuckEventType, number> = {
   injury: 1.5,
   dodge: 1.1,
   ball_handling: 1.1,
-  argue_call: 0.9
+  argue_call: 0.9,
+  movement_risk: 1.0
 };
 
 export const ROLL_TYPE_BY_EVENT: Record<LuckEventType, number[]> = {
@@ -15,5 +16,6 @@ export const ROLL_TYPE_BY_EVENT: Record<LuckEventType, number[]> = {
   injury: [4, 37],
   dodge: [],
   ball_handling: [],
-  argue_call: [42, 70, 71]
+  argue_call: [42, 70, 71],
+  movement_risk: [1]
 };

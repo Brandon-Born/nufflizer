@@ -65,25 +65,24 @@ The Nufflizier probability engine now distinguishes scored deterministic context
 
 1. Scored deterministic contexts:
    - `ResultRoll` + `RollType=2` -> `block`
-   - `ResultRoll` + `RollType=1|34` -> `armor_break`
-   - `ResultRoll` + `RollType=4|31|37` -> `injury`
-   - `ResultRoll` + `StepType=1` + valid target -> `dodge`
-   - `ResultRoll` + `StepType=4|5|8|9|12|13` + valid target -> `ball_handling`
+   - `ResultRoll` + `RollType=10|34` -> `armor_break`
+   - `ResultRoll` + `RollType=4|37` -> `injury`
    - `ResultRoll` + `RollType=71` + valid target -> `argue_call`
-2. Excluded contexts:
-   - Missing target threshold.
-   - Non-deterministic or unsupported source-tag/roll combinations.
-   - Summary-chain events (`ResultBlockOutcome`, `ResultInjuryRoll`, `ResultCasualtyRoll`, `ResultPlayerRemoval`) that do not carry stable roll-threshold semantics.
-3. Argue-call variant matrix:
-   - `RollType=71`: scored when target is present.
-   - `RollType=42`: excluded.
-   - `RollType=70`: excluded.
-4. Fixture evidence:
-   - `tests/fixtures/models/argue-rolltype-42.json`
-   - `tests/fixtures/models/argue-rolltype-70.json`
-5. Transparency requirement:
+   - `ResultRoll` + `RollType=1` + valid target -> `movement_risk`
+2. Excluded deterministic contexts:
+   - `RollType=5,6,7,31,33,41,43,45,67,73,74,88` remain deterministic-but-uncertain and are tracked as roll candidates.
+3. Explicit randomizer exclusions:
+   - `RollType=8,9,25,26,30,87` are excluded from roll-candidate coverage.
+4. Explicit argue-call variant exclusions:
+   - `RollType=42` and `RollType=70` remain excluded pending stronger deterministic evidence.
+5. Summary-chain exclusions:
+   - `ResultBlockOutcome`, `ResultInjuryRoll`, `ResultCasualtyRoll`, and `ResultPlayerRemoval` are exposed for transparency but not scored.
+6. Transparency requirement:
    - Every event must indicate `scoringStatus` and `statusReason`.
    - Coverage must expose scored/excluded rates and exclusion-reason inventory.
+7. Fixture evidence:
+   - `tests/fixtures/models/argue-rolltype-42.json`
+   - `tests/fixtures/models/argue-rolltype-70.json`
 
 ## Goblin Fixture Findings (`demo-goblins1.bbr`, 2026-02-11)
 
@@ -116,7 +115,9 @@ The Nufflizier probability engine now distinguishes scored deterministic context
    - `ResultRoll|10` and `ResultRoll|34` -> `armor_break`
    - `ResultRoll|4` and `ResultRoll|37` -> `injury`
    - `ResultRoll|71` -> `argue_call`
+   - `ResultRoll|1` -> `movement_risk`
 4. Deterministic-but-uncertain families are explicitly excluded and tracked as roll candidates:
-   - `1,5,6,7,31,33,41,43,45,67,73,74,88`
+   - `5,6,7,31,33,41,43,45,67,73,74,88`
+   - Expanded-count priority: `7` (58), `33` (39), `88` (18), `67` (15).
 5. Randomizer families are explicitly excluded from roll-candidate coverage:
    - `8,9,25,26,30,87`

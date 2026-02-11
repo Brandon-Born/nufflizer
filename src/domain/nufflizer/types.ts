@@ -1,4 +1,4 @@
-export type LuckEventType = "block" | "armor_break" | "injury" | "dodge" | "ball_handling" | "argue_call";
+export type LuckEventType = "block" | "armor_break" | "injury" | "dodge" | "ball_handling" | "argue_call" | "movement_risk";
 
 export type LuckMomentTag = "blessed" | "shaftaroonie";
 export type LuckScoringStatus = "scored" | "excluded";
@@ -65,6 +65,7 @@ export type LuckTeamAggregate = {
     dodge: number;
     ballHandling: number;
     argueCall: number;
+    movementRisk: number;
   };
   eventCount: number;
 };

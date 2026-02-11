@@ -1,0 +1,130 @@
+{
+  "fixtureCount": 12,
+  "fixtures": [
+    "demo-goblins1.bbr",
+    "demo1.bbr",
+    "demo2.bbr",
+    "demo3.bbr",
+    "demo4.bbr",
+    "demo5.bbr",
+    "demo6.bbr",
+    "demo7.bbr",
+    "demo8.bbr",
+    "demo9.bbr",
+    "demo10.bbr",
+    "demo11.bbr"
+  ],
+  "rollType1Total": 216,
+  "reportRollType1Total": 216,
+  "reportScoredMovementRiskCount": 216,
+  "requirementValues": {
+    "2": 216
+  },
+  "difficultyValues": {
+    "2": 216
+  },
+  "stepTypeCounts": {
+    "0": 119,
+    "1": 78,
+    "6": 4,
+    "31": 15
+  },
+  "dieTypeCounts": {
+    "0": 216
+  },
+  "diceCountDistribution": {
+    "1": 216
+  },
+  "modifierSumCounts": {
+    "0": 216
+  },
+  "outcomeCounts": {
+    "0": 18,
+    "1": 198
+  },
+  "outcomeDiceThresholdMismatches": 0,
+  "failureNextSourceTagCounts": {
+    "ResultRoll": 18
+  },
+  "failureNextRollTypeCounts": {
+    "10": 17,
+    "87": 1
+  },
+  "successNextRollType10Count": 1,
+  "failureNextRollType10Count": 17,
+  "failureNextRollType87Count": 1,
+  "byFixture": {
+    "demo-goblins1.bbr": {
+      "rollType1Total": 26,
+      "successCount": 25,
+      "failureCount": 1,
+      "scoredMovementRiskCount": 26
+    },
+    "demo1.bbr": {
+      "rollType1Total": 26,
+      "successCount": 22,
+      "failureCount": 4,
+      "scoredMovementRiskCount": 26
+    },
+    "demo2.bbr": {
+      "rollType1Total": 29,
+      "successCount": 25,
+      "failureCount": 4,
+      "scoredMovementRiskCount": 29
+    },
+    "demo3.bbr": {
+      "rollType1Total": 18,
+      "successCount": 18,
+      "failureCount": 0,
+      "scoredMovementRiskCount": 18
+    },
+    "demo4.bbr": {
+      "rollType1Total": 6,
+      "successCount": 6,
+      "failureCount": 0,
+      "scoredMovementRiskCount": 6
+    },
+    "demo5.bbr": {
+      "rollType1Total": 11,
+      "successCount": 11,
+      "failureCount": 0,
+      "scoredMovementRiskCount": 11
+    },
+    "demo6.bbr": {
+      "rollType1Total": 13,
+      "successCount": 13,
+      "failureCount": 0,
+      "scoredMovementRiskCount": 13
+    },
+    "demo7.bbr": {
+      "rollType1Total": 25,
+      "successCount": 23,
+      "failureCount": 2,
+      "scoredMovementRiskCount": 25
+    },
+    "demo8.bbr": {
+      "rollType1Total": 21,
+      "successCount": 18,
+      "failureCount": 3,
+      "scoredMovementRiskCount": 21
+    },
+    "demo9.bbr": {
+      "rollType1Total": 12,
+      "successCount": 12,
+      "failureCount": 0,
+      "scoredMovementRiskCount": 12
+    },
+    "demo10.bbr": {
+      "rollType1Total": 10,
+      "successCount": 9,
+      "failureCount": 1,
+      "scoredMovementRiskCount": 10
+    },
+    "demo11.bbr": {
+      "rollType1Total": 19,
+      "successCount": 16,
+      "failureCount": 3,
+      "scoredMovementRiskCount": 19
+    }
+  }
+}
