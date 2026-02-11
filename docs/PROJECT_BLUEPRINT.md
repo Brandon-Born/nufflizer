@@ -10,6 +10,7 @@ Output:
 1. Team-level luck verdict and score gap.
 2. Category contribution breakdown.
 3. Key moment timeline for low-probability successes and high-probability failures.
+4. Human-readable “why” explanations that non-statistics users can follow.
 
 ## Canonical Planning and Handoff Docs
 1. `docs/PROJECT_PLAN.md` (current status and backlog)
@@ -22,6 +23,7 @@ Output:
 3. Analysis approach: deterministic replay-derived probability + weighted scoring.
 4. Runtime model: one-shot processing, no required persistence.
 5. Backward compatibility: legacy coaching pipeline is currently `legacy-kept`.
+6. Explainability priority: transparency of weights and assumptions is required, even for a for-fun tool.
 
 ## Current Implementation State (2026-02-11)
 1. Primary runtime surface is implemented:
@@ -111,8 +113,9 @@ Acceptance:
 ## Non-Functional Requirements
 1. Reliability: malformed/oversized uploads fail safely with user-readable errors.
 2. Performance: replay analysis stays within serverless runtime constraints.
-3. Explainability: verdict traces back to explicit event-level probabilities/deltas.
-4. Privacy: no silent long-term replay storage.
+3. Explainability: verdict traces back to explicit event-level probabilities/deltas and disclosed category weights.
+4. Accessibility of reasoning: report copy should be understandable by users without formal statistics training.
+5. Privacy: no silent long-term replay storage.
 
 ## Replay Fixture Guidance
 1. Use `demo-replays/demo1.bbr`, `demo2.bbr`, `demo3.bbr` for parser and scoring evolution.

@@ -7,6 +7,14 @@ Nufflizier analyzes Blood Bowl 3 replay files (`.xml` and `.bbr`) and outputs a 
 1. Which team was luckier overall.
 2. Where low-probability events succeeded and high-probability events failed.
 3. Category-level luck contributions (block, armor break, injury, dodge, ball handling, argue-call style events).
+4. A clear, plain-language “why” explanation so non-statistics users can understand how verdicts were produced.
+
+## Transparency Principle
+Nufflizier should optimize for explainability over mystery scoring.
+1. Every top-level verdict must be traceable to visible event-level calculations.
+2. Weights and probability assumptions must be documented and discoverable in both code and docs.
+3. UI copy should explain outcomes in plain language intended for users without a statistics background.
+4. Unknowns/fallbacks must be disclosed instead of hidden.
 
 ## Current System Snapshot
 1. Product surface:
@@ -73,15 +81,17 @@ Status taxonomy: `converted`, `partial`, `legacy-kept`, `pending`, `blocked`.
 - Product owner decision on backward compatibility needs.
 
 ### P2 - Reporting Explainability and UX Calibration
-- Why it matters: Coaches need transparent “why” behind verdicts to trust recommendations.
+- Why it matters: Users can only trust a for-fun analyzer if the “why” is transparent and understandable without statistics training.
 - Concrete tasks:
 1. Add optional detail expansion per key moment (inputs used for probability calculation).
 2. Add confidence/coverage banner summarizing how much of replay was scored via explicit mappings vs fallback.
-3. Add UI copy refinements for category score interpretation.
+3. Add plain-language UI copy for weight effects and score interpretation.
+4. Add “How this was scored” helper text linking each verdict to underlying weighted deltas.
 - Acceptance criteria:
 1. Each key moment can show probability inputs without exposing raw parser internals.
 2. Coverage metric is visible in report and backed by tests.
-3. e2e smoke test validates primary verdict + explainability elements.
+3. A user unfamiliar with statistics can explain why a team was labeled luckier after reading the report page.
+4. e2e smoke test validates primary verdict + explainability elements.
 - Dependencies:
 - Stable metadata contract from `LuckEvent`.
 

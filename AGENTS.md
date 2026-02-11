@@ -50,6 +50,7 @@ Use the following unless explicitly changed by the user:
 6. Keep scoring behavior explainable; avoid opaque magic constants without docs.
 7. Prefer deterministic logic over black-box heuristics when replay data supports exactness.
 8. Update handoff docs in the same change set whenever milestone state changes.
+9. Optimize report explanations for non-statistics users; always make the scoring “why” plain-language and traceable.
 
 ## 7) Expected Local Commands
 1. `pnpm install`

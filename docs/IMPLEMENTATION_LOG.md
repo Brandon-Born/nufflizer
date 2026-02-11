@@ -101,3 +101,30 @@ Explicit handoff next steps:
 1. Keep logs append-only; never rewrite historical entries.
 2. For each future implementation, append one conversion entry and one implementation entry with command outcomes.
 3. Update `docs/PROJECT_PLAN.md` backlog statuses when milestones move from `partial/pending` to `converted`.
+
+## 2026-02-11 10:46 - Transparency principle documentation update
+Goal:
+1. Encode a clear product requirement that Nufflizier must explain “why” in plain language for users without statistics training.
+
+Changes made (files):
+1. Updated planning and standards docs:
+- `docs/PROJECT_PLAN.md`
+- `docs/PROJECT_BLUEPRINT.md`
+- `AGENTS.md`
+2. Appended migration/execution trace:
+- `docs/CONVERSION_LOG.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+Commands run + outcomes:
+1. `sed -n ... docs/PROJECT_PLAN.md docs/PROJECT_BLUEPRINT.md docs/CONVERSION_LOG.md docs/IMPLEMENTATION_LOG.md` -> reviewed current doc baselines.
+2. `rg -n \"BB Trainer|coaching|/api/replay|nufflizier\" ...` -> validated stale wording and located transparency insertion points.
+3. `date '+%Y-%m-%d %H:%M'` -> captured timestamp for append-only log entry.
+
+Regressions/known gaps:
+1. This pass is documentation-only; runtime UI still needs explicit “how scored” affordances.
+2. Explainability validation in tests is not yet implemented.
+
+Explicit handoff next steps:
+1. Add UI elements that surface scoring rationale and weight impact in plain language.
+2. Add tests that assert presence of explainability content in report output.
+3. Keep transparency requirement treated as blocking acceptance criteria for future scoring changes.

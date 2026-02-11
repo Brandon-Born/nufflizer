@@ -5,6 +5,7 @@ Nufflizier is a Blood Bowl 3 replay luck analyzer. It parses `.xml` and `.bbr` r
 1. Who had better dice overall.
 2. Category luck breakdowns (block, armor break, injury, dodge, ball handling, argue-call style rolls).
 3. Timeline of high-impact swings (both "blessed" and "shaftaroonie" moments).
+4. Transparent, plain-language reasoning so users without statistics training can understand why a verdict was produced.
 
 The app is one-shot and ephemeral: upload -> analyze -> read/download report.
 

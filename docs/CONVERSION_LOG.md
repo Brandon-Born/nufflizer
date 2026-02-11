@@ -95,3 +95,19 @@ Remaining follow-ups:
 Verification evidence:
 1. Cross-reference links added in `AGENTS.md` and `docs/PROJECT_BLUEPRINT.md`.
 2. Repository search confirms legacy BB Trainer wording removed from primary docs except explicitly marked historical references.
+
+## 2026-02-11 - Transparency-first explanation requirement
+Metadata: commit(s) `pending`; scope `Product explainability standards`; status `converted`.
+
+Converted items:
+1. Elevated transparency to an explicit product principle in planning docs.
+2. Added non-statistics-user readability requirement for report explanations.
+3. Clarified that weights/assumptions must be visible and that fallback uncertainty should be disclosed.
+
+Remaining follow-ups:
+1. Implement UI-level “How this was scored” affordances and plain-language helper text.
+2. Add tests that validate explainability content presence, not only numeric correctness.
+
+Verification evidence:
+1. `docs/PROJECT_PLAN.md` now contains a dedicated “Transparency Principle” section and strengthened P2 criteria.
+2. `docs/PROJECT_BLUEPRINT.md` and `AGENTS.md` now encode explainability as a required engineering constraint.
