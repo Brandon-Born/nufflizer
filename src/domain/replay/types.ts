@@ -9,6 +9,7 @@ export type ReplayEventType =
   | "blitz"
   | "foul"
   | "dodge"
+  | "roll"
   | "reroll"
   | "casualty"
   | "ball_state"
@@ -30,6 +31,8 @@ export type ReplayEvent = {
   stepLabel?: string;
   reasonCode?: number;
   reasonLabel?: string;
+  rollType?: number;
+  rollLabel?: string;
   finishingTurnType?: number;
   payload?: Record<string, unknown>;
 };

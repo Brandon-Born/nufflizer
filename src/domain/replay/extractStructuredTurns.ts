@@ -178,6 +178,8 @@ function collectSequenceEvents(block: string, unknownCodeCounters: Map<string, R
       gamerId,
       actionCode,
       actionLabel: labelForCode(ACTION_CODE_MAP, actionCode, "action"),
+      rollType,
+      rollLabel: labelForCode(ROLL_TYPE_MAP, rollType, "roll"),
       payload
     } satisfies Omit<ReplayEvent, "type">;
 
@@ -195,6 +197,10 @@ function collectSequenceEvents(block: string, unknownCodeCounters: Map<string, R
 
     if (rootTag === "ResultFoulRoll" || rootTag === "ResultFoulOutcome") {
       events.push({ type: "foul", sourceLabel: "foul_resolution", ...baseEvent });
+    }
+
+    if (rootTag === "ResultRoll") {
+      events.push({ type: "roll", sourceLabel: "generic_roll", ...baseEvent });
     }
 
     if (rootTag === "ResultRoll" && sequenceContext.stepType === 1) {

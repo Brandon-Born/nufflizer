@@ -1,82 +1,36 @@
-# BB Trainer
+# Nufflizier
 
-Web app for Blood Bowl 3 replay coaching. Users upload replay XML and receive:
+Nufflizier is a Blood Bowl 3 replay luck analyzer. It parses `.xml` and `.bbr` replay files and reports:
 
-1. Macro feedback on patterns and risk.
-2. Turn-by-turn constructive advice.
+1. Who had better dice overall.
+2. Category luck breakdowns (block, armor break, injury, dodge, ball handling, argue-call style rolls).
+3. Timeline of high-impact swings (both "blessed" and "shaftaroonie" moments).
 
-This project is built for Vercel deployment with Next.js App Router.
+The app is one-shot and ephemeral: upload -> analyze -> read/download report.
 
-## Current Status
+## MVP Interfaces
 
-The repository now contains a working project scaffold:
-
-1. Next.js + TypeScript + Tailwind setup.
-2. Replay upload UI and `/api/replay` analysis endpoint.
-3. Initial domain modules for parsing, timeline building, heuristic analysis, and coaching text.
-4. Unit and e2e test scaffolding.
-5. CI workflow for lint, typecheck, unit tests, build, and Playwright e2e smoke.
-
-Analysis logic now includes BB3-focused starter heuristics (turnover causes, reroll timing, blitz value, foul timing, ball safety, cage/screen warnings) and is designed to keep expanding with replay evidence.
-
-## Demo Replay
-
-1. Sanitized demo replays: `demo-replays/demo1.bbr`, `demo-replays/demo2.bbr`, `demo-replays/demo3.bbr`.
-2. These replays are intended for parser/analysis development and agent inspection.
-3. Sensitive values have been anonymized (names, gamer/account IDs, lobby/match IDs, IP addresses).
+1. Web UI: `/nufflizier` (and `/upload` alias).
+2. API: `POST /api/nufflizier/analyze` (multipart `replay` file).
+3. CLI: `pnpm nufflizier analyze <replay_file> --format json|text`
 
 ## Tech Stack
 
-1. Next.js (App Router)
-2. TypeScript
+1. Next.js (App Router) + TypeScript
+2. fast-xml-parser
 3. Tailwind CSS
-4. Zod
-5. fast-xml-parser
-6. Vitest + Playwright
-7. Vercel deployment target
-
-## Project Structure
-
-```text
-src/
-  app/
-    api/replay/route.ts
-    upload/page.tsx
-    report/[id]/page.tsx
-    page.tsx
-    layout.tsx
-  domain/
-    replay/
-    analysis/
-    coaching/
-  server/
-    services/analyzeReplay.ts
-  lib/
-tests/
-  unit/
-  e2e/
-docs/
-  PROJECT_BLUEPRINT.md
-AGENTS.md
-```
+4. Vitest + Playwright
 
 ## Local Development
-
-Prerequisites:
-
-1. Node.js 20+
-2. pnpm 9+
-
-Commands:
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000/nufflizier](http://localhost:3000/nufflizier).
 
-Quality checks:
+Checks:
 
 ```bash
 pnpm lint
@@ -86,27 +40,10 @@ pnpm build
 pnpm test:e2e
 ```
 
-## Vercel Deployment
+## Demo Replays
 
-1. Push repository to GitHub.
-2. Import project in Vercel.
-3. Framework preset: Next.js (auto-detected).
-4. Build command: `pnpm build` (default is fine).
-5. Output: managed by Next.js.
-6. Runtime: Node.js for replay analysis endpoint.
+Use the included sanitized replay fixtures:
 
-No required environment variables yet.
-This app is intentionally one-shot: upload -> analyze -> read advice -> done. No long-term replay persistence is required.
-
-## Agent Build Guidelines
-
-1. Keep parsing, analysis, and coaching generation under `src/domain/*`.
-2. Keep route handlers thin and orchestration-focused.
-3. Validate input at boundaries and handle malformed XML safely.
-4. Add fixture-based tests for new parser/heuristic behavior.
-5. Maintain explainable recommendations tied to replay evidence.
-
-See:
-
-1. `AGENTS.md` for operating rules.
-2. `docs/PROJECT_BLUEPRINT.md` for milestones and acceptance criteria.
+1. `demo-replays/demo1.bbr`
+2. `demo-replays/demo2.bbr`
+3. `demo-replays/demo3.bbr`
