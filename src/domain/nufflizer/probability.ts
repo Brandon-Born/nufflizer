@@ -199,6 +199,42 @@ function computeExplicitInjuryOdds(input: ProbabilityInput): number | null {
   return probabilityBySumTarget(target, sidesByDie);
 }
 
+function computeExplicitDodgeOdds(input: ProbabilityInput): number | null {
+  if (input.rollType !== 3 && input.rollType !== 17 && input.rollType !== 21) {
+    return null;
+  }
+
+  const target = resolveTarget(input);
+  if (!target || input.dice.length === 0) {
+    return null;
+  }
+
+  const sidesByDie = input.dice.map((value, index) => estimatedSides(input.dieTypes[index], value));
+  if (input.dice.length === 1) {
+    return probabilityBySingleDieTarget(target, sidesByDie[0] ?? 6);
+  }
+
+  return probabilityByAnyDieTarget(target, sidesByDie);
+}
+
+function computeExplicitBallHandlingOdds(input: ProbabilityInput): number | null {
+  if (input.rollType !== 11 && input.rollType !== 12 && input.rollType !== 13 && input.rollType !== 14 && input.rollType !== 15 && input.rollType !== 25) {
+    return null;
+  }
+
+  const target = resolveTarget(input);
+  if (!target || input.dice.length === 0) {
+    return null;
+  }
+
+  const sidesByDie = input.dice.map((value, index) => estimatedSides(input.dieTypes[index], value));
+  if (input.dice.length === 1) {
+    return probabilityBySingleDieTarget(target, sidesByDie[0] ?? 6);
+  }
+
+  return probabilityByAnyDieTarget(target, sidesByDie);
+}
+
 function explicitComputation(eventType: LuckEventType, input: ProbabilityInput): { baseOdds: number; reason: string } | null {
   if (eventType === "block") {
     const baseOdds = computeExplicitBlockOdds(input);
@@ -226,6 +262,26 @@ function explicitComputation(eventType: LuckEventType, input: ProbabilityInput):
       return {
         baseOdds,
         reason: "explicit injury calculator (rollType 4/31/37)"
+      };
+    }
+  }
+
+  if (eventType === "dodge") {
+    const baseOdds = computeExplicitDodgeOdds(input);
+    if (baseOdds !== null) {
+      return {
+        baseOdds,
+        reason: "explicit dodge calculator (rollType 3/17/21)"
+      };
+    }
+  }
+
+  if (eventType === "ball_handling") {
+    const baseOdds = computeExplicitBallHandlingOdds(input);
+    if (baseOdds !== null) {
+      return {
+        baseOdds,
+        reason: "explicit ball-handling calculator (rollType 11/12/13/14/15/25)"
       };
     }
   }

@@ -170,3 +170,44 @@ Explicit handoff next steps:
 1. Implement explicit probability handling for additional families (`dodge`, `ball_handling`) where replay context allows.
 2. Continue refining plain-language explanation text for non-statistics users.
 3. Produce legacy-surface ADR (`/api/replay` retain/gate/remove) and update docs accordingly.
+
+## 2026-02-11 11:10 - Probability wave 2 implementation + explainability contract expansion
+Goal:
+1. Implement next-step Wave 2 work: explicit probability for `dodge` and `ball_handling`, richer event explainability, and by-type coverage visibility across API/UI/CLI.
+
+Changes made (files):
+1. Probability and scoring domain:
+- `src/domain/nufflizer/probability.ts`
+- `src/domain/nufflizer/analyzeLuck.ts`
+- `src/domain/nufflizer/types.ts`
+2. Presentation surfaces:
+- `src/app/nufflizier/NufflizierAnalyzer.tsx`
+- `src/cli/nufflizier.ts`
+3. Tests:
+- `tests/unit/nufflizierProbability.test.ts`
+- `tests/unit/nufflizierScoring.test.ts`
+- `tests/unit/nufflizierApi.test.ts`
+- `tests/unit/analyzeNufflizier.test.ts`
+- `tests/e2e/smoke.spec.ts`
+4. Handoff/blueprint docs:
+- `docs/PROJECT_PLAN.md`
+- `docs/PROJECT_BLUEPRINT.md`
+- `docs/REPLAY_INVESTIGATION.md`
+- `docs/CONVERSION_LOG.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+Commands run + outcomes:
+1. `corepack pnpm typecheck` -> passed.
+2. `corepack pnpm lint` -> passed.
+3. `corepack pnpm test` -> initially failed (2 assertions), then passed after test expectation updates.
+4. `corepack pnpm build` -> passed.
+5. `corepack pnpm test:e2e` -> initially failed on hidden-details assertion, then passed after smoke assertion adjustment.
+
+Regressions/known gaps:
+1. `argue_call` still relies on fallback probability logic by design.
+2. Legacy coaching pipeline remains in repository under gated `legacy-kept` policy.
+
+Explicit handoff next steps:
+1. Add explicit `argue_call` mapping only if replay fixtures provide deterministic thresholds/outcomes.
+2. Run plain-language UX copy pass for non-statistics readability on key moment explanations.
+3. Continue appending conversion/implementation logs for each milestone and keep plan matrix status current.

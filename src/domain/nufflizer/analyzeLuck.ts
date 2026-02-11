@@ -189,6 +189,21 @@ function targetLabel(requirement?: number, difficulty?: number): string {
   return `${target}+ target`;
 }
 
+function buildFormulaSummary(actualSuccess: boolean, probabilitySuccess: number, weight: number, weightedDelta: number): string {
+  return `weighted delta = (${actualSuccess ? 1 : 0} - ${probabilitySuccess.toFixed(3)}) x ${weight.toFixed(2)} = ${weightedDelta.toFixed(3)}`;
+}
+
+function buildInputsSummary(
+  type: LuckEventType,
+  target: string,
+  dice: number[],
+  rerollAvailable: boolean,
+  calculationMethod: LuckEvent["calculationMethod"]
+): string {
+  const diceText = dice.length > 0 ? `[${dice.join(", ")}]` : "none";
+  return `${eventTypeLabel(type)} | target ${target} | dice ${diceText} | reroll available ${rerollAvailable ? "yes" : "no"} | method ${calculationMethod}`;
+}
+
 function isPlayableTeamName(name: string): boolean {
   return !/^Team \d+$/i.test(name.trim());
 }
@@ -272,6 +287,7 @@ function buildNormalizedEvent(
   const delta = (actualSuccess ? 1 : 0) - probabilitySuccess;
   const weight = LUCK_CATEGORY_WEIGHTS[type];
   const weightedDelta = delta * weight;
+  const target = targetLabel(requirement, difficulty);
 
   const tags: LuckEvent["tags"] = [];
   if (actualSuccess && probabilitySuccess <= 0.3) {
@@ -297,10 +313,12 @@ function buildNormalizedEvent(
     calculationMethod: probability.calculationMethod,
     calculationReason: probability.calculationReason,
     explainability: {
-      target: targetLabel(requirement, difficulty),
+      target,
       baseOdds: probability.baseOdds,
       rerollAdjustedOdds: probability.rerollAdjustedOdds,
-      weight
+      weight,
+      formulaSummary: buildFormulaSummary(actualSuccess, probabilitySuccess, weight, weightedDelta),
+      inputsSummary: buildInputsSummary(type, target, dice, inferredRerollAvailable, probability.calculationMethod)
     },
     metadata: {
       sourceTag: event.sourceTag,
@@ -338,6 +356,17 @@ function initialAggregate(teamId: string, teamName: string): LuckTeamAggregate {
       argueCall: 0
     },
     eventCount: 0
+  };
+}
+
+function initialCoverageByType(): LuckReport["coverage"]["byType"] {
+  return {
+    block: { explicit: 0, fallback: 0 },
+    armor_break: { explicit: 0, fallback: 0 },
+    injury: { explicit: 0, fallback: 0 },
+    dodge: { explicit: 0, fallback: 0 },
+    ball_handling: { explicit: 0, fallback: 0 },
+    argue_call: { explicit: 0, fallback: 0 }
   };
 }
 
@@ -434,6 +463,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   ]);
   let explicitCount = 0;
   let fallbackCount = 0;
+  const byTypeCoverage = initialCoverageByType();
 
   for (const event of events) {
     const aggregate = aggregateById.get(event.teamId);
@@ -445,8 +475,10 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     aggregate.eventCount += 1;
     if (event.calculationMethod === "explicit") {
       explicitCount += 1;
+      byTypeCoverage[event.type].explicit += 1;
     } else {
       fallbackCount += 1;
+      byTypeCoverage[event.type].fallback += 1;
     }
 
     if (event.type === "block") {
@@ -489,7 +521,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   const coverage = {
     explicitCount,
     fallbackCount,
-    explicitRate: totalCount > 0 ? roundTo(explicitCount / totalCount, 3) : 0
+    explicitRate: totalCount > 0 ? roundTo(explicitCount / totalCount, 3) : 0,
+    byType: byTypeCoverage
   } satisfies LuckReport["coverage"];
   const idSeed = `${replay.matchId}:${events.length}:${homeAggregate.luckScore}:${awayAggregate.luckScore}`;
 
@@ -513,7 +546,9 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         ...event.explainability,
         baseOdds: roundTo(event.explainability.baseOdds, 3),
         rerollAdjustedOdds: roundTo(event.explainability.rerollAdjustedOdds, 3),
-        weight: roundTo(event.explainability.weight, 3)
+        weight: roundTo(event.explainability.weight, 3),
+        formulaSummary: event.explainability.formulaSummary,
+        inputsSummary: event.explainability.inputsSummary
       },
       delta: roundTo(event.delta, 3),
       weightedDelta: roundTo(event.weightedDelta, 3)
@@ -525,7 +560,9 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         ...event.explainability,
         baseOdds: roundTo(event.explainability.baseOdds, 3),
         rerollAdjustedOdds: roundTo(event.explainability.rerollAdjustedOdds, 3),
-        weight: roundTo(event.explainability.weight, 3)
+        weight: roundTo(event.explainability.weight, 3),
+        formulaSummary: event.explainability.formulaSummary,
+        inputsSummary: event.explainability.inputsSummary
       },
       delta: roundTo(event.delta, 3),
       weightedDelta: roundTo(event.weightedDelta, 3)

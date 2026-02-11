@@ -29,7 +29,15 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(payload).toHaveProperty("keyMoments");
     expect(payload).toHaveProperty("events");
     expect(payload).toHaveProperty("coverage");
+    expect(payload).toHaveProperty("coverage.byType");
     expect(payload).toHaveProperty("weightTable");
     expect(payload).toHaveProperty("howScoredSummary");
+
+    const keyMoments = payload.keyMoments as Array<{ explainability?: Record<string, unknown> }> | undefined;
+    expect(Array.isArray(keyMoments)).toBe(true);
+    if (keyMoments && keyMoments.length > 0) {
+      expect(keyMoments[0]?.explainability).toHaveProperty("formulaSummary");
+      expect(keyMoments[0]?.explainability).toHaveProperty("inputsSummary");
+    }
   });
 });

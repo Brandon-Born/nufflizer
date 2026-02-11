@@ -67,6 +67,8 @@ The Nufflizier probability engine now distinguishes explicit calculators from fa
    - `block`: `RollType=2`
    - `armor_break`: `RollType=1`, `RollType=34`
    - `injury`: `RollType=4`, `RollType=31`, `RollType=37`
+   - `dodge`: `RollType=3`, `RollType=17`, `RollType=21`
+   - `ball_handling`: `RollType=11`, `RollType=12`, `RollType=13`, `RollType=14`, `RollType=15`, `RollType=25`
 2. Fallback behavior:
    - Used when event family lacks explicit mapping or replay context is insufficient.
    - Fallback usage is reported in `LuckReport.coverage` and per-event `calculationMethod` / `calculationReason`.

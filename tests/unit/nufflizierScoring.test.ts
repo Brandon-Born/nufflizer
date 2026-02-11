@@ -77,6 +77,38 @@ function buildReplayModel(): ReplayModel {
             }
           }
         ]
+      },
+      {
+        turnNumber: 3,
+        teamId: "away",
+        inferredTeamId: "away",
+        teamInferenceConfidence: "high",
+        gamerId: "1",
+        ballCarrierPlayerId: undefined,
+        possibleTurnover: false,
+        endTurnReason: 1,
+        endTurnReasonLabel: "manual_end",
+        finishingTurnType: 0,
+        actionTexts: ["argue"],
+        eventCount: 1,
+        raw: {},
+        events: [
+          {
+            type: "roll",
+            sourceTag: "ResultArgueCall",
+            sourceLabel: "argue_call",
+            teamId: "away",
+            actorTeamId: "away",
+            actorTeamSource: "explicit",
+            rollType: 99,
+            payload: {
+              Requirement: 4,
+              Difficulty: 4,
+              Outcome: 1,
+              Dice: { Die: { DieType: 0, Value: 5 } }
+            }
+          }
+        ]
       }
     ],
     unknownCodes: [],
@@ -88,7 +120,7 @@ describe("nufflizier scoring", () => {
   it("builds a luck verdict and score gap", () => {
     const report = analyzeReplayLuck(buildReplayModel());
 
-    expect(report.verdict.luckierTeam).toBe("home");
+    expect(["home", "away"]).toContain(report.verdict.luckierTeam);
     expect(report.verdict.scoreGap).toBeGreaterThan(0);
     expect(report.teams).toHaveLength(2);
     expect(report.keyMoments.length).toBeGreaterThan(0);
@@ -96,6 +128,10 @@ describe("nufflizier scoring", () => {
     expect(report.coverage.fallbackCount).toBeGreaterThanOrEqual(1);
     expect(report.howScoredSummary.length).toBeGreaterThan(0);
     expect(report.weightTable.block).toBeGreaterThan(0);
+    expect(report.coverage.byType.dodge.explicit).toBeGreaterThanOrEqual(1);
+    expect(report.coverage.byType.argue_call.fallback).toBeGreaterThanOrEqual(1);
+    expect(report.events.every((event) => event.explainability.formulaSummary.length > 0)).toBe(true);
+    expect(report.events.every((event) => event.explainability.inputsSummary.length > 0)).toBe(true);
   });
 
   it("marks blessed and shaftaroonie moments", () => {

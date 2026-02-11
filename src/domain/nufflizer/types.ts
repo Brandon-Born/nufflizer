@@ -43,6 +43,8 @@ export type LuckEvent = {
     baseOdds: number;
     rerollAdjustedOdds: number;
     weight: number;
+    formulaSummary: string;
+    inputsSummary: string;
   };
   metadata: LuckEventMetadata;
 };
@@ -81,6 +83,7 @@ export type LuckReport = {
     explicitCount: number;
     fallbackCount: number;
     explicitRate: number;
+    byType: Record<LuckEventType, { explicit: number; fallback: number }>;
   };
   weightTable: Record<LuckEventType, number>;
   howScoredSummary: string[];

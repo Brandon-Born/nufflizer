@@ -16,6 +16,8 @@ test("one-shot replay flow shows nufflizier analysis", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Download JSON" })).toBeVisible();
   await expect(page.getByText(/Coverage:/)).toBeVisible();
   await expect(page.getByRole("heading", { name: "How this was scored" })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "Event type" })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "Fallback" })).toBeVisible();
 
   await page.getByRole("button", { name: "Upload Another Replay" }).click();
   await expect(page.getByRole("heading", { name: "Nuffle Match Report" })).toHaveCount(0);

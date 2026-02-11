@@ -34,6 +34,9 @@ function parseFormat(args: string[]): OutputFormat {
 function formatTeamSummary(report: ReturnType<typeof analyzeNufflizerInput>): string {
   const [home, away] = report.teams;
   const topMoments = report.keyMoments.slice(0, 5);
+  const byTypeCoverage = Object.entries(report.coverage.byType).map(([type, counts]) => {
+    return `- ${type}: ${counts.explicit} explicit, ${counts.fallback} fallback`;
+  });
 
   return [
     `Match: ${report.match.id}`,
@@ -41,6 +44,8 @@ function formatTeamSummary(report: ReturnType<typeof analyzeNufflizerInput>): st
     `Away: ${away?.teamName ?? "Away"} (${away?.luckScore.toFixed(1) ?? "0.0"})`,
     `Verdict: ${report.verdict.summary} (gap ${report.verdict.scoreGap.toFixed(1)})`,
     `Coverage: ${(report.coverage.explicitRate * 100).toFixed(1)}% explicit (${report.coverage.explicitCount} explicit, ${report.coverage.fallbackCount} fallback)`,
+    "Coverage by event type:",
+    ...byTypeCoverage,
     "",
     "How this was scored:",
     ...report.howScoredSummary.map((line) => `- ${line}`),
@@ -48,7 +53,7 @@ function formatTeamSummary(report: ReturnType<typeof analyzeNufflizerInput>): st
     "Top swings:",
     ...topMoments.map(
       (moment, index) =>
-        `${index + 1}. Turn ${moment.turn} | ${moment.teamName} | ${moment.label} | weighted delta ${moment.weightedDelta.toFixed(3)} | ${moment.calculationMethod} (${moment.calculationReason})`
+        `${index + 1}. Turn ${moment.turn} | ${moment.teamName} | ${moment.label} | weighted delta ${moment.weightedDelta.toFixed(3)} | ${moment.calculationMethod} (${moment.calculationReason}) | ${moment.explainability.formulaSummary}`
     )
   ].join("\n");
 }

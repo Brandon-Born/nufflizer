@@ -94,9 +94,31 @@ describe("nufflizier probability engine", () => {
     expect(injury.calculationMethod).toBe("explicit");
   });
 
-  it("falls back when no explicit mapping is available", () => {
-    const fallback = computeProbabilityForEvent("dodge", {
+  it("uses explicit calculators for dodge and ball handling", () => {
+    const dodge = computeProbabilityForEvent("dodge", {
       rollType: 3,
+      requirement: 4,
+      difficulty: 4,
+      dice: [3],
+      dieTypes: [0],
+      rerollAvailable: false
+    });
+    const ballHandling = computeProbabilityForEvent("ball_handling", {
+      rollType: 12,
+      requirement: 4,
+      difficulty: 4,
+      dice: [2],
+      dieTypes: [0],
+      rerollAvailable: true
+    });
+
+    expect(dodge.calculationMethod).toBe("explicit");
+    expect(ballHandling.calculationMethod).toBe("explicit");
+  });
+
+  it("falls back when no explicit mapping is available", () => {
+    const fallback = computeProbabilityForEvent("argue_call", {
+      rollType: 99,
       requirement: 4,
       difficulty: 4,
       dice: [3],

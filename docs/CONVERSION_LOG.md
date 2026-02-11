@@ -129,3 +129,21 @@ Remaining follow-ups:
 Verification evidence:
 1. Updated tests: `tests/unit/nufflizierProbability.test.ts`, `tests/unit/nufflizierScoring.test.ts`, `tests/unit/nufflizierApi.test.ts`, `tests/unit/analyzeNufflizier.test.ts`, `tests/e2e/smoke.spec.ts`.
 2. Validation commands passed: `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build`, `pnpm test:e2e`.
+
+## 2026-02-11 - Probability fidelity wave 2 + explainability detail expansion
+Metadata: commit(s) `pending`; scope `Explicit probability coverage and transparency UX`; status `partial`.
+
+Converted items:
+1. Added explicit probability calculators for `dodge` and `ball_handling` families in the core probability engine.
+2. Expanded report explainability payload with per-event `formulaSummary` and `inputsSummary`.
+3. Added report coverage breakdown by event family (`coverage.byType`) and surfaced it in UI and CLI output.
+4. Added ADR decision to gate (not remove) legacy coaching surface while keeping Nufflizier as primary runtime path.
+
+Remaining follow-ups:
+1. `argue_call` remains fallback-first until replay evidence supports deterministic explicit mapping.
+2. Continue plain-language copy calibration for non-statistics users.
+3. Revisit legacy surface removal once gate period milestones are complete.
+
+Verification evidence:
+1. Validation commands passed: `corepack pnpm typecheck`, `corepack pnpm lint`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm test:e2e`.
+2. Updated runtime/test/docs files include `src/domain/nufflizer/*`, `src/app/nufflizier/NufflizierAnalyzer.tsx`, `src/cli/nufflizier.ts`, `tests/unit/*`, `tests/e2e/smoke.spec.ts`, and handoff docs under `docs/`.

@@ -26,6 +26,8 @@ type LuckEvent = {
     baseOdds: number;
     rerollAdjustedOdds: number;
     weight: number;
+    formulaSummary: string;
+    inputsSummary: string;
   };
 };
 
@@ -46,6 +48,7 @@ type LuckReport = {
     explicitCount: number;
     fallbackCount: number;
     explicitRate: number;
+    byType: Record<LuckEventType, { explicit: number; fallback: number }>;
   };
   weightTable: Record<LuckEventType, number>;
   howScoredSummary: string[];
@@ -270,6 +273,26 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
               Weights: block {report.weightTable.block}, armor {report.weightTable.armor_break}, injury {report.weightTable.injury}, dodge{" "}
               {report.weightTable.dodge}, ball handling {report.weightTable.ball_handling}, argue {report.weightTable.argue_call}.
             </p>
+            <div className="mt-3 overflow-x-auto">
+              <table className="min-w-full border-collapse text-xs text-amber-50/90">
+                <thead>
+                  <tr className="border-b border-amber-300/20 text-left">
+                    <th className="px-2 py-1">Event type</th>
+                    <th className="px-2 py-1">Explicit</th>
+                    <th className="px-2 py-1">Fallback</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(report.coverage.byType).map(([eventType, counts]) => (
+                    <tr key={eventType} className="border-b border-amber-300/10">
+                      <td className="px-2 py-1">{eventType}</td>
+                      <td className="px-2 py-1">{counts.explicit}</td>
+                      <td className="px-2 py-1">{counts.fallback}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </section>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -347,6 +370,8 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                             {(moment.explainability.baseOdds * 100).toFixed(1)}%, reroll-adjusted{" "}
                             {(moment.explainability.rerollAdjustedOdds * 100).toFixed(1)}%, weight {moment.explainability.weight}.
                           </p>
+                          <p className="mt-1 text-xs text-amber-100/80">{moment.explainability.formulaSummary}.</p>
+                          <p className="mt-1 text-xs text-amber-100/80">{moment.explainability.inputsSummary}.</p>
                         </details>
                       </td>
                       <td className="px-2 py-3">{(moment.probabilitySuccess * 100).toFixed(1)}%</td>

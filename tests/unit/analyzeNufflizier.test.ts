@@ -24,6 +24,8 @@ describe("analyzeNufflizerInput", () => {
     expect(report.coverage.explicitCount + report.coverage.fallbackCount).toBe(report.events.length);
     expect(report.coverage.explicitRate).toBeGreaterThanOrEqual(0);
     expect(report.coverage.explicitRate).toBeLessThanOrEqual(1);
+    const byTypeTotal = Object.values(report.coverage.byType).reduce((sum, counts) => sum + counts.explicit + counts.fallback, 0);
+    expect(byTypeTotal).toBe(report.events.length);
     expect(report.howScoredSummary.length).toBeGreaterThan(0);
   });
 

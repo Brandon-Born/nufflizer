@@ -105,7 +105,8 @@ Acceptance:
 
 Progress note:
 1. Wave 1 complete for explicit calculators in `block`, `armor_break`, and `injury`.
-2. Wave 2 remaining for additional families (notably `dodge` and `ball_handling` where data permits).
+2. Wave 2 explicit coverage added for `dodge` and `ball_handling`.
+3. Remaining fallback-first family is `argue_call` pending stronger replay evidence.
 
 ### M4 - Legacy Surface Resolution (Pending)
 Deliverables:
@@ -114,6 +115,19 @@ Deliverables:
 
 Acceptance:
 1. No ambiguity in product path or docs for follow-up agents.
+
+### Legacy Surface ADR (2026-02-11)
+Decision: `gate`.
+
+Rationale:
+1. Keep `/api/replay` and coaching modules available for compatibility and historical tests in the short term.
+2. Treat Nufflizier endpoints/UI/CLI as the only primary product surface in docs and future features.
+3. Prevent new feature work from landing in coaching modules unless explicitly requested.
+
+Execution policy:
+1. Keep legacy modules tagged `legacy-kept` in conversion/status docs.
+2. New analytics features ship only through `/api/nufflizier/analyze` and `/nufflizier`.
+3. Re-evaluate removal once two consecutive milestones complete without legacy dependency.
 
 ## Non-Functional Requirements
 1. Reliability: malformed/oversized uploads fail safely with user-readable errors.
