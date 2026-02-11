@@ -226,7 +226,7 @@ function isRollCandidateEvent(event: ReplayEvent, dice: number[], classification
     return false;
   }
 
-  return classification.scored || classification.reason.startsWith("excluded:");
+  return classification.rollCandidate;
 }
 
 function normalizeExcludedReason(reason: string): string {

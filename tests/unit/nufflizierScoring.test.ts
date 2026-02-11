@@ -67,14 +67,19 @@ function buildReplayModel(): ReplayModel {
             teamId: "away",
             actorTeamId: "away",
             actorTeamSource: "explicit",
-            rollType: 3,
-            rollLabel: "dodge",
-            stepType: 1,
+            rollType: 10,
+            rollLabel: "armor_chain_check_2d6",
+            stepType: 6,
             payload: {
               Requirement: 2,
               Difficulty: 2,
               Outcome: 0,
-              Dice: { Die: { DieType: 0, Value: 1 } }
+              Dice: {
+                Die: [
+                  { DieType: 0, Value: 1 },
+                  { DieType: 0, Value: 1 }
+                ]
+              }
             }
           }
         ]
@@ -129,7 +134,8 @@ describe("nufflizier scoring", () => {
     expect(report.coverage.allEvents.excludedCount).toBeGreaterThanOrEqual(1);
     expect(report.howScoredSummary.length).toBeGreaterThan(0);
     expect(report.weightTable.block).toBeGreaterThan(0);
-    expect(report.coverage.scoredByType.dodge).toBeGreaterThanOrEqual(1);
+    expect(report.coverage.scoredByType.dodge).toBe(0);
+    expect(report.coverage.scoredByType.armor_break).toBeGreaterThanOrEqual(0);
     expect(report.coverage.excludedByType.block).toBeGreaterThanOrEqual(0);
     expect(
       report.events

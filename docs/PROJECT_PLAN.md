@@ -130,3 +130,15 @@ Done means all are true:
 1. Expand deterministic promotion coverage only when fixture evidence proves stable semantics for additional roll families.
 2. Refine merge diagnostics/explainability copy so users can distinguish summary-chain merges from unsupported contexts at a glance.
 3. Keep API/UI/CLI parity checks synchronized as coverage/exclusion telemetry evolves.
+
+## Status Update (2026-02-11, Roll-Type Rebaseline)
+1. Added source-tag-aware roll evidence and coverage docs:
+- `docs/ROLL_TYPE_EVIDENCE_MATRIX.md`
+- `docs/ROLL_TYPE_CODE_COVERAGE.md`
+2. Rebased deterministic scoring to high-confidence families only:
+- promoted `ResultRoll|10` into scored armor-like checks.
+- demoted uncertain deterministic families (including `ResultRoll|1`) to explicit excluded status.
+- excluded known randomizer families from roll-candidate denominator.
+3. Next milestone focus:
+1. Resolve highest-impact uncertain families (`ResultRoll|1`, `ResultRoll|67`) with additional fixture evidence.
+2. Maintain one-to-one contract coverage for newly observed `sourceTag|rollType` pairs.

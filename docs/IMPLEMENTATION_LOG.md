@@ -504,3 +504,47 @@ Regressions/known gaps:
 Explicit handoff next steps:
 1. Validate block-chain merge heuristics against additional non-goblin fixtures to confirm window/link preference robustness.
 2. Continue expanding deterministic roll-family allowlists only when replay evidence supports stable semantics.
+
+## 2026-02-11 14:15 - Roll-type evidence rebaseline execution
+Goal:
+1. Execute evidence-first roll-family rebaseline: document observed `sourceTag|rollType` behavior, explicitly map code coverage status, and apply high-confidence scoring fixes.
+
+Changes made (files):
+1. Replay contracts/mappings:
+- `src/domain/replay/rollTypeContracts.ts` (new)
+- `src/domain/replay/mappings.ts`
+- `src/domain/replay/extractStructuredTurns.ts`
+2. Nufflizier scoring flow:
+- `src/domain/nufflizer/classifyRollContext.ts`
+- `src/domain/nufflizer/analyzeLuck.ts`
+- `src/domain/nufflizer/constants.ts`
+3. Tests:
+- `tests/unit/rollTypeEvidenceMatrix.test.ts` (new)
+- `tests/unit/nufflizierClassification.test.ts`
+- `tests/unit/analyzeNufflizier.test.ts`
+- `tests/unit/nufflizierScoring.test.ts`
+- `tests/unit/replayMappings.test.ts`
+- `tests/unit/nufflizierCoverageInventory.test.ts`
+4. Documentation:
+- `docs/ROLL_TYPE_EVIDENCE_MATRIX.md` (new)
+- `docs/ROLL_TYPE_CODE_COVERAGE.md` (new)
+- `docs/REPLAY_INVESTIGATION.md`
+- `docs/PROJECT_PLAN.md`
+- `docs/CONVERSION_LOG.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+Commands run + outcomes:
+1. `corepack pnpm test` -> initially failed on `tests/unit/nufflizierScoring.test.ts` (shaftaroonie expectation after roll-family remap), then passed after fixture adjustment.
+2. `corepack pnpm lint` -> passed.
+3. `corepack pnpm typecheck` -> passed.
+4. `corepack pnpm test` -> passed (23 files, 73 tests).
+5. `corepack pnpm build` -> passed.
+6. `corepack pnpm test:e2e` -> passed (1 test).
+
+Regressions/known gaps:
+1. Uncertain deterministic families remain excluded by design (`1,5,6,7,31,33,41,43,45,67,73,74,88`).
+2. Randomizer families remain explicitly non-candidate by design (`8,9,25,26,30,87`).
+
+Explicit handoff next steps:
+1. Prioritize semantic resolution for high-volume ambiguous families: `ResultRoll|1` and `ResultRoll|67`.
+2. Add additional replay fixtures covering special-action and bomb/chainsaw chains to lift medium-confidence families.

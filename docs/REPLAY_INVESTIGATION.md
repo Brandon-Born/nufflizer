@@ -103,3 +103,20 @@ The Nufflizier probability engine now distinguishes scored deterministic context
    - Secondary visibility signal remains `coverage.allEvents` (entire normalized event stream).
 6. Mapping diagnostics:
    - `RollType=30` is now labeled `special_event_30` to reduce unknown-code ambiguity while semantics remain intentionally unscored.
+
+## Roll-Type Rebaseline Snapshot (2026-02-11)
+
+1. A full source-tag-aware inventory now lives in:
+   - `docs/ROLL_TYPE_EVIDENCE_MATRIX.md`
+   - `docs/ROLL_TYPE_CODE_COVERAGE.md`
+2. Key correction from this pass:
+   - `ResultRoll|10` does not behave like classic GFI in these fixtures; it is consistently a 2-die, high-target chain check and is treated as armor-like in deterministic scoring.
+3. High-confidence scored families currently:
+   - `ResultRoll|2` -> `block`
+   - `ResultRoll|10` and `ResultRoll|34` -> `armor_break`
+   - `ResultRoll|4` and `ResultRoll|37` -> `injury`
+   - `ResultRoll|71` -> `argue_call`
+4. Deterministic-but-uncertain families are explicitly excluded and tracked as roll candidates:
+   - `1,5,6,7,31,33,41,43,45,67,73,74,88`
+5. Randomizer families are explicitly excluded from roll-candidate coverage:
+   - `8,9,25,26,30,87`

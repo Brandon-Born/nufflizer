@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { classifyRollContext } from "@/domain/nufflizer/classifyRollContext";
 
 describe("nufflizier roll-context classification", () => {
-  it("does not classify ResultBlockRoll rollType 3 as dodge", () => {
+  it("treats ResultBlockRoll rollType 3 as non-scored summary context", () => {
     const result = classifyRollContext({
       sourceTag: "ResultBlockRoll",
       stepType: 6,
@@ -14,10 +14,12 @@ describe("nufflizier roll-context classification", () => {
     });
 
     expect(result.scored).toBe(false);
-    expect(result.reason).toMatch(/unsupported source tag/i);
+    expect(result.rollCandidate).toBe(false);
+    expect(result.eventType).toBe("block");
+    expect(result.reason).toMatch(/summary event/i);
   });
 
-  it("does not classify ResultInjuryRoll rollType 11 as ball handling", () => {
+  it("treats ResultInjuryRoll rollType 11 as non-scored injury summary context", () => {
     const result = classifyRollContext({
       sourceTag: "ResultInjuryRoll",
       stepType: 6,
@@ -28,10 +30,56 @@ describe("nufflizier roll-context classification", () => {
     });
 
     expect(result.scored).toBe(false);
+    expect(result.rollCandidate).toBe(false);
     expect(result.reason).toMatch(/injury-chain summary/i);
   });
 
-  it("classifies ResultRoll stepType 1 as scored dodge only for supported roll family", () => {
+  it("scores rollType 10 as deterministic armor-break", () => {
+    const result = classifyRollContext({
+      sourceTag: "ResultRoll",
+      stepType: 6,
+      rollType: 10,
+      requirement: 10,
+      difficulty: 10,
+      diceCount: 2
+    });
+
+    expect(result.scored).toBe(true);
+    expect(result.rollCandidate).toBe(true);
+    expect(result.eventType).toBe("armor_break");
+  });
+
+  it("keeps rollType 1 excluded until semantics are confirmed", () => {
+    const result = classifyRollContext({
+      sourceTag: "ResultRoll",
+      stepType: 0,
+      rollType: 1,
+      requirement: 2,
+      difficulty: 2,
+      diceCount: 1
+    });
+
+    expect(result.scored).toBe(false);
+    expect(result.rollCandidate).toBe(true);
+    expect(result.reason).toMatch(/pending semantic confirmation/i);
+  });
+
+  it("excludes randomizer families from roll-candidate coverage", () => {
+    const result = classifyRollContext({
+      sourceTag: "ResultRoll",
+      stepType: 3,
+      rollType: 25,
+      requirement: 0,
+      difficulty: 0,
+      diceCount: 1
+    });
+
+    expect(result.scored).toBe(false);
+    expect(result.rollCandidate).toBe(false);
+    expect(result.reason).toMatch(/randomizer roll family/i);
+  });
+
+  it("keeps unsupported roll families excluded and non-candidate", () => {
     const result = classifyRollContext({
       sourceTag: "ResultRoll",
       stepType: 1,
@@ -41,51 +89,8 @@ describe("nufflizier roll-context classification", () => {
       diceCount: 1
     });
 
-    expect(result.scored).toBe(true);
-    expect(result.eventType).toBe("dodge");
-  });
-
-  it("excludes dodge step when roll family is unsupported", () => {
-    const result = classifyRollContext({
-      sourceTag: "ResultRoll",
-      stepType: 1,
-      rollType: 10,
-      requirement: 3,
-      difficulty: 3,
-      diceCount: 1
-    });
-
     expect(result.scored).toBe(false);
-    expect(result.eventType).toBe("dodge");
-    expect(result.reason).toMatch(/dodge step without supported roll family/i);
-  });
-
-  it("excludes ball-handling step when roll family is unsupported", () => {
-    const result = classifyRollContext({
-      sourceTag: "ResultRoll",
-      stepType: 4,
-      rollType: 7,
-      requirement: 3,
-      difficulty: 3,
-      diceCount: 1
-    });
-
-    expect(result.scored).toBe(false);
-    expect(result.eventType).toBe("ball_handling");
-    expect(result.reason).toMatch(/ball-handling step without supported roll family/i);
-  });
-
-  it("excludes ResultBlockOutcome from scoring", () => {
-    const result = classifyRollContext({
-      sourceTag: "ResultBlockOutcome",
-      stepType: 6,
-      rollType: undefined,
-      requirement: undefined,
-      difficulty: undefined,
-      diceCount: 0
-    });
-
-    expect(result.scored).toBe(false);
-    expect(result.eventType).toBe("block");
+    expect(result.rollCandidate).toBe(false);
+    expect(result.reason).toMatch(/unsupported ResultRoll context/i);
   });
 });

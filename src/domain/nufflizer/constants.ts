@@ -11,9 +11,9 @@ export const LUCK_CATEGORY_WEIGHTS: Record<LuckEventType, number> = {
 
 export const ROLL_TYPE_BY_EVENT: Record<LuckEventType, number[]> = {
   block: [2],
-  armor_break: [1, 34],
-  injury: [4, 31, 37],
-  dodge: [3, 17, 21],
-  ball_handling: [11, 12, 13, 14, 15, 25],
+  armor_break: [10, 34],
+  injury: [4, 37],
+  dodge: [],
+  ball_handling: [],
   argue_call: [42, 70, 71]
 };

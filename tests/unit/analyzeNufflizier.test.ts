@@ -44,9 +44,14 @@ describe("analyzeNufflizerInput", () => {
   it("keeps goblin odd roll families excluded while preserving argue-call scoring", () => {
     const report = analyzeNufflizerInput(readDemoReplay("demo-goblins1.bbr"));
     const scoredBallHandling = report.events.filter((event) => event.type === "ball_handling" && event.scoringStatus === "scored");
+    const scoredArmorFromRoll10 = report.events.filter(
+      (event) => event.type === "armor_break" && event.scoringStatus === "scored" && event.metadata.rollType === 10
+    );
 
     expect(scoredBallHandling.some((event) => event.metadata.rollType === 7)).toBe(false);
     expect(scoredBallHandling.some((event) => event.metadata.rollType === 30)).toBe(false);
+    expect(scoredArmorFromRoll10.length).toBeGreaterThan(0);
+    expect(report.coverage.excludedByReason["excluded: unsupported ResultRoll context for rollType 10"] ?? 0).toBe(0);
     expect(report.events.some((event) => event.type === "argue_call" && event.scoringStatus === "scored" && event.metadata.rollType === 71)).toBe(
       true
     );

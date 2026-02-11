@@ -7,6 +7,7 @@ import {
   STEP_TYPE_MAP,
   labelForCode
 } from "@/domain/replay/mappings";
+import { labelForRollType } from "@/domain/replay/rollTypeContracts";
 import type { ReplayEvent, ReplayTurn, ReplayUnknownCode } from "@/domain/replay/types";
 
 const parser = new XMLParser({
@@ -179,7 +180,7 @@ function collectSequenceEvents(block: string, unknownCodeCounters: Map<string, R
       actionCode,
       actionLabel: labelForCode(ACTION_CODE_MAP, actionCode, "action"),
       rollType,
-      rollLabel: labelForCode(ROLL_TYPE_MAP, rollType, "roll"),
+      rollLabel: labelForRollType(rootTag, rollType, labelForCode(ROLL_TYPE_MAP, rollType, "roll")),
       payload
     } satisfies Omit<ReplayEvent, "type">;
 

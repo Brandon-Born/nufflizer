@@ -257,3 +257,35 @@ Remaining follow-ups:
 Verification evidence:
 1. Validation commands passed in this session: `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm test:e2e`.
 2. Targeted assertions passed for goblin fixture expectations (`tests/unit/analyzeNufflizier.test.ts`) and block-chain merge metadata (`tests/unit/nufflizierNormalization.test.ts`).
+
+## 2026-02-11 - Roll-type evidence rebaseline + source-tag contracts
+Metadata: commit(s) `pending`; scope `Replay semantics hardening for roll-family correctness`; status `partial`.
+
+Converted items:
+1. Added evidence-first roll-family inventory and code coverage crosswalk docs:
+- `docs/ROLL_TYPE_EVIDENCE_MATRIX.md`
+- `docs/ROLL_TYPE_CODE_COVERAGE.md`
+2. Introduced source-tag-aware roll contracts in `src/domain/replay/rollTypeContracts.ts` covering every observed demo `sourceTag|rollType` pair.
+3. Updated replay extraction to resolve roll labels via source-tag-aware contracts before fallback map labels.
+4. Rebased deterministic scoring to high-confidence families:
+- promoted `ResultRoll|10` to scored armor-like checks,
+- retained `2`, `34`, `4`, `37`, `71` scored paths,
+- demoted uncertain deterministic families (including `ResultRoll|1`) to explicit excluded status.
+5. Excluded randomizer families from roll-candidate denominator while preserving all-event transparency.
+6. Added guardrail tests to enforce evidence/coverage completeness for observed roll pairs.
+7. Updated replay mapping diagnostics to reduce misleading legacy labels (notably roll families `3`, `10`, `25`, `26`, `87`).
+
+Remaining follow-ups:
+1. Resolve highest-impact ambiguous deterministic families (`ResultRoll|1`, `ResultRoll|67`) with additional replay evidence.
+2. Re-evaluate step-type labels separately from roll-family contracts as more fixtures arrive.
+3. Continue keeping new observed `sourceTag|rollType` pairs blocked from silent fallback via matrix tests.
+
+Verification evidence:
+1. Validation commands passed in this session: `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm test:e2e`.
+2. Added/updated tests include:
+- `tests/unit/rollTypeEvidenceMatrix.test.ts`
+- `tests/unit/nufflizierClassification.test.ts`
+- `tests/unit/analyzeNufflizier.test.ts`
+- `tests/unit/nufflizierScoring.test.ts`
+- `tests/unit/replayMappings.test.ts`
+- `tests/unit/nufflizierCoverageInventory.test.ts`

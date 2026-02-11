@@ -1,4 +1,5 @@
 import type { LuckEventType } from "@/domain/nufflizer/types";
+import { getRollTypeContract, type RollScoringCategory } from "@/domain/replay/rollTypeContracts";
 
 export type ClassificationContext = {
   sourceTag: string;
@@ -13,21 +14,27 @@ export type ClassificationResult =
   | {
       eventType: LuckEventType;
       scored: true;
+      rollCandidate: true;
       reason: string;
     }
   | {
       eventType: LuckEventType | null;
       scored: false;
+      rollCandidate: boolean;
       reason: string;
     };
-
-const BALL_HANDLING_STEP_TYPES = new Set([4, 5, 8, 9, 12, 13]);
-const DODGE_ROLL_TYPES = new Set([3, 17, 21]);
-const BALL_HANDLING_ROLL_TYPES = new Set([11, 12, 13, 14, 15, 25]);
 
 function hasTargetThreshold(context: ClassificationContext): boolean {
   const target = context.difficulty ?? context.requirement;
   return Number.isFinite(target) && (target ?? 0) > 0;
+}
+
+function mapContractCategory(category: RollScoringCategory | undefined): LuckEventType | null {
+  if (category === "block" || category === "armor_break" || category === "injury" || category === "argue_call") {
+    return category;
+  }
+
+  return null;
 }
 
 export function classifyRollContext(context: ClassificationContext): ClassificationResult {
@@ -35,6 +42,7 @@ export function classifyRollContext(context: ClassificationContext): Classificat
     return {
       eventType: "block",
       scored: false,
+      rollCandidate: false,
       reason: "excluded: block outcome summary event is non-roll context"
     };
   }
@@ -43,7 +51,19 @@ export function classifyRollContext(context: ClassificationContext): Classificat
     return {
       eventType: "injury",
       scored: false,
+      rollCandidate: false,
       reason: "excluded: injury-chain summary event without deterministic threshold contract"
+    };
+  }
+
+  const contract = getRollTypeContract(context.sourceTag, context.rollType);
+
+  if (contract?.kind === "summary") {
+    return {
+      eventType: mapContractCategory(contract.scoringCategory),
+      scored: false,
+      rollCandidate: false,
+      reason: `excluded: ${contract.label} summary event is non-roll scoring context`
     };
   }
 
@@ -52,6 +72,7 @@ export function classifyRollContext(context: ClassificationContext): Classificat
       return {
         eventType: "argue_call",
         scored: false,
+        rollCandidate: false,
         reason: "excluded: argue-call context missing deterministic ResultRoll contract"
       };
     }
@@ -59,6 +80,7 @@ export function classifyRollContext(context: ClassificationContext): Classificat
     return {
       eventType: null,
       scored: false,
+      rollCandidate: false,
       reason: "excluded: unsupported source tag for deterministic luck scoring"
     };
   }
@@ -68,6 +90,7 @@ export function classifyRollContext(context: ClassificationContext): Classificat
       return {
         eventType: "argue_call",
         scored: false,
+        rollCandidate: true,
         reason: "excluded: missing target threshold"
       };
     }
@@ -75,85 +98,61 @@ export function classifyRollContext(context: ClassificationContext): Classificat
     return {
       eventType: "argue_call",
       scored: false,
+      rollCandidate: true,
       reason: `excluded: unsupported ResultRoll context for rollType ${context.rollType}`
+    };
+  }
+
+  if (contract?.kind === "randomizer") {
+    return {
+      eventType: null,
+      scored: false,
+      rollCandidate: false,
+      reason: "excluded: randomizer roll family without success-threshold semantics"
     };
   }
 
   if (!hasTargetThreshold(context)) {
     return {
-      eventType: null,
+      eventType: mapContractCategory(contract?.scoringCategory),
       scored: false,
+      rollCandidate: contract?.kind === "scored_deterministic" || contract?.kind === "excluded_deterministic",
       reason: "excluded: missing target threshold"
     };
   }
 
-  if (context.rollType === 1 || context.rollType === 34) {
-    return {
-      eventType: "armor_break",
-      scored: true,
-      reason: "scored: ResultRoll armor-break rollType 1/34"
-    };
-  }
-
-  if (context.rollType === 4 || context.rollType === 31 || context.rollType === 37) {
-    return {
-      eventType: "injury",
-      scored: true,
-      reason: "scored: ResultRoll injury rollType 4/31/37"
-    };
-  }
-
-  if (context.rollType === 2) {
-    return {
-      eventType: "block",
-      scored: true,
-      reason: "scored: ResultRoll block rollType 2"
-    };
-  }
-
-  if (context.rollType === 71) {
-    return {
-      eventType: "argue_call",
-      scored: true,
-      reason: "scored: ResultRoll argue-call rollType 71"
-    };
-  }
-
-  if (context.stepType === 1) {
-    if (!DODGE_ROLL_TYPES.has(context.rollType ?? -1)) {
+  if (contract?.kind === "scored_deterministic") {
+    const mappedType = mapContractCategory(contract.scoringCategory);
+    if (!mappedType) {
       return {
-        eventType: "dodge",
+        eventType: null,
         scored: false,
-        reason: "excluded: dodge step without supported roll family"
+        rollCandidate: true,
+        reason: `excluded: scored contract for ${contract.label} is missing a luck category mapping`
       };
     }
 
     return {
-      eventType: "dodge",
+      eventType: mappedType,
       scored: true,
-      reason: "scored: ResultRoll dodge stepType 1"
+      rollCandidate: true,
+      reason: `scored: ${contract.label}`
     };
   }
 
-  if (context.stepType !== undefined && BALL_HANDLING_STEP_TYPES.has(context.stepType)) {
-    if (!BALL_HANDLING_ROLL_TYPES.has(context.rollType ?? -1)) {
-      return {
-        eventType: "ball_handling",
-        scored: false,
-        reason: "excluded: ball-handling step without supported roll family"
-      };
-    }
-
+  if (contract?.kind === "excluded_deterministic") {
     return {
-      eventType: "ball_handling",
-      scored: true,
-      reason: `scored: ResultRoll ball-handling stepType ${context.stepType}`
+      eventType: mapContractCategory(contract.scoringCategory),
+      scored: false,
+      rollCandidate: true,
+      reason: `excluded: deterministic roll family pending semantic confirmation (${contract.label})`
     };
   }
 
   return {
     eventType: null,
     scored: false,
+    rollCandidate: false,
     reason: `excluded: unsupported ResultRoll context${context.rollType !== undefined ? ` for rollType ${context.rollType}` : ""}`
   };
 }
