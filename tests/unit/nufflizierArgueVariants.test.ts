@@ -20,6 +20,8 @@ describe("nufflizier argue-call variant gate", () => {
     expect(events.every((event) => event.calculationMethod === "fallback")).toBe(true);
     expect(events.some((event) => (event.metadata.normalizationFlags ?? []).includes("missing_target_threshold"))).toBe(true);
     expect(events.every((event) => /nondeterministic/i.test(event.calculationReason))).toBe(true);
+    expect(report.coverage.fallbackByRollType["42"]).toBe(events.length);
+    expect(report.coverage.nondeterministicArgueRollTypes).toContain(42);
   });
 
   it("keeps rollType 70 in fallback because fixture semantics remain nondeterministic", () => {
@@ -30,5 +32,7 @@ describe("nufflizier argue-call variant gate", () => {
     expect(events.every((event) => event.calculationMethod === "fallback")).toBe(true);
     expect(events.some((event) => (event.metadata.normalizationFlags ?? []).includes("missing_target_threshold"))).toBe(true);
     expect(events.every((event) => /nondeterministic/i.test(event.calculationReason))).toBe(true);
+    expect(report.coverage.fallbackByRollType["70"]).toBe(events.length);
+    expect(report.coverage.nondeterministicArgueRollTypes).toContain(70);
   });
 });

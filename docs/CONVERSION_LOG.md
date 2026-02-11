@@ -198,3 +198,22 @@ Remaining follow-ups:
 Verification evidence:
 1. Validation commands passed: `corepack pnpm typecheck`, `corepack pnpm lint`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm test:e2e`, `corepack pnpm test:nufflizier`, `corepack pnpm test:legacy`.
 2. New files include fixtures (`tests/fixtures/models/argue-rolltype-42.json`, `tests/fixtures/models/argue-rolltype-70.json`) and tests (`tests/unit/nufflizierArgueVariants.test.ts`, `tests/unit/nufflizierCoverageInventory.test.ts`).
+
+## 2026-02-11 - Legacy API gate + fallback transparency hardening
+Metadata: commit(s) `pending`; scope `Conversion residue cleanup and compatibility controls`; status `partial`.
+
+Converted items:
+1. Added deprecation-first gate controls for legacy `POST /api/replay` with environment-configurable mode and sunset metadata.
+2. Added legacy endpoint deprecation headers (`Deprecation`, `Sunset`, successor `Link`) and explicit disabled-mode `410` response contract.
+3. Extended `LuckReport.coverage` with fallback roll-type inventory and nondeterministic argue-call roll visibility.
+4. Surfaced nondeterministic argue-call fallback disclosure in both UI and CLI text output.
+5. Removed active-surface BB Trainer residue by renaming homepage logo asset references and added conversion-residue inventory tests.
+
+Remaining follow-ups:
+1. Keep monitoring legacy endpoint usage and switch default mode to disabled at/after sunset once compatibility consumers are migrated.
+2. Keep argue-call `rollType=42` and `rollType=70` fallback until deterministic replay evidence supports explicit promotion.
+3. Re-evaluate full legacy coaching module removal after gate milestones complete.
+
+Verification evidence:
+1. Added/updated tests include `tests/unit/legacyReplayApiRoute.test.ts`, `tests/unit/nufflizierApi.test.ts`, `tests/unit/nufflizierNormalization.test.ts`, `tests/unit/nufflizierArgueVariants.test.ts`, `tests/unit/nufflizierCliParity.test.ts`, `tests/unit/nufflizierConversionResidue.test.ts`.
+2. Validation commands passed in this session: `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm test:e2e`, `corepack pnpm test:nufflizier`, `corepack pnpm test:legacy`.

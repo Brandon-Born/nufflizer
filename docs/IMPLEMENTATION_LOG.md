@@ -334,3 +334,78 @@ Explicit handoff next steps:
 1. Gather additional replay evidence for `42` and `70` and re-run explicit promotion gate.
 2. Continue migrating shared behavior checks toward Nufflizier-first suites while retaining legacy safety net.
 3. Use human-test feedback to tune wording in shared explainability copy.
+
+## 2026-02-11 12:05 - Legacy gate and conversion residue remediation
+Goal:
+1. Implement remediation plan to deprecate+gate legacy replay API, improve fallback transparency for nondeterministic argue variants, and remove active BB Trainer residue.
+
+Changes made (files):
+1. Config and legacy API route:
+- `src/lib/config.ts`
+- `src/app/api/replay/route.ts`
+2. Nufflizier reporting and presentation:
+- `src/domain/nufflizer/types.ts`
+- `src/domain/nufflizer/analyzeLuck.ts`
+- `src/app/nufflizier/NufflizierAnalyzer.tsx`
+- `src/cli/nufflizier.ts`
+3. Residue cleanup:
+- `src/app/page.tsx`
+- `src/app/nufflizier-logo.png` (renamed from `src/app/bb-trainer-logo.png`)
+4. Tests:
+- `tests/unit/legacyReplayApiRoute.test.ts`
+- `tests/unit/nufflizierApi.test.ts`
+- `tests/unit/nufflizierNormalization.test.ts`
+- `tests/unit/nufflizierArgueVariants.test.ts`
+- `tests/unit/nufflizierCliParity.test.ts`
+- `tests/unit/nufflizierCoverageInventory.test.ts`
+- `tests/unit/nufflizierConversionResidue.test.ts`
+- `package.json` (`test:legacy` includes legacy API gate test)
+5. Docs:
+- `README.md`
+- `docs/PROJECT_PLAN.md`
+- `docs/CONVERSION_LOG.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+Commands run + outcomes:
+1. `corepack pnpm -s nufflizier analyze demo-replays/demo1.bbr --format json | rg '"rollType": (42|70)' -n` -> no matches in demo1.
+2. `corepack pnpm -s nufflizier analyze demo-replays/demo2.bbr --format json | rg '"rollType": (42|70)' -n` -> no matches in demo2.
+3. `corepack pnpm -s nufflizier analyze demo-replays/demo3.bbr --format json | rg '"rollType": (42|70)' -n` -> no matches in demo3.
+4. `corepack pnpm lint` -> pending in final validation block.
+5. `corepack pnpm typecheck` -> pending in final validation block.
+6. `corepack pnpm test` -> pending in final validation block.
+7. `corepack pnpm build` -> pending in final validation block.
+8. `corepack pnpm test:e2e` -> pending in final validation block.
+9. `corepack pnpm test:nufflizier` -> pending in final validation block.
+10. `corepack pnpm test:legacy` -> pending in final validation block.
+
+Regressions/known gaps:
+1. Argue-call `rollType=42` and `rollType=70` remain fallback-scored by design until deterministic semantics are proven.
+2. Legacy coaching modules remain in repository under gated compatibility policy.
+
+Explicit handoff next steps:
+1. Monitor `/api/replay` usage logs and plan default mode flip to `disabled` near sunset.
+2. Continue gathering replay evidence for `42`/`70` promotion gate.
+3. Revisit full legacy module removal once compatibility window ends.
+
+## 2026-02-11 12:10 - Remediation verification completion
+Goal:
+1. Complete full post-change verification sequence for legacy gate and transparency remediation.
+
+Changes made (files):
+1. `docs/IMPLEMENTATION_LOG.md` (append-only verification entry)
+
+Commands run + outcomes:
+1. `corepack pnpm lint` -> passed.
+2. `corepack pnpm typecheck` -> passed.
+3. `corepack pnpm test` -> passed (21 files, 64 tests).
+4. `corepack pnpm build` -> first parallel run failed with transient `/ _document` page lookup conflict while Playwright web server was also running; sequential rerun passed.
+5. `corepack pnpm test:e2e` -> passed.
+6. `corepack pnpm test:nufflizier` -> passed.
+7. `corepack pnpm test:legacy` -> passed (6 files, 23 tests).
+
+Regressions/known gaps:
+1. No new regressions detected beyond known intentional fallback behavior for argue-call `42`/`70`.
+
+Explicit handoff next steps:
+1. Monitor legacy `/api/replay` usage and decide sunset-mode default flip timing.
+2. Continue evidence gathering for deterministic argue-call variant promotion.

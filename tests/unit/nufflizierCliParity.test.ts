@@ -32,6 +32,8 @@ describe("nufflizier CLI/API parity", () => {
 
   it("prints shared explainability guidance in text mode", () => {
     const replayPath = path.resolve(process.cwd(), "tests", "fixtures", "replays", "sample-basic.xml");
+    const replayInput = readFileSync(replayPath, "utf-8");
+    const apiReport = analyzeNufflizerInput(replayInput);
     const cliRun = spawnSync("corepack", ["pnpm", "-s", "nufflizier", "analyze", replayPath, "--format", "text"], {
       cwd: process.cwd(),
       encoding: "utf-8"
@@ -43,6 +45,12 @@ describe("nufflizier CLI/API parity", () => {
     }
     for (const line of CATEGORY_EXAMPLE_LINES) {
       expect(cliRun.stdout).toContain(line);
+    }
+
+    if (apiReport.coverage.nondeterministicArgueRollTypes.length > 0) {
+      expect(cliRun.stdout).toContain("Warning: argue-call roll types");
+    } else {
+      expect(cliRun.stdout).not.toContain("Warning: argue-call roll types");
     }
   });
 });

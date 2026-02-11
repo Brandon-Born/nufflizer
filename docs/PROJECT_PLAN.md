@@ -19,7 +19,7 @@ Nufflizier should optimize for explainability over mystery scoring.
 ## Current System Snapshot
 1. Product surface:
 - Web UI: `/nufflizier` (primary) and `/upload` (alias).
-- API: `POST /api/nufflizier/analyze` (primary), `POST /api/replay` (legacy coaching pipeline).
+- API: `POST /api/nufflizier/analyze` (primary), `POST /api/replay` (legacy coaching pipeline, deprecated + gateable).
 - CLI: `pnpm nufflizier analyze <replay_file> --format json|text`.
 
 2. Active Nufflizier flow:
@@ -45,10 +45,10 @@ Status taxonomy: `converted`, `partial`, `legacy-kept`, `pending`, `blocked`.
 | Luck normalization | `partial` | Roll-based mapping works for MVP categories; deeper event semantics still need expansion for edge cases. | `src/domain/nufflizer/analyzeLuck.ts` |
 | Probability/scoring engine | `partial` | Explicit calculators now implemented for `block`, `armor_break`, `injury`, `dodge`, `ball_handling`, and `argue_call` (`rollType=71`); unsupported argue-call variants remain fallback with explicit disclosure. | `src/domain/nufflizer/probability.ts`, `src/domain/nufflizer/constants.ts` |
 | API: `/api/nufflizier/analyze` | `converted` | Main one-shot Nufflizier endpoint active. | `src/app/api/nufflizier/analyze/route.ts` |
-| API: `/api/replay` | `legacy-kept` | Coaching endpoint retained; not primary product surface. | `src/app/api/replay/route.ts` |
+| API: `/api/replay` | `legacy-kept` | Coaching endpoint retained with deprecation headers and env-based gate (`NUFFLIZIER_LEGACY_REPLAY_API_MODE`). Not primary product surface. | `src/app/api/replay/route.ts` |
 | UI routes (`/nufflizier`, `/upload`) | `converted` | Upload + verdict + team cards + key moments + filters + JSON export. | `src/app/nufflizier/*`, `src/app/upload/page.tsx` |
 | CLI entrypoint | `converted` | Text and JSON modes using shared report contract. | `src/cli/nufflizier.ts`, `bin/nufflizier` |
-| Automated tests | `partial` | Nufflizier unit/api/e2e coverage now includes explicit-vs-fallback coverage, normalization metadata assertions, CLI/API parity checks, argue-variant gate tests, and inventory checks; legacy coaching tests still exist and are now split with dedicated scripts for targeted execution. | `tests/unit/*`, `tests/e2e/smoke.spec.ts`, `package.json` |
+| Automated tests | `partial` | Nufflizier unit/api/e2e coverage now includes explicit-vs-fallback coverage, normalization metadata assertions, CLI/API parity checks, argue-variant gate tests, and conversion residue inventory checks; legacy coaching tests still exist and are now split with dedicated scripts for targeted execution and include legacy API gate coverage. | `tests/unit/*`, `tests/e2e/smoke.spec.ts`, `package.json` |
 | Documentation system | `partial` | README is updated; handoff docs and blueprint/agent alignment introduced in this pass. | `README.md`, `docs/*`, `AGENTS.md` |
 
 ## Prioritized Backlog

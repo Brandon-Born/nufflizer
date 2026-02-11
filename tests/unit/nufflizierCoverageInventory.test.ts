@@ -9,7 +9,8 @@ const REQUIRED_NUFFLIZIER_TESTS = [
   "tests/unit/nufflizierNormalization.test.ts",
   "tests/unit/nufflizierApi.test.ts",
   "tests/unit/nufflizierCliParity.test.ts",
-  "tests/unit/nufflizierArgueVariants.test.ts"
+  "tests/unit/nufflizierArgueVariants.test.ts",
+  "tests/unit/nufflizierConversionResidue.test.ts"
 ];
 
 describe("nufflizier test inventory", () => {

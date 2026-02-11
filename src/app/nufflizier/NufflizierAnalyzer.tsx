@@ -51,6 +51,8 @@ type LuckReport = {
     fallbackCount: number;
     explicitRate: number;
     byType: Record<LuckEventType, { explicit: number; fallback: number }>;
+    fallbackByRollType: Record<string, number>;
+    nondeterministicArgueRollTypes: number[];
   };
   weightTable: Record<LuckEventType, number>;
   howScoredSummary: string[];
@@ -262,6 +264,12 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
               Coverage: {(report.coverage.explicitRate * 100).toFixed(1)}% explicit ({report.coverage.explicitCount} explicit,{" "}
               {report.coverage.fallbackCount} fallback)
             </p>
+            {report.coverage.nondeterministicArgueRollTypes.length > 0 ? (
+              <p className="mt-2 text-sm text-amber-100">
+                Note: argue-call roll types {report.coverage.nondeterministicArgueRollTypes.join(", ")} are still scored with fallback odds
+                because replay semantics remain nondeterministic.
+              </p>
+            ) : null}
           </div>
 
           <section className="rounded-xl border border-amber-300/20 bg-black/20 p-4">

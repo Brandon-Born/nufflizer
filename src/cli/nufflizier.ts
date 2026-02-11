@@ -35,6 +35,7 @@ function parseFormat(args: string[]): OutputFormat {
 function formatTeamSummary(report: ReturnType<typeof analyzeNufflizerInput>): string {
   const [home, away] = report.teams;
   const topMoments = report.keyMoments.slice(0, 5);
+  const nondeterministicArgueRolls = report.coverage.nondeterministicArgueRollTypes;
   const byTypeCoverage = Object.entries(report.coverage.byType).map(([type, counts]) => {
     return `- ${type}: ${counts.explicit} explicit, ${counts.fallback} fallback`;
   });
@@ -45,6 +46,13 @@ function formatTeamSummary(report: ReturnType<typeof analyzeNufflizerInput>): st
     `Away: ${away?.teamName ?? "Away"} (${away?.luckScore.toFixed(1) ?? "0.0"})`,
     `Verdict: ${report.verdict.summary} (gap ${report.verdict.scoreGap.toFixed(1)})`,
     `Coverage: ${(report.coverage.explicitRate * 100).toFixed(1)}% explicit (${report.coverage.explicitCount} explicit, ${report.coverage.fallbackCount} fallback)`,
+    ...(nondeterministicArgueRolls.length > 0
+      ? [
+          `Warning: argue-call roll types ${nondeterministicArgueRolls.join(
+            ", "
+          )} are scored with fallback odds because replay semantics are nondeterministic.`
+        ]
+      : []),
     "Coverage by event type:",
     ...byTypeCoverage,
     "",

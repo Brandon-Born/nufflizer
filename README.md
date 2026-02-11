@@ -15,6 +15,16 @@ The app is one-shot and ephemeral: upload -> analyze -> read/download report.
 2. API: `POST /api/nufflizier/analyze` (multipart `replay` file).
 3. CLI: `pnpm nufflizier analyze <replay_file> --format json|text`
 
+## Legacy API Status
+
+`POST /api/replay` is deprecated and kept only for temporary compatibility.
+
+1. Successor endpoint: `POST /api/nufflizier/analyze`
+2. Runtime gate env vars:
+- `NUFFLIZIER_LEGACY_REPLAY_API_MODE=enabled|disabled` (default: `enabled`)
+- `NUFFLIZIER_LEGACY_REPLAY_API_SUNSET=2026-04-30T00:00:00Z` (default shown)
+3. Deprecated responses include `Deprecation`, `Sunset`, and `Link` headers.
+
 ## Tech Stack
 
 1. Next.js (App Router) + TypeScript

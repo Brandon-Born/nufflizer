@@ -6,6 +6,7 @@ import type { LuckEvent, LuckEventType, LuckReport, LuckTeamAggregate } from "@/
 import type { ReplayEvent, ReplayModel, ReplayTurn } from "@/domain/replay/types";
 
 type RecordLike = Record<string, unknown>;
+const NONDETERMINISTIC_ARGUE_ROLL_TYPES = new Set([42, 70]);
 
 function isRecord(value: unknown): value is RecordLike {
   return typeof value === "object" && value !== null;
@@ -489,6 +490,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   let explicitCount = 0;
   let fallbackCount = 0;
   const byTypeCoverage = initialCoverageByType();
+  const fallbackByRollType = new Map<number, number>();
+  const nondeterministicArgueRollTypes = new Set<number>();
 
   for (const event of events) {
     const aggregate = aggregateById.get(event.teamId);
@@ -504,6 +507,12 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     } else {
       fallbackCount += 1;
       byTypeCoverage[event.type].fallback += 1;
+      if (event.metadata.rollType !== undefined) {
+        fallbackByRollType.set(event.metadata.rollType, (fallbackByRollType.get(event.metadata.rollType) ?? 0) + 1);
+      }
+      if (event.type === "argue_call" && event.metadata.rollType !== undefined && NONDETERMINISTIC_ARGUE_ROLL_TYPES.has(event.metadata.rollType)) {
+        nondeterministicArgueRollTypes.add(event.metadata.rollType);
+      }
     }
 
     if (event.type === "block") {
@@ -547,7 +556,9 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     explicitCount,
     fallbackCount,
     explicitRate: totalCount > 0 ? roundTo(explicitCount / totalCount, 3) : 0,
-    byType: byTypeCoverage
+    byType: byTypeCoverage,
+    fallbackByRollType: Object.fromEntries(Array.from(fallbackByRollType.entries()).map(([rollType, count]) => [String(rollType), count])),
+    nondeterministicArgueRollTypes: Array.from(nondeterministicArgueRollTypes).sort((a, b) => a - b)
   } satisfies LuckReport["coverage"];
   const idSeed = `${replay.matchId}:${events.length}:${homeAggregate.luckScore}:${awayAggregate.luckScore}`;
 

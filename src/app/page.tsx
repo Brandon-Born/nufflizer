@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import bbTrainerLogo from "./bb-trainer-logo.png";
+import nufflizierLogo from "./nufflizier-logo.png";
 
 export default function HomePage() {
   return (
@@ -18,7 +18,7 @@ export default function HomePage() {
         </div>
         <div className="mx-auto rounded-2xl border border-amber-300/40 bg-black/30 p-3 shadow-lg md:mx-0">
           <Image
-            src={bbTrainerLogo}
+            src={nufflizierLogo}
             alt="Nufflizier goblin logo"
             width={176}
             height={176}

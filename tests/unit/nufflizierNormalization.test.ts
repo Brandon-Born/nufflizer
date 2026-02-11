@@ -30,6 +30,9 @@ describe("nufflizier normalization", () => {
 
     expect(report.coverage.byType.argue_call.explicit).toBe(1);
     expect(report.coverage.byType.argue_call.fallback).toBe(2);
+    expect(report.coverage.fallbackByRollType["42"]).toBe(1);
+    expect(report.coverage.fallbackByRollType["70"]).toBe(1);
+    expect(report.coverage.nondeterministicArgueRollTypes).toEqual([42, 70]);
   });
 
   it("emits normalization flags for ambiguous event context", () => {

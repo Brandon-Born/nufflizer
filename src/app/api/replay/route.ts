@@ -13,6 +13,8 @@ type RateBucket = {
 };
 
 const replayRateLimiter = new Map<string, RateBucket>();
+const LEGACY_REPLAY_ENDPOINT = "/api/replay";
+const SUCCESSOR_ENDPOINT = "/api/nufflizier/analyze";
 
 function hasAllowedExtension(name: string): boolean {
   return name.endsWith(".xml") || name.endsWith(".bbr");
@@ -62,8 +64,37 @@ function consumeReplayRateLimit(clientKey: string): boolean {
   return true;
 }
 
+function withDeprecationHeaders(response: NextResponse): NextResponse {
+  response.headers.set("Deprecation", "true");
+  response.headers.set("Sunset", appConfig.legacyReplayApiSunsetIso);
+  response.headers.set("Link", `<${SUCCESSOR_ENDPOINT}>; rel="successor-version"`);
+  return response;
+}
+
+function legacyJson(body: unknown, init?: ResponseInit): NextResponse {
+  return withDeprecationHeaders(NextResponse.json(body, init));
+}
+
 export async function POST(request: Request) {
   const clientId = getClientIdentifier(request);
+  logger.warn("Legacy replay API requested", {
+    endpoint: LEGACY_REPLAY_ENDPOINT,
+    mode: appConfig.legacyReplayApiMode,
+    sunset: appConfig.legacyReplayApiSunsetIso,
+    clientId
+  });
+
+  if (appConfig.legacyReplayApiMode === "disabled") {
+    return legacyJson(
+      {
+        error: "This endpoint has been disabled. Use /api/nufflizier/analyze instead.",
+        code: "LEGACY_ENDPOINT_DISABLED",
+        replacement: SUCCESSOR_ENDPOINT
+      },
+      { status: 410 }
+    );
+  }
+
   if (!consumeReplayRateLimit(clientId)) {
     logger.warn("Replay API rate limit exceeded", {
       clientId,
@@ -71,7 +102,7 @@ export async function POST(request: Request) {
       maxRequests: appConfig.replayRateLimitMaxRequests
     });
 
-    return NextResponse.json({ error: "Too many replay uploads right now. Please wait about a minute and try again." }, { status: 429 });
+    return legacyJson({ error: "Too many replay uploads right now. Please wait about a minute and try again." }, { status: 429 });
   }
 
   const contentLength = Number(request.headers.get("content-length") ?? "0");
@@ -82,25 +113,25 @@ export async function POST(request: Request) {
       maxReplayBytes: appConfig.maxReplayBytes
     });
 
-    return NextResponse.json({ error: "Upload payload is too large." }, { status: 413 });
+    return legacyJson({ error: "Upload payload is too large." }, { status: 413 });
   }
 
   let formData: FormData;
   try {
     formData = await request.formData();
   } catch {
-    return NextResponse.json({ error: "Could not read upload form data. Please try uploading the replay again." }, { status: 400 });
+    return legacyJson({ error: "Could not read upload form data. Please try uploading the replay again." }, { status: 400 });
   }
 
   const replayFile = formData.get("replay");
 
   if (!(replayFile instanceof File)) {
-    return NextResponse.json({ error: "A replay file is required." }, { status: 400 });
+    return legacyJson({ error: "A replay file is required." }, { status: 400 });
   }
 
   const fileName = replayFile.name.toLowerCase();
   if (!hasAllowedExtension(fileName)) {
-    return NextResponse.json({ error: "Unsupported replay file type. Upload .xml or .bbr files." }, { status: 400 });
+    return legacyJson({ error: "Unsupported replay file type. Upload .xml or .bbr files." }, { status: 400 });
   }
 
   if (replayFile.size > appConfig.maxReplayBytes) {
@@ -110,7 +141,7 @@ export async function POST(request: Request) {
       maxReplayBytes: appConfig.maxReplayBytes
     });
 
-    return NextResponse.json(
+    return legacyJson(
       { error: `Replay file too large. Max size is ${Math.floor(appConfig.maxReplayBytes / (1024 * 1024))}MB.` },
       { status: 413 }
     );
@@ -120,11 +151,11 @@ export async function POST(request: Request) {
   try {
     replayInput = await replayFile.text();
   } catch {
-    return NextResponse.json({ error: "Could not read the replay file. Please try another file." }, { status: 400 });
+    return legacyJson({ error: "Could not read the replay file. Please try another file." }, { status: 400 });
   }
 
   if (replayInput.trim().length === 0) {
-    return NextResponse.json({ error: "Replay file is empty." }, { status: 400 });
+    return legacyJson({ error: "Replay file is empty." }, { status: 400 });
   }
 
   try {
@@ -141,7 +172,7 @@ export async function POST(request: Request) {
         budgetMs: appConfig.maxAnalyzeDurationMs
       });
 
-      return NextResponse.json(
+      return legacyJson(
         { error: "Replay analysis took too long. Try a smaller replay or trim long overtime games." },
         { status: 413 }
       );
@@ -177,19 +208,19 @@ export async function POST(request: Request) {
       });
     }
 
-    return NextResponse.json({ report });
+    return legacyJson({ report });
   } catch (error) {
     if (error instanceof ReplayValidationError) {
       const friendlyError = /parse failed/i.test(error.message)
         ? "Replay format was not readable. Please upload a valid BB3 .bbr or XML replay file."
         : error.message;
-      return NextResponse.json({ error: friendlyError }, { status: 400 });
+      return legacyJson({ error: friendlyError }, { status: 400 });
     }
 
     logger.error("Unexpected replay analysis error", {
       error: error instanceof Error ? error.message : "Unknown error"
     });
 
-    return NextResponse.json({ error: "Failed to analyze replay." }, { status: 500 });
+    return legacyJson({ error: "Failed to analyze replay." }, { status: 500 });
   }
 }

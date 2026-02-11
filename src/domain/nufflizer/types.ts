@@ -86,6 +86,8 @@ export type LuckReport = {
     fallbackCount: number;
     explicitRate: number;
     byType: Record<LuckEventType, { explicit: number; fallback: number }>;
+    fallbackByRollType: Record<string, number>;
+    nondeterministicArgueRollTypes: number[];
   };
   weightTable: Record<LuckEventType, number>;
   howScoredSummary: string[];

@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:nufflizier": "vitest run tests/unit/nufflizier*.test.ts && playwright test tests/e2e/smoke.spec.ts",
-    "test:legacy": "vitest run tests/unit/analyzeReplay.test.ts tests/unit/coachingOutput.test.ts tests/unit/teamScoping.test.ts tests/unit/demoReplayStructured.test.ts tests/unit/rulesPlayerLinking.test.ts",
+    "test:legacy": "vitest run tests/unit/analyzeReplay.test.ts tests/unit/coachingOutput.test.ts tests/unit/teamScoping.test.ts tests/unit/demoReplayStructured.test.ts tests/unit/rulesPlayerLinking.test.ts tests/unit/legacyReplayApiRoute.test.ts",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "nufflizier": "node --import tsx src/cli/nufflizier.ts"
