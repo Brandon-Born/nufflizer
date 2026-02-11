@@ -1,7 +1,7 @@
 export type LuckEventType = "block" | "armor_break" | "injury" | "dodge" | "ball_handling" | "argue_call";
 
 export type LuckMomentTag = "blessed" | "shaftaroonie";
-export type LuckCalculationMethod = "explicit" | "fallback";
+export type LuckScoringStatus = "scored" | "excluded";
 
 export type LuckEventMetadata = {
   sourceTag: string;
@@ -38,14 +38,14 @@ export type LuckEvent = {
   weightedDelta: number;
   label: string;
   tags: LuckMomentTag[];
-  calculationMethod: LuckCalculationMethod;
-  calculationReason: string;
+  scoringStatus: LuckScoringStatus;
+  statusReason: string;
   explainability: {
     target: string;
-    baseOdds: number;
-    rerollAdjustedOdds: number;
+    baseOdds?: number;
+    rerollAdjustedOdds?: number;
     weight: number;
-    formulaSummary: string;
+    formulaSummary?: string;
     inputsSummary: string;
   };
   metadata: LuckEventMetadata;
@@ -82,12 +82,12 @@ export type LuckReport = {
   };
   verdict: LuckVerdict;
   coverage: {
-    explicitCount: number;
-    fallbackCount: number;
-    explicitRate: number;
-    byType: Record<LuckEventType, { explicit: number; fallback: number }>;
-    fallbackByRollType: Record<string, number>;
-    nondeterministicArgueRollTypes: number[];
+    scoredCount: number;
+    excludedCount: number;
+    scoredRate: number;
+    scoredByType: Record<LuckEventType, number>;
+    excludedByType: Record<LuckEventType, number>;
+    excludedByReason: Record<string, number>;
   };
   weightTable: Record<LuckEventType, number>;
   howScoredSummary: string[];

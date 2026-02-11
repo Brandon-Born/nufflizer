@@ -1,7 +1,7 @@
 export const HOW_TO_READ_LINES = [
   "Expected is the chance the play should work based on the replay context at roll time.",
   "Weighted delta is luck swing: (actual result - expected chance) x category weight.",
-  "Explicit means we have a dedicated calculator for that roll family; fallback means we still scored it, but with generic odds."
+  "Scored means deterministic replay context was sufficient; excluded means the event is shown for transparency but not counted."
 ] as const;
 
 export const CATEGORY_EXAMPLE_LINES = [
@@ -12,4 +12,3 @@ export const CATEGORY_EXAMPLE_LINES = [
   "Ball handling: pickup/catch/pass/handoff style control rolls.",
   "Argue call: referee call roll outcomes."
 ] as const;
-

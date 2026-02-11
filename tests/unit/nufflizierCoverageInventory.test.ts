@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 const REQUIRED_NUFFLIZIER_TESTS = [
   "tests/unit/nufflizierProbability.test.ts",
+  "tests/unit/nufflizierClassification.test.ts",
   "tests/unit/nufflizierScoring.test.ts",
   "tests/unit/nufflizierNormalization.test.ts",
   "tests/unit/nufflizierApi.test.ts",

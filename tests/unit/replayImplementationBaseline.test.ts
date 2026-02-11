@@ -86,10 +86,6 @@ function extractReferenceCounts(xml: string): ReferenceCounts {
         counts.foul += 1;
       }
 
-      if (resultTag === "ResultRoll" && stepType === 1) {
-        counts.dodge += 1;
-      }
-
       if (resultTag === "QuestionTeamRerollUsage" || resultTag === "ResultTeamRerollUsage") {
         counts.reroll += 1;
       }

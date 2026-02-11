@@ -409,3 +409,54 @@ Regressions/known gaps:
 Explicit handoff next steps:
 1. Monitor legacy `/api/replay` usage and decide sunset-mode default flip timing.
 2. Continue evidence gathering for deterministic argue-call variant promotion.
+
+## 2026-02-11 12:30 - Deterministic scored/excluded refactor
+Goal:
+1. Execute planned dice-fidelity refactor: context-aware roll classification, no generic fallback scoring, and breaking scored/excluded contract across domain/API/UI/CLI/tests.
+
+Changes made (files):
+1. Nufflizier domain:
+- `src/domain/nufflizer/classifyRollContext.ts`
+- `src/domain/nufflizer/analyzeLuck.ts`
+- `src/domain/nufflizer/probability.ts`
+- `src/domain/nufflizer/types.ts`
+- `src/domain/nufflizer/explainabilityCopy.ts`
+2. Replay extraction:
+- `src/domain/replay/extractStructuredTurns.ts`
+3. Presentation surfaces:
+- `src/app/nufflizier/NufflizierAnalyzer.tsx`
+- `src/cli/nufflizier.ts`
+4. Tests:
+- `tests/unit/nufflizierClassification.test.ts`
+- `tests/unit/nufflizierProbability.test.ts`
+- `tests/unit/nufflizierScoring.test.ts`
+- `tests/unit/nufflizierNormalization.test.ts`
+- `tests/unit/nufflizierArgueVariants.test.ts`
+- `tests/unit/nufflizierApi.test.ts`
+- `tests/unit/nufflizierCliParity.test.ts`
+- `tests/unit/analyzeNufflizier.test.ts`
+- `tests/unit/replayImplementationBaseline.test.ts`
+- `tests/unit/demoReplayStructured.test.ts`
+- `tests/unit/nufflizierCoverageInventory.test.ts`
+- `tests/e2e/smoke.spec.ts`
+5. Docs:
+- `docs/PROJECT_PLAN.md`
+- `docs/REPLAY_INVESTIGATION.md`
+- `docs/CONVERSION_LOG.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+Commands run + outcomes:
+1. `corepack pnpm typecheck` -> passed.
+2. `corepack pnpm lint` -> passed.
+3. `corepack pnpm test` -> initially failed (legacy expectations for synthetic dodge + argue variant categorization), then passed after test and classifier updates.
+4. `corepack pnpm build` -> passed.
+5. `corepack pnpm test:e2e` -> initially failed (smoke assertion expected old `Method` header), then passed after smoke assertion update.
+
+Regressions/known gaps:
+1. Some roll contexts are intentionally excluded from scoring pending deterministic fixture evidence.
+2. Report/API contract is intentionally breaking (`scored`/`excluded`) and no backward shim was added.
+
+Explicit handoff next steps:
+1. Add deterministic mappings for currently excluded special-action contexts once replay evidence is stable.
+2. Consider adding optional contract versioning only if external consumers require backward compatibility.
+3. Continue monitoring scored-rate and exclusion-reason trends across new replay fixtures.

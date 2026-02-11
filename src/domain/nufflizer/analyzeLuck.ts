@@ -1,12 +1,12 @@
 import { createHash } from "node:crypto";
 
-import { LUCK_CATEGORY_WEIGHTS, ROLL_TYPE_BY_EVENT } from "@/domain/nufflizer/constants";
+import { LUCK_CATEGORY_WEIGHTS } from "@/domain/nufflizer/constants";
+import { classifyRollContext } from "@/domain/nufflizer/classifyRollContext";
 import { computeProbabilityForEvent, resolveActualSuccess } from "@/domain/nufflizer/probability";
 import type { LuckEvent, LuckEventType, LuckReport, LuckTeamAggregate } from "@/domain/nufflizer/types";
 import type { ReplayEvent, ReplayModel, ReplayTurn } from "@/domain/replay/types";
 
 type RecordLike = Record<string, unknown>;
-const NONDETERMINISTIC_ARGUE_ROLL_TYPES = new Set([42, 70]);
 
 function isRecord(value: unknown): value is RecordLike {
   return typeof value === "object" && value !== null;
@@ -64,21 +64,6 @@ function eventTypeLabel(type: LuckEventType): string {
   }
 
   return type[0].toUpperCase() + type.slice(1);
-}
-
-function classifyByRollType(rollType: number | undefined): LuckEventType | null {
-  if (rollType === undefined) {
-    return null;
-  }
-
-  const entries = Object.entries(ROLL_TYPE_BY_EVENT) as Array<[LuckEventType, number[]]>;
-  for (const [eventType, rollTypes] of entries) {
-    if (rollTypes.includes(rollType)) {
-      return eventType;
-    }
-  }
-
-  return null;
 }
 
 function extractDice(payload: RecordLike | undefined): { dice: number[]; dieTypes: number[] } {
@@ -150,29 +135,13 @@ function resolveTeamId(turn: ReplayTurn, event: ReplayEvent): string | undefined
   return event.actorTeamId ?? event.teamId ?? turn.teamId ?? turn.inferredTeamId;
 }
 
-function fallbackEventType(event: ReplayEvent): LuckEventType | null {
-  if (event.type === "dodge") {
-    return "dodge";
-  }
-
-  if (event.type === "casualty") {
-    return "injury";
-  }
-
-  if (event.type === "block" && event.sourceTag === "ResultBlockOutcome") {
-    return "block";
-  }
-
-  if (/argue|referee|bribe/i.test(event.sourceTag)) {
-    return "argue_call";
-  }
-
-  return null;
-}
-
-function buildMomentLabel(type: LuckEventType, actualSuccess: boolean, probabilitySuccess: number, difficulty?: number): string {
+function buildMomentLabel(type: LuckEventType, actualSuccess: boolean, probabilitySuccess?: number, difficulty?: number): string {
   const action = eventTypeLabel(type);
   const targetPrefix = difficulty && difficulty > 0 ? `${difficulty}+ ` : "";
+
+  if (probabilitySuccess === undefined) {
+    return `${targetPrefix}${action} excluded from score`;
+  }
 
   if (actualSuccess) {
     return `${targetPrefix}${action} succeeded (${percent(probabilitySuccess)})`;
@@ -194,15 +163,9 @@ function buildFormulaSummary(actualSuccess: boolean, probabilitySuccess: number,
   return `weighted delta = (${actualSuccess ? 1 : 0} - ${probabilitySuccess.toFixed(3)}) x ${weight.toFixed(2)} = ${weightedDelta.toFixed(3)}`;
 }
 
-function buildInputsSummary(
-  type: LuckEventType,
-  target: string,
-  dice: number[],
-  rerollAvailable: boolean,
-  calculationMethod: LuckEvent["calculationMethod"]
-): string {
+function buildInputsSummary(type: LuckEventType, target: string, dice: number[], rerollAvailable: boolean, scoringStatus: LuckEvent["scoringStatus"]): string {
   const diceText = dice.length > 0 ? `[${dice.join(", ")}]` : "none";
-  return `${eventTypeLabel(type)} | target ${target} | dice ${diceText} | reroll available ${rerollAvailable ? "yes" : "no"} | method ${calculationMethod}`;
+  return `${eventTypeLabel(type)} | target ${target} | dice ${diceText} | reroll available ${rerollAvailable ? "yes" : "no"} | status ${scoringStatus}`;
 }
 
 function isPlayableTeamName(name: string): boolean {
@@ -247,6 +210,10 @@ function hashId(value: string): string {
   return createHash("sha1").update(value).digest("hex").slice(0, 12);
 }
 
+function defaultCategory(type: LuckEventType | null): LuckEventType {
+  return type ?? "block";
+}
+
 function buildNormalizedEvent(
   replayTurn: ReplayTurn,
   turnEvents: ReplayEvent[],
@@ -256,25 +223,12 @@ function buildNormalizedEvent(
 ): LuckEvent | null {
   const payload = isRecord(event.payload) ? event.payload : undefined;
   const rollType = event.rollType ?? toNumber(payload?.RollType);
-  const classifiedFromRoll = event.type === "roll" ? classifyByRollType(rollType) : null;
-  const type = classifiedFromRoll ?? fallbackEventType(event);
-
-  if (!type) {
-    return null;
-  }
-
-  const teamId = resolveTeamId(replayTurn, event);
-  if (!teamId) {
-    return null;
-  }
-
   const { dice, dieTypes } = extractDice(payload);
   const { modifiers, skillsUsed } = extractModifiers(payload);
   const requirement = toNumber(payload?.Requirement);
   const difficulty = toNumber(payload?.Difficulty);
   const outcomeCode = toNumber(payload?.Outcome);
   const { rerollAvailable, rerollUsed } = extractRerollFlags(turnEvents, eventIndex);
-  const inferredRerollAvailable = rerollAvailable || skillsUsed.length > 0;
   const normalizationFlags: string[] = [];
   const normalizationNotes: string[] = [];
 
@@ -285,7 +239,7 @@ function buildNormalizedEvent(
 
   if (difficulty === undefined && requirement === undefined) {
     normalizationFlags.push("missing_target_threshold");
-    normalizationNotes.push("difficulty and requirement were both missing; fallback target handling applied");
+    normalizationNotes.push("difficulty and requirement were both missing");
   }
 
   if (dice.length > 0 && dieTypes.some((dieType) => dieType === 0)) {
@@ -294,24 +248,88 @@ function buildNormalizedEvent(
   }
 
   if (!rerollAvailable && skillsUsed.length > 0) {
-    normalizationFlags.push("inferred_reroll_from_skill_only");
-    normalizationNotes.push("reroll availability inferred from skill usage without explicit reroll question");
+    normalizationFlags.push("skill_modifier_present_without_explicit_reroll");
+    normalizationNotes.push("skill modifiers observed without explicit team reroll question");
   }
 
-  const probability = computeProbabilityForEvent(type, {
+  const classification = classifyRollContext({
+    sourceTag: event.sourceTag,
+    stepType: event.stepType,
+    rollType,
+    requirement,
+    difficulty,
+    diceCount: dice.length
+  });
+
+  const teamId = resolveTeamId(replayTurn, event);
+  if (!teamId) {
+    return null;
+  }
+
+  const eventType = defaultCategory(classification.eventType);
+  const target = targetLabel(requirement, difficulty);
+  const resolvedActual = resolveActualSuccess(outcomeCode, dice, difficulty ?? requirement);
+
+  if (!classification.scored || !resolvedActual.deterministic) {
+    const exclusionReason = !classification.scored ? classification.reason : `excluded: ${resolvedActual.reason}`;
+    return {
+      id: `${replayTurn.turnNumber}-${eventIndex}-${event.sourceTag}`,
+      turn: replayTurn.turnNumber,
+      teamId,
+      teamName: teamNameById.get(teamId) ?? teamId,
+      playerId: event.playerId,
+      type: eventType,
+      probabilitySuccess: 0,
+      actualSuccess: resolvedActual.actualSuccess,
+      delta: 0,
+      weightedDelta: 0,
+      label: buildMomentLabel(eventType, resolvedActual.actualSuccess, undefined, difficulty ?? requirement),
+      tags: [],
+      scoringStatus: "excluded",
+      statusReason: exclusionReason,
+      explainability: {
+        target,
+        weight: LUCK_CATEGORY_WEIGHTS[eventType],
+        inputsSummary: buildInputsSummary(eventType, target, dice, rerollAvailable, "excluded")
+      },
+      metadata: {
+        sourceTag: event.sourceTag,
+        rollType,
+        rollLabel: event.rollLabel,
+        stepType: event.stepType,
+        stepLabel: event.stepLabel,
+        actionCode: event.actionCode,
+        actionLabel: event.actionLabel,
+        outcomeCode,
+        requirement,
+        difficulty,
+        dice,
+        dieTypes,
+        modifiers,
+        modifiersSum: modifiers.reduce((sum, value) => sum + value, 0),
+        rerollAvailable,
+        rerollUsed,
+        skillsUsed,
+        normalizationFlags,
+        normalizationNotes
+      }
+    };
+  }
+
+  const probability = computeProbabilityForEvent({
+    eventType,
     rollType,
     requirement,
     difficulty,
     dice,
     dieTypes,
-    rerollAvailable: inferredRerollAvailable
+    rerollAvailable
   });
   const probabilitySuccess = probability.probabilitySuccess;
-  const actualSuccess = resolveActualSuccess(outcomeCode, dice, difficulty ?? requirement);
+  const actualSuccess = resolvedActual.actualSuccess;
   const delta = (actualSuccess ? 1 : 0) - probabilitySuccess;
-  const weight = LUCK_CATEGORY_WEIGHTS[type];
+  const weight = LUCK_CATEGORY_WEIGHTS[eventType];
   const weightedDelta = delta * weight;
-  const target = targetLabel(requirement, difficulty);
 
   const tags: LuckEvent["tags"] = [];
   if (actualSuccess && probabilitySuccess <= 0.3) {
@@ -327,22 +345,22 @@ function buildNormalizedEvent(
     teamId,
     teamName: teamNameById.get(teamId) ?? teamId,
     playerId: event.playerId,
-    type,
+    type: eventType,
     probabilitySuccess: clamp01(probabilitySuccess),
     actualSuccess,
     delta,
     weightedDelta,
-    label: buildMomentLabel(type, actualSuccess, probabilitySuccess, difficulty ?? requirement),
+    label: buildMomentLabel(eventType, actualSuccess, probabilitySuccess, difficulty ?? requirement),
     tags,
-    calculationMethod: probability.calculationMethod,
-    calculationReason: probability.calculationReason,
+    scoringStatus: "scored",
+    statusReason: `${classification.reason}; ${probability.reason}; ${resolvedActual.reason}`,
     explainability: {
       target,
       baseOdds: probability.baseOdds,
       rerollAdjustedOdds: probability.rerollAdjustedOdds,
       weight,
       formulaSummary: buildFormulaSummary(actualSuccess, probabilitySuccess, weight, weightedDelta),
-      inputsSummary: buildInputsSummary(type, target, dice, inferredRerollAvailable, probability.calculationMethod)
+      inputsSummary: buildInputsSummary(eventType, target, dice, rerollAvailable, "scored")
     },
     metadata: {
       sourceTag: event.sourceTag,
@@ -359,7 +377,7 @@ function buildNormalizedEvent(
       dieTypes,
       modifiers,
       modifiersSum: modifiers.reduce((sum, value) => sum + value, 0),
-      rerollAvailable: inferredRerollAvailable,
+      rerollAvailable,
       rerollUsed,
       skillsUsed,
       normalizationFlags,
@@ -385,14 +403,14 @@ function initialAggregate(teamId: string, teamName: string): LuckTeamAggregate {
   };
 }
 
-function initialCoverageByType(): LuckReport["coverage"]["byType"] {
+function initialCoverageByType(): Record<LuckEventType, number> {
   return {
-    block: { explicit: 0, fallback: 0 },
-    armor_break: { explicit: 0, fallback: 0 },
-    injury: { explicit: 0, fallback: 0 },
-    dodge: { explicit: 0, fallback: 0 },
-    ball_handling: { explicit: 0, fallback: 0 },
-    argue_call: { explicit: 0, fallback: 0 }
+    block: 0,
+    armor_break: 0,
+    injury: 0,
+    dodge: 0,
+    ball_handling: 0,
+    argue_call: 0
   };
 }
 
@@ -431,17 +449,18 @@ function summarizeVerdict(
   };
 }
 
-function buildHowScoredSummary(
-  verdictSummary: string,
-  coverage: LuckReport["coverage"],
-  home: LuckTeamAggregate,
-  away: LuckTeamAggregate
-): string[] {
+function buildHowScoredSummary(verdictSummary: string, coverage: LuckReport["coverage"], home: LuckTeamAggregate, away: LuckTeamAggregate): string[] {
+  const excludedTopReasons = Object.entries(coverage.excludedByReason)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([reason, count]) => `${count} ${reason}`);
+
   return [
-    `Nufflizier scores each event as (actual result - expected odds) multiplied by a category weight.`,
-    `Coverage this match: ${coverage.explicitCount} explicit calculations and ${coverage.fallbackCount} fallback calculations (${(
-      coverage.explicitRate * 100
-    ).toFixed(1)}% explicit).`,
+    "Nufflizier scores only deterministic roll contexts with stable thresholds and outcomes.",
+    `Coverage this match: ${coverage.scoredCount} scored events and ${coverage.excludedCount} excluded events (${(coverage.scoredRate * 100).toFixed(
+      1
+    )}% scored).`,
+    excludedTopReasons.length > 0 ? `Top exclusions: ${excludedTopReasons.join("; ")}.` : "Top exclusions: none.",
     `${home.teamName} finished at ${home.luckScore.toFixed(1)} versus ${away.teamName} at ${away.luckScore.toFixed(
       1
     )}, so verdict is: ${verdictSummary}`
@@ -451,9 +470,7 @@ function buildHowScoredSummary(
 export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   const [homeTeam, awayTeam] = selectMatchTeams(replay);
   const trackedTeamIds = new Set<string>([homeTeam.id, awayTeam.id]);
-  const teamNameById = new Map<string, string>(
-    replay.teams.map((team) => [team.id, team.name] satisfies [string, string])
-  );
+  const teamNameById = new Map<string, string>(replay.teams.map((team) => [team.id, team.name] satisfies [string, string]));
 
   const events: LuckEvent[] = [];
 
@@ -487,11 +504,11 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     [homeAggregate.teamId, 0],
     [awayAggregate.teamId, 0]
   ]);
-  let explicitCount = 0;
-  let fallbackCount = 0;
-  const byTypeCoverage = initialCoverageByType();
-  const fallbackByRollType = new Map<number, number>();
-  const nondeterministicArgueRollTypes = new Set<number>();
+  let scoredCount = 0;
+  let excludedCount = 0;
+  const scoredByType = initialCoverageByType();
+  const excludedByType = initialCoverageByType();
+  const excludedByReason = new Map<string, number>();
 
   for (const event of events) {
     const aggregate = aggregateById.get(event.teamId);
@@ -499,21 +516,16 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       continue;
     }
 
-    const categoryWeight = LUCK_CATEGORY_WEIGHTS[event.type];
     aggregate.eventCount += 1;
-    if (event.calculationMethod === "explicit") {
-      explicitCount += 1;
-      byTypeCoverage[event.type].explicit += 1;
-    } else {
-      fallbackCount += 1;
-      byTypeCoverage[event.type].fallback += 1;
-      if (event.metadata.rollType !== undefined) {
-        fallbackByRollType.set(event.metadata.rollType, (fallbackByRollType.get(event.metadata.rollType) ?? 0) + 1);
-      }
-      if (event.type === "argue_call" && event.metadata.rollType !== undefined && NONDETERMINISTIC_ARGUE_ROLL_TYPES.has(event.metadata.rollType)) {
-        nondeterministicArgueRollTypes.add(event.metadata.rollType);
-      }
+    if (event.scoringStatus === "excluded") {
+      excludedCount += 1;
+      excludedByType[event.type] += 1;
+      excludedByReason.set(event.statusReason, (excludedByReason.get(event.statusReason) ?? 0) + 1);
+      continue;
     }
+
+    scoredCount += 1;
+    scoredByType[event.type] += 1;
 
     if (event.type === "block") {
       aggregate.categoryScores.block += event.weightedDelta;
@@ -529,6 +541,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       aggregate.categoryScores.argueCall += event.weightedDelta;
     }
 
+    const categoryWeight = LUCK_CATEGORY_WEIGHTS[event.type];
     weightSums.set(event.teamId, (weightSums.get(event.teamId) ?? 0) + categoryWeight);
     weightedTotals.set(event.teamId, (weightedTotals.get(event.teamId) ?? 0) + event.weightedDelta);
   }
@@ -547,18 +560,20 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     };
   }
 
-  const keyMoments = [...events]
+  const keyMoments = events
+    .filter((event) => event.scoringStatus === "scored")
     .sort((a, b) => Math.abs(b.weightedDelta) - Math.abs(a.weightedDelta))
     .slice(0, 15);
+
   const { verdict } = summarizeVerdict(homeAggregate, awayAggregate);
-  const totalCount = explicitCount + fallbackCount;
+  const totalCount = scoredCount + excludedCount;
   const coverage = {
-    explicitCount,
-    fallbackCount,
-    explicitRate: totalCount > 0 ? roundTo(explicitCount / totalCount, 3) : 0,
-    byType: byTypeCoverage,
-    fallbackByRollType: Object.fromEntries(Array.from(fallbackByRollType.entries()).map(([rollType, count]) => [String(rollType), count])),
-    nondeterministicArgueRollTypes: Array.from(nondeterministicArgueRollTypes).sort((a, b) => a - b)
+    scoredCount,
+    excludedCount,
+    scoredRate: totalCount > 0 ? roundTo(scoredCount / totalCount, 3) : 0,
+    scoredByType,
+    excludedByType,
+    excludedByReason: Object.fromEntries(Array.from(excludedByReason.entries()).sort((a, b) => b[1] - a[1]))
   } satisfies LuckReport["coverage"];
   const idSeed = `${replay.matchId}:${events.length}:${homeAggregate.luckScore}:${awayAggregate.luckScore}`;
 
@@ -580,11 +595,10 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       probabilitySuccess: roundTo(event.probabilitySuccess, 3),
       explainability: {
         ...event.explainability,
-        baseOdds: roundTo(event.explainability.baseOdds, 3),
-        rerollAdjustedOdds: roundTo(event.explainability.rerollAdjustedOdds, 3),
-        weight: roundTo(event.explainability.weight, 3),
-        formulaSummary: event.explainability.formulaSummary,
-        inputsSummary: event.explainability.inputsSummary
+        baseOdds: event.explainability.baseOdds !== undefined ? roundTo(event.explainability.baseOdds, 3) : undefined,
+        rerollAdjustedOdds:
+          event.explainability.rerollAdjustedOdds !== undefined ? roundTo(event.explainability.rerollAdjustedOdds, 3) : undefined,
+        weight: roundTo(event.explainability.weight, 3)
       },
       delta: roundTo(event.delta, 3),
       weightedDelta: roundTo(event.weightedDelta, 3)
@@ -594,11 +608,10 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       probabilitySuccess: roundTo(event.probabilitySuccess, 3),
       explainability: {
         ...event.explainability,
-        baseOdds: roundTo(event.explainability.baseOdds, 3),
-        rerollAdjustedOdds: roundTo(event.explainability.rerollAdjustedOdds, 3),
-        weight: roundTo(event.explainability.weight, 3),
-        formulaSummary: event.explainability.formulaSummary,
-        inputsSummary: event.explainability.inputsSummary
+        baseOdds: event.explainability.baseOdds !== undefined ? roundTo(event.explainability.baseOdds, 3) : undefined,
+        rerollAdjustedOdds:
+          event.explainability.rerollAdjustedOdds !== undefined ? roundTo(event.explainability.rerollAdjustedOdds, 3) : undefined,
+        weight: roundTo(event.explainability.weight, 3)
       },
       delta: roundTo(event.delta, 3),
       weightedDelta: roundTo(event.weightedDelta, 3)

@@ -78,14 +78,16 @@ describe("demo replay structured extraction", () => {
     });
   }
 
-  it("detects dodge events in at least one replay", () => {
-    const hasDodge = DEMO_REPLAYS.some((replayName) => {
+  it("detects dodge-like roll contexts in at least one replay", () => {
+    const hasDodgeContext = DEMO_REPLAYS.some((replayName) => {
       const decoded = decodeReplayInput(readDemoReplay(replayName));
       const replay = parseReplayXml(decoded.xml);
-      return replay.turns.some((turn) => turn.events.some((event) => event.type === "dodge"));
+      return replay.turns.some((turn) =>
+        turn.events.some((event) => event.type === "roll" && event.sourceTag === "ResultRoll" && event.stepType === 1)
+      );
     });
 
-    expect(hasDodge).toBe(true);
+    expect(hasDodgeContext).toBe(true);
   });
 
   it("detects foul events in at least one replay", () => {

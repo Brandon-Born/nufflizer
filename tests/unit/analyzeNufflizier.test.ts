@@ -21,12 +21,14 @@ describe("analyzeNufflizerInput", () => {
     expect(report.keyMoments.length).toBeGreaterThan(0);
     expect(report.keyMoments.length).toBeLessThanOrEqual(15);
     expect(report.events.every((event) => event.probabilitySuccess >= 0 && event.probabilitySuccess <= 1)).toBe(true);
-    expect(report.coverage.explicitCount + report.coverage.fallbackCount).toBe(report.events.length);
-    expect(report.coverage.explicitRate).toBeGreaterThanOrEqual(0);
-    expect(report.coverage.explicitRate).toBeLessThanOrEqual(1);
-    const byTypeTotal = Object.values(report.coverage.byType).reduce((sum, counts) => sum + counts.explicit + counts.fallback, 0);
+    expect(report.coverage.scoredCount + report.coverage.excludedCount).toBe(report.events.length);
+    expect(report.coverage.scoredRate).toBeGreaterThanOrEqual(0);
+    expect(report.coverage.scoredRate).toBeLessThanOrEqual(1);
+    const byTypeTotal =
+      Object.values(report.coverage.scoredByType).reduce((sum, count) => sum + count, 0) +
+      Object.values(report.coverage.excludedByType).reduce((sum, count) => sum + count, 0);
     expect(byTypeTotal).toBe(report.events.length);
-    expect(report.coverage.byType.argue_call.explicit).toBeGreaterThanOrEqual(1);
+    expect(report.coverage.scoredByType.argue_call).toBeGreaterThanOrEqual(1);
     expect(report.howScoredSummary.length).toBeGreaterThan(0);
   });
 

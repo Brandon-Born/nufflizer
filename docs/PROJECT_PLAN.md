@@ -43,7 +43,7 @@ Status taxonomy: `converted`, `partial`, `legacy-kept`, `pending`, `blocked`.
 | --- | --- | --- | --- |
 | Replay parsing core (`decodeReplay`, `parseXml`, `extractStructuredTurns`) | `converted` | Handles XML + BBR with structured turn extraction and attribution. | `src/domain/replay/*` |
 | Luck normalization | `partial` | Roll-based mapping works for MVP categories; deeper event semantics still need expansion for edge cases. | `src/domain/nufflizer/analyzeLuck.ts` |
-| Probability/scoring engine | `partial` | Explicit calculators now implemented for `block`, `armor_break`, `injury`, `dodge`, `ball_handling`, and `argue_call` (`rollType=71`); unsupported argue-call variants remain fallback with explicit disclosure. | `src/domain/nufflizer/probability.ts`, `src/domain/nufflizer/constants.ts` |
+| Probability/scoring engine | `partial` | Refactored to deterministic scored-vs-excluded contract with context-aware roll classification; unsupported/ambiguous contexts are now excluded from luck totals instead of fallback-scored. | `src/domain/nufflizer/probability.ts`, `src/domain/nufflizer/classifyRollContext.ts`, `src/domain/nufflizer/analyzeLuck.ts` |
 | API: `/api/nufflizier/analyze` | `converted` | Main one-shot Nufflizier endpoint active. | `src/app/api/nufflizier/analyze/route.ts` |
 | API: `/api/replay` | `legacy-kept` | Coaching endpoint retained with deprecation headers and env-based gate (`NUFFLIZIER_LEGACY_REPLAY_API_MODE`). Not primary product surface. | `src/app/api/replay/route.ts` |
 | UI routes (`/nufflizier`, `/upload`) | `converted` | Upload + verdict + team cards + key moments + filters + JSON export. | `src/app/nufflizier/*`, `src/app/upload/page.tsx` |
@@ -53,22 +53,22 @@ Status taxonomy: `converted`, `partial`, `legacy-kept`, `pending`, `blocked`.
 
 ## Prioritized Backlog
 
-### P0 - Probability Fidelity Hardening (Wave 2)
+### P0 - Probability Fidelity Hardening (Wave 3)
 - Why it matters: Verdict trust depends on realistic probabilities for replay-visible action context.
 - Concrete tasks:
-1. Expand explicit argue-call support beyond `rollType=71` only if replay evidence proves deterministic semantics for additional variants (`42`, `70`).
+1. Expand deterministic scored-context mapping for additional roll families now excluded (special actions and unusual roll chains).
 2. Add fixtures for edge conditions (multi-die unusual types, reroll decisions, ambiguous outcomes).
-3. Document supported/unsupported roll semantics in `docs/REPLAY_INVESTIGATION.md` and conversion logs.
+3. Document scored/excluded context matrix in `docs/REPLAY_INVESTIGATION.md` and conversion logs.
 - Acceptance criteria:
 1. Probability calculator behavior is deterministic and unit-tested for each explicitly supported roll family.
-2. No unsupported roll family silently reuses generic fallback without tagged note in report metadata/log.
+2. No unsupported roll family is scored with generic fallback odds; unsupported contexts must be explicitly excluded with reason tags.
 3. Regression tests pass for all demo replays and sample fixture.
 - Dependencies:
 - Replay payload field consistency from `extractStructuredTurns`.
 - Availability of representative replay fixtures.
 
 Current decision note:
-1. Evidence gate for `rollType=42` and `rollType=70` currently fails because target-source consistency is not stable across fixtures; both remain fallback with explicit reason strings.
+1. `rollType=42` and `rollType=70` are now excluded from scoring with explicit reasons; they are shown in report transparency data but do not affect luck totals.
 
 ### P1 - Legacy Surface Decision and Cleanup Plan
 - Why it matters: Keeping both Nufflizier and coaching pipelines increases maintenance burden and ambiguity for new agents.
@@ -87,7 +87,7 @@ Current decision note:
 - Why it matters: Users can only trust a for-fun analyzer if the “why” is transparent and understandable without statistics training.
 - Concrete tasks:
 1. Add optional detail expansion per key moment (inputs used for probability calculation).
-2. Add confidence/coverage banner summarizing how much of replay was scored via explicit mappings vs fallback.
+2. Add confidence/coverage banner summarizing how much of replay was scored vs excluded.
 3. Add plain-language UI copy for weight effects and score interpretation.
 4. Add “How this was scored” helper text linking each verdict to underlying weighted deltas.
 - Acceptance criteria:
@@ -99,9 +99,9 @@ Current decision note:
 - Stable metadata contract from `LuckEvent`.
 
 ## Next 3 Agent Tasks
-1. Collect additional replay evidence for argue-call `rollType=42` and `rollType=70`, then re-run the explicit promotion gate.
+1. Collect additional replay evidence for excluded roll families (argue variants and special-action chains), then promote deterministic contexts to scored.
 2. Continue test-suite rebalance by migrating more shared behavior checks to Nufflizier-named tests while keeping `test:legacy` safety coverage intact.
-3. Refine explainability wording from baseline category examples using human-test feedback.
+3. Refine explainability wording around exclusion reasons for non-statistics users.
 
 ## Risks/Dependencies
 1. Replay payload variability across BB3 versions may reduce mapping confidence for less common events.
@@ -110,11 +110,11 @@ Current decision note:
 4. Any scoring-weight changes can alter verdict narratives and require baseline snapshot/test updates.
 
 ## Definition of Done for Next Milestone
-Milestone: “Probability Fidelity Hardening - Wave 2”.
+Milestone: “Probability Fidelity Hardening - Wave 3”.
 
 Done means all are true:
-1. Explicit calculators are implemented and tested for high-frequency non-combat families (`dodge`, `ball_handling`) with report-level method transparency.
-2. Fallback usage remains measurable and disclosed in report metadata and UI/CLI explainability views.
+1. Context-aware deterministic scoring is implemented for supported roll contexts and tested for high-frequency families.
+2. Excluded usage remains measurable and disclosed in report metadata and UI/CLI explainability views.
 3. Unit + integration + e2e checks pass in CI.
 4. `docs/CONVERSION_LOG.md` and `docs/IMPLEMENTATION_LOG.md` contain append-only entries for all changes and verification outcomes.
 5. Legacy `gate` policy is reflected consistently across plan/blueprint/handoff docs.

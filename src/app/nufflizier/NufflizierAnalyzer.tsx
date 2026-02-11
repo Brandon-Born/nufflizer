@@ -6,7 +6,7 @@ import { CATEGORY_EXAMPLE_LINES, HOW_TO_READ_LINES } from "@/domain/nufflizer/ex
 
 type LuckEventType = "block" | "armor_break" | "injury" | "dodge" | "ball_handling" | "argue_call";
 type LuckMomentTag = "blessed" | "shaftaroonie";
-type LuckCalculationMethod = "explicit" | "fallback";
+type LuckScoringStatus = "scored" | "excluded";
 
 type LuckEvent = {
   id: string;
@@ -21,14 +21,14 @@ type LuckEvent = {
   weightedDelta: number;
   label: string;
   tags: LuckMomentTag[];
-  calculationMethod: LuckCalculationMethod;
-  calculationReason: string;
+  scoringStatus: LuckScoringStatus;
+  statusReason: string;
   explainability: {
     target: string;
-    baseOdds: number;
-    rerollAdjustedOdds: number;
+    baseOdds?: number;
+    rerollAdjustedOdds?: number;
     weight: number;
-    formulaSummary: string;
+    formulaSummary?: string;
     inputsSummary: string;
   };
 };
@@ -47,12 +47,12 @@ type LuckReport = {
     summary: string;
   };
   coverage: {
-    explicitCount: number;
-    fallbackCount: number;
-    explicitRate: number;
-    byType: Record<LuckEventType, { explicit: number; fallback: number }>;
-    fallbackByRollType: Record<string, number>;
-    nondeterministicArgueRollTypes: number[];
+    scoredCount: number;
+    excludedCount: number;
+    scoredRate: number;
+    scoredByType: Record<LuckEventType, number>;
+    excludedByType: Record<LuckEventType, number>;
+    excludedByReason: Record<string, number>;
   };
   weightTable: Record<LuckEventType, number>;
   howScoredSummary: string[];
@@ -261,14 +261,11 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
             <p className="text-lg font-semibold text-amber-100">{report.verdict.summary}</p>
             <p className="mt-1 text-sm text-amber-50/90">Score gap: {report.verdict.scoreGap.toFixed(1)}</p>
             <p className="mt-1 text-sm text-amber-50/90">
-              Coverage: {(report.coverage.explicitRate * 100).toFixed(1)}% explicit ({report.coverage.explicitCount} explicit,{" "}
-              {report.coverage.fallbackCount} fallback)
+              Coverage: {(report.coverage.scoredRate * 100).toFixed(1)}% scored ({report.coverage.scoredCount} scored,{" "}
+              {report.coverage.excludedCount} excluded)
             </p>
-            {report.coverage.nondeterministicArgueRollTypes.length > 0 ? (
-              <p className="mt-2 text-sm text-amber-100">
-                Note: argue-call roll types {report.coverage.nondeterministicArgueRollTypes.join(", ")} are still scored with fallback odds
-                because replay semantics remain nondeterministic.
-              </p>
+            {Object.keys(report.coverage.excludedByReason).length > 0 ? (
+              <p className="mt-2 text-sm text-amber-100">Some events were excluded when replay context was nondeterministic.</p>
             ) : null}
           </div>
 
@@ -305,21 +302,36 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                 <thead>
                   <tr className="border-b border-amber-300/20 text-left">
                     <th className="px-2 py-1">Event type</th>
-                    <th className="px-2 py-1">Explicit</th>
-                    <th className="px-2 py-1">Fallback</th>
+                    <th className="px-2 py-1">Scored</th>
+                    <th className="px-2 py-1">Excluded</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {Object.entries(report.coverage.byType).map(([eventType, counts]) => (
+                  {Object.entries(report.coverage.scoredByType).map(([eventType, scoredCount]) => (
                     <tr key={eventType} className="border-b border-amber-300/10">
                       <td className="px-2 py-1">{eventType}</td>
-                      <td className="px-2 py-1">{counts.explicit}</td>
-                      <td className="px-2 py-1">{counts.fallback}</td>
+                      <td className="px-2 py-1">{scoredCount}</td>
+                      <td className="px-2 py-1">{report.coverage.excludedByType[eventType as LuckEventType]}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+            {Object.keys(report.coverage.excludedByReason).length > 0 ? (
+              <div className="mt-3">
+                <h4 className="text-sm font-semibold text-amber-100">Top exclusion reasons</h4>
+                <ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-amber-50/90">
+                  {Object.entries(report.coverage.excludedByReason)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5)
+                    .map(([reason, count]) => (
+                      <li key={reason}>
+                        {count} {reason}
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            ) : null}
           </section>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -379,7 +391,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                     <th className="px-2 py-2">Expected</th>
                     <th className="px-2 py-2">Actual</th>
                     <th className="px-2 py-2">Weighted Delta</th>
-                    <th className="px-2 py-2">Method</th>
+                    <th className="px-2 py-2">Status</th>
                     <th className="px-2 py-2">Tag</th>
                   </tr>
                 </thead>
@@ -393,18 +405,24 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                         <details className="mt-1">
                           <summary className="cursor-pointer text-xs text-amber-100/80">Why</summary>
                           <p className="mt-1 text-xs text-amber-100/80">
-                            {moment.calculationReason}. Target: {moment.explainability.target}. Base odds{" "}
-                            {(moment.explainability.baseOdds * 100).toFixed(1)}%, reroll-adjusted{" "}
-                            {(moment.explainability.rerollAdjustedOdds * 100).toFixed(1)}%, weight {moment.explainability.weight}.
+                            {moment.statusReason}. Target: {moment.explainability.target}. Base odds{" "}
+                            {moment.explainability.baseOdds !== undefined ? `${(moment.explainability.baseOdds * 100).toFixed(1)}%` : "n/a"},
+                            reroll-adjusted{" "}
+                            {moment.explainability.rerollAdjustedOdds !== undefined
+                              ? `${(moment.explainability.rerollAdjustedOdds * 100).toFixed(1)}%`
+                              : "n/a"}
+                            , weight {moment.explainability.weight}.
                           </p>
-                          <p className="mt-1 text-xs text-amber-100/80">{moment.explainability.formulaSummary}.</p>
+                          {moment.explainability.formulaSummary ? (
+                            <p className="mt-1 text-xs text-amber-100/80">{moment.explainability.formulaSummary}.</p>
+                          ) : null}
                           <p className="mt-1 text-xs text-amber-100/80">{moment.explainability.inputsSummary}.</p>
                         </details>
                       </td>
                       <td className="px-2 py-3">{(moment.probabilitySuccess * 100).toFixed(1)}%</td>
                       <td className="px-2 py-3">{moment.actualSuccess ? "Success" : "Fail"}</td>
                       <td className="px-2 py-3">{moment.weightedDelta.toFixed(3)}</td>
-                      <td className="px-2 py-3">{moment.calculationMethod}</td>
+                      <td className="px-2 py-3">{moment.scoringStatus}</td>
                       <td className="px-2 py-3">
                         {moment.tags.length > 0 ? (
                           <span className="inline-flex rounded-full border border-amber-200/40 px-2 py-1 text-xs font-semibold uppercase">

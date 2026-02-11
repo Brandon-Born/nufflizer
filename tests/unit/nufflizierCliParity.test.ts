@@ -24,8 +24,8 @@ describe("nufflizier CLI/API parity", () => {
 
     expect(cliReport.verdict.luckierTeam).toBe(apiReport.verdict.luckierTeam);
     expect(cliReport.verdict.scoreGap).toBe(apiReport.verdict.scoreGap);
-    expect(cliReport.coverage.explicitCount).toBe(apiReport.coverage.explicitCount);
-    expect(cliReport.coverage.fallbackCount).toBe(apiReport.coverage.fallbackCount);
+    expect(cliReport.coverage.scoredCount).toBe(apiReport.coverage.scoredCount);
+    expect(cliReport.coverage.excludedCount).toBe(apiReport.coverage.excludedCount);
     expect(cliReport.teams[0]?.luckScore).toBe(apiReport.teams[0]?.luckScore);
     expect(cliReport.teams[1]?.luckScore).toBe(apiReport.teams[1]?.luckScore);
   });
@@ -47,10 +47,10 @@ describe("nufflizier CLI/API parity", () => {
       expect(cliRun.stdout).toContain(line);
     }
 
-    if (apiReport.coverage.nondeterministicArgueRollTypes.length > 0) {
-      expect(cliRun.stdout).toContain("Warning: argue-call roll types");
+    if (Object.keys(apiReport.coverage.excludedByReason).length > 0) {
+      expect(cliRun.stdout).toContain("Top exclusion reasons:");
     } else {
-      expect(cliRun.stdout).not.toContain("Warning: argue-call roll types");
+      expect(cliRun.stdout).not.toContain("Top exclusion reasons:");
     }
   });
 });

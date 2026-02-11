@@ -217,3 +217,23 @@ Remaining follow-ups:
 Verification evidence:
 1. Added/updated tests include `tests/unit/legacyReplayApiRoute.test.ts`, `tests/unit/nufflizierApi.test.ts`, `tests/unit/nufflizierNormalization.test.ts`, `tests/unit/nufflizierArgueVariants.test.ts`, `tests/unit/nufflizierCliParity.test.ts`, `tests/unit/nufflizierConversionResidue.test.ts`.
 2. Validation commands passed in this session: `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm test:e2e`, `corepack pnpm test:nufflizier`, `corepack pnpm test:legacy`.
+
+## 2026-02-11 - Deterministic scored/excluded scoring contract
+Metadata: commit(s) `pending`; scope `Dice-fidelity normalization and probability contract refactor`; status `partial`.
+
+Converted items:
+1. Replaced explicit/fallback scoring model with deterministic `scored` versus `excluded` contract in report/event schemas.
+2. Added context-aware roll classification (`sourceTag` + `stepType` + `rollType` + target presence) and excluded unsupported/ambiguous contexts from luck totals.
+3. Removed synthetic parser dodge event injection and moved dodge detection to deterministic roll-context classification.
+4. Reworked probability and outcome resolution to avoid generic fallback scoring for unsupported contexts.
+5. Updated API/UI/CLI coverage/explainability rendering to scored/excluded telemetry and exclusion-reason inventory.
+6. Added classification test coverage and updated normalization/argue/parity/e2e tests for the new contract.
+
+Remaining follow-ups:
+1. Expand deterministic scored coverage for currently excluded special-action roll families as fixture evidence grows.
+2. Continue explainability copy refinement around exclusion reasons for non-statistics users.
+3. Keep monitoring scored-rate shifts as new replay variants are introduced.
+
+Verification evidence:
+1. Validation commands passed: `corepack pnpm typecheck`, `corepack pnpm lint`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm test:e2e`.
+2. New/updated files include `src/domain/nufflizer/classifyRollContext.ts`, `src/domain/nufflizer/analyzeLuck.ts`, `src/domain/nufflizer/probability.ts`, `src/domain/nufflizer/types.ts`, `src/app/nufflizier/NufflizierAnalyzer.tsx`, `src/cli/nufflizier.ts`, and `tests/unit/nufflizierClassification.test.ts`.

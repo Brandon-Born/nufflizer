@@ -35,26 +35,28 @@ function parseFormat(args: string[]): OutputFormat {
 function formatTeamSummary(report: ReturnType<typeof analyzeNufflizerInput>): string {
   const [home, away] = report.teams;
   const topMoments = report.keyMoments.slice(0, 5);
-  const nondeterministicArgueRolls = report.coverage.nondeterministicArgueRollTypes;
-  const byTypeCoverage = Object.entries(report.coverage.byType).map(([type, counts]) => {
-    return `- ${type}: ${counts.explicit} explicit, ${counts.fallback} fallback`;
+  const scoredByType = Object.entries(report.coverage.scoredByType).map(([type, count]) => {
+    return `- ${type}: ${count} scored`;
   });
+  const excludedByType = Object.entries(report.coverage.excludedByType).map(([type, count]) => {
+    return `- ${type}: ${count} excluded`;
+  });
+  const topExclusions = Object.entries(report.coverage.excludedByReason)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([reason, count]) => `- ${count} ${reason}`);
 
   return [
     `Match: ${report.match.id}`,
     `Home: ${home?.teamName ?? "Home"} (${home?.luckScore.toFixed(1) ?? "0.0"})`,
     `Away: ${away?.teamName ?? "Away"} (${away?.luckScore.toFixed(1) ?? "0.0"})`,
     `Verdict: ${report.verdict.summary} (gap ${report.verdict.scoreGap.toFixed(1)})`,
-    `Coverage: ${(report.coverage.explicitRate * 100).toFixed(1)}% explicit (${report.coverage.explicitCount} explicit, ${report.coverage.fallbackCount} fallback)`,
-    ...(nondeterministicArgueRolls.length > 0
-      ? [
-          `Warning: argue-call roll types ${nondeterministicArgueRolls.join(
-            ", "
-          )} are scored with fallback odds because replay semantics are nondeterministic.`
-        ]
-      : []),
-    "Coverage by event type:",
-    ...byTypeCoverage,
+    `Coverage: ${(report.coverage.scoredRate * 100).toFixed(1)}% scored (${report.coverage.scoredCount} scored, ${report.coverage.excludedCount} excluded)`,
+    "Scored by event type:",
+    ...scoredByType,
+    "Excluded by event type:",
+    ...excludedByType,
+    ...(topExclusions.length > 0 ? ["Top exclusion reasons:", ...topExclusions] : []),
     "",
     "How to read this report:",
     ...HOW_TO_READ_LINES.map((line) => `- ${line}`),
@@ -67,7 +69,9 @@ function formatTeamSummary(report: ReturnType<typeof analyzeNufflizerInput>): st
     "Top swings:",
     ...topMoments.map(
       (moment, index) =>
-        `${index + 1}. Turn ${moment.turn} | ${moment.teamName} | ${moment.label} | weighted delta ${moment.weightedDelta.toFixed(3)} | ${moment.calculationMethod} (${moment.calculationReason}) | ${moment.explainability.formulaSummary}`
+        `${index + 1}. Turn ${moment.turn} | ${moment.teamName} | ${moment.label} | weighted delta ${moment.weightedDelta.toFixed(3)} | ${
+          moment.scoringStatus
+        } (${moment.statusReason}) | ${moment.explainability.formulaSummary ?? "no formula"}`
     )
   ].join("\n");
 }

@@ -59,33 +59,28 @@ Across the three demo replays:
 
 These extra codes are not fully mapped yet and should be refined as more replay coverage is added.
 
-## Explicit Probability Coverage (2026-02-11)
+## Deterministic Scoring Coverage (2026-02-11)
 
-The Nufflizier probability engine now distinguishes explicit calculators from fallback calculators.
+The Nufflizier probability engine now distinguishes scored deterministic contexts from excluded contexts.
 
-1. Explicit calculator families:
-   - `block`: `RollType=2`
-   - `armor_break`: `RollType=1`, `RollType=34`
-   - `injury`: `RollType=4`, `RollType=31`, `RollType=37`
-   - `dodge`: `RollType=3`, `RollType=17`, `RollType=21`
-   - `ball_handling`: `RollType=11`, `RollType=12`, `RollType=13`, `RollType=14`, `RollType=15`, `RollType=25`
-   - `argue_call`: `RollType=71`
-2. Fallback behavior:
-   - Used when event family lacks explicit mapping or replay context is insufficient.
-   - For `argue_call`, `RollType=42` and `RollType=70` currently remain fallback pending deterministic fixture evidence.
-   - Fallback usage is reported in `LuckReport.coverage` and per-event `calculationMethod` / `calculationReason`.
+1. Scored deterministic contexts:
+   - `ResultRoll` + `RollType=2` -> `block`
+   - `ResultRoll` + `RollType=1|34` -> `armor_break`
+   - `ResultRoll` + `RollType=4|31|37` -> `injury`
+   - `ResultRoll` + `StepType=1` + valid target -> `dodge`
+   - `ResultRoll` + `StepType=4|5|8|9|12|13` + valid target -> `ball_handling`
+   - `ResultRoll` + `RollType=71` + valid target -> `argue_call`
+2. Excluded contexts:
+   - Missing target threshold.
+   - Non-deterministic or unsupported source-tag/roll combinations.
+   - Summary-chain events (`ResultBlockOutcome`, `ResultInjuryRoll`, `ResultCasualtyRoll`, `ResultPlayerRemoval`) that do not carry stable roll-threshold semantics.
 3. Argue-call variant matrix:
-   - `RollType=71`: explicit (supported and tested).
-   - `RollType=42`: fallback (target source not stable across current fixtures).
-   - `RollType=70`: fallback (target source not stable across current fixtures).
-4. Explicit promotion gate for `argue_call` variants:
-   - Stable target source (`difficulty` or `requirement`) must exist for the variant.
-   - Success/failure semantics must align with replay outcome and dice values.
-   - No contradictory behavior across fixtures for that same roll type.
-   - Current gate result for `42` and `70`: fail (remain fallback).
-5. Fixture evidence:
+   - `RollType=71`: scored when target is present.
+   - `RollType=42`: excluded.
+   - `RollType=70`: excluded.
+4. Fixture evidence:
    - `tests/fixtures/models/argue-rolltype-42.json`
    - `tests/fixtures/models/argue-rolltype-70.json`
-6. Transparency requirement:
-   - Every scored event must indicate whether it used `explicit` or `fallback` calculation.
-   - Coverage rate must be surfaced to UI and CLI users.
+5. Transparency requirement:
+   - Every event must indicate `scoringStatus` and `statusReason`.
+   - Coverage must expose scored/excluded rates and exclusion-reason inventory.

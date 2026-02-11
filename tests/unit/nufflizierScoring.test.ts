@@ -67,8 +67,9 @@ function buildReplayModel(): ReplayModel {
             teamId: "away",
             actorTeamId: "away",
             actorTeamSource: "explicit",
-            rollType: 3,
-            rollLabel: "dodge",
+            rollType: 10,
+            rollLabel: "gfi",
+            stepType: 1,
             payload: {
               Requirement: 2,
               Difficulty: 2,
@@ -124,13 +125,17 @@ describe("nufflizier scoring", () => {
     expect(report.verdict.scoreGap).toBeGreaterThan(0);
     expect(report.teams).toHaveLength(2);
     expect(report.keyMoments.length).toBeGreaterThan(0);
-    expect(report.coverage.explicitCount).toBeGreaterThanOrEqual(1);
-    expect(report.coverage.fallbackCount).toBeGreaterThanOrEqual(1);
+    expect(report.coverage.scoredCount).toBeGreaterThanOrEqual(1);
+    expect(report.coverage.excludedCount).toBeGreaterThanOrEqual(1);
     expect(report.howScoredSummary.length).toBeGreaterThan(0);
     expect(report.weightTable.block).toBeGreaterThan(0);
-    expect(report.coverage.byType.dodge.explicit).toBeGreaterThanOrEqual(1);
-    expect(report.coverage.byType.argue_call.fallback).toBeGreaterThanOrEqual(1);
-    expect(report.events.every((event) => event.explainability.formulaSummary.length > 0)).toBe(true);
+    expect(report.coverage.scoredByType.dodge).toBeGreaterThanOrEqual(1);
+    expect(report.coverage.excludedByType.block).toBeGreaterThanOrEqual(0);
+    expect(
+      report.events
+        .filter((event) => event.scoringStatus === "scored")
+        .every((event) => (event.explainability.formulaSummary?.length ?? 0) > 0)
+    ).toBe(true);
     expect(report.events.every((event) => event.explainability.inputsSummary.length > 0)).toBe(true);
   });
 
@@ -142,12 +147,12 @@ describe("nufflizier scoring", () => {
     expect(tags).toContain("shaftaroonie");
   });
 
-  it("labels event calculation methods", () => {
+  it("labels event scoring status", () => {
     const report = analyzeReplayLuck(buildReplayModel());
-    const methods = new Set(report.events.map((event) => event.calculationMethod));
+    const statuses = new Set(report.events.map((event) => event.scoringStatus));
 
-    expect(methods.has("explicit")).toBe(true);
-    expect(methods.has("fallback")).toBe(true);
-    expect(report.events.every((event) => event.calculationReason.length > 0)).toBe(true);
+    expect(statuses.has("scored")).toBe(true);
+    expect(statuses.has("excluded")).toBe(true);
+    expect(report.events.every((event) => event.statusReason.length > 0)).toBe(true);
   });
 });

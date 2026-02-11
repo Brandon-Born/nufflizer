@@ -32,7 +32,7 @@ Output:
 - CLI `nufflizier analyze`
 2. Parser + attribution foundation is production-usable for replay fixtures.
 3. Luck analysis domain exists (`src/domain/nufflizer/*`) with normalization, probability, and scoring.
-4. Report now includes explainability metadata (`explicit` vs `fallback`, coverage metrics, “how scored” summaries, and normalization flags for ambiguous contexts).
+4. Report now includes explainability metadata (`scored` vs `excluded`, coverage metrics, “how scored” summaries, and normalization flags for ambiguous contexts).
 5. Legacy coaching modules still exist and are tested but are not the primary product path.
 6. CI-quality checks pass for lint, typecheck, test, build, and e2e smoke.
 7. Test execution is now split with dedicated scripts: `test:nufflizier` and `test:legacy`.
@@ -97,19 +97,18 @@ Acceptance:
 ### M3 - Probability Fidelity Hardening (In Progress)
 Deliverables:
 1. Increase explicit roll-family probability coverage.
-2. Reduce fallback approximations in high-impact categories.
-3. Add coverage telemetry for explicit-vs-fallback scoring.
+2. Reduce excluded contexts in high-impact categories by promoting only deterministic mappings.
+3. Add coverage telemetry for scored-vs-excluded scoring.
 
 Acceptance:
 1. Probability behavior documented and backed by deterministic tests.
 2. Report explainability includes coverage confidence indicators.
 
 Progress note:
-1. Wave 1 complete for explicit calculators in `block`, `armor_break`, and `injury`.
-2. Wave 2 explicit coverage added for `dodge` and `ball_handling`.
-3. Wave 2 now includes explicit `argue_call` handling for `rollType=71`.
-4. Remaining argue-call variants (`42`, `70`) stay fallback-first pending stronger replay evidence.
-5. Current promotion gate result for `42`/`70`: keep fallback, because fixture target-source semantics are not yet deterministic.
+1. Wave 1 complete for deterministic calculators in `block`, `armor_break`, and `injury`.
+2. Wave 2 deterministic coverage added for `dodge`, `ball_handling`, and `argue_call` (`rollType=71`) when replay context is stable.
+3. Scoring contract now excludes unsupported or ambiguous contexts instead of generic fallback scoring.
+4. Argue-call variants (`42`, `70`) are currently excluded pending stronger deterministic replay evidence.
 
 ### M4 - Legacy Surface Resolution (Pending)
 Deliverables:

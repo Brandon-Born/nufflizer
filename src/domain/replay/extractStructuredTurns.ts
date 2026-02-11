@@ -203,10 +203,6 @@ function collectSequenceEvents(block: string, unknownCodeCounters: Map<string, R
       events.push({ type: "roll", sourceLabel: "generic_roll", ...baseEvent });
     }
 
-    if (rootTag === "ResultRoll" && sequenceContext.stepType === 1) {
-      events.push({ type: "dodge", sourceLabel: "dodge_roll", ...baseEvent });
-    }
-
     if (rootTag === "QuestionTeamRerollUsage" || rootTag === "ResultTeamRerollUsage") {
       events.push({ type: "reroll", sourceLabel: "team_reroll", ...baseEvent });
     }
