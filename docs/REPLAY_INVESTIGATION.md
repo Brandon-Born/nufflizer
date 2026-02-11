@@ -84,3 +84,22 @@ The Nufflizier probability engine now distinguishes scored deterministic context
 5. Transparency requirement:
    - Every event must indicate `scoringStatus` and `statusReason`.
    - Coverage must expose scored/excluded rates and exclusion-reason inventory.
+
+## Goblin Fixture Findings (`demo-goblins1.bbr`, 2026-02-11)
+
+1. Argue-the-call scoring:
+   - `ResultRoll` with `RollType=71` remains deterministic and scored as `argue_call`.
+2. Ball-handling false-positive control:
+   - Step-only promotion is no longer sufficient.
+   - `ball_handling` now requires `ResultRoll` plus `StepType in {4,5,8,9,12,13}` plus supported roll family `11|12|13|14|15|25`.
+   - Unsupported families observed in goblin replay (for example `RollType=7` and `RollType=30`) remain visible but excluded.
+3. Dodge false-positive control:
+   - `dodge` now requires `ResultRoll` plus `StepType=1` plus supported roll family `3|17|21`.
+4. Block-chain context merge:
+   - `ResultBlockRoll`, `ResultBlockOutcome`, and `ResultPushBack` entries are retained in event timelines but excluded from luck scoring when merged to a nearby scored block anchor (`RollType=2`).
+   - Merged members carry `metadata.mergedBlockAnchorId` and exclusion reason `excluded: merged into block anchor <id>`.
+5. Coverage interpretation update:
+   - Primary fidelity signal is now `coverage.rollCandidates` (dice-only candidate population).
+   - Secondary visibility signal remains `coverage.allEvents` (entire normalized event stream).
+6. Mapping diagnostics:
+   - `RollType=30` is now labeled `special_event_30` to reduce unknown-code ambiguity while semantics remain intentionally unscored.

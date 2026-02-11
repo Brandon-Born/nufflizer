@@ -24,8 +24,10 @@ describe("nufflizier CLI/API parity", () => {
 
     expect(cliReport.verdict.luckierTeam).toBe(apiReport.verdict.luckierTeam);
     expect(cliReport.verdict.scoreGap).toBe(apiReport.verdict.scoreGap);
-    expect(cliReport.coverage.scoredCount).toBe(apiReport.coverage.scoredCount);
-    expect(cliReport.coverage.excludedCount).toBe(apiReport.coverage.excludedCount);
+    expect(cliReport.coverage.allEvents.scoredCount).toBe(apiReport.coverage.allEvents.scoredCount);
+    expect(cliReport.coverage.allEvents.excludedCount).toBe(apiReport.coverage.allEvents.excludedCount);
+    expect(cliReport.coverage.rollCandidates.scoredCount).toBe(apiReport.coverage.rollCandidates.scoredCount);
+    expect(cliReport.coverage.rollCandidates.excludedCount).toBe(apiReport.coverage.rollCandidates.excludedCount);
     expect(cliReport.teams[0]?.luckScore).toBe(apiReport.teams[0]?.luckScore);
     expect(cliReport.teams[1]?.luckScore).toBe(apiReport.teams[1]?.luckScore);
   });
@@ -46,6 +48,8 @@ describe("nufflizier CLI/API parity", () => {
     for (const line of CATEGORY_EXAMPLE_LINES) {
       expect(cliRun.stdout).toContain(line);
     }
+    expect(cliRun.stdout).toContain("Roll-candidate coverage:");
+    expect(cliRun.stdout).toContain("All-event coverage:");
 
     if (Object.keys(apiReport.coverage.excludedByReason).length > 0) {
       expect(cliRun.stdout).toContain("Top exclusion reasons:");

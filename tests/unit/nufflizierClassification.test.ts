@@ -31,7 +31,21 @@ describe("nufflizier roll-context classification", () => {
     expect(result.reason).toMatch(/injury-chain summary/i);
   });
 
-  it("classifies ResultRoll stepType 1 as scored dodge when target is valid", () => {
+  it("classifies ResultRoll stepType 1 as scored dodge only for supported roll family", () => {
+    const result = classifyRollContext({
+      sourceTag: "ResultRoll",
+      stepType: 1,
+      rollType: 3,
+      requirement: 3,
+      difficulty: 3,
+      diceCount: 1
+    });
+
+    expect(result.scored).toBe(true);
+    expect(result.eventType).toBe("dodge");
+  });
+
+  it("excludes dodge step when roll family is unsupported", () => {
     const result = classifyRollContext({
       sourceTag: "ResultRoll",
       stepType: 1,
@@ -41,8 +55,24 @@ describe("nufflizier roll-context classification", () => {
       diceCount: 1
     });
 
-    expect(result.scored).toBe(true);
+    expect(result.scored).toBe(false);
     expect(result.eventType).toBe("dodge");
+    expect(result.reason).toMatch(/dodge step without supported roll family/i);
+  });
+
+  it("excludes ball-handling step when roll family is unsupported", () => {
+    const result = classifyRollContext({
+      sourceTag: "ResultRoll",
+      stepType: 4,
+      rollType: 7,
+      requirement: 3,
+      difficulty: 3,
+      diceCount: 1
+    });
+
+    expect(result.scored).toBe(false);
+    expect(result.eventType).toBe("ball_handling");
+    expect(result.reason).toMatch(/ball-handling step without supported roll family/i);
   });
 
   it("excludes ResultBlockOutcome from scoring", () => {

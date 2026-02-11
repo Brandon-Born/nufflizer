@@ -29,6 +29,8 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(payload).toHaveProperty("keyMoments");
     expect(payload).toHaveProperty("events");
     expect(payload).toHaveProperty("coverage");
+    expect(payload).toHaveProperty("coverage.allEvents");
+    expect(payload).toHaveProperty("coverage.rollCandidates");
     expect(payload).toHaveProperty("coverage.scoredByType");
     expect(payload).toHaveProperty("coverage.excludedByType");
     expect(payload).toHaveProperty("coverage.excludedByReason");

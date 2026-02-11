@@ -118,3 +118,15 @@ Done means all are true:
 3. Unit + integration + e2e checks pass in CI.
 4. `docs/CONVERSION_LOG.md` and `docs/IMPLEMENTATION_LOG.md` contain append-only entries for all changes and verification outcomes.
 5. Legacy `gate` policy is reflected consistently across plan/blueprint/handoff docs.
+
+## Status Update (2026-02-11)
+1. Goblin gap-closure pass is implemented for deterministic dice scoring:
+- Strict roll-family gating now blocks step-only promotion for unsupported dodge and ball-handling roll families.
+- Block chain summary tags (`ResultBlockRoll`, `ResultBlockOutcome`, `ResultPushBack`) are merged into nearby scored block anchors when deterministic linkage exists.
+- Coverage now reports both `rollCandidates` (primary trust metric) and `allEvents` (secondary visibility metric).
+2. Current explicit exclusions remain intentional:
+- `rollType=42` and `rollType=70` remain excluded until deterministic replay evidence is sufficient for promotion.
+3. Updated near-term tasks:
+1. Expand deterministic promotion coverage only when fixture evidence proves stable semantics for additional roll families.
+2. Refine merge diagnostics/explainability copy so users can distinguish summary-chain merges from unsupported contexts at a glance.
+3. Keep API/UI/CLI parity checks synchronized as coverage/exclusion telemetry evolves.

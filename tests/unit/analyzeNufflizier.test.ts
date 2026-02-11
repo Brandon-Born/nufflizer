@@ -21,9 +21,9 @@ describe("analyzeNufflizerInput", () => {
     expect(report.keyMoments.length).toBeGreaterThan(0);
     expect(report.keyMoments.length).toBeLessThanOrEqual(15);
     expect(report.events.every((event) => event.probabilitySuccess >= 0 && event.probabilitySuccess <= 1)).toBe(true);
-    expect(report.coverage.scoredCount + report.coverage.excludedCount).toBe(report.events.length);
-    expect(report.coverage.scoredRate).toBeGreaterThanOrEqual(0);
-    expect(report.coverage.scoredRate).toBeLessThanOrEqual(1);
+    expect(report.coverage.allEvents.scoredCount + report.coverage.allEvents.excludedCount).toBe(report.events.length);
+    expect(report.coverage.allEvents.scoredRate).toBeGreaterThanOrEqual(0);
+    expect(report.coverage.allEvents.scoredRate).toBeLessThanOrEqual(1);
     const byTypeTotal =
       Object.values(report.coverage.scoredByType).reduce((sum, count) => sum + count, 0) +
       Object.values(report.coverage.excludedByType).reduce((sum, count) => sum + count, 0);
@@ -39,5 +39,18 @@ describe("analyzeNufflizerInput", () => {
     expect(report.verdict).toHaveProperty("luckierTeam");
     expect(report.verdict).toHaveProperty("scoreGap");
     expect(report.teams.every((team) => Number.isFinite(team.luckScore))).toBe(true);
+  });
+
+  it("keeps goblin odd roll families excluded while preserving argue-call scoring", () => {
+    const report = analyzeNufflizerInput(readDemoReplay("demo-goblins1.bbr"));
+    const scoredBallHandling = report.events.filter((event) => event.type === "ball_handling" && event.scoringStatus === "scored");
+
+    expect(scoredBallHandling.some((event) => event.metadata.rollType === 7)).toBe(false);
+    expect(scoredBallHandling.some((event) => event.metadata.rollType === 30)).toBe(false);
+    expect(report.events.some((event) => event.type === "argue_call" && event.scoringStatus === "scored" && event.metadata.rollType === 71)).toBe(
+      true
+    );
+    expect(report.coverage.rollCandidates.scoredRate).toBeGreaterThan(report.coverage.allEvents.scoredRate);
+    expect(report.coverage.excludedByReason["excluded: merged into block anchor"]).toBeGreaterThan(0);
   });
 });

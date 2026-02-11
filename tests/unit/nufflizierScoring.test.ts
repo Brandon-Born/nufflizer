@@ -67,8 +67,8 @@ function buildReplayModel(): ReplayModel {
             teamId: "away",
             actorTeamId: "away",
             actorTeamSource: "explicit",
-            rollType: 10,
-            rollLabel: "gfi",
+            rollType: 3,
+            rollLabel: "dodge",
             stepType: 1,
             payload: {
               Requirement: 2,
@@ -125,8 +125,8 @@ describe("nufflizier scoring", () => {
     expect(report.verdict.scoreGap).toBeGreaterThan(0);
     expect(report.teams).toHaveLength(2);
     expect(report.keyMoments.length).toBeGreaterThan(0);
-    expect(report.coverage.scoredCount).toBeGreaterThanOrEqual(1);
-    expect(report.coverage.excludedCount).toBeGreaterThanOrEqual(1);
+    expect(report.coverage.allEvents.scoredCount).toBeGreaterThanOrEqual(1);
+    expect(report.coverage.allEvents.excludedCount).toBeGreaterThanOrEqual(1);
     expect(report.howScoredSummary.length).toBeGreaterThan(0);
     expect(report.weightTable.block).toBeGreaterThan(0);
     expect(report.coverage.scoredByType.dodge).toBeGreaterThanOrEqual(1);

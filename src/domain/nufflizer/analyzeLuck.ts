@@ -7,6 +7,7 @@ import type { LuckEvent, LuckEventType, LuckReport, LuckTeamAggregate } from "@/
 import type { ReplayEvent, ReplayModel, ReplayTurn } from "@/domain/replay/types";
 
 type RecordLike = Record<string, unknown>;
+const BLOCK_CHAIN_SOURCE_TAGS = new Set(["ResultBlockRoll", "ResultBlockOutcome", "ResultPushBack"]);
 
 function isRecord(value: unknown): value is RecordLike {
   return typeof value === "object" && value !== null;
@@ -210,6 +211,107 @@ function hashId(value: string): string {
   return createHash("sha1").update(value).digest("hex").slice(0, 12);
 }
 
+function eventIndexFromId(eventId: string): number | null {
+  const tokens = eventId.split("-");
+  if (tokens.length < 3) {
+    return null;
+  }
+
+  const index = Number(tokens[1]);
+  return Number.isFinite(index) ? index : null;
+}
+
+function isRollCandidateEvent(event: ReplayEvent, dice: number[], classification: ReturnType<typeof classifyRollContext>): boolean {
+  if (event.sourceTag !== "ResultRoll" || dice.length === 0) {
+    return false;
+  }
+
+  return classification.scored || classification.reason.startsWith("excluded:");
+}
+
+function normalizeExcludedReason(reason: string): string {
+  if (reason.startsWith("excluded: merged into block anchor ")) {
+    return "excluded: merged into block anchor";
+  }
+
+  return reason;
+}
+
+function mergeBlockChainContext(events: LuckEvent[]): void {
+  const blockAnchors = events.filter(
+    (event) =>
+      event.scoringStatus === "scored" &&
+      event.type === "block" &&
+      event.metadata.sourceTag === "ResultRoll" &&
+      event.metadata.rollType === 2
+  );
+
+  for (const event of events) {
+    if (!BLOCK_CHAIN_SOURCE_TAGS.has(event.metadata.sourceTag)) {
+      continue;
+    }
+
+    const memberEventIndex = eventIndexFromId(event.id);
+    if (memberEventIndex === null) {
+      continue;
+    }
+
+    const candidateAnchors = blockAnchors
+      .map((anchor) => {
+        const anchorIndex = eventIndexFromId(anchor.id);
+        if (anchor.turn !== event.turn || anchorIndex === null) {
+          return null;
+        }
+
+        const distance = Math.abs(anchorIndex - memberEventIndex);
+        if (distance > 6) {
+          return null;
+        }
+
+        const teamMatch = anchor.teamId === event.teamId;
+        const playerMatch = event.playerId ? anchor.playerId === event.playerId : false;
+        const targetMatch = event.metadata.targetId ? anchor.metadata.targetId === event.metadata.targetId : false;
+
+        return {
+          anchor,
+          anchorIndex,
+          distance,
+          teamMatch,
+          playerMatch,
+          targetMatch
+        };
+      })
+      .filter((candidate): candidate is NonNullable<typeof candidate> => candidate !== null);
+
+    if (candidateAnchors.length === 0) {
+      continue;
+    }
+
+    candidateAnchors.sort((left, right) => {
+      if (left.teamMatch !== right.teamMatch) {
+        return left.teamMatch ? -1 : 1;
+      }
+
+      const leftMatchScore = Number(left.playerMatch) + Number(left.targetMatch);
+      const rightMatchScore = Number(right.playerMatch) + Number(right.targetMatch);
+      if (leftMatchScore !== rightMatchScore) {
+        return rightMatchScore - leftMatchScore;
+      }
+
+      if (left.distance !== right.distance) {
+        return left.distance - right.distance;
+      }
+
+      return left.anchorIndex - right.anchorIndex;
+    });
+
+    const bestAnchor = candidateAnchors[0]!.anchor;
+    event.scoringStatus = "excluded";
+    event.statusReason = `excluded: merged into block anchor ${bestAnchor.id}`;
+    event.metadata.mergedBlockAnchorId = bestAnchor.id;
+  }
+}
+
 function defaultCategory(type: LuckEventType | null): LuckEventType {
   return type ?? "block";
 }
@@ -260,6 +362,7 @@ function buildNormalizedEvent(
     difficulty,
     diceCount: dice.length
   });
+  const isRollCandidate = isRollCandidateEvent(event, dice, classification);
 
   const teamId = resolveTeamId(replayTurn, event);
   if (!teamId) {
@@ -294,6 +397,8 @@ function buildNormalizedEvent(
       },
       metadata: {
         sourceTag: event.sourceTag,
+        isRollCandidate,
+        targetId: event.targetId,
         rollType,
         rollLabel: event.rollLabel,
         stepType: event.stepType,
@@ -363,8 +468,10 @@ function buildNormalizedEvent(
       inputsSummary: buildInputsSummary(eventType, target, dice, rerollAvailable, "scored")
     },
     metadata: {
-      sourceTag: event.sourceTag,
-      rollType,
+        sourceTag: event.sourceTag,
+        isRollCandidate,
+        targetId: event.targetId,
+        rollType,
       rollLabel: event.rollLabel,
       stepType: event.stepType,
       stepLabel: event.stepLabel,
@@ -457,9 +564,12 @@ function buildHowScoredSummary(verdictSummary: string, coverage: LuckReport["cov
 
   return [
     "Nufflizier scores only deterministic roll contexts with stable thresholds and outcomes.",
-    `Coverage this match: ${coverage.scoredCount} scored events and ${coverage.excludedCount} excluded events (${(coverage.scoredRate * 100).toFixed(
-      1
-    )}% scored).`,
+    `Roll-candidate coverage: ${coverage.rollCandidates.scoredCount} scored and ${coverage.rollCandidates.excludedCount} excluded (${(
+      coverage.rollCandidates.scoredRate * 100
+    ).toFixed(1)}% scored).`,
+    `All-event visibility: ${coverage.allEvents.scoredCount} scored and ${coverage.allEvents.excludedCount} excluded (${(
+      coverage.allEvents.scoredRate * 100
+    ).toFixed(1)}% scored).`,
     excludedTopReasons.length > 0 ? `Top exclusions: ${excludedTopReasons.join("; ")}.` : "Top exclusions: none.",
     `${home.teamName} finished at ${home.luckScore.toFixed(1)} versus ${away.teamName} at ${away.luckScore.toFixed(
       1
@@ -490,6 +600,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     }
   }
 
+  mergeBlockChainContext(events);
+
   const homeAggregate = initialAggregate(homeTeam.id, homeTeam.name);
   const awayAggregate = initialAggregate(awayTeam.id, awayTeam.name);
   const aggregateById = new Map<string, LuckTeamAggregate>([
@@ -504,8 +616,10 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     [homeAggregate.teamId, 0],
     [awayAggregate.teamId, 0]
   ]);
-  let scoredCount = 0;
-  let excludedCount = 0;
+  let allScoredCount = 0;
+  let allExcludedCount = 0;
+  let rollCandidateScoredCount = 0;
+  let rollCandidateExcludedCount = 0;
   const scoredByType = initialCoverageByType();
   const excludedByType = initialCoverageByType();
   const excludedByReason = new Map<string, number>();
@@ -518,13 +632,20 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
 
     aggregate.eventCount += 1;
     if (event.scoringStatus === "excluded") {
-      excludedCount += 1;
+      allExcludedCount += 1;
+      if (event.metadata.isRollCandidate) {
+        rollCandidateExcludedCount += 1;
+      }
       excludedByType[event.type] += 1;
-      excludedByReason.set(event.statusReason, (excludedByReason.get(event.statusReason) ?? 0) + 1);
+      const reasonKey = normalizeExcludedReason(event.statusReason);
+      excludedByReason.set(reasonKey, (excludedByReason.get(reasonKey) ?? 0) + 1);
       continue;
     }
 
-    scoredCount += 1;
+    allScoredCount += 1;
+    if (event.metadata.isRollCandidate) {
+      rollCandidateScoredCount += 1;
+    }
     scoredByType[event.type] += 1;
 
     if (event.type === "block") {
@@ -566,11 +687,19 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     .slice(0, 15);
 
   const { verdict } = summarizeVerdict(homeAggregate, awayAggregate);
-  const totalCount = scoredCount + excludedCount;
+  const allEventsTotalCount = allScoredCount + allExcludedCount;
+  const rollCandidateTotalCount = rollCandidateScoredCount + rollCandidateExcludedCount;
   const coverage = {
-    scoredCount,
-    excludedCount,
-    scoredRate: totalCount > 0 ? roundTo(scoredCount / totalCount, 3) : 0,
+    allEvents: {
+      scoredCount: allScoredCount,
+      excludedCount: allExcludedCount,
+      scoredRate: allEventsTotalCount > 0 ? roundTo(allScoredCount / allEventsTotalCount, 3) : 0
+    },
+    rollCandidates: {
+      scoredCount: rollCandidateScoredCount,
+      excludedCount: rollCandidateExcludedCount,
+      scoredRate: rollCandidateTotalCount > 0 ? roundTo(rollCandidateScoredCount / rollCandidateTotalCount, 3) : 0
+    },
     scoredByType,
     excludedByType,
     excludedByReason: Object.fromEntries(Array.from(excludedByReason.entries()).sort((a, b) => b[1] - a[1]))

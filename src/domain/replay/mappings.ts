@@ -72,6 +72,7 @@ export const ROLL_TYPE_MAP: Record<number, string> = {
   20: "hypnotic_gaze",
   25: "interception",
   26: "touchback",
+  30: "special_event_30",
   31: "casualty",
   32: "apothecary_or_doctor",
   33: "regeneration_or_resilience",

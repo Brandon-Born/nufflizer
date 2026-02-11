@@ -237,3 +237,23 @@ Remaining follow-ups:
 Verification evidence:
 1. Validation commands passed: `corepack pnpm typecheck`, `corepack pnpm lint`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm test:e2e`.
 2. New/updated files include `src/domain/nufflizer/classifyRollContext.ts`, `src/domain/nufflizer/analyzeLuck.ts`, `src/domain/nufflizer/probability.ts`, `src/domain/nufflizer/types.ts`, `src/app/nufflizier/NufflizierAnalyzer.tsx`, `src/cli/nufflizier.ts`, and `tests/unit/nufflizierClassification.test.ts`.
+
+## 2026-02-11 - Goblin replay gap closure (strict gates + block merge + dice-candidate coverage)
+Metadata: commit(s) `pending`; scope `Goblin fixture fidelity hardening`; status `partial`.
+
+Converted items:
+1. Added strict roll-family gates so dodge and ball-handling are scored only when both step type and supported roll family match deterministic contracts.
+2. Added block-chain merge pass linking `ResultBlockRoll` / `ResultBlockOutcome` / `ResultPushBack` events to nearby scored block anchors; merged members remain visible but excluded with merge metadata.
+3. Upgraded coverage contract to dual metrics: primary `rollCandidates` and secondary `allEvents`, while retaining scored/excluded inventories by type and reason.
+4. Added `LuckEventMetadata` diagnostics for `isRollCandidate` and `mergedBlockAnchorId`; normalized merged-block exclusion reason aggregation.
+5. Added replay mapping label for `rollType=30` as `special_event_30` for explicit diagnostics.
+6. Updated UI and CLI coverage presentation order to show dice-candidate coverage first and all-event coverage second.
+7. Expanded unit/API/CLI/e2e tests, including goblin replay assertions for argue-call retention and unsupported ball-handling roll-family exclusions.
+
+Remaining follow-ups:
+1. Keep `rollType=42` and `rollType=70` excluded until deterministic evidence supports explicit promotion.
+2. Continue collecting fixtures for additional special-action roll families before any scoring promotion.
+
+Verification evidence:
+1. Validation commands passed in this session: `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm test:e2e`.
+2. Targeted assertions passed for goblin fixture expectations (`tests/unit/analyzeNufflizier.test.ts`) and block-chain merge metadata (`tests/unit/nufflizierNormalization.test.ts`).

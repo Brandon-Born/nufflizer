@@ -460,3 +460,47 @@ Explicit handoff next steps:
 1. Add deterministic mappings for currently excluded special-action contexts once replay evidence is stable.
 2. Consider adding optional contract versioning only if external consumers require backward compatibility.
 3. Continue monitoring scored-rate and exclusion-reason trends across new replay fixtures.
+
+## 2026-02-11 13:15 - Goblin gap-closure implementation and verification
+Goal:
+1. Implement goblin replay gap-closure plan: strict dodge/ball-handling family gates, block-chain merge context, and dice-candidate-first coverage reporting.
+
+Changes made (files):
+1. Domain logic and schema:
+- `src/domain/nufflizer/classifyRollContext.ts`
+- `src/domain/nufflizer/analyzeLuck.ts`
+- `src/domain/nufflizer/types.ts`
+2. Replay diagnostics:
+- `src/domain/replay/mappings.ts`
+3. Presentation:
+- `src/app/nufflizier/NufflizierAnalyzer.tsx`
+- `src/cli/nufflizier.ts`
+4. Tests:
+- `tests/unit/nufflizierClassification.test.ts`
+- `tests/unit/nufflizierNormalization.test.ts`
+- `tests/unit/analyzeNufflizier.test.ts`
+- `tests/unit/nufflizierApi.test.ts`
+- `tests/unit/nufflizierCliParity.test.ts`
+- `tests/unit/nufflizierScoring.test.ts`
+- `tests/unit/replayMappings.test.ts`
+- `tests/e2e/smoke.spec.ts`
+5. Documentation:
+- `docs/PROJECT_PLAN.md`
+- `docs/REPLAY_INVESTIGATION.md`
+- `docs/CONVERSION_LOG.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+Commands run + outcomes:
+1. `corepack pnpm lint` -> passed.
+2. `corepack pnpm typecheck` -> passed.
+3. `corepack pnpm test` -> passed (22 files, 70 tests).
+4. `corepack pnpm build` -> passed.
+5. `corepack pnpm test:e2e` -> passed (1 test).
+
+Regressions/known gaps:
+1. No regressions detected in this verification run.
+2. `rollType=42` and `rollType=70` remain intentionally excluded pending deterministic evidence.
+
+Explicit handoff next steps:
+1. Validate block-chain merge heuristics against additional non-goblin fixtures to confirm window/link preference robustness.
+2. Continue expanding deterministic roll-family allowlists only when replay evidence supports stable semantics.

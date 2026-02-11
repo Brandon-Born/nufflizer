@@ -22,6 +22,8 @@ export type ClassificationResult =
     };
 
 const BALL_HANDLING_STEP_TYPES = new Set([4, 5, 8, 9, 12, 13]);
+const DODGE_ROLL_TYPES = new Set([3, 17, 21]);
+const BALL_HANDLING_ROLL_TYPES = new Set([11, 12, 13, 14, 15, 25]);
 
 function hasTargetThreshold(context: ClassificationContext): boolean {
   const target = context.difficulty ?? context.requirement;
@@ -118,6 +120,14 @@ export function classifyRollContext(context: ClassificationContext): Classificat
   }
 
   if (context.stepType === 1) {
+    if (!DODGE_ROLL_TYPES.has(context.rollType ?? -1)) {
+      return {
+        eventType: "dodge",
+        scored: false,
+        reason: "excluded: dodge step without supported roll family"
+      };
+    }
+
     return {
       eventType: "dodge",
       scored: true,
@@ -126,6 +136,14 @@ export function classifyRollContext(context: ClassificationContext): Classificat
   }
 
   if (context.stepType !== undefined && BALL_HANDLING_STEP_TYPES.has(context.stepType)) {
+    if (!BALL_HANDLING_ROLL_TYPES.has(context.rollType ?? -1)) {
+      return {
+        eventType: "ball_handling",
+        scored: false,
+        reason: "excluded: ball-handling step without supported roll family"
+      };
+    }
+
     return {
       eventType: "ball_handling",
       scored: true,

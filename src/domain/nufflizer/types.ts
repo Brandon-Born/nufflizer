@@ -5,10 +5,13 @@ export type LuckScoringStatus = "scored" | "excluded";
 
 export type LuckEventMetadata = {
   sourceTag: string;
+  isRollCandidate?: boolean;
+  mergedBlockAnchorId?: string;
   rollType?: number;
   rollLabel?: string;
   stepType?: number;
   stepLabel?: string;
+  targetId?: string;
   actionCode?: number;
   actionLabel?: string;
   outcomeCode?: number;
@@ -82,9 +85,16 @@ export type LuckReport = {
   };
   verdict: LuckVerdict;
   coverage: {
-    scoredCount: number;
-    excludedCount: number;
-    scoredRate: number;
+    allEvents: {
+      scoredCount: number;
+      excludedCount: number;
+      scoredRate: number;
+    };
+    rollCandidates: {
+      scoredCount: number;
+      excludedCount: number;
+      scoredRate: number;
+    };
     scoredByType: Record<LuckEventType, number>;
     excludedByType: Record<LuckEventType, number>;
     excludedByReason: Record<string, number>;

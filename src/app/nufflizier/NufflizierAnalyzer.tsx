@@ -47,9 +47,16 @@ type LuckReport = {
     summary: string;
   };
   coverage: {
-    scoredCount: number;
-    excludedCount: number;
-    scoredRate: number;
+    allEvents: {
+      scoredCount: number;
+      excludedCount: number;
+      scoredRate: number;
+    };
+    rollCandidates: {
+      scoredCount: number;
+      excludedCount: number;
+      scoredRate: number;
+    };
     scoredByType: Record<LuckEventType, number>;
     excludedByType: Record<LuckEventType, number>;
     excludedByReason: Record<string, number>;
@@ -261,8 +268,12 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
             <p className="text-lg font-semibold text-amber-100">{report.verdict.summary}</p>
             <p className="mt-1 text-sm text-amber-50/90">Score gap: {report.verdict.scoreGap.toFixed(1)}</p>
             <p className="mt-1 text-sm text-amber-50/90">
-              Coverage: {(report.coverage.scoredRate * 100).toFixed(1)}% scored ({report.coverage.scoredCount} scored,{" "}
-              {report.coverage.excludedCount} excluded)
+              Roll-candidate coverage: {(report.coverage.rollCandidates.scoredRate * 100).toFixed(1)}% scored (
+              {report.coverage.rollCandidates.scoredCount} scored, {report.coverage.rollCandidates.excludedCount} excluded)
+            </p>
+            <p className="mt-1 text-sm text-amber-50/90">
+              All-event coverage: {(report.coverage.allEvents.scoredRate * 100).toFixed(1)}% scored ({report.coverage.allEvents.scoredCount}{" "}
+              scored, {report.coverage.allEvents.excludedCount} excluded)
             </p>
             {Object.keys(report.coverage.excludedByReason).length > 0 ? (
               <p className="mt-2 text-sm text-amber-100">Some events were excluded when replay context was nondeterministic.</p>

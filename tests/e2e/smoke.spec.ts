@@ -14,7 +14,8 @@ test("one-shot replay flow shows nufflizier analysis", async ({ page }) => {
   await expect(page.getByRole("columnheader", { name: "Weighted Delta" })).toBeVisible();
   await expect(page.getByRole("columnheader", { name: "Status" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Download JSON" })).toBeVisible();
-  await expect(page.getByText(/Coverage:/)).toBeVisible();
+  await expect(page.getByText(/Roll-candidate coverage:/).first()).toBeVisible();
+  await expect(page.getByText(/All-event coverage:/).first()).toBeVisible();
   await expect(page.getByRole("heading", { name: "How to read this report" })).toBeVisible();
   await expect(page.getByText(/Category examples:/)).toBeVisible();
   await expect(page.getByRole("heading", { name: "How this was scored" })).toBeVisible();
