@@ -263,6 +263,17 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
           </div>
 
           <section className="rounded-xl border border-amber-300/20 bg-black/20 p-4">
+            <h3 className="text-base font-semibold text-amber-100">How to read this report</h3>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-50/90">
+              <li>Expected is the chance the play should work based on the replay context at roll time.</li>
+              <li>Weighted delta is luck swing: (actual result - expected chance) x category weight.</li>
+              <li>
+                Explicit means we have a dedicated calculator for that roll family; fallback means we still scored it, but with generic odds.
+              </li>
+            </ul>
+          </section>
+
+          <section className="rounded-xl border border-amber-300/20 bg-black/20 p-4">
             <h3 className="text-base font-semibold text-amber-100">How this was scored</h3>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-50/90">
               {report.howScoredSummary.map((line, index) => (

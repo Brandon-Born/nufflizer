@@ -235,6 +235,24 @@ function computeExplicitBallHandlingOdds(input: ProbabilityInput): number | null
   return probabilityByAnyDieTarget(target, sidesByDie);
 }
 
+function computeExplicitArgueCallOdds(input: ProbabilityInput): number | null {
+  if (input.rollType !== 71) {
+    return null;
+  }
+
+  const target = resolveTarget(input);
+  if (!target || input.dice.length === 0) {
+    return null;
+  }
+
+  const sidesByDie = input.dice.map((value, index) => estimatedSides(input.dieTypes[index], value));
+  if (input.dice.length === 1) {
+    return probabilityBySingleDieTarget(target, sidesByDie[0] ?? 6);
+  }
+
+  return probabilityByAnyDieTarget(target, sidesByDie);
+}
+
 function explicitComputation(eventType: LuckEventType, input: ProbabilityInput): { baseOdds: number; reason: string } | null {
   if (eventType === "block") {
     const baseOdds = computeExplicitBlockOdds(input);
@@ -286,6 +304,16 @@ function explicitComputation(eventType: LuckEventType, input: ProbabilityInput):
     }
   }
 
+  if (eventType === "argue_call") {
+    const baseOdds = computeExplicitArgueCallOdds(input);
+    if (baseOdds !== null) {
+      return {
+        baseOdds,
+        reason: "explicit argue-call calculator (rollType 71)"
+      };
+    }
+  }
+
   return null;
 }
 
@@ -309,7 +337,7 @@ export function computeProbabilityForEvent(eventType: LuckEventType, input: Prob
     baseOdds: clamp01(baseOdds),
     rerollAdjustedOdds,
     calculationMethod: "fallback",
-    calculationReason: "generic fallback calculator (insufficient explicit mapping)"
+    calculationReason: `generic fallback calculator (insufficient explicit mapping${input.rollType !== undefined ? ` for rollType ${input.rollType}` : ""})`
   };
 }
 

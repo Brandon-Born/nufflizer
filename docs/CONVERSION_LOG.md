@@ -147,3 +147,20 @@ Remaining follow-ups:
 Verification evidence:
 1. Validation commands passed: `corepack pnpm typecheck`, `corepack pnpm lint`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm test:e2e`.
 2. Updated runtime/test/docs files include `src/domain/nufflizer/*`, `src/app/nufflizier/NufflizierAnalyzer.tsx`, `src/cli/nufflizier.ts`, `tests/unit/*`, `tests/e2e/smoke.spec.ts`, and handoff docs under `docs/`.
+
+## 2026-02-11 - Argue-call explicit mapping + readability helper
+Metadata: commit(s) `pending`; scope `Probability completeness and transparency UX`; status `partial`.
+
+Converted items:
+1. Added explicit `argue_call` probability handling for deterministic replay evidence path (`rollType=71`).
+2. Improved fallback reason strings to include roll type context when explicit mapping is unavailable.
+3. Added a plain-language “How to read this report” UI helper block to improve non-statistics readability.
+4. Updated docs to reflect that argue-call is now partially explicit (`71`) and partially fallback (`42`, `70`).
+
+Remaining follow-ups:
+1. Validate and map additional argue-call roll variants (`42`, `70`) only after deterministic fixture evidence is available.
+2. Continue expanding plain-language examples per category for end-user clarity.
+
+Verification evidence:
+1. Full verification run passed: `corepack pnpm typecheck`, `corepack pnpm lint`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm test:e2e`.
+2. Updated tests cover explicit argue-call path and fallback roll-type reasoning.

@@ -211,3 +211,39 @@ Explicit handoff next steps:
 1. Add explicit `argue_call` mapping only if replay fixtures provide deterministic thresholds/outcomes.
 2. Run plain-language UX copy pass for non-statistics readability on key moment explanations.
 3. Continue appending conversion/implementation logs for each milestone and keep plan matrix status current.
+
+## 2026-02-11 11:20 - Argue-call explicit odds and readability pass
+Goal:
+1. Implement explicit argue-call probability where replay semantics are deterministic and improve plain-language explainability visibility.
+
+Changes made (files):
+1. Probability domain:
+- `src/domain/nufflizer/probability.ts`
+2. UI:
+- `src/app/nufflizier/NufflizierAnalyzer.tsx`
+3. Tests:
+- `tests/unit/nufflizierProbability.test.ts`
+- `tests/unit/analyzeNufflizier.test.ts`
+- `tests/e2e/smoke.spec.ts`
+4. Handoff docs:
+- `docs/PROJECT_PLAN.md`
+- `docs/PROJECT_BLUEPRINT.md`
+- `docs/REPLAY_INVESTIGATION.md`
+- `docs/CONVERSION_LOG.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+Commands run + outcomes:
+1. `corepack pnpm typecheck` -> passed.
+2. `corepack pnpm lint` -> passed.
+3. `corepack pnpm test` -> passed.
+4. `corepack pnpm build` -> passed.
+5. `corepack pnpm test:e2e` -> passed.
+
+Regressions/known gaps:
+1. `argue_call` variants `rollType=42` and `rollType=70` remain fallback by design until deterministic semantics are verified.
+2. Legacy coaching pipeline remains gated (`legacy-kept`).
+
+Explicit handoff next steps:
+1. Add fixture coverage for roll types `42` and `70` and only promote to explicit when deterministic thresholds are proven.
+2. Expand helper copy with concise per-category examples to improve novice readability.
+3. Continue append-only logging for each implementation milestone.

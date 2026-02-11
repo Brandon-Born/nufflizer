@@ -106,7 +106,8 @@ Acceptance:
 Progress note:
 1. Wave 1 complete for explicit calculators in `block`, `armor_break`, and `injury`.
 2. Wave 2 explicit coverage added for `dodge` and `ball_handling`.
-3. Remaining fallback-first family is `argue_call` pending stronger replay evidence.
+3. Wave 2 now includes explicit `argue_call` handling for `rollType=71`.
+4. Remaining argue-call variants (`42`, `70`) stay fallback-first pending stronger replay evidence.
 
 ### M4 - Legacy Surface Resolution (Pending)
 Deliverables:

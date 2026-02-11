@@ -43,7 +43,7 @@ Status taxonomy: `converted`, `partial`, `legacy-kept`, `pending`, `blocked`.
 | --- | --- | --- | --- |
 | Replay parsing core (`decodeReplay`, `parseXml`, `extractStructuredTurns`) | `converted` | Handles XML + BBR with structured turn extraction and attribution. | `src/domain/replay/*` |
 | Luck normalization | `partial` | Roll-based mapping works for MVP categories; deeper event semantics still need expansion for edge cases. | `src/domain/nufflizer/analyzeLuck.ts` |
-| Probability/scoring engine | `partial` | Explicit calculators now implemented for `block`, `armor_break`, `injury`, `dodge`, and `ball_handling`; `argue_call` remains fallback-first with explicit disclosure. | `src/domain/nufflizer/probability.ts`, `src/domain/nufflizer/constants.ts` |
+| Probability/scoring engine | `partial` | Explicit calculators now implemented for `block`, `armor_break`, `injury`, `dodge`, `ball_handling`, and `argue_call` (`rollType=71`); unsupported argue-call variants remain fallback with explicit disclosure. | `src/domain/nufflizer/probability.ts`, `src/domain/nufflizer/constants.ts` |
 | API: `/api/nufflizier/analyze` | `converted` | Main one-shot Nufflizier endpoint active. | `src/app/api/nufflizier/analyze/route.ts` |
 | API: `/api/replay` | `legacy-kept` | Coaching endpoint retained; not primary product surface. | `src/app/api/replay/route.ts` |
 | UI routes (`/nufflizier`, `/upload`) | `converted` | Upload + verdict + team cards + key moments + filters + JSON export. | `src/app/nufflizier/*`, `src/app/upload/page.tsx` |
@@ -56,7 +56,7 @@ Status taxonomy: `converted`, `partial`, `legacy-kept`, `pending`, `blocked`.
 ### P0 - Probability Fidelity Hardening (Wave 2)
 - Why it matters: Verdict trust depends on realistic probabilities for replay-visible action context.
 - Concrete tasks:
-1. Extend explicit calculators beyond current five-family coverage to the remaining category (`argue_call`) where replay evidence is sufficient.
+1. Expand explicit argue-call support beyond `rollType=71` only if replay evidence proves deterministic semantics for additional variants (`42`, `70`).
 2. Add fixtures for edge conditions (multi-die unusual types, reroll decisions, ambiguous outcomes).
 3. Document supported/unsupported roll semantics in `docs/REPLAY_INVESTIGATION.md` and conversion logs.
 - Acceptance criteria:
@@ -96,9 +96,9 @@ Status taxonomy: `converted`, `partial`, `legacy-kept`, `pending`, `blocked`.
 - Stable metadata contract from `LuckEvent`.
 
 ## Next 3 Agent Tasks
-1. Write the legacy-surface ADR note in `docs/PROJECT_BLUEPRINT.md` deciding future of `/api/replay` and coaching modules (`retain`, `gate`, or `remove`).
-2. Add explicit `argue_call` probability mapping only if replay fixtures provide deterministic roll semantics; otherwise document and keep fallback as intentional.
-3. Expand explainability UX copy calibration (plain-language wording pass with one user-facing “how to read this” helper block).
+1. Add replay fixtures and unit cases covering argue-call edge variants (`rollType=42`, `70`) and keep unsupported variants explicitly fallback-tagged.
+2. Expand plain-language explainability copy from baseline helper text into concise per-category examples (block/armor/injury/dodge/ball/argue).
+3. Rebalance tests so Nufflizier-specific suite weight grows relative to legacy coaching tests, while preserving `legacy-kept` safety checks.
 
 ## Risks/Dependencies
 1. Replay payload variability across BB3 versions may reduce mapping confidence for less common events.

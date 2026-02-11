@@ -116,9 +116,23 @@ describe("nufflizier probability engine", () => {
     expect(ballHandling.calculationMethod).toBe("explicit");
   });
 
+  it("uses explicit calculator for argue-call rollType 71", () => {
+    const argueCall = computeProbabilityForEvent("argue_call", {
+      rollType: 71,
+      requirement: 4,
+      difficulty: 4,
+      dice: [5],
+      dieTypes: [0],
+      rerollAvailable: false
+    });
+
+    expect(argueCall.calculationMethod).toBe("explicit");
+    expect(argueCall.calculationReason).toMatch(/rollType 71/i);
+  });
+
   it("falls back when no explicit mapping is available", () => {
     const fallback = computeProbabilityForEvent("argue_call", {
-      rollType: 99,
+      rollType: 42,
       requirement: 4,
       difficulty: 4,
       dice: [3],
@@ -128,5 +142,6 @@ describe("nufflizier probability engine", () => {
 
     expect(fallback.calculationMethod).toBe("fallback");
     expect(fallback.calculationReason).toMatch(/fallback/i);
+    expect(fallback.calculationReason).toMatch(/rollType 42/i);
   });
 });
