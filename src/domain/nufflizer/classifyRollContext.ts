@@ -34,6 +34,7 @@ function mapContractCategory(category: RollScoringCategory | undefined): LuckEve
     category === "block" ||
     category === "armor_break" ||
     category === "injury" ||
+    category === "ball_handling" ||
     category === "argue_call" ||
     category === "movement_risk"
   ) {

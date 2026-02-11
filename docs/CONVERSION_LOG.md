@@ -311,3 +311,28 @@ Remaining follow-ups:
 Verification evidence:
 1. Validation commands passed in this session: `corepack pnpm typecheck`, `corepack pnpm test`, `corepack pnpm lint`, `corepack pnpm build`, `corepack pnpm test:e2e`.
 2. Evidence summary in expanded fixture set confirms deterministic rollType 1 invariants (single die, target 2+, zero modifier sum, zero outcome-threshold mismatches).
+
+## 2026-02-11 - RollType 7 promotion to pickup ball-handling scoring
+Metadata: commit(s) `pending`; scope `Roll-family semantic resolution and scoring integration`; status `partial`.
+
+Converted items:
+1. Promoted `ResultRoll|7` from `excluded_deterministic` to `scored_deterministic` with scoring category `ball_handling` and pickup semantics.
+2. Updated contract/category wiring so `ball_handling` is accepted by the deterministic roll classifier and surfaced in roll-type constants.
+3. Added expanded-fixture evidence artifacts and strict gate assertions for rollType 7:
+- `tests/fixtures/evidence/rolltype7-expanded-summary.json`
+- `tests/fixtures/evidence/rolltype7-gate.json`
+- `tests/unit/rollType7Evidence.test.ts`
+4. Updated test expectations and inventory coverage for scored pickup behavior:
+- `tests/unit/nufflizierClassification.test.ts`
+- `tests/unit/analyzeNufflizier.test.ts`
+- `tests/unit/nufflizierCoverageInventory.test.ts`
+5. Updated roll-type coverage/evidence/investigation/project-plan docs to reflect scored pickup mapping and revised unresolved-priority counts.
+
+Remaining follow-ups:
+1. Resolve next highest-impact excluded deterministic families (`ResultRoll|33`, `ResultRoll|88`, `ResultRoll|67`).
+2. Continue collecting expanded replay evidence before promoting low-frequency deterministic families.
+3. Revisit ball-handling weight calibration only after broader corpus validation.
+
+Verification evidence:
+1. Validation commands passed in this session: `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm test:e2e`.
+2. rollType 7 evidence gate confirms: 58 observed samples, all scored as `ball_handling`, zero threshold mismatches, zero `7->7` chains, and non-`25` followups present.

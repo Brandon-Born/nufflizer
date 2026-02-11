@@ -37,7 +37,7 @@ Coverage status meanings:
 | `ResultRoll|1` | mapped-and-scored | scored_deterministic | movement_risk | yes | scored movement-risk 2+ check |
 | `ResultRoll|5` | mapped-but-excluded-deterministic | excluded_deterministic | - | yes | deterministic but unresolved |
 | `ResultRoll|6` | mapped-but-excluded-deterministic | excluded_deterministic | - | yes | deterministic but unresolved |
-| `ResultRoll|7` | mapped-but-excluded-deterministic | excluded_deterministic | - | yes | deterministic but unresolved |
+| `ResultRoll|7` | mapped-and-scored | scored_deterministic | ball_handling | yes | scored pickup attempt check |
 | `ResultRoll|31` | mapped-but-excluded-deterministic | excluded_deterministic | - | yes | deterministic but unresolved |
 | `ResultRoll|33` | mapped-but-excluded-deterministic | excluded_deterministic | - | yes | deterministic but unresolved |
 | `ResultRoll|41` | mapped-but-excluded-deterministic | excluded_deterministic | - | yes | deterministic but unresolved |
@@ -50,18 +50,17 @@ Coverage status meanings:
 
 ## Remaining Priority Targets
 Expanded unresolved counts (12 demo fixtures):
-1. `ResultRoll|7` -> 58
-2. `ResultRoll|33` -> 39
-3. `ResultRoll|88` -> 18
-4. `ResultRoll|67` -> 15
-5. `ResultRoll|5` -> 12
-6. `ResultRoll|73` -> 7
-7. `ResultRoll|6` -> 6
-8. `ResultRoll|45` -> 5
-9. `ResultRoll|31` -> 4
-10. `ResultRoll|41` and `ResultRoll|43` and `ResultRoll|74` -> 2 each
+1. `ResultRoll|33` -> 39
+2. `ResultRoll|88` -> 18
+3. `ResultRoll|67` -> 15
+4. `ResultRoll|5` -> 12
+5. `ResultRoll|73` -> 7
+6. `ResultRoll|6` -> 6
+7. `ResultRoll|45` -> 5
+8. `ResultRoll|31` -> 4
+9. `ResultRoll|41` and `ResultRoll|43` and `ResultRoll|74` -> 2 each
 
 Priority order:
-1. `ResultRoll|7` and `ResultRoll|33` (highest remaining impact).
+1. `ResultRoll|33` (highest remaining impact).
 2. `ResultRoll|88` and `ResultRoll|67` (next coverage impact tier).
 3. Remaining low-frequency families after higher-impact tiers are resolved.

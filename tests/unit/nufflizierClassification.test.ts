@@ -65,6 +65,22 @@ describe("nufflizier roll-context classification", () => {
     expect(result.reason).toMatch(/movement_risk_check/i);
   });
 
+  it("scores rollType 7 as pickup ball-handling context", () => {
+    const result = classifyRollContext({
+      sourceTag: "ResultRoll",
+      stepType: 4,
+      rollType: 7,
+      requirement: 3,
+      difficulty: 4,
+      diceCount: 1
+    });
+
+    expect(result.scored).toBe(true);
+    expect(result.rollCandidate).toBe(true);
+    expect(result.eventType).toBe("ball_handling");
+    expect(result.reason).toMatch(/pickup_attempt_check/i);
+  });
+
   it("excludes randomizer families from roll-candidate coverage", () => {
     const result = classifyRollContext({
       sourceTag: "ResultRoll",

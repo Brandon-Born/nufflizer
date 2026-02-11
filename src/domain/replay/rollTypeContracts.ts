@@ -1,7 +1,7 @@
 export type RollContractKind = "scored_deterministic" | "excluded_deterministic" | "randomizer" | "summary";
 export type RollConfidence = "high" | "medium" | "low";
 export type RollKnowledgeStatus = "known" | "ambiguous" | "unknown";
-export type RollScoringCategory = "block" | "armor_break" | "injury" | "argue_call" | "movement_risk";
+export type RollScoringCategory = "block" | "armor_break" | "injury" | "ball_handling" | "argue_call" | "movement_risk";
 
 export type RollTypeContract = {
   sourceTag: string;
@@ -196,11 +196,13 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
   {
     sourceTag: "ResultRoll",
     rollType: 7,
-    label: "deterministic_check_7_provisional",
-    kind: "excluded_deterministic",
-    confidence: "medium",
-    status: "ambiguous",
-    notes: "Deterministic threshold check with mixed step contexts and modifiers."
+    label: "pickup_attempt_check",
+    kind: "scored_deterministic",
+    confidence: "high",
+    status: "known",
+    scoringCategory: "ball_handling",
+    notes:
+      "Single-die deterministic pickup attempt check with stable threshold/outcome semantics across expanded fixtures."
   },
   {
     sourceTag: "ResultRoll",

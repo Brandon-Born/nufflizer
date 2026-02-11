@@ -1,0 +1,211 @@
+{
+  "fixtureCount": 12,
+  "fixtures": [
+    "demo-goblins1.bbr",
+    "demo1.bbr",
+    "demo2.bbr",
+    "demo3.bbr",
+    "demo4.bbr",
+    "demo5.bbr",
+    "demo6.bbr",
+    "demo7.bbr",
+    "demo8.bbr",
+    "demo9.bbr",
+    "demo10.bbr",
+    "demo11.bbr"
+  ],
+  "rollType7Total": 58,
+  "reportRollType7Total": 58,
+  "reportScoredBallHandlingCount": 58,
+  "reportExcludedRollType7Count": 0,
+  "reportStatusReasonCounts": {
+    "scored: pickup_attempt_check; single-die target; resolved by explicit success outcome code": 32,
+    "scored: pickup_attempt_check; single-die target; resolved by explicit failure outcome code": 26
+  },
+  "requirementValues": {
+    "2": 3,
+    "3": 50,
+    "4": 4,
+    "5": 1
+  },
+  "difficultyValues": {
+    "2": 1,
+    "3": 13,
+    "4": 17,
+    "5": 11,
+    "6": 16
+  },
+  "stepTypeCounts": {
+    "0": 13,
+    "1": 1,
+    "4": 21,
+    "5": 2,
+    "6": 14,
+    "13": 1,
+    "29": 6
+  },
+  "dieTypeCounts": {
+    "0": 58
+  },
+  "diceCountDistribution": {
+    "1": 58
+  },
+  "modifierSumCounts": {
+    "0": 14,
+    "-1": 17,
+    "-4": 5,
+    "-2": 12,
+    "-3": 8,
+    "-5": 2
+  },
+  "outcomeCounts": {
+    "0": 26,
+    "1": 32
+  },
+  "missingTargetCount": 0,
+  "outcomeDiceThresholdMismatches": 0,
+  "prevRollTypeCounts": {
+    "1": 1,
+    "4": 2,
+    "5": 2,
+    "6": 5,
+    "9": 1,
+    "25": 23,
+    "26": 3,
+    "none": 21
+  },
+  "nextRollTypeCounts": {
+    "8": 1,
+    "25": 22,
+    "88": 5,
+    "none": 30
+  },
+  "prevSourceTagCounts": {
+    "Carrier": 11,
+    "ResultRoll": 37,
+    "ResultTeamRerollUsage": 8,
+    "START": 2
+  },
+  "nextSourceTagCounts": {
+    "END": 7,
+    "ResultRoll": 28,
+    "Carrier": 17,
+    "EventEndTurn": 6
+  },
+  "consecutiveRollType7Count": 0,
+  "kickoffTurnRollType7Count": 15,
+  "kickoffSameTurnBeforeRollType7Count": 13,
+  "followupRollType25Count": 22,
+  "nonScatterFollowupCount": 36,
+  "chain25725Count": 13,
+  "byFixture": {
+    "demo-goblins1.bbr": {
+      "rollType7Total": 2,
+      "successCount": 1,
+      "failureCount": 1,
+      "scoredBallHandlingCount": 2,
+      "kickoffTurnCount": 1,
+      "kickoffSameTurnBeforeCount": 1,
+      "chain25725Count": 1
+    },
+    "demo1.bbr": {
+      "rollType7Total": 4,
+      "successCount": 3,
+      "failureCount": 1,
+      "scoredBallHandlingCount": 4,
+      "kickoffTurnCount": 2,
+      "kickoffSameTurnBeforeCount": 1,
+      "chain25725Count": 0
+    },
+    "demo2.bbr": {
+      "rollType7Total": 5,
+      "successCount": 2,
+      "failureCount": 3,
+      "scoredBallHandlingCount": 5,
+      "kickoffTurnCount": 2,
+      "kickoffSameTurnBeforeCount": 1,
+      "chain25725Count": 0
+    },
+    "demo3.bbr": {
+      "rollType7Total": 3,
+      "successCount": 2,
+      "failureCount": 1,
+      "scoredBallHandlingCount": 3,
+      "kickoffTurnCount": 0,
+      "kickoffSameTurnBeforeCount": 0,
+      "chain25725Count": 1
+    },
+    "demo4.bbr": {
+      "rollType7Total": 6,
+      "successCount": 3,
+      "failureCount": 3,
+      "scoredBallHandlingCount": 6,
+      "kickoffTurnCount": 1,
+      "kickoffSameTurnBeforeCount": 1,
+      "chain25725Count": 1
+    },
+    "demo5.bbr": {
+      "rollType7Total": 6,
+      "successCount": 3,
+      "failureCount": 3,
+      "scoredBallHandlingCount": 6,
+      "kickoffTurnCount": 2,
+      "kickoffSameTurnBeforeCount": 2,
+      "chain25725Count": 3
+    },
+    "demo6.bbr": {
+      "rollType7Total": 10,
+      "successCount": 4,
+      "failureCount": 6,
+      "scoredBallHandlingCount": 10,
+      "kickoffTurnCount": 4,
+      "kickoffSameTurnBeforeCount": 4,
+      "chain25725Count": 3
+    },
+    "demo7.bbr": {
+      "rollType7Total": 7,
+      "successCount": 5,
+      "failureCount": 2,
+      "scoredBallHandlingCount": 7,
+      "kickoffTurnCount": 1,
+      "kickoffSameTurnBeforeCount": 1,
+      "chain25725Count": 0
+    },
+    "demo8.bbr": {
+      "rollType7Total": 2,
+      "successCount": 1,
+      "failureCount": 1,
+      "scoredBallHandlingCount": 2,
+      "kickoffTurnCount": 1,
+      "kickoffSameTurnBeforeCount": 1,
+      "chain25725Count": 0
+    },
+    "demo9.bbr": {
+      "rollType7Total": 6,
+      "successCount": 4,
+      "failureCount": 2,
+      "scoredBallHandlingCount": 6,
+      "kickoffTurnCount": 1,
+      "kickoffSameTurnBeforeCount": 1,
+      "chain25725Count": 1
+    },
+    "demo10.bbr": {
+      "rollType7Total": 2,
+      "successCount": 1,
+      "failureCount": 1,
+      "scoredBallHandlingCount": 2,
+      "kickoffTurnCount": 0,
+      "kickoffSameTurnBeforeCount": 0,
+      "chain25725Count": 1
+    },
+    "demo11.bbr": {
+      "rollType7Total": 5,
+      "successCount": 3,
+      "failureCount": 2,
+      "scoredBallHandlingCount": 5,
+      "kickoffTurnCount": 0,
+      "kickoffSameTurnBeforeCount": 0,
+      "chain25725Count": 2
+    }
+  }
+}

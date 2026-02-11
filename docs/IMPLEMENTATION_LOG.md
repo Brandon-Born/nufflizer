@@ -597,3 +597,45 @@ Explicit handoff next steps:
 1. Run the same evidence-gate workflow for `ResultRoll|67` with expanded fixtures before any promotion.
 2. Decide whether `movement_risk` weight needs recalibration after larger replay corpus analysis.
 3. Keep roll-type evidence docs synchronized whenever demo fixture corpus changes.
+
+## 2026-02-11 16:41 - RollType 7 pickup promotion and evidence gate
+Goal:
+1. Promote `ResultRoll|7` to scored deterministic pickup behavior under `ball_handling` and lock it with expanded-fixture evidence gates.
+
+Changes made (files):
+1. Domain scoring contracts/classification/constants:
+- `src/domain/replay/rollTypeContracts.ts`
+- `src/domain/nufflizer/classifyRollContext.ts`
+- `src/domain/nufflizer/constants.ts`
+- `src/domain/nufflizer/explainabilityCopy.ts`
+2. Tests and evidence artifacts:
+- `tests/unit/rollType7Evidence.test.ts` (new)
+- `tests/fixtures/evidence/rolltype7-expanded-summary.json` (new)
+- `tests/fixtures/evidence/rolltype7-gate.json` (new)
+- `tests/unit/nufflizierClassification.test.ts`
+- `tests/unit/analyzeNufflizier.test.ts`
+- `tests/unit/nufflizierCoverageInventory.test.ts`
+3. Documentation and handoff updates:
+- `docs/ROLL_TYPE_CODE_COVERAGE.md`
+- `docs/ROLL_TYPE_EVIDENCE_MATRIX.md`
+- `docs/REPLAY_INVESTIGATION.md`
+- `docs/PROJECT_PLAN.md`
+- `docs/CONVERSION_LOG.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+Commands run + outcomes:
+1. `corepack pnpm test tests/unit/nufflizierClassification.test.ts tests/unit/analyzeNufflizier.test.ts tests/unit/nufflizierCoverageInventory.test.ts tests/unit/rollType7Evidence.test.ts` -> passed.
+2. `corepack pnpm lint` -> passed.
+3. `corepack pnpm typecheck` -> passed.
+4. `corepack pnpm test` -> passed (25 files, 79 tests).
+5. `corepack pnpm build` -> passed.
+6. `corepack pnpm test:e2e` -> passed (1 test).
+
+Regressions/known gaps:
+1. Remaining excluded deterministic families are unchanged (`33`, `88`, `67`, and lower-frequency one-offs).
+2. Argue-call variants `rollType=42` and `rollType=70` remain intentionally excluded pending deterministic evidence.
+
+Explicit handoff next steps:
+1. Prioritize rollType evidence-gate execution for `ResultRoll|33` (highest remaining impact).
+2. Keep roll-type docs and evidence artifacts synchronized whenever demo fixture corpus changes.
+3. Re-run full validation after the next roll-family promotion.

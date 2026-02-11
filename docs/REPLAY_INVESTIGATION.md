@@ -67,10 +67,11 @@ The Nufflizier probability engine now distinguishes scored deterministic context
    - `ResultRoll` + `RollType=2` -> `block`
    - `ResultRoll` + `RollType=10|34` -> `armor_break`
    - `ResultRoll` + `RollType=4|37` -> `injury`
+   - `ResultRoll` + `RollType=7` + valid target -> `ball_handling` (pickup attempt)
    - `ResultRoll` + `RollType=71` + valid target -> `argue_call`
    - `ResultRoll` + `RollType=1` + valid target -> `movement_risk`
 2. Excluded deterministic contexts:
-   - `RollType=5,6,7,31,33,41,43,45,67,73,74,88` remain deterministic-but-uncertain and are tracked as roll candidates.
+   - `RollType=5,6,31,33,41,43,45,67,73,74,88` remain deterministic-but-uncertain and are tracked as roll candidates.
 3. Explicit randomizer exclusions:
    - `RollType=8,9,25,26,30,87` are excluded from roll-candidate coverage.
 4. Explicit argue-call variant exclusions:
@@ -90,8 +91,9 @@ The Nufflizier probability engine now distinguishes scored deterministic context
    - `ResultRoll` with `RollType=71` remains deterministic and scored as `argue_call`.
 2. Ball-handling false-positive control:
    - Step-only promotion is no longer sufficient.
-   - `ball_handling` now requires `ResultRoll` plus `StepType in {4,5,8,9,12,13}` plus supported roll family `11|12|13|14|15|25`.
-   - Unsupported families observed in goblin replay (for example `RollType=7` and `RollType=30`) remain visible but excluded.
+   - `ball_handling` now follows explicit roll-family contracts rather than generic step-only gates.
+   - `ResultRoll|7` is scored as pickup (`ball_handling`) across observed step contexts.
+   - Unsupported ball-control families (for example `RollType=30`) remain visible but excluded.
 3. Dodge false-positive control:
    - `dodge` now requires `ResultRoll` plus `StepType=1` plus supported roll family `3|17|21`.
 4. Block-chain context merge:
@@ -114,10 +116,11 @@ The Nufflizier probability engine now distinguishes scored deterministic context
    - `ResultRoll|2` -> `block`
    - `ResultRoll|10` and `ResultRoll|34` -> `armor_break`
    - `ResultRoll|4` and `ResultRoll|37` -> `injury`
+   - `ResultRoll|7` -> `ball_handling` (pickup)
    - `ResultRoll|71` -> `argue_call`
    - `ResultRoll|1` -> `movement_risk`
 4. Deterministic-but-uncertain families are explicitly excluded and tracked as roll candidates:
-   - `5,6,7,31,33,41,43,45,67,73,74,88`
-   - Expanded-count priority: `7` (58), `33` (39), `88` (18), `67` (15).
+   - `5,6,31,33,41,43,45,67,73,74,88`
+   - Expanded-count priority: `33` (39), `88` (18), `67` (15).
 5. Randomizer families are explicitly excluded from roll-candidate coverage:
    - `8,9,25,26,30,87`

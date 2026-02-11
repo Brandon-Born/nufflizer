@@ -15,7 +15,7 @@ export const ROLL_TYPE_BY_EVENT: Record<LuckEventType, number[]> = {
   armor_break: [10, 34],
   injury: [4, 37],
   dodge: [],
-  ball_handling: [],
+  ball_handling: [7],
   argue_call: [42, 70, 71],
   movement_risk: [1]
 };

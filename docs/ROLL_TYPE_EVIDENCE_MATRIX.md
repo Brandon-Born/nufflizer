@@ -38,7 +38,7 @@ Status meanings:
 | `ResultRoll|1` | 99 | 1 die, target 2 | appears in movement-risk and block-adjacent chains with deterministic 2+ threshold | movement-risk check | high | known | score as movement_risk |
 | `ResultRoll|5` | 4 | 1 die, target 3-5 | low-frequency special chain | deterministic check 5 | low | unknown | exclude deterministic |
 | `ResultRoll|6` | 1 | 1 die, target 6 | one-off special-action chain | deterministic check 6 | low | unknown | exclude deterministic |
-| `ResultRoll|7` | 14 | 1 die, target 2-6 | mixed step contexts with negative modifiers | deterministic check 7 | medium | ambiguous | exclude deterministic |
+| `ResultRoll|7` | 14 | 1 die, target 2-6 | appears in ball-state sequences; often adjacent to rollType 25 randomizer | pickup attempt check | high | known | score as `ball_handling` |
 | `ResultRoll|31` | 1 | 1 die, target 3 | one-off in block chain | deterministic check 31 | low | unknown | exclude deterministic |
 | `ResultRoll|33` | 5 | 1 die, target 2 | repeated but semantics unclear | deterministic check 33 | medium | ambiguous | exclude deterministic |
 | `ResultRoll|41` | 1 | 1 die, target 5/6 with many modifiers | one-off near argue/chain events | deterministic check 41 | low | unknown | exclude deterministic |
@@ -50,10 +50,9 @@ Status meanings:
 | `ResultRoll|88` | 6 | 1 die, target 4 | bomb/special-action chain | deterministic check 88 | medium | ambiguous | exclude deterministic |
 
 ## High-Impact Problem Roll Types (count x uncertainty)
-1. `ResultRoll|7` (58 in expanded fixtures): highest-volume unresolved deterministic family.
-2. `ResultRoll|33` (39 in expanded fixtures): large unresolved deterministic family.
-3. `ResultRoll|88` (18 in expanded fixtures): repeated unresolved special-action chain.
-4. `ResultRoll|67` (15 in expanded fixtures): repeated setup chain before `rollType 10`, semantics unclear.
+1. `ResultRoll|33` (39 in expanded fixtures): highest-volume unresolved deterministic family.
+2. `ResultRoll|88` (18 in expanded fixtures): repeated unresolved special-action chain.
+3. `ResultRoll|67` (15 in expanded fixtures): repeated setup chain before `rollType 10`, semantics unclear.
 
 ## RollType 1 Expanded Evidence (2026-02-11)
 Expanded fixtures analyzed:
@@ -73,13 +72,33 @@ Observed movement-risk invariants for `ResultRoll|1`:
 6. Failures are followed by `ResultRoll|10` in 17/18 cases and `ResultRoll|87` in 1/18 cases.
 
 Remaining unresolved deterministic families in expanded fixtures:
-1. `ResultRoll|7` -> 58
-2. `ResultRoll|33` -> 39
-3. `ResultRoll|88` -> 18
-4. `ResultRoll|67` -> 15
-5. `ResultRoll|5` -> 12
-6. `ResultRoll|73` -> 7
-7. `ResultRoll|6` -> 6
-8. `ResultRoll|45` -> 5
-9. `ResultRoll|31` -> 4
-10. `ResultRoll|41` and `ResultRoll|43` and `ResultRoll|74` -> 2 each
+1. `ResultRoll|33` -> 39
+2. `ResultRoll|88` -> 18
+3. `ResultRoll|67` -> 15
+4. `ResultRoll|5` -> 12
+5. `ResultRoll|73` -> 7
+6. `ResultRoll|6` -> 6
+7. `ResultRoll|45` -> 5
+8. `ResultRoll|31` -> 4
+9. `ResultRoll|41` and `ResultRoll|43` and `ResultRoll|74` -> 2 each
+
+## RollType 7 Expanded Evidence (2026-02-11)
+Expanded fixtures analyzed:
+1. `demo-replays/demo-goblins1.bbr`
+2. `demo-replays/demo1.bbr` through `demo-replays/demo11.bbr`
+
+Evidence artifact:
+1. `tests/fixtures/evidence/rolltype7-expanded-summary.json`
+2. `tests/fixtures/evidence/rolltype7-gate.json`
+
+Observed pickup invariants for `ResultRoll|7`:
+1. 58 total occurrences across 12 fixtures; all 58 are scored as `ball_handling`.
+2. Deterministic payload shape is stable: always one die (`diceCount=1`) with `dieType=0`.
+3. Outcome/dice-threshold mismatch count is `0` against replay-provided `Difficulty/Requirement`.
+4. No consecutive `7 -> 7` chains were observed.
+5. Kickoff-adjacent concentration exists but is not exclusive:
+- 15/58 occur on turns that contain kickoff randomizer rolls (`8|9|26`).
+- 13/58 occur after a kickoff randomizer earlier in the same turn.
+6. Chain telemetry remains supportive but non-binding for scoring:
+- `25 -> 7 -> 25` appears 13 times.
+- Non-`25` followups appear 36 times, confirming no hard scatter-followup requirement.

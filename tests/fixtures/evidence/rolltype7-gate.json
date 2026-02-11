@@ -1,0 +1,18 @@
+{
+  "expectedRollType7Samples": 58,
+  "requiredDieType": 0,
+  "requiredDiceCount": 1,
+  "allowedRequirementValues": [2, 3, 4, 5],
+  "allowedDifficultyValues": [2, 3, 4, 5, 6],
+  "allowedStepTypes": [0, 1, 4, 5, 6, 13, 29],
+  "allowedModifierSums": [-5, -4, -3, -2, -1, 0],
+  "maxMissingTargetCount": 0,
+  "maxOutcomeDiceThresholdMismatches": 0,
+  "maxConsecutiveRollType7Count": 0,
+  "allowedNextRollTypes": ["8", "25", "88", "none"],
+  "minKickoffTurnShare": 0.25,
+  "minKickoffSameTurnBeforeShare": 0.2,
+  "minChain25725Count": 10,
+  "minNonScatterFollowupCount": 20,
+  "requiredScoredReasonPrefix": "scored: pickup_attempt_check"
+}

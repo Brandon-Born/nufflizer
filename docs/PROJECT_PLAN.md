@@ -99,7 +99,7 @@ Current decision note:
 - Stable metadata contract from `LuckEvent`.
 
 ## Next 3 Agent Tasks
-1. Collect additional replay evidence for remaining excluded roll families (`67`, `7`, `33`, `88`, plus one-offs), then promote deterministic contexts to scored.
+1. Collect additional replay evidence for remaining excluded roll families (`33`, `88`, `67`, plus one-offs), then promote deterministic contexts to scored.
 2. Continue test-suite rebalance by migrating more shared behavior checks to Nufflizier-named tests while keeping `test:legacy` safety coverage intact.
 3. Refine explainability wording for `movement_risk` and exclusion reasons for non-statistics users.
 
@@ -138,9 +138,10 @@ Done means all are true:
 2. Rebased deterministic scoring to high-confidence families only:
 - promoted `ResultRoll|10` into scored armor-like checks.
 - promoted `ResultRoll|1` to scored `movement_risk` checks after expanded fixture validation.
+- promoted `ResultRoll|7` to scored `ball_handling` pickup checks after expanded fixture validation.
 - excluded known randomizer families from roll-candidate denominator.
 3. Next milestone focus:
-1. Resolve highest-impact uncertain families (`ResultRoll|7` -> 58, `ResultRoll|33` -> 39, then `ResultRoll|88` -> 18) with additional fixture evidence.
+1. Resolve highest-impact uncertain families (`ResultRoll|33` -> 39, then `ResultRoll|88` -> 18 and `ResultRoll|67` -> 15) with additional fixture evidence.
 2. Maintain one-to-one contract coverage for newly observed `sourceTag|rollType` pairs.
 
 ## Status Update (2026-02-11, rollType 1 promotion with expanded fixtures)
@@ -154,3 +155,16 @@ Done means all are true:
 - Added `movement_risk` category to domain types, weight table, coverage maps, UI filters/cards, and explainability copy.
 3. Verification:
 - Full validation passed (`pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm test:e2e`).
+
+## Status Update (2026-02-11, rollType 7 pickup promotion with expanded fixtures)
+1. Fixture evidence and strict gate:
+- Added pickup evidence artifacts and gate config:
+  - `tests/fixtures/evidence/rolltype7-expanded-summary.json`
+  - `tests/fixtures/evidence/rolltype7-gate.json`
+- Added strict gate test:
+  - `tests/unit/rollType7Evidence.test.ts`
+2. Scoring promotion:
+- Promoted `ResultRoll|7` from excluded deterministic to scored deterministic as `ball_handling` pickup.
+- Applied contract-based scoring regardless of step-type/scatter-chain adjacency; chain/kickoff patterns remain telemetry evidence only.
+3. Verification:
+- Full validation passed (`corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm test:e2e`).
