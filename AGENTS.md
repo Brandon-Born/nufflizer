@@ -1,115 +1,82 @@
-# BB Trainer Agent Guide
+# Nufflizier Agent Guide
 
 This file is the canonical operating guide for coding agents working in this repository.
 
 ## 1) Project Goal
+Build and maintain **Nufflizier**, a Blood Bowl 3 replay luck analyzer that accepts replay `.xml` / `.bbr` input and returns:
+1. Team-level luck verdict (who was luckier overall).
+2. Category breakdown (block, armor break, injury, dodge, ball handling, argue-call style events).
+3. Key timeline moments for unlikely successes and likely failures.
 
-Build a web application that lets a Blood Bowl 3 player upload a replay XML file and receive:
+The app is deployable on Vercel and intentionally one-shot (ephemeral results, no required persistence).
 
-1. A macro coaching summary (strengths, weaknesses, repeated errors).
-2. Constructive turn-by-turn advice with safer or higher-value alternatives.
+## 2) Handoff Docs (Read First)
+1. `docs/PROJECT_PLAN.md` - current state, conversion matrix, prioritized backlog, next tasks.
+2. `docs/CONVERSION_LOG.md` - append-only migration history from BB Trainer to Nufflizier.
+3. `docs/IMPLEMENTATION_LOG.md` - append-only session execution ledger.
 
-The app must be deployable on Vercel.
+## 3) Current Runtime Shape (as of 2026-02-11)
+1. Primary UI: `/nufflizier` (with `/upload` alias).
+2. Primary API: `POST /api/nufflizier/analyze`.
+3. CLI: `pnpm nufflizier analyze <replay_file> --format json|text`.
+4. Legacy coaching stack remains in tree as `legacy-kept` (`/api/replay`, `src/domain/analysis/*`, `src/domain/coaching/*`, `src/server/services/analyzeReplay.ts`).
 
-## 2) Current State (as of 2026-02-08)
-
-1. Base Next.js + TypeScript + Tailwind app scaffold is implemented.
-2. Upload route (`/upload`) and replay API endpoint (`/api/replay`) are implemented.
-3. Initial replay parser, timeline builder, heuristic analyzer, and coaching renderer are implemented.
-4. Fixture-based unit tests and CI workflow are present.
-5. Current analysis logic is a starter ruleset and requires BB3-specific heuristic expansion.
-
-## 3) Required Tech Stack (Vercel-Oriented)
-
+## 4) Required Tech Stack
 Use the following unless explicitly changed by the user:
+1. Next.js (App Router) + TypeScript.
+2. Node.js 20+ runtime behavior.
+3. React + Tailwind CSS.
+4. Zod for boundary validation.
+5. `fast-xml-parser` for replay parsing.
+6. Vitest (unit) + Playwright (e2e smoke).
+7. ESLint + Prettier.
+8. pnpm package management.
 
-1. Framework: Next.js (App Router) + TypeScript.
-2. Runtime: Node.js 20+.
-3. UI: React + Tailwind CSS.
-4. Validation: Zod.
-5. XML parsing: fast-xml-parser.
-6. State/data access: server-centric; avoid heavy client state libraries unless needed.
-7. Testing: Vitest (unit) + Playwright (e2e smoke).
-8. Lint/format: ESLint + Prettier.
-9. Package manager: pnpm.
+## 5) Architecture Boundaries
+1. `src/domain/replay` - replay decoding/parsing, mappings, attribution.
+2. `src/domain/nufflizer` - luck event normalization, probability logic, scoring, verdict model.
+3. `src/server/services/analyzeNufflizer.ts` - orchestration from replay input to luck report.
+4. `src/app/api/nufflizier/analyze/route.ts` - upload boundary, validation, rate limiting, HTTP contract.
+5. `src/app/nufflizier/*` - report UI and user interactions.
+6. `src/cli/nufflizier.ts` + `bin/nufflizier` - CLI contract.
+7. `src/domain/analysis/*` and `src/domain/coaching/*` - legacy-kept components, not the primary product pipeline.
 
-## 4) High-Level Architecture
-
-1. `apps/web` (or root Next app): UI routes, upload flow, report rendering.
-2. `src/domain/replay`: replay schema types, XML normalization, event timeline builder.
-3. `src/domain/analysis`: rule-based evaluator, heuristic scoring, misplay detection.
-4. `src/domain/coaching`: narrative generator from structured findings.
-5. `src/server`: API route handlers and orchestration.
-6. `src/lib`: shared helpers, logging, config, error utilities.
-
-### Request Flow
-
-1. User uploads replay XML.
-2. Server validates + parses XML into normalized model.
-3. Analysis engine computes metrics and findings.
-4. Coaching layer produces actionable summary + turn notes.
-5. UI displays report and optional export/share.
-
-## 5) Delivery Plan
-
-1. Phase 0: Bootstrap project, CI, lint/test/build, Vercel preview deploy.
-2. Phase 1: XML upload + parsing + normalized replay model.
-3. Phase 2: Macro report (reroll efficiency, turnover causes, positional risk).
-4. Phase 3: Turn-by-turn suggestions with constructive language templates.
-5. Phase 4: Persistence, historical trends, and report comparison.
-6. Phase 5: Optional AI augmentation for wording, while keeping rule outputs auditable.
-
-## 6) Build and Run Standards for Agents
-
+## 6) Build and Run Standards
 1. Keep domain logic pure and framework-agnostic under `src/domain/*`.
-2. Never put analysis logic directly inside React components or route handlers.
-3. Validate all external input at boundaries (upload, query params, API body).
-4. Treat replay XML as untrusted input; guard against malformed/oversized files.
-5. Add fixture-based tests for parser and analyzer before expanding features.
-6. Prefer deterministic scoring rules first; document every heuristic.
-7. Keep serverless constraints in mind: avoid long synchronous work in request path.
-8. Return typed, structured analysis payloads; render language from structured data.
-9. Add instrumentation for parse failures and rule misses.
-10. Keep PRs small and vertically slice features (parse -> analysis -> UI).
+2. Keep route handlers thin; orchestration belongs in `src/server/services/*`.
+3. Validate all external inputs (uploads/API params).
+4. Treat replay input as untrusted and guard malformed/oversized payloads.
+5. Add/adjust fixture-based tests for parser/probability/scoring changes.
+6. Keep scoring behavior explainable; avoid opaque magic constants without docs.
+7. Prefer deterministic logic over black-box heuristics when replay data supports exactness.
+8. Update handoff docs in the same change set whenever milestone state changes.
 
-## 7) Local Developer Workflow
-
-After bootstrap, expected commands are:
-
+## 7) Expected Local Commands
 1. `pnpm install`
 2. `pnpm dev`
-3. `pnpm test`
-4. `pnpm lint`
-5. `pnpm build`
+3. `pnpm lint`
+4. `pnpm typecheck`
+5. `pnpm test`
+6. `pnpm build`
+7. `pnpm test:e2e`
 
-Agents should run lint + tests + build before declaring work complete.
+Agents should run lint + typecheck + tests + build before declaring significant work complete.
 
-## 8) Vercel Deployment Guidance
+## 8) Definition of Done (Per Feature)
+1. Type-safe implementation aligned with architecture boundaries.
+2. Tests cover changed parser/probability/scoring behavior and relevant UI/API states.
+3. No lint/typecheck/build failures.
+4. Handoff docs updated:
+- append entry in `docs/CONVERSION_LOG.md` (migration impact)
+- append entry in `docs/IMPLEMENTATION_LOG.md` (session execution)
+- update backlog/status in `docs/PROJECT_PLAN.md` when applicable
 
-1. Use default Next.js build settings on Vercel.
-2. Keep parsing/analysis in Node runtime routes (not Edge) unless proven lightweight.
-3. Use environment variables for feature flags and external integrations.
-4. If persistence is added:
-   - Use Vercel Postgres or Neon for relational data.
-   - Use Vercel Blob for replay/report artifacts if needed.
-5. Ensure preview deployments remain functional with seed fixtures.
+## 9) Out of Scope (Unless User Requests)
+1. Live process hooking or active-match automation.
+2. Bot play for online matches.
+3. Opaque scoring pipelines without replay-evidence traceability.
 
-## 9) Definition of Done (per feature)
-
-1. Type-safe implementation with clear domain boundaries.
-2. Unit tests for rule logic and parser edge cases.
-3. UI state coverage for success, invalid XML, and analysis errors.
-4. No lint/type/build failures.
-5. Docs updated if architecture or heuristics changed.
-
-## 10) Out of Scope (initially)
-
-1. Live process hooking or runtime control of BB3.
-2. Multiplayer automation or bot play in active online matches.
-3. Black-box opaque model scoring without explainable findings.
-
-## 11) Demo Replay Artifact
-
-1. Sanitized real-world demo replays are available in `demo-replays/` (`demo1.bbr`, `demo2.bbr`, `demo3.bbr`).
-2. These files are approved for agent inspection to improve parser and analysis coverage.
-3. Sensitive identifiers (names, gamer/account IDs, lobby/match IDs, and IP addresses) have been anonymized.
+## 10) Replay Fixtures
+1. Sanitized demo fixtures are in `demo-replays/`.
+2. Use fixtures to evolve parser/probability coverage safely.
+3. Maintain anonymization and avoid introducing sensitive identifiers in committed replay artifacts.

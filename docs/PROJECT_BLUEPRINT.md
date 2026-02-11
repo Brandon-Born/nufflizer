@@ -1,146 +1,125 @@
-# Project Blueprint: BB Trainer (Web)
+# Project Blueprint: Nufflizier (Web + API + CLI)
 
 ## Product Summary
+Nufflizier is a replay-driven luck analysis tool for Blood Bowl 3.
 
-BB Trainer is a replay analysis web app for Blood Bowl 3.
-Input: replay XML.
-Output: constructive coaching report with overall advice and turn-level improvements.
+Input:
+1. Replay XML or BB3 `.bbr` payload.
+
+Output:
+1. Team-level luck verdict and score gap.
+2. Category contribution breakdown.
+3. Key moment timeline for low-probability successes and high-probability failures.
+
+## Canonical Planning and Handoff Docs
+1. `docs/PROJECT_PLAN.md` (current status and backlog)
+2. `docs/CONVERSION_LOG.md` (append-only migration log)
+3. `docs/IMPLEMENTATION_LOG.md` (append-only execution log)
 
 ## Baseline Decisions
-
 1. Deployment target: Vercel.
-2. Application shape: single Next.js TypeScript app.
-3. Analysis approach: deterministic rules first, optional AI narration later.
-4. Safety: offline replay analysis only, no game hooking.
+2. App shape: single Next.js TypeScript application.
+3. Analysis approach: deterministic replay-derived probability + weighted scoring.
+4. Runtime model: one-shot processing, no required persistence.
+5. Backward compatibility: legacy coaching pipeline is currently `legacy-kept`.
 
-## Implementation Progress (2026-02-08)
+## Current Implementation State (2026-02-11)
+1. Primary runtime surface is implemented:
+- UI route `/nufflizier` (with `/upload` alias)
+- API route `POST /api/nufflizier/analyze`
+- CLI `nufflizier analyze`
+2. Parser + attribution foundation is production-usable for replay fixtures.
+3. Luck analysis domain exists (`src/domain/nufflizer/*`) with normalization, probability, and scoring.
+4. Legacy coaching modules still exist and are tested but are not the primary product path.
+5. CI-quality checks pass for lint, typecheck, test, build, and e2e smoke.
 
-1. M0 scaffold is complete: app bootstrapped with lint/test/build/CI foundations.
-2. M1 foundation is in progress: XML upload endpoint, parser, and timeline pipeline are implemented.
-3. Remaining M1 work: broaden replay schema coverage with real BB3 samples and tighten rule quality.
-
-## Proposed Folder Structure
-
+## Runtime Architecture
 ```text
-.
-├─ AGENTS.md
-├─ docs/
-│  └─ PROJECT_BLUEPRINT.md
-├─ src/
-│  ├─ app/
-│  │  ├─ page.tsx
-│  │  ├─ upload/page.tsx
-│  │  └─ report/[id]/page.tsx
-│  ├─ server/
-│  │  ├─ api/replay/route.ts
-│  │  └─ services/analyzeReplay.ts
-│  ├─ domain/
-│  │  ├─ replay/
-│  │  │  ├─ types.ts
-│  │  │  ├─ parseXml.ts
-│  │  │  └─ buildTimeline.ts
-│  │  ├─ analysis/
-│  │  │  ├─ heuristics.ts
-│  │  │  ├─ evaluateTurn.ts
-│  │  │  └─ summarizeMatch.ts
-│  │  └─ coaching/
-│  │     └─ renderAdvice.ts
-│  └─ lib/
-│     ├─ config.ts
-│     ├─ errors.ts
-│     └─ logger.ts
-├─ tests/
-│  ├─ fixtures/replays/
-│  ├─ unit/
-│  └─ e2e/
-└─ package.json
+Replay file (.xml/.bbr)
+  -> src/domain/replay/decodeReplay.ts
+  -> src/domain/replay/parseXml.ts
+  -> src/domain/replay/extractStructuredTurns.ts + attribution
+  -> src/domain/nufflizer/analyzeLuck.ts
+      -> constants.ts (weights/mappings)
+      -> probability.ts (odds model)
+      -> types.ts (report contract)
+  -> src/server/services/analyzeNufflizer.ts
+  -> API/UI/CLI presentation
 ```
+
+## Primary Interfaces
+1. API
+- `POST /api/nufflizier/analyze`
+- Request: multipart form with `replay` file.
+- Response: `LuckReport` payload (`match`, `verdict`, `teams`, `keyMoments`, `events`).
+
+2. UI
+- `/nufflizier`: upload, verdict banner, team cards, category scores, filtered key moments, JSON export.
+- `/upload`: alias to same analyzer component.
+
+3. CLI
+- `pnpm nufflizier analyze <replay_file> --format json|text`
 
 ## Milestone Plan
 
-## M0: App Bootstrap
-
+### M0 - Foundation (Completed)
 Deliverables:
-1. Next.js app with TypeScript, Tailwind, ESLint, Prettier.
-2. CI pipeline running lint, typecheck, unit tests, and build.
-3. First Vercel preview deployment.
+1. Next.js + TypeScript + Tailwind scaffold.
+2. Build/lint/test pipeline.
 
 Acceptance:
-1. `pnpm dev`, `pnpm test`, `pnpm lint`, and `pnpm build` pass.
-2. Root page renders and links to upload flow.
+1. `pnpm dev`, `pnpm test`, `pnpm lint`, and `pnpm build` run successfully.
 
-## M1: Replay Parsing Foundation
-
+### M1 - Replay Parsing and Attribution (Completed)
 Deliverables:
-1. Replay upload endpoint with size/type validation.
-2. XML parser that normalizes input into internal replay model.
-3. Timeline reconstruction for turns and key actions.
+1. XML/BBR decode and parser normalization.
+2. Structured event extraction and team/player attribution.
+3. Fixture-based replay baseline tests.
 
 Acceptance:
-1. Parser handles valid fixture files and fails cleanly on malformed XML.
-2. Replay model has explicit TypeScript types and Zod boundary validation.
+1. Parser handles demo fixtures and malformed input gracefully.
 
-## M2: Macro Coaching
-
+### M2 - Nufflizier MVP Conversion (Completed)
 Deliverables:
-1. Metrics:
-   - Turnovers by cause.
-   - Reroll spending quality.
-   - Block quality/risk profile.
-   - Ball progression tempo.
-2. Report summary card with 3-5 actionable priorities.
+1. Luck analysis domain and scoring contract.
+2. Primary API `/api/nufflizier/analyze`.
+3. Primary UI `/nufflizier` and CLI command.
+4. Initial Nufflizier unit/api/e2e tests.
 
 Acceptance:
-1. Each recommendation references specific turns/events.
-2. Explanations are constructive and specific.
+1. End-to-end replay upload to luck report works.
+2. CLI and API return aligned report structure.
 
-## M3: Turn-by-Turn Advice
-
+### M3 - Probability Fidelity Hardening (In Progress)
 Deliverables:
-1. Per-turn analysis: chosen line vs safer alternative sequence.
-2. Human-readable rationale templates from structured findings.
+1. Increase explicit roll-family probability coverage.
+2. Reduce fallback approximations in high-impact categories.
+3. Add coverage telemetry for explicit-vs-fallback scoring.
 
 Acceptance:
-1. Every flagged turn includes:
-   - What happened.
-   - Why it was risky.
-   - One concrete alternative.
+1. Probability behavior documented and backed by deterministic tests.
+2. Report explainability includes coverage confidence indicators.
 
-## M4: Persistence and History (Optional Early)
-
+### M4 - Legacy Surface Resolution (Pending)
 Deliverables:
-1. Save reports and analysis metadata.
-2. Show trend view across uploaded matches.
+1. Explicit decision for legacy coaching stack (`retain`, `gate`, or `remove`).
+2. Deprecation/migration plan if removal is selected.
 
 Acceptance:
-1. Users can open prior reports by ID.
-2. Data model supports future team/faction filters.
+1. No ambiguity in product path or docs for follow-up agents.
 
 ## Non-Functional Requirements
+1. Reliability: malformed/oversized uploads fail safely with user-readable errors.
+2. Performance: replay analysis stays within serverless runtime constraints.
+3. Explainability: verdict traces back to explicit event-level probabilities/deltas.
+4. Privacy: no silent long-term replay storage.
 
-1. Reliability: invalid uploads do not crash the server route.
-2. Performance: keep processing under serverless limits for typical replay sizes.
-3. Explainability: every score/recommendation traces back to explicit rule results.
-4. Privacy: only process files required for analysis; no silent third-party transfer.
+## Replay Fixture Guidance
+1. Use `demo-replays/demo1.bbr`, `demo2.bbr`, `demo3.bbr` for parser and scoring evolution.
+2. Keep `docs/REPLAY_INVESTIGATION.md` updated when mapping assumptions change.
+3. Preserve anonymization for all replay artifacts.
 
-## Replay Fixtures
-
-1. Sanitized demo replays are available in `demo-replays/` (`demo1.bbr`, `demo2.bbr`, `demo3.bbr`).
-2. Agents can inspect these replays to understand real BB3 replay structure and evolve parsing rules.
-3. Investigation notes and current code mappings are tracked in `docs/REPLAY_INVESTIGATION.md`.
-
-## Best Practices for Coding Agents
-
-1. Implement core logic as pure functions under `src/domain`.
-2. Write or update tests with every heuristic change.
-3. Keep rule thresholds centralized (single config/constants module).
-4. Avoid mixing parse, evaluation, and presentation concerns.
-5. Prefer explicit types over `any`; fail fast on unknown event shapes.
-6. Surface user-safe errors (`invalid replay`, `unsupported replay version`, etc.).
-7. If introducing AI-generated phrasing, keep raw rule output available for audit.
-
-## Versioning and Change Log Rules
-
-1. Update `AGENTS.md` when stack/architecture decisions change.
-2. Update this blueprint when milestones are added/reordered.
-3. Add a short dated note for major heuristic changes to preserve analysis history.
+## Versioning and Change Rules
+1. Append migration details to `docs/CONVERSION_LOG.md` for conversion-relevant work.
+2. Append execution details to `docs/IMPLEMENTATION_LOG.md` for every coding session.
+3. Update `docs/PROJECT_PLAN.md` when backlog priorities or status taxonomy changes.
