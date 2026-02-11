@@ -2,6 +2,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
+import { CATEGORY_EXAMPLE_LINES, HOW_TO_READ_LINES } from "@/domain/nufflizer/explainabilityCopy";
 import { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
 
 type OutputFormat = "json" | "text";
@@ -48,10 +49,9 @@ function formatTeamSummary(report: ReturnType<typeof analyzeNufflizerInput>): st
     ...byTypeCoverage,
     "",
     "How to read this report:",
-    "- Expected is the chance a play should work in this replay context.",
-    "- Weighted delta is (actual result - expected chance) x category weight.",
-    "- Explicit means dedicated odds logic; fallback means generic odds with disclosure.",
-    "- Category examples: block (dice faces), armor/injury (target rolls), dodge/ball (agility checks), argue (ref call rolls).",
+    ...HOW_TO_READ_LINES.map((line) => `- ${line}`),
+    "- Category examples:",
+    ...CATEGORY_EXAMPLE_LINES.map((line) => `  - ${line}`),
     "",
     "How this was scored:",
     ...report.howScoredSummary.map((line) => `- ${line}`),

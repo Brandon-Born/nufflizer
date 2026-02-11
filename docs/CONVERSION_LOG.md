@@ -181,3 +181,20 @@ Remaining follow-ups:
 Verification evidence:
 1. Validation commands passed: `corepack pnpm typecheck`, `corepack pnpm lint`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm test:e2e`.
 2. New tests/fixtures: `tests/unit/nufflizierNormalization.test.ts`, `tests/unit/nufflizierCliParity.test.ts`, `tests/fixtures/models/argue-edge-replay.json`.
+
+## 2026-02-11 - Argue variant gate + copy centralization
+Metadata: commit(s) `pending`; scope `Human-test readiness hardening`; status `partial`.
+
+Converted items:
+1. Added evidence fixtures for argue-call variants: `rollType=42` and `rollType=70`.
+2. Kept `42`/`70` fallback and added explicit nondeterministic reason text in probability output.
+3. Added centralized explainability copy module consumed by both UI and CLI for parity.
+4. Added Nufflizier-focused variant, inventory, normalization, and CLI parity assertions; introduced split scripts (`test:nufflizier`, `test:legacy`).
+
+Remaining follow-ups:
+1. Promote `42` or `70` to explicit only after replay evidence satisfies deterministic gate criteria.
+2. Continue reducing reliance on legacy-heavy tests as Nufflizier coverage grows.
+
+Verification evidence:
+1. Validation commands passed: `corepack pnpm typecheck`, `corepack pnpm lint`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm test:e2e`, `corepack pnpm test:nufflizier`, `corepack pnpm test:legacy`.
+2. New files include fixtures (`tests/fixtures/models/argue-rolltype-42.json`, `tests/fixtures/models/argue-rolltype-70.json`) and tests (`tests/unit/nufflizierArgueVariants.test.ts`, `tests/unit/nufflizierCoverageInventory.test.ts`).

@@ -151,7 +151,9 @@ describe("nufflizier probability engine", () => {
     expect(fallback42.calculationMethod).toBe("fallback");
     expect(fallback42.calculationReason).toMatch(/fallback/i);
     expect(fallback42.calculationReason).toMatch(/rollType 42/i);
+    expect(fallback42.calculationReason).toMatch(/nondeterministic/i);
     expect(fallback70.calculationMethod).toBe("fallback");
     expect(fallback70.calculationReason).toMatch(/rollType 70/i);
+    expect(fallback70.calculationReason).toMatch(/nondeterministic/i);
   });
 });

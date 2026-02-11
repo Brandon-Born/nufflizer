@@ -48,7 +48,7 @@ Status taxonomy: `converted`, `partial`, `legacy-kept`, `pending`, `blocked`.
 | API: `/api/replay` | `legacy-kept` | Coaching endpoint retained; not primary product surface. | `src/app/api/replay/route.ts` |
 | UI routes (`/nufflizier`, `/upload`) | `converted` | Upload + verdict + team cards + key moments + filters + JSON export. | `src/app/nufflizier/*`, `src/app/upload/page.tsx` |
 | CLI entrypoint | `converted` | Text and JSON modes using shared report contract. | `src/cli/nufflizier.ts`, `bin/nufflizier` |
-| Automated tests | `partial` | Nufflizier unit/api/e2e coverage now includes explicit-vs-fallback coverage, normalization metadata assertions, and CLI/API parity checks; legacy coaching tests still dominate total suite and should be rebalanced. | `tests/unit/*`, `tests/e2e/smoke.spec.ts` |
+| Automated tests | `partial` | Nufflizier unit/api/e2e coverage now includes explicit-vs-fallback coverage, normalization metadata assertions, CLI/API parity checks, argue-variant gate tests, and inventory checks; legacy coaching tests still exist and are now split with dedicated scripts for targeted execution. | `tests/unit/*`, `tests/e2e/smoke.spec.ts`, `package.json` |
 | Documentation system | `partial` | README is updated; handoff docs and blueprint/agent alignment introduced in this pass. | `README.md`, `docs/*`, `AGENTS.md` |
 
 ## Prioritized Backlog
@@ -66,6 +66,9 @@ Status taxonomy: `converted`, `partial`, `legacy-kept`, `pending`, `blocked`.
 - Dependencies:
 - Replay payload field consistency from `extractStructuredTurns`.
 - Availability of representative replay fixtures.
+
+Current decision note:
+1. Evidence gate for `rollType=42` and `rollType=70` currently fails because target-source consistency is not stable across fixtures; both remain fallback with explicit reason strings.
 
 ### P1 - Legacy Surface Decision and Cleanup Plan
 - Why it matters: Keeping both Nufflizier and coaching pipelines increases maintenance burden and ambiguity for new agents.
@@ -96,9 +99,9 @@ Status taxonomy: `converted`, `partial`, `legacy-kept`, `pending`, `blocked`.
 - Stable metadata contract from `LuckEvent`.
 
 ## Next 3 Agent Tasks
-1. Evaluate deterministic semantics for argue-call `rollType=42` and `rollType=70` using additional replay evidence before promoting either from fallback to explicit.
-2. Rebalance tests so Nufflizier-specific suite weight grows relative to legacy coaching tests, while preserving `legacy-kept` safety checks.
-3. Expand explainability UX copy with concise per-category examples in both UI and CLI as fixture coverage grows.
+1. Collect additional replay evidence for argue-call `rollType=42` and `rollType=70`, then re-run the explicit promotion gate.
+2. Continue test-suite rebalance by migrating more shared behavior checks to Nufflizier-named tests while keeping `test:legacy` safety coverage intact.
+3. Refine explainability wording from baseline category examples using human-test feedback.
 
 ## Risks/Dependencies
 1. Replay payload variability across BB3 versions may reduce mapping confidence for less common events.

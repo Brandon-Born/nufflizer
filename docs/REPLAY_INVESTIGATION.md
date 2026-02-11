@@ -76,8 +76,16 @@ The Nufflizier probability engine now distinguishes explicit calculators from fa
    - Fallback usage is reported in `LuckReport.coverage` and per-event `calculationMethod` / `calculationReason`.
 3. Argue-call variant matrix:
    - `RollType=71`: explicit (supported and tested).
-   - `RollType=42`: fallback (insufficient deterministic semantics).
-   - `RollType=70`: fallback (insufficient deterministic semantics).
-3. Transparency requirement:
+   - `RollType=42`: fallback (target source not stable across current fixtures).
+   - `RollType=70`: fallback (target source not stable across current fixtures).
+4. Explicit promotion gate for `argue_call` variants:
+   - Stable target source (`difficulty` or `requirement`) must exist for the variant.
+   - Success/failure semantics must align with replay outcome and dice values.
+   - No contradictory behavior across fixtures for that same roll type.
+   - Current gate result for `42` and `70`: fail (remain fallback).
+5. Fixture evidence:
+   - `tests/fixtures/models/argue-rolltype-42.json`
+   - `tests/fixtures/models/argue-rolltype-70.json`
+6. Transparency requirement:
    - Every scored event must indicate whether it used `explicit` or `fallback` calculation.
    - Coverage rate must be surfaced to UI and CLI users.

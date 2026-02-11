@@ -287,3 +287,50 @@ Explicit handoff next steps:
 1. Gather replay evidence for `rollType=42` and `70` to decide explicit promotion.
 2. Continue test-suite rebalance toward Nufflizier-first coverage.
 3. Keep append-only handoff logs current with each implementation milestone.
+
+## 2026-02-11 11:43 - Remaining-3-items completion pass
+Goal:
+1. Execute the remaining human-test readiness items: argue variant evidence gate, test rebalance scaffolding, and shared explainability copy across UI/CLI.
+
+Changes made (files):
+1. Domain and copy:
+- `src/domain/nufflizer/probability.ts`
+- `src/domain/nufflizer/explainabilityCopy.ts`
+2. UI and CLI:
+- `src/app/nufflizier/NufflizierAnalyzer.tsx`
+- `src/cli/nufflizier.ts`
+3. Config/scripts:
+- `package.json`
+4. Fixtures and tests:
+- `tests/fixtures/models/argue-rolltype-42.json`
+- `tests/fixtures/models/argue-rolltype-70.json`
+- `tests/unit/nufflizierArgueVariants.test.ts`
+- `tests/unit/nufflizierNormalization.test.ts`
+- `tests/unit/nufflizierCliParity.test.ts`
+- `tests/unit/nufflizierCoverageInventory.test.ts`
+- `tests/unit/nufflizierProbability.test.ts`
+- `tests/e2e/smoke.spec.ts`
+5. Docs/handoff:
+- `docs/PROJECT_PLAN.md`
+- `docs/PROJECT_BLUEPRINT.md`
+- `docs/REPLAY_INVESTIGATION.md`
+- `docs/CONVERSION_LOG.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+Commands run + outcomes:
+1. `corepack pnpm typecheck` -> passed.
+2. `corepack pnpm lint` -> passed.
+3. `corepack pnpm test` -> passed (19 files, 61 tests).
+4. `corepack pnpm build` -> passed.
+5. `corepack pnpm test:e2e` -> passed.
+6. `corepack pnpm test:nufflizier` -> passed.
+7. `corepack pnpm test:legacy` -> passed.
+
+Regressions/known gaps:
+1. `argue_call` `rollType=42` and `rollType=70` remain fallback by design until deterministic evidence improves.
+2. Legacy coaching stack remains `legacy-kept` under gated policy.
+
+Explicit handoff next steps:
+1. Gather additional replay evidence for `42` and `70` and re-run explicit promotion gate.
+2. Continue migrating shared behavior checks toward Nufflizier-first suites while retaining legacy safety net.
+3. Use human-test feedback to tune wording in shared explainability copy.

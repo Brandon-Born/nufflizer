@@ -35,6 +35,7 @@ Output:
 4. Report now includes explainability metadata (`explicit` vs `fallback`, coverage metrics, “how scored” summaries, and normalization flags for ambiguous contexts).
 5. Legacy coaching modules still exist and are tested but are not the primary product path.
 6. CI-quality checks pass for lint, typecheck, test, build, and e2e smoke.
+7. Test execution is now split with dedicated scripts: `test:nufflizier` and `test:legacy`.
 
 ## Runtime Architecture
 ```text
@@ -108,6 +109,7 @@ Progress note:
 2. Wave 2 explicit coverage added for `dodge` and `ball_handling`.
 3. Wave 2 now includes explicit `argue_call` handling for `rollType=71`.
 4. Remaining argue-call variants (`42`, `70`) stay fallback-first pending stronger replay evidence.
+5. Current promotion gate result for `42`/`70`: keep fallback, because fixture target-source semantics are not yet deterministic.
 
 ### M4 - Legacy Surface Resolution (Pending)
 Deliverables:

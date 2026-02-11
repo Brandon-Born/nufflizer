@@ -17,6 +17,8 @@ export type ProbabilityResult = {
   calculationReason: string;
 };
 
+const ARGUE_CALL_FALLBACK_ROLLS = new Set([42, 70]);
+
 function clamp01(value: number): number {
   if (!Number.isFinite(value)) {
     return 0.5;
@@ -332,12 +334,17 @@ export function computeProbabilityForEvent(eventType: LuckEventType, input: Prob
 
   const baseOdds = computeBaseSuccessProbability(input);
   const rerollAdjustedOdds = applyReroll(baseOdds, input.rerollAvailable);
+  let calculationReason = `generic fallback calculator (insufficient explicit mapping${input.rollType !== undefined ? ` for rollType ${input.rollType}` : ""})`;
+  if (eventType === "argue_call" && input.rollType !== undefined && ARGUE_CALL_FALLBACK_ROLLS.has(input.rollType)) {
+    calculationReason = `argue-call fallback calculator (rollType ${input.rollType} remains nondeterministic in current fixtures)`;
+  }
+
   return {
     probabilitySuccess: rerollAdjustedOdds,
     baseOdds: clamp01(baseOdds),
     rerollAdjustedOdds,
     calculationMethod: "fallback",
-    calculationReason: `generic fallback calculator (insufficient explicit mapping${input.rollType !== undefined ? ` for rollType ${input.rollType}` : ""})`
+    calculationReason
   };
 }
 

@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 
+import { CATEGORY_EXAMPLE_LINES, HOW_TO_READ_LINES } from "@/domain/nufflizer/explainabilityCopy";
+
 type LuckEventType = "block" | "armor_break" | "injury" | "dodge" | "ball_handling" | "argue_call";
 type LuckMomentTag = "blessed" | "shaftaroonie";
 type LuckCalculationMethod = "explicit" | "fallback";
@@ -265,14 +267,16 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
           <section className="rounded-xl border border-amber-300/20 bg-black/20 p-4">
             <h3 className="text-base font-semibold text-amber-100">How to read this report</h3>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-50/90">
-              <li>Expected is the chance the play should work based on the replay context at roll time.</li>
-              <li>Weighted delta is luck swing: (actual result - expected chance) x category weight.</li>
+              {HOW_TO_READ_LINES.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
               <li>
-                Explicit means we have a dedicated calculator for that roll family; fallback means we still scored it, but with generic odds.
-              </li>
-              <li>
-                Category examples: block (dice faces), armor/injury (target rolls), dodge/ball handling (agility checks), argue call (ref
-                call roll).
+                Category examples:
+                <ul className="mt-1 list-disc space-y-1 pl-5">
+                  {CATEGORY_EXAMPLE_LINES.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
               </li>
             </ul>
           </section>

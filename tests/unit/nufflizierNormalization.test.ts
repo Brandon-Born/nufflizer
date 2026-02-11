@@ -43,4 +43,13 @@ describe("nufflizier normalization", () => {
     expect(roll70?.metadata.normalizationFlags).toContain("insufficient_dice_metadata");
     expect(roll70?.metadata.normalizationNotes?.length).toBeGreaterThan(0);
   });
+
+  it("flags unstable target context for rollType 42 and keeps fallback", () => {
+    const report = analyzeReplayLuck(readModelFixture("argue-rolltype-42.json"));
+    const roll42 = report.events.filter((event) => event.type === "argue_call" && event.metadata.rollType === 42);
+
+    expect(roll42.length).toBeGreaterThan(0);
+    expect(roll42.every((event) => event.calculationMethod === "fallback")).toBe(true);
+    expect(roll42.some((event) => (event.metadata.normalizationFlags ?? []).includes("missing_target_threshold"))).toBe(true);
+  });
 });
