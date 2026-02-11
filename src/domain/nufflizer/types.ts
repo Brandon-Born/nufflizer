@@ -1,6 +1,7 @@
 export type LuckEventType = "block" | "armor_break" | "injury" | "dodge" | "ball_handling" | "argue_call";
 
 export type LuckMomentTag = "blessed" | "shaftaroonie";
+export type LuckCalculationMethod = "explicit" | "fallback";
 
 export type LuckEventMetadata = {
   sourceTag: string;
@@ -35,6 +36,14 @@ export type LuckEvent = {
   weightedDelta: number;
   label: string;
   tags: LuckMomentTag[];
+  calculationMethod: LuckCalculationMethod;
+  calculationReason: string;
+  explainability: {
+    target: string;
+    baseOdds: number;
+    rerollAdjustedOdds: number;
+    weight: number;
+  };
   metadata: LuckEventMetadata;
 };
 
@@ -68,6 +77,13 @@ export type LuckReport = {
     awayTeam: string;
   };
   verdict: LuckVerdict;
+  coverage: {
+    explicitCount: number;
+    fallbackCount: number;
+    explicitRate: number;
+  };
+  weightTable: Record<LuckEventType, number>;
+  howScoredSummary: string[];
   teams: [LuckTeamAggregate, LuckTeamAggregate];
   keyMoments: LuckEvent[];
   events: LuckEvent[];

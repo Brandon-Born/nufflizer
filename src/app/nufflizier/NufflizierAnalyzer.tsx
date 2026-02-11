@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 type LuckEventType = "block" | "armor_break" | "injury" | "dodge" | "ball_handling" | "argue_call";
 type LuckMomentTag = "blessed" | "shaftaroonie";
+type LuckCalculationMethod = "explicit" | "fallback";
 
 type LuckEvent = {
   id: string;
@@ -18,6 +19,14 @@ type LuckEvent = {
   weightedDelta: number;
   label: string;
   tags: LuckMomentTag[];
+  calculationMethod: LuckCalculationMethod;
+  calculationReason: string;
+  explainability: {
+    target: string;
+    baseOdds: number;
+    rerollAdjustedOdds: number;
+    weight: number;
+  };
 };
 
 type LuckReport = {
@@ -33,6 +42,13 @@ type LuckReport = {
     scoreGap: number;
     summary: string;
   };
+  coverage: {
+    explicitCount: number;
+    fallbackCount: number;
+    explicitRate: number;
+  };
+  weightTable: Record<LuckEventType, number>;
+  howScoredSummary: string[];
   teams: Array<{
     teamId: string;
     teamName: string;
@@ -237,7 +253,24 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
           <div className="rounded-lg border border-amber-300/20 bg-amber-950/20 p-4">
             <p className="text-lg font-semibold text-amber-100">{report.verdict.summary}</p>
             <p className="mt-1 text-sm text-amber-50/90">Score gap: {report.verdict.scoreGap.toFixed(1)}</p>
+            <p className="mt-1 text-sm text-amber-50/90">
+              Coverage: {(report.coverage.explicitRate * 100).toFixed(1)}% explicit ({report.coverage.explicitCount} explicit,{" "}
+              {report.coverage.fallbackCount} fallback)
+            </p>
           </div>
+
+          <section className="rounded-xl border border-amber-300/20 bg-black/20 p-4">
+            <h3 className="text-base font-semibold text-amber-100">How this was scored</h3>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-50/90">
+              {report.howScoredSummary.map((line, index) => (
+                <li key={`${index}-${line}`}>{line}</li>
+              ))}
+            </ul>
+            <p className="mt-3 text-xs text-amber-100/80">
+              Weights: block {report.weightTable.block}, armor {report.weightTable.armor_break}, injury {report.weightTable.injury}, dodge{" "}
+              {report.weightTable.dodge}, ball handling {report.weightTable.ball_handling}, argue {report.weightTable.argue_call}.
+            </p>
+          </section>
 
           <div className="grid gap-4 md:grid-cols-2">
             {report.teams.map((team) => (
@@ -296,6 +329,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                     <th className="px-2 py-2">Expected</th>
                     <th className="px-2 py-2">Actual</th>
                     <th className="px-2 py-2">Weighted Delta</th>
+                    <th className="px-2 py-2">Method</th>
                     <th className="px-2 py-2">Tag</th>
                   </tr>
                 </thead>
@@ -304,10 +338,21 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                     <tr key={moment.id} className="border-b border-amber-300/10 align-top">
                       <td className="px-2 py-3 font-semibold">{moment.turn}</td>
                       <td className="px-2 py-3">{moment.teamName}</td>
-                      <td className="px-2 py-3">{moment.label}</td>
+                      <td className="px-2 py-3">
+                        <div>{moment.label}</div>
+                        <details className="mt-1">
+                          <summary className="cursor-pointer text-xs text-amber-100/80">Why</summary>
+                          <p className="mt-1 text-xs text-amber-100/80">
+                            {moment.calculationReason}. Target: {moment.explainability.target}. Base odds{" "}
+                            {(moment.explainability.baseOdds * 100).toFixed(1)}%, reroll-adjusted{" "}
+                            {(moment.explainability.rerollAdjustedOdds * 100).toFixed(1)}%, weight {moment.explainability.weight}.
+                          </p>
+                        </details>
+                      </td>
                       <td className="px-2 py-3">{(moment.probabilitySuccess * 100).toFixed(1)}%</td>
                       <td className="px-2 py-3">{moment.actualSuccess ? "Success" : "Fail"}</td>
                       <td className="px-2 py-3">{moment.weightedDelta.toFixed(3)}</td>
+                      <td className="px-2 py-3">{moment.calculationMethod}</td>
                       <td className="px-2 py-3">
                         {moment.tags.length > 0 ? (
                           <span className="inline-flex rounded-full border border-amber-200/40 px-2 py-1 text-xs font-semibold uppercase">

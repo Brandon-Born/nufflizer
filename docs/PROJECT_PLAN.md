@@ -43,24 +43,24 @@ Status taxonomy: `converted`, `partial`, `legacy-kept`, `pending`, `blocked`.
 | --- | --- | --- | --- |
 | Replay parsing core (`decodeReplay`, `parseXml`, `extractStructuredTurns`) | `converted` | Handles XML + BBR with structured turn extraction and attribution. | `src/domain/replay/*` |
 | Luck normalization | `partial` | Roll-based mapping works for MVP categories; deeper event semantics still need expansion for edge cases. | `src/domain/nufflizer/analyzeLuck.ts` |
-| Probability/scoring engine | `partial` | Deterministic probabilities + weighted deltas implemented; some roll families are still approximated heuristically. | `src/domain/nufflizer/probability.ts`, `src/domain/nufflizer/constants.ts` |
+| Probability/scoring engine | `partial` | Explicit calculators now implemented for `block`, `armor_break`, and `injury`; remaining families still use disclosed fallback paths. | `src/domain/nufflizer/probability.ts`, `src/domain/nufflizer/constants.ts` |
 | API: `/api/nufflizier/analyze` | `converted` | Main one-shot Nufflizier endpoint active. | `src/app/api/nufflizier/analyze/route.ts` |
 | API: `/api/replay` | `legacy-kept` | Coaching endpoint retained; not primary product surface. | `src/app/api/replay/route.ts` |
 | UI routes (`/nufflizier`, `/upload`) | `converted` | Upload + verdict + team cards + key moments + filters + JSON export. | `src/app/nufflizier/*`, `src/app/upload/page.tsx` |
 | CLI entrypoint | `converted` | Text and JSON modes using shared report contract. | `src/cli/nufflizier.ts`, `bin/nufflizier` |
-| Automated tests | `partial` | Nufflizier unit/api/e2e coverage exists; legacy coaching tests still dominate total suite and should be rebalanced. | `tests/unit/*`, `tests/e2e/smoke.spec.ts` |
+| Automated tests | `partial` | Nufflizier unit/api/e2e coverage now includes explicit-vs-fallback coverage and explainability assertions; legacy coaching tests still dominate total suite and should be rebalanced. | `tests/unit/*`, `tests/e2e/smoke.spec.ts` |
 | Documentation system | `partial` | README is updated; handoff docs and blueprint/agent alignment introduced in this pass. | `README.md`, `docs/*`, `AGENTS.md` |
 
 ## Prioritized Backlog
 
-### P0 - Probability Fidelity Hardening
+### P0 - Probability Fidelity Hardening (Wave 2)
 - Why it matters: Verdict trust depends on realistic probabilities for replay-visible action context.
 - Concrete tasks:
-1. Replace heuristic roll-family approximations with explicit per-roll-type calculators where data exists.
+1. Extend explicit calculators beyond `block`, `armor_break`, and `injury` into additional supported roll families.
 2. Add fixtures for edge conditions (multi-die unusual types, reroll decisions, ambiguous outcomes).
 3. Document supported/unsupported roll semantics in `docs/REPLAY_INVESTIGATION.md` and conversion logs.
 - Acceptance criteria:
-1. Probability calculator behavior is deterministic and unit-tested for each supported roll family.
+1. Probability calculator behavior is deterministic and unit-tested for each explicitly supported roll family.
 2. No unsupported roll family silently reuses generic fallback without tagged note in report metadata/log.
 3. Regression tests pass for all demo replays and sample fixture.
 - Dependencies:
@@ -89,15 +89,15 @@ Status taxonomy: `converted`, `partial`, `legacy-kept`, `pending`, `blocked`.
 4. Add “How this was scored” helper text linking each verdict to underlying weighted deltas.
 - Acceptance criteria:
 1. Each key moment can show probability inputs without exposing raw parser internals.
-2. Coverage metric is visible in report and backed by tests.
+2. Coverage metric is visible in report and backed by tests. (Implemented; continue refining)
 3. A user unfamiliar with statistics can explain why a team was labeled luckier after reading the report page.
 4. e2e smoke test validates primary verdict + explainability elements.
 - Dependencies:
 - Stable metadata contract from `LuckEvent`.
 
 ## Next 3 Agent Tasks
-1. Implement explicit roll-family probability calculators for `block`, `armor_break`, and `injury`, replacing fallback logic where possible.
-2. Add a coverage metric (`explicit vs fallback`) to report schema and render it in `/nufflizier`.
+1. Implement explicit calculators for remaining high-value families (`dodge`, `ball_handling`) where replay context is sufficient, with clear fallback reasoning where not.
+2. Add richer plain-language “why” copy in UI/CLI for each key moment and include per-event formula summary text.
 3. Write a legacy-surface ADR note in `docs/PROJECT_BLUEPRINT.md` deciding future of `/api/replay` and coaching modules.
 
 ## Risks/Dependencies
@@ -107,10 +107,10 @@ Status taxonomy: `converted`, `partial`, `legacy-kept`, `pending`, `blocked`.
 4. Any scoring-weight changes can alter verdict narratives and require baseline snapshot/test updates.
 
 ## Definition of Done for Next Milestone
-Milestone: “Probability Fidelity Hardening - Wave 1”.
+Milestone: “Probability Fidelity Hardening - Wave 2”.
 
 Done means all are true:
-1. Explicit calculators implemented and tested for `block`, `armor_break`, and `injury` roll families.
-2. Fallback usage is measurable and exposed in report metadata and UI coverage banner.
+1. Explicit calculators are implemented and tested for additional non-combat families beyond current Wave 1 coverage.
+2. Fallback usage remains measurable and disclosed in report metadata and UI/CLI explainability views.
 3. Unit + integration + e2e checks pass in CI.
 4. `docs/CONVERSION_LOG.md` and `docs/IMPLEMENTATION_LOG.md` contain append-only entries for all changes and verification outcomes.

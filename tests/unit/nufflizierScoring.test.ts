@@ -34,13 +34,13 @@ function buildReplayModel(): ReplayModel {
             teamId: "home",
             actorTeamId: "home",
             actorTeamSource: "explicit",
-            rollType: 3,
-            rollLabel: "dodge",
+            rollType: 2,
+            rollLabel: "block_dice",
             payload: {
               Requirement: 6,
               Difficulty: 6,
               Outcome: 1,
-              Dice: { Die: { DieType: 0, Value: 6 } }
+              Dice: { Die: { DieType: 0, Value: 5 } }
             }
           }
         ]
@@ -92,6 +92,10 @@ describe("nufflizier scoring", () => {
     expect(report.verdict.scoreGap).toBeGreaterThan(0);
     expect(report.teams).toHaveLength(2);
     expect(report.keyMoments.length).toBeGreaterThan(0);
+    expect(report.coverage.explicitCount).toBeGreaterThanOrEqual(1);
+    expect(report.coverage.fallbackCount).toBeGreaterThanOrEqual(1);
+    expect(report.howScoredSummary.length).toBeGreaterThan(0);
+    expect(report.weightTable.block).toBeGreaterThan(0);
   });
 
   it("marks blessed and shaftaroonie moments", () => {
@@ -100,5 +104,14 @@ describe("nufflizier scoring", () => {
 
     expect(tags).toContain("blessed");
     expect(tags).toContain("shaftaroonie");
+  });
+
+  it("labels event calculation methods", () => {
+    const report = analyzeReplayLuck(buildReplayModel());
+    const methods = new Set(report.events.map((event) => event.calculationMethod));
+
+    expect(methods.has("explicit")).toBe(true);
+    expect(methods.has("fallback")).toBe(true);
+    expect(report.events.every((event) => event.calculationReason.length > 0)).toBe(true);
   });
 });

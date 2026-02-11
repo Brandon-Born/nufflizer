@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { computeBaseSuccessProbability, computeSuccessProbability, resolveActualSuccess } from "@/domain/nufflizer/probability";
+import {
+  computeBaseSuccessProbability,
+  computeProbabilityForEvent,
+  computeSuccessProbability,
+  resolveActualSuccess
+} from "@/domain/nufflizer/probability";
 
 describe("nufflizier probability engine", () => {
   it("computes single-die target odds", () => {
@@ -56,5 +61,50 @@ describe("nufflizier probability engine", () => {
     expect(resolveActualSuccess(0, [6], 2)).toBe(false);
     expect(resolveActualSuccess(undefined, [5], 4)).toBe(true);
     expect(resolveActualSuccess(undefined, [1], 4)).toBe(false);
+  });
+
+  it("uses explicit calculators for block, armor break, and injury", () => {
+    const block = computeProbabilityForEvent("block", {
+      rollType: 2,
+      requirement: 3,
+      difficulty: 3,
+      dice: [2],
+      dieTypes: [0],
+      rerollAvailable: false
+    });
+    const armor = computeProbabilityForEvent("armor_break", {
+      rollType: 1,
+      requirement: 8,
+      difficulty: 8,
+      dice: [4, 4],
+      dieTypes: [0, 0],
+      rerollAvailable: false
+    });
+    const injury = computeProbabilityForEvent("injury", {
+      rollType: 4,
+      requirement: 9,
+      difficulty: 9,
+      dice: [4, 5],
+      dieTypes: [0, 0],
+      rerollAvailable: false
+    });
+
+    expect(block.calculationMethod).toBe("explicit");
+    expect(armor.calculationMethod).toBe("explicit");
+    expect(injury.calculationMethod).toBe("explicit");
+  });
+
+  it("falls back when no explicit mapping is available", () => {
+    const fallback = computeProbabilityForEvent("dodge", {
+      rollType: 3,
+      requirement: 4,
+      difficulty: 4,
+      dice: [3],
+      dieTypes: [0],
+      rerollAvailable: false
+    });
+
+    expect(fallback.calculationMethod).toBe("fallback");
+    expect(fallback.calculationReason).toMatch(/fallback/i);
   });
 });

@@ -21,6 +21,10 @@ describe("analyzeNufflizerInput", () => {
     expect(report.keyMoments.length).toBeGreaterThan(0);
     expect(report.keyMoments.length).toBeLessThanOrEqual(15);
     expect(report.events.every((event) => event.probabilitySuccess >= 0 && event.probabilitySuccess <= 1)).toBe(true);
+    expect(report.coverage.explicitCount + report.coverage.fallbackCount).toBe(report.events.length);
+    expect(report.coverage.explicitRate).toBeGreaterThanOrEqual(0);
+    expect(report.coverage.explicitRate).toBeLessThanOrEqual(1);
+    expect(report.howScoredSummary.length).toBeGreaterThan(0);
   });
 
   it("keeps verdict and score gap stable for sample fixture", () => {

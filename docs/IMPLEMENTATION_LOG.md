@@ -128,3 +128,45 @@ Explicit handoff next steps:
 1. Add UI elements that surface scoring rationale and weight impact in plain language.
 2. Add tests that assert presence of explainability content in report output.
 3. Keep transparency requirement treated as blocking acceptance criteria for future scoring changes.
+
+## 2026-02-11 10:53 - Probability fidelity wave 1 execution
+Goal:
+1. Execute probability-fidelity and explainability plan with explicit-vs-fallback transparency across API/UI/CLI.
+
+Changes made (files):
+1. Scoring and probability core:
+- `src/domain/nufflizer/probability.ts`
+- `src/domain/nufflizer/analyzeLuck.ts`
+- `src/domain/nufflizer/types.ts`
+2. Presentation surfaces:
+- `src/app/nufflizier/NufflizierAnalyzer.tsx`
+- `src/cli/nufflizier.ts`
+3. Tests:
+- `tests/unit/nufflizierProbability.test.ts`
+- `tests/unit/nufflizierScoring.test.ts`
+- `tests/unit/nufflizierApi.test.ts`
+- `tests/unit/analyzeNufflizier.test.ts`
+- `tests/e2e/smoke.spec.ts`
+4. Handoff docs and investigation notes:
+- `docs/PROJECT_PLAN.md`
+- `docs/PROJECT_BLUEPRINT.md`
+- `docs/REPLAY_INVESTIGATION.md`
+- `docs/CONVERSION_LOG.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+Commands run + outcomes:
+1. `pnpm typecheck` -> passed.
+2. `pnpm lint` -> passed.
+3. `pnpm test` -> initially failed one scoring assertion, then passed after fixture adjustment.
+4. `pnpm build` -> passed.
+5. `pnpm test:e2e` -> initially failed due to strict locator ambiguity, then passed after selector update.
+6. `pnpm nufflizier analyze tests/fixtures/replays/sample-basic.xml --format text` -> passed and now prints coverage + explainability summary.
+
+Regressions/known gaps:
+1. Explicit calculators currently cover only `block`, `armor_break`, `injury`; remaining categories still use disclosed fallback.
+2. Legacy coaching pipeline remains `legacy-kept` and unresolved.
+
+Explicit handoff next steps:
+1. Implement explicit probability handling for additional families (`dodge`, `ball_handling`) where replay context allows.
+2. Continue refining plain-language explanation text for non-statistics users.
+3. Produce legacy-surface ADR (`/api/replay` retain/gate/remove) and update docs accordingly.

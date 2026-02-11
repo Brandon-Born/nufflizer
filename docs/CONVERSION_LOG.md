@@ -111,3 +111,21 @@ Remaining follow-ups:
 Verification evidence:
 1. `docs/PROJECT_PLAN.md` now contains a dedicated “Transparency Principle” section and strengthened P2 criteria.
 2. `docs/PROJECT_BLUEPRINT.md` and `AGENTS.md` now encode explainability as a required engineering constraint.
+
+## 2026-02-11 - Probability fidelity wave 1 + explainability coverage
+Metadata: commit(s) `pending`; scope `Nufflizier scoring transparency and explicit calculators`; status `partial`.
+
+Converted items:
+1. Added explicit probability calculators for `block`, `armor_break`, and `injury` roll families.
+2. Added event-level method tagging (`explicit`/`fallback`) and reason strings in report output.
+3. Added report-level coverage telemetry (`explicitCount`, `fallbackCount`, `explicitRate`) and weight table output.
+4. Added “How this was scored” summaries and explainability data to API/UI/CLI output paths.
+
+Remaining follow-ups:
+1. Extend explicit calculators to additional families (`dodge`, `ball_handling`) where replay data is sufficient.
+2. Continue reducing fallback reliance and improve plain-language rationale depth for end users.
+3. Finalize ADR for legacy `/api/replay` surface.
+
+Verification evidence:
+1. Updated tests: `tests/unit/nufflizierProbability.test.ts`, `tests/unit/nufflizierScoring.test.ts`, `tests/unit/nufflizierApi.test.ts`, `tests/unit/analyzeNufflizier.test.ts`, `tests/e2e/smoke.spec.ts`.
+2. Validation commands passed: `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build`, `pnpm test:e2e`.

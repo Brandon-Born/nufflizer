@@ -32,8 +32,9 @@ Output:
 - CLI `nufflizier analyze`
 2. Parser + attribution foundation is production-usable for replay fixtures.
 3. Luck analysis domain exists (`src/domain/nufflizer/*`) with normalization, probability, and scoring.
-4. Legacy coaching modules still exist and are tested but are not the primary product path.
-5. CI-quality checks pass for lint, typecheck, test, build, and e2e smoke.
+4. Report now includes explainability metadata (`explicit` vs `fallback`, coverage metrics, and “how scored” summaries).
+5. Legacy coaching modules still exist and are tested but are not the primary product path.
+6. CI-quality checks pass for lint, typecheck, test, build, and e2e smoke.
 
 ## Runtime Architecture
 ```text
@@ -101,6 +102,10 @@ Deliverables:
 Acceptance:
 1. Probability behavior documented and backed by deterministic tests.
 2. Report explainability includes coverage confidence indicators.
+
+Progress note:
+1. Wave 1 complete for explicit calculators in `block`, `armor_break`, and `injury`.
+2. Wave 2 remaining for additional families (notably `dodge` and `ball_handling` where data permits).
 
 ### M4 - Legacy Surface Resolution (Pending)
 Deliverables:

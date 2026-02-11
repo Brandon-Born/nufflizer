@@ -40,11 +40,15 @@ function formatTeamSummary(report: ReturnType<typeof analyzeNufflizerInput>): st
     `Home: ${home?.teamName ?? "Home"} (${home?.luckScore.toFixed(1) ?? "0.0"})`,
     `Away: ${away?.teamName ?? "Away"} (${away?.luckScore.toFixed(1) ?? "0.0"})`,
     `Verdict: ${report.verdict.summary} (gap ${report.verdict.scoreGap.toFixed(1)})`,
+    `Coverage: ${(report.coverage.explicitRate * 100).toFixed(1)}% explicit (${report.coverage.explicitCount} explicit, ${report.coverage.fallbackCount} fallback)`,
+    "",
+    "How this was scored:",
+    ...report.howScoredSummary.map((line) => `- ${line}`),
     "",
     "Top swings:",
     ...topMoments.map(
       (moment, index) =>
-        `${index + 1}. Turn ${moment.turn} | ${moment.teamName} | ${moment.label} | weighted delta ${moment.weightedDelta.toFixed(3)}`
+        `${index + 1}. Turn ${moment.turn} | ${moment.teamName} | ${moment.label} | weighted delta ${moment.weightedDelta.toFixed(3)} | ${moment.calculationMethod} (${moment.calculationReason})`
     )
   ].join("\n");
 }

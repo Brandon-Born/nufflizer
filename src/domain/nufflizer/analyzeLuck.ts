@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 
 import { LUCK_CATEGORY_WEIGHTS, ROLL_TYPE_BY_EVENT } from "@/domain/nufflizer/constants";
-import { computeSuccessProbability, resolveActualSuccess } from "@/domain/nufflizer/probability";
+import { computeProbabilityForEvent, resolveActualSuccess } from "@/domain/nufflizer/probability";
 import type { LuckEvent, LuckEventType, LuckReport, LuckTeamAggregate } from "@/domain/nufflizer/types";
 import type { ReplayEvent, ReplayModel, ReplayTurn } from "@/domain/replay/types";
 
@@ -180,6 +180,15 @@ function buildMomentLabel(type: LuckEventType, actualSuccess: boolean, probabili
   return `${targetPrefix}${action} failed (${percent(probabilitySuccess)})`;
 }
 
+function targetLabel(requirement?: number, difficulty?: number): string {
+  const target = difficulty ?? requirement;
+  if (!target || target <= 0) {
+    return "unspecified target";
+  }
+
+  return `${target}+ target`;
+}
+
 function isPlayableTeamName(name: string): boolean {
   return !/^Team \d+$/i.test(name.trim());
 }
@@ -250,7 +259,7 @@ function buildNormalizedEvent(
   const outcomeCode = toNumber(payload?.Outcome);
   const { rerollAvailable, rerollUsed } = extractRerollFlags(turnEvents, eventIndex);
   const inferredRerollAvailable = rerollAvailable || skillsUsed.length > 0;
-  const probabilitySuccess = computeSuccessProbability({
+  const probability = computeProbabilityForEvent(type, {
     rollType,
     requirement,
     difficulty,
@@ -258,9 +267,11 @@ function buildNormalizedEvent(
     dieTypes,
     rerollAvailable: inferredRerollAvailable
   });
+  const probabilitySuccess = probability.probabilitySuccess;
   const actualSuccess = resolveActualSuccess(outcomeCode, dice, difficulty ?? requirement);
   const delta = (actualSuccess ? 1 : 0) - probabilitySuccess;
-  const weightedDelta = delta * LUCK_CATEGORY_WEIGHTS[type];
+  const weight = LUCK_CATEGORY_WEIGHTS[type];
+  const weightedDelta = delta * weight;
 
   const tags: LuckEvent["tags"] = [];
   if (actualSuccess && probabilitySuccess <= 0.3) {
@@ -283,6 +294,14 @@ function buildNormalizedEvent(
     weightedDelta,
     label: buildMomentLabel(type, actualSuccess, probabilitySuccess, difficulty ?? requirement),
     tags,
+    calculationMethod: probability.calculationMethod,
+    calculationReason: probability.calculationReason,
+    explainability: {
+      target: targetLabel(requirement, difficulty),
+      baseOdds: probability.baseOdds,
+      rerollAdjustedOdds: probability.rerollAdjustedOdds,
+      weight
+    },
     metadata: {
       sourceTag: event.sourceTag,
       rollType,
@@ -357,6 +376,23 @@ function summarizeVerdict(
   };
 }
 
+function buildHowScoredSummary(
+  verdictSummary: string,
+  coverage: LuckReport["coverage"],
+  home: LuckTeamAggregate,
+  away: LuckTeamAggregate
+): string[] {
+  return [
+    `Nufflizier scores each event as (actual result - expected odds) multiplied by a category weight.`,
+    `Coverage this match: ${coverage.explicitCount} explicit calculations and ${coverage.fallbackCount} fallback calculations (${(
+      coverage.explicitRate * 100
+    ).toFixed(1)}% explicit).`,
+    `${home.teamName} finished at ${home.luckScore.toFixed(1)} versus ${away.teamName} at ${away.luckScore.toFixed(
+      1
+    )}, so verdict is: ${verdictSummary}`
+  ];
+}
+
 export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   const [homeTeam, awayTeam] = selectMatchTeams(replay);
   const trackedTeamIds = new Set<string>([homeTeam.id, awayTeam.id]);
@@ -396,6 +432,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     [homeAggregate.teamId, 0],
     [awayAggregate.teamId, 0]
   ]);
+  let explicitCount = 0;
+  let fallbackCount = 0;
 
   for (const event of events) {
     const aggregate = aggregateById.get(event.teamId);
@@ -405,6 +443,11 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
 
     const categoryWeight = LUCK_CATEGORY_WEIGHTS[event.type];
     aggregate.eventCount += 1;
+    if (event.calculationMethod === "explicit") {
+      explicitCount += 1;
+    } else {
+      fallbackCount += 1;
+    }
 
     if (event.type === "block") {
       aggregate.categoryScores.block += event.weightedDelta;
@@ -442,6 +485,12 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     .sort((a, b) => Math.abs(b.weightedDelta) - Math.abs(a.weightedDelta))
     .slice(0, 15);
   const { verdict } = summarizeVerdict(homeAggregate, awayAggregate);
+  const totalCount = explicitCount + fallbackCount;
+  const coverage = {
+    explicitCount,
+    fallbackCount,
+    explicitRate: totalCount > 0 ? roundTo(explicitCount / totalCount, 3) : 0
+  } satisfies LuckReport["coverage"];
   const idSeed = `${replay.matchId}:${events.length}:${homeAggregate.luckScore}:${awayAggregate.luckScore}`;
 
   return {
@@ -453,16 +502,31 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       awayTeam: awayAggregate.teamName
     },
     verdict,
+    coverage,
+    weightTable: { ...LUCK_CATEGORY_WEIGHTS },
+    howScoredSummary: buildHowScoredSummary(verdict.summary, coverage, homeAggregate, awayAggregate),
     teams: [homeAggregate, awayAggregate],
     keyMoments: keyMoments.map((event) => ({
       ...event,
       probabilitySuccess: roundTo(event.probabilitySuccess, 3),
+      explainability: {
+        ...event.explainability,
+        baseOdds: roundTo(event.explainability.baseOdds, 3),
+        rerollAdjustedOdds: roundTo(event.explainability.rerollAdjustedOdds, 3),
+        weight: roundTo(event.explainability.weight, 3)
+      },
       delta: roundTo(event.delta, 3),
       weightedDelta: roundTo(event.weightedDelta, 3)
     })),
     events: events.map((event) => ({
       ...event,
       probabilitySuccess: roundTo(event.probabilitySuccess, 3),
+      explainability: {
+        ...event.explainability,
+        baseOdds: roundTo(event.explainability.baseOdds, 3),
+        rerollAdjustedOdds: roundTo(event.explainability.rerollAdjustedOdds, 3),
+        weight: roundTo(event.explainability.weight, 3)
+      },
       delta: roundTo(event.delta, 3),
       weightedDelta: roundTo(event.weightedDelta, 3)
     }))

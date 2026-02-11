@@ -58,3 +58,18 @@ Across the three demo replays:
 4. Additional observed `Action` values: `4`, `5`, `6`, `15`, `16`.
 
 These extra codes are not fully mapped yet and should be refined as more replay coverage is added.
+
+## Explicit Probability Coverage (2026-02-11)
+
+The Nufflizier probability engine now distinguishes explicit calculators from fallback calculators.
+
+1. Explicit calculator families:
+   - `block`: `RollType=2`
+   - `armor_break`: `RollType=1`, `RollType=34`
+   - `injury`: `RollType=4`, `RollType=31`, `RollType=37`
+2. Fallback behavior:
+   - Used when event family lacks explicit mapping or replay context is insufficient.
+   - Fallback usage is reported in `LuckReport.coverage` and per-event `calculationMethod` / `calculationReason`.
+3. Transparency requirement:
+   - Every scored event must indicate whether it used `explicit` or `fallback` calculation.
+   - Coverage rate must be surfaced to UI and CLI users.

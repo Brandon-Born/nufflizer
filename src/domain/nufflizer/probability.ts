@@ -1,3 +1,5 @@
+import type { LuckCalculationMethod, LuckEventType } from "@/domain/nufflizer/types";
+
 type ProbabilityInput = {
   rollType?: number;
   requirement?: number;
@@ -5,6 +7,14 @@ type ProbabilityInput = {
   dice: number[];
   dieTypes: number[];
   rerollAvailable: boolean;
+};
+
+export type ProbabilityResult = {
+  probabilitySuccess: number;
+  baseOdds: number;
+  rerollAdjustedOdds: number;
+  calculationMethod: LuckCalculationMethod;
+  calculationReason: string;
 };
 
 function clamp01(value: number): number {
@@ -116,6 +126,135 @@ export function computeSuccessProbability(input: ProbabilityInput): number {
   }
 
   return clamp01(1 - (1 - base) * (1 - base));
+}
+
+function applyReroll(baseOdds: number, rerollAvailable: boolean): number {
+  if (!rerollAvailable) {
+    return clamp01(baseOdds);
+  }
+
+  return clamp01(1 - (1 - baseOdds) * (1 - baseOdds));
+}
+
+function resolveTarget(input: ProbabilityInput): number | undefined {
+  const target = input.difficulty ?? input.requirement;
+  if (!Number.isFinite(target) || target === undefined || target <= 0) {
+    return undefined;
+  }
+
+  return target;
+}
+
+function computeExplicitBlockOdds(input: ProbabilityInput): number | null {
+  if (input.rollType !== 2) {
+    return null;
+  }
+
+  const target = resolveTarget(input);
+  if (!target || input.dice.length === 0) {
+    return null;
+  }
+
+  const sidesByDie = input.dice.map((value, index) => estimatedSides(input.dieTypes[index], value));
+  if (input.dice.length === 1) {
+    return probabilityBySingleDieTarget(target, sidesByDie[0] ?? 6);
+  }
+
+  return probabilityByAnyDieTarget(target, sidesByDie);
+}
+
+function computeExplicitArmorOdds(input: ProbabilityInput): number | null {
+  if (input.rollType !== 1 && input.rollType !== 34) {
+    return null;
+  }
+
+  const target = resolveTarget(input);
+  if (!target || input.dice.length === 0) {
+    return null;
+  }
+
+  const sidesByDie = input.dice.map((value, index) => estimatedSides(input.dieTypes[index], value));
+  if (input.dice.length === 1) {
+    return probabilityBySingleDieTarget(target, sidesByDie[0] ?? 6);
+  }
+
+  return probabilityBySumTarget(target, sidesByDie);
+}
+
+function computeExplicitInjuryOdds(input: ProbabilityInput): number | null {
+  if (input.rollType !== 4 && input.rollType !== 31 && input.rollType !== 37) {
+    return null;
+  }
+
+  const target = resolveTarget(input);
+  if (!target || input.dice.length === 0) {
+    return null;
+  }
+
+  const sidesByDie = input.dice.map((value, index) => estimatedSides(input.dieTypes[index], value));
+  if (input.dice.length === 1) {
+    return probabilityBySingleDieTarget(target, sidesByDie[0] ?? 6);
+  }
+
+  return probabilityBySumTarget(target, sidesByDie);
+}
+
+function explicitComputation(eventType: LuckEventType, input: ProbabilityInput): { baseOdds: number; reason: string } | null {
+  if (eventType === "block") {
+    const baseOdds = computeExplicitBlockOdds(input);
+    if (baseOdds !== null) {
+      return {
+        baseOdds,
+        reason: "explicit block calculator (rollType 2)"
+      };
+    }
+  }
+
+  if (eventType === "armor_break") {
+    const baseOdds = computeExplicitArmorOdds(input);
+    if (baseOdds !== null) {
+      return {
+        baseOdds,
+        reason: "explicit armor-break calculator (rollType 1/34)"
+      };
+    }
+  }
+
+  if (eventType === "injury") {
+    const baseOdds = computeExplicitInjuryOdds(input);
+    if (baseOdds !== null) {
+      return {
+        baseOdds,
+        reason: "explicit injury calculator (rollType 4/31/37)"
+      };
+    }
+  }
+
+  return null;
+}
+
+export function computeProbabilityForEvent(eventType: LuckEventType, input: ProbabilityInput): ProbabilityResult {
+  const explicit = explicitComputation(eventType, input);
+  if (explicit) {
+    const rerollAdjustedOdds = applyReroll(explicit.baseOdds, input.rerollAvailable);
+    return {
+      probabilitySuccess: rerollAdjustedOdds,
+      baseOdds: clamp01(explicit.baseOdds),
+      rerollAdjustedOdds,
+      calculationMethod: "explicit",
+      calculationReason: explicit.reason
+    };
+  }
+
+  const baseOdds = computeBaseSuccessProbability(input);
+  const rerollAdjustedOdds = applyReroll(baseOdds, input.rerollAvailable);
+  return {
+    probabilitySuccess: rerollAdjustedOdds,
+    baseOdds: clamp01(baseOdds),
+    rerollAdjustedOdds,
+    calculationMethod: "fallback",
+    calculationReason: "generic fallback calculator (insufficient explicit mapping)"
+  };
 }
 
 export function resolveActualSuccess(outcomeCode: number | undefined, dice: number[], target: number | undefined): boolean {

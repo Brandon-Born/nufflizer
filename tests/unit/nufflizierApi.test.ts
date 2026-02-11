@@ -28,5 +28,8 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(payload).toHaveProperty("teams");
     expect(payload).toHaveProperty("keyMoments");
     expect(payload).toHaveProperty("events");
+    expect(payload).toHaveProperty("coverage");
+    expect(payload).toHaveProperty("weightTable");
+    expect(payload).toHaveProperty("howScoredSummary");
   });
 });
