@@ -772,3 +772,380 @@ Pre-publication evidence:
 1. Refreshed `nufflizer/master`; reviewed the tracked/untracked file inventory, dependency/CI changes, fixture sizes and whitespace checks. Generated worker/build outputs, local environment files and temporary browser artifacts remain ignored.
 2. The final source was already validated from a clean frozen install: lint, typecheck, 191 unit tests in 33 files, production build and four browser flows passed. The workspace production build also passed. No runtime changes were made for the commit/push step; this entry and the plan only record publication state.
 3. Seven prior local closures remain; NUF-009 is active reverse-engineering work. Remote CI evidence, deployed validation, shared abuse controls and full semantic/context acceptance remain outstanding. Committing/pushing does not mark these requirements complete.
+
+## 2026-11-09 - User-supplied local replay action inventory
+
+User request: ignore the newly supplied replay folder and use it to investigate move/action identification.
+
+Changes:
+1. Added root-anchored `/replays/` to `.gitignore`. All 27 source BBR files and generated analysis reports remain local; no source files were tracked, uploaded or committed.
+2. Added `scripts/inventory-replay-actions.py`, a dependency-free offline raw XML/message inventory that does not import disputed application mappings. Outputs use source hashes, sequence/step/message locators and numeric payload projections. Per-file counters merge only after successful processing.
+3. Inspected all 27 local files with an explicit 32 MiB offline cap: 35,121 step emissions and 41 source-tag/type pairs. Compared all 12 demo files: 14,272 steps and 33 pairs. Source file hashes do not overlap. Recorded raw movement/block/damage/skill co-occurrence and source-linked counterexamples in `docs/LOCAL_REPLAY_FINDINGS.md`.
+4. One local file expands to 16,510,562 bytes and is excluded by the product/default inventory 15 MiB cap. The default-cap run reproduced that exclusion (26 processed files, 33,060 steps). Product limits remain unchanged.
+5. Linked the investigation from the plan and backlog. NUF-009 remains in progress; no source-code scoring or rule-contract changes, semantic promotions, or issue closures were made.
+
+Validation:
+- Both expanded-corpus and demo inventories completed without errors at their stated caps; default-cap local inventory explicitly recorded the single size exclusion.
+- Manually inspected decoded numeric step/message examples and source locators for movement, block questions/results, type-4 replacement emissions and activation/skill checks. Aggregate counts are source emissions, not unique rolls or independent rules evidence.
+- `git diff --check` passed. `git ls-files -- replays` returned no tracked files; all 27 sources and three generated reports matched Git ignore rules.
+- Removed temporary Python bytecode. Full app lint/type/unit/build/browser checks were not run: this change adds offline research tooling, ignore configuration and documentation without changing application behavior.
+
+Next: validate type-2 movement/dodge, type-4 movement-associated ball handling, type-7 receipt, activation traits and reroll-policy hypotheses using state transitions, roster/skill evidence and independent arithmetic. Sparse BoardState updates require explicit unchanged-versus-cleared field handling. See the findings document; raw reports remain in ignored `replays/.analysis/`.
+
+## 2026-11-09 - Hotseat experiment and UI-paired replay evidence
+
+User request: control BB3 locally in single-player hotseat, create scenarios, obtain a replay and determine definitive move/action mappings. Computer Use access initially failed, then worked after the user enabled the app and requested continuation.
+
+Execution and results:
+1. Completed a local default Human versus Black Orc match, controlling both teams, ending 0–0 after 16 turns per team. Recorded 18 observations covering common checks, rerolls, traits and damage. No new BBR appeared in Saved/Replays and no downloadable hotseat match appeared in profile history. Rechecked the saved directory: the 27 original sources remained. Updated the ignored session plan to `hotseat_completed_no_replay_available`. No raw mapping is claimed from this unavailable capture.
+2. Loaded two existing saved BBRs through the BB3 UI. Manually observed labels/dice/thresholds/modifiers/resources, matched roster IDs and exact raw sequence/step/message records without importing Nufflizier's labels, and preserved 20 cases in `tests/fixtures/evidence/bb3-ui-playback-001.json` and `bb3-ui-playback-002.json`.
+3. Added `scripts/verify-replay-evidence.py` to verify original source hashes, replay versions and all numeric extracts. The two source files declare ReplayVersion 1-4-0-0. Fixtures omit source filenames, match/coach/team/player names, account identifiers and arbitrary text. Original sources, raw inventories, hotseat notes and local assembly scripts remain under ignored `replays/`.
+4. Documented direct correspondences for 15 roll families, seven skill IDs and five block symbols in `docs/REPLAY_UI_EVIDENCE.md`. Included ordinary movement without checks; pickup versus catch; hand-off initiator versus recipient; foul initiator versus victim; failed-Rush self-damage; defender-owned Foul Appearance; Bone Head and Animal Savagery; successful and failed Loner gates.
+5. Counterexamples: a failed Loner spends a resource and re-emits block RollStatus 2 without fresh pool dice; two type-5 Outcome-0 records are visibly Fumbled and Inaccurate; distinct block faces [4,3] both produce adjusted DiceOutcomes 6 against the same target. These require separate face/outcome/attempt and actor/subject/skill-owner contracts.
+6. Linked the findings from the plan/backlog and corrected an earlier unsupported assertion about omitted BoardState fields. No runtime mappings or scores changed, and no remediation issue was closed. This is scoped empirical evidence, not complete semantic support.
+
+Validation:
+- Both source verifiers passed: 16 cases / 50 numeric records and 4 cases / 11 numeric records, respectively. Verification checks extract identity, not manual semantic transcription; no separate human review is claimed.
+- Additional numeric-only projection, locator uniqueness, mutation-rejection and independent arithmetic checks are recorded with the final verification below.
+- `corepack pnpm --version` failed before package execution: the sandbox denied creating the default Corepack cache (`EPERM`). This checkout has no node_modules, and the available global Node is 24.15.0 while the project requires Node 22. No app lint/type/unit/build/browser success is claimed for this research-only change. Production code was not modified.
+
+Outstanding: held-out/source-version acceptance, remaining positive/negative trait and skill policies, full injury/casualty/recovery/referee chains, state/default semantics and runtime implementation. NUF-009 remains in progress; see the evidence document for exact missing cases.
+
+Follow-up within this capture session: added UI-021 (failed Animal Savagery, kept original die, friendly victim selection) and UI-022 (second-source Dodge/Rush/pickup/bounce with declined reroll). Final evidence is **22 cases / 68 raw records**: source 001 has 16/50, source 002 has 6/18. Renamed the fixture's UI counter field to `displayedActionNumber`: its activation semantics are unproven, and the game counter can advance during continuing chains. Friendly victim damage dice were not visually read and are not claimed as independently annotated.
+
+Final research verification: both source verifiers passed at those final counts; all observation IDs are unique and all raw step/message leaves are numeric or null; a deliberately changed die was rejected at sequence 3 / step 0; exact Fraction arithmetic confirmed 8/9 and 65/72 examples; both Python scripts compiled without bytecode output; `git diff --check` passed. Git ignore checks cover source/capture/analysis files and `git ls-files -- replays` remains empty. Full application checks remain unrun for the environment reasons above; no production files were changed. BB3 was left paused in saved replay playback.
+
+## 2026-11-09 - Further saved-replay mining and direct-event capture
+
+Continued the user's active BB3 research request with the Computer Use skill. Observations UI-023–041 extend the prior fixtures and add sources 003, 004 and 007. Checkpoint: 41 cases across five files, 129 distinct encoded step records plus two direct ReplayStep/EventRoll records, all source verified. New game-label matches include Interfere, Deviate, Shadowing, Dauntless, Casualty, Throw Team-Mate, Always Hungry, Unchannelled Fury, Projectile Vomit, Land, Argue the Call and KO recovery; 27 named roll families total in annotated contexts.
+
+Material counterexamples: type-25 movement can concern a thrown player rather than the ball; type 26 is used for kicks and thrown players; a declared Block can resolve as Projectile Vomit without block dice; active side can differ from the roller/skill owner; thrower, thrown player, collision victims and damage subject require separate roles; Argue the Call Outcome 2 is Neutral and its visible die has NewRoll 0. Failed recovery omits Outcome. No universal omitted-field defaults are claimed.
+
+Extended inventory with separate top-level event counts, preserving historical step counts. Across 27 files: 184 EventRoll/13, 67 unidentified EventRoll/92, 116 kick-off-table, 43 weather and 27 fan-factor event emissions. Extended the verifier with optional eventRecords located by one-based ReplayStep / zero-based child index. All five source verifiers passed; a deliberately mutated direct-event die was rejected at ReplayStep 287 / child 3; unique IDs, numeric-only projections and Python compilation passed. `git diff --check` passed. A temporary validation script assumed the last case held direct events; corrected it to select UI-040 by ID and reran successfully.
+
+No production code changed and no backlog item closed. Full app checks remain unrun for the Node/dependency limitations documented above. The explicit research goal remains active and BB3 remains open while additional rare-event sources are inspected.
+
+
+Further checkpoint: UI-042–045 in source 013 add Jump up, Tentacles, Fireball hit and Bribe. Evidence now totals **45 cases / 149 step records / 2 top-level event records across six sources**, with 31 numeric roll-family names in observed contexts. All six source verifiers, numeric-only and ID-uniqueness checks, direct-event mutation rejection and Python compilation passed. No runtime behavior changed or backlog item closed; BB3 research remains active.
+
+
+## 2026-11-09 - Rare actions and Pick me up from existing replays
+
+Continued Computer Use mining of original saved BBRs rather than claiming a hotseat export. Added UI-046–058: Breathe fire failure/success, Pro replacement Block dice, bomb passes/catches/Explosion/Bomb damage, Ball & Chain direction, Animosity before hand-off, Chainsaw foul/Argue the Call success, failed Regeneration, Jump over failure/same-face reroll/success, and successful/failed Pick me up. Final checkpoint: 58 manually annotated cases, 192 verified step records and six direct events across ten sources; 41 named numeric roll families in scoped contexts. The six direct events include four rolls and two accompanying skill usages. All sources still declare version1-4-0-0; held-out/version acceptance remains open.
+
+New counterexamples: pass Outcome0 includes Wildly Inaccurate; bomb log wording reuses ball/catch terms; successful type88/89 damage checks harm friendly subjects; Jump over Moved1 coexists with failure/damage; Ball & Chain direction is Neutral; Pick me up type92 occurs outside encoded steps, with omitted Outcome on failure despite Used1 skill usage. See REPLAY_UI_EVIDENCE.md and numeric fixtures for exact locators. Type9 return-to-pitch transition still lacks observed dice roles. Complete skill, injury/casualty/apothecary, referee, state/default and beneficiary policies remain incomplete. No runtime mappings/scoring changed or backlog item closed.
+
+Validation: all ten source/extract verifiers passed; unique IDs, numeric-only projections and Python compilation passed; a deliberately modified direct-event die was rejected at ReplayStep287/child3. Original replay/capture/analysis paths remain Git-ignored and no replay source is tracked. Full application lint/type/unit/build/browser checks remain unrun for the previously documented Node/dependency limits; this change only adds research fixtures and documentation. BB3 is paused in saved replay005; the broader data-gathering goal is still active.
+
+## 2026-11-09 - Existing-corpus decision and apothecary evidence
+
+Continued the authorized Computer Use investigation of existing BBRs. Added UI-059–064 across sources005,002,001. Checkpoint: 64 manually annotated cases, 220 distinct source-verified step records and six direct events across ten sources; still41 named numeric roll families. Raw corpus scans found37 apothecary usage questions,16 casualty-choice questions and16 type9 return-to-pitch emissions. Private scan scripts/results remain under ignored replays/.analysis/; emission counts do not establish independent attempts or complete rule policies.
+
+UI-059 demonstrates a repeated block pool handed to the defender without fresh dice or resource use, despite NewRoll1 in the later selected result. UI-060 follows Seriously Hurt D16=8 through an apothecary replacement D16=1 No Injury; the later choice question transforms the original Outcome field, so preserve the original casualty record. UI-061 shows a three-die pool and Dodge-adjusted Push; corrected an initially misread Both Down icon before accepting the annotation. UI-062 adds Sidestep skill56 and distinct block/push controllers. UI-063 contrasts an unmodified Animal Savagery4+ stand-up activation with earlier attack bonuses. UI-064 revisits the failed-Rush Stunty injury from UI-009: apothecary use yields No Injury with no new casualty dice or choice question, contrasting UI-060.
+
+Updated plan, backlog and evidence document. All ten source/extract verifiers passed at64/220/6; IDs are unique, projections numeric-only, deliberately changed direct-event dice rejected, and research Python scripts compile. Full app checks remain unrun for the previously recorded Node/dependency limitations. No production mapping or scoring code changed, and no remediation issue closed. The broader research goal remains active; BB3 is paused in source001 after the observed apothecary result.
+
+## 2026-11-09 - Retained versus replacement casualty decisions
+
+Prior goal turn classified as progress: it added six UI cases and verified source records. This continuation inspected current BB3 state and added source021 (Skaven versus Chaos Chosen), observations UI-065–067. Current checkpoint:67 cases /242 distinct step records /6 direct events across eleven source files, all version1-4-0-0. No extra numeric family name is claimed;41 remain identified in scoped contexts.
+
+UI-065 independently reads Dislocated Shoulder D16=13+D6=6, replacement Dead D16=15, and final retention of Dislocated Shoulder. Also corroborates failed Loner retaining the original Both Down pool and separate damage to both teams. UI-066 reads Dead D16=16 replaced by Serious Injury D16=10, with the replacement applied. Horns skill15 is visible on that Blitz. UI-067 adds Wildly Inaccurate short pass, interference and pitch return: an offered interceptor evaluation differs from the actual applied modifiers. Its raw Difficulty6 cannot be recovered by blindly adding printed modifiers to the base threshold. The log still omits type9 dice roles.
+
+Raw-only referee/recovery scan across27 originals found one successful Bribe, successful/neutral Argue results, and successful/failed Regeneration candidates. No direct failed Bribe or die1 Argue roll was found by that scan. The next available corroboration is successful Regeneration at source001:259/1; current observed regeneration evidence only covers failure. Local scan tools/results remain ignored. Source021 fixture omits identifying text and records its SHA256.
+
+Validation: all eleven source verifiers passed at67/242/6; unique observation IDs, numeric-only projection checks, mutated-direct-event rejection and public Python compilation passed. No application code changed; app checks remain unrun for the previously documented environment constraints. Plan/backlog/evidence totals updated. NUF-009/011/012/013 remain incomplete. BB3 remains paused in source021 after UI-067; the full research-and-close-game goal remains active.
+
+## 2026-11-09 - Successful recovery and interference from the existing corpus
+
+Previous goal turn made progress by adding successful Regeneration UI-068; this continuation verified and documented it, then added UI-069 in source015 (Nurgle versus Orc). Checkpoint:69 manually annotated cases /253 distinct step records /6 direct events across twelve sources. All source ReplayVersion fields remain1-4-0-0. No new numeric family name or completed runtime contract is claimed.
+
+UI-068 pairs Badly Hurt D16=3 with Regeneration4+ die6 Success, skill19/type46. The original removal precedes successful recovery within one damage step, so it cannot safely establish final unavailability. UI-069 follows Animosity success, Quick pass natural1 fumble, Pass skill47 replacement4 under four Disturbing Presence penalties, Wildly Inaccurate deviation, Interfere4-1 success and separate Catch5-1 success. The UI explicitly reports home possession after Catch and the away turn ending for a failed action. Skill33/type27 modifiers match Disturbing Presence in this context. An interference success alone must not stand in for the subsequent catch outcome. Offered evaluation and applied interference modifiers differ here too.
+
+Expanded the private scan to nested decoded message nodes across27 originals: ten dice-bearing type6 emissions (eight failed/two successful), fourteen type6 evaluations without dice, one successful type21 Bribe, six type30 Argue emissions (two success/four Neutral) and thirteen type46 Regeneration emissions (seven success/six failure). No failed Bribe or die1 Argue was found in these messages; this is representation-scoped absence, not proof that all unrecognized formats are absent. The second successful interference at source027:457 is an additional corroboration candidate. A brief history inspection found the latest listed own match already represented in the original corpus; no new replay export was obtained.
+
+Validation: all twelve source/extract verifiers passed at69/253/6. Unique IDs, numeric-only projections, deliberate direct-event mutation rejection and public Python compilation passed. git diff --check passed; private analysis/replays remain ignored with no replay source tracked. Full application checks remain unrun for the previously recorded Node/dependency constraints; production code is unchanged. Updated evidence, plan and backlog without closing NUF-009/011/012/013. BB3 is paused in source015 at second-half setup after reviewing the first-half turn8 log. The broader gather-missing-data-and-close-game goal remains active.
+
+
+Further checkpoint: UI-070 in source027 independently confirms successful interference followed by failed Catch, three-die scatter and bounce. It contrasts UI-069 possession after successful Catch, adds applied inaccurate-pass−2/Stunty+1 modifiers, and pairs PlayerStep/29 with interference in a second source. Raw counter[17,16] occurs during a UI turn16 chain; no actual seventeenth home turn is inferred. Loading screen confirms Goblin versus Underworld Denizens. Evidence totals70 cases /260 step records /6 direct events across twelve sources. All twelve source verifiers and integrity checks passed. No runtime contract or issue closure; BB3 is paused at source027 replay end with the expanded dice log visible. The full gather-missing-data-and-close-game goal remains active.
+
+## 2026-11-09 - Selective dice replacement and Wrestle decisions
+
+Continued mining the existing corpus through the Computer Use skill. UI-071/072 in source007 identify Brawler skill96 and Grab skill37: one Both Down die is rerolled while another pool die is retained, including a distinguishable Push. UI-073/074 in source012 (Norse versus Imperial Nobility) identify Wrestle skill68 on attacking and defending player42. Both select Both Down, resolve as Players are wrestling, leave both players prone and continue the active team's turn without an intervening armor/damage step. The face remains1 while Outcome changes1 to2 with NewRoll0. Opponent skill decisions must not be attributed automatically to the attacker.
+
+Checkpoint:74 UI cases /278 source-verified step records /6 direct event records across thirteen sources;41 named numeric roll families remain scoped correspondences, not complete support. A private scan found64 direct casualty-roll emissions and recorded modifier counterexamples for source014:154/1,268/1;015:186/2;017:434/1. These are raw-only candidates, not UI-confirmed names or rule tables. Existing files still offer useful casualty/skill/state evidence; no failed Bribe or die1 Argue was found by the previously scoped message scan.
+
+Validation: all thirteen source/extract verifiers passed; IDs unique, numeric-only projections checked, deliberate direct-event mutation rejected and public Python scripts compiled. git diff --check and ignored-source checks passed. No runtime changes or remediation closures; full app checks remain unrun for the previously recorded environment limits. BB3 remains paused in source012, home turn5/action10, following defensive Wrestle. The broader data-gathering goal is incomplete; the game has not yet been closed.
+
+## 2026-11-09 - Casualty modifiers, Frenzy and throw-in geometry
+
+Previous goal turn made progress by adding attacking/defending Wrestle and synchronized evidence. This continuation used Computer Use to add UI-075–078 from saved sources014/015. Source014 loading labels independently confirm Khorne versus Nurgle. Decay skill81/type27/+1 changes D16=14 to Dead and D16=6 to Seriously Hurt. Source015 independently names modifier type31/+1 as niggling Injury, with no player/skill ID on that modifier. Its selected Both Down causes distinct damage rolls for both teams and then a home turnover, even though enclosing counters already read[5,5]. UI-077 identifies Frenzy skill36 between two separate blocks, with new positions/assists; it is not a reroll of the first block.
+
+Checkpoint:78 manually annotated cases /301 distinct source-verified step records /6 top-level event records across fourteen source files, all declaring1-4-0-0; still41 named roll families in scoped contexts. No runtime contracts or backlog items closed. Complete rule tables and state/beneficiary policies remain incomplete.
+
+The private throw-in geometry audit decoded all27 originals with the explicit offline32MiB cap and checked all16 type9 emissions. First D6 as paired direction, remaining two as summed distance, last inbound origin and interruption/restart at another edge fit16/16 endpoints. The fixed alternatives using the second/third die as direction fit2/16 and5/16. It accounts for the source018 carrier surf and source026 chained return. No west-edge example; two distant-pass origins remain clamp inferences. This is raw-model corroboration, not independent die-role labelling or additional UI annotations. Scripts/results remain ignored under replays/.analysis/.
+
+Validation: all fourteen source/extract verifiers passed at78/301/6; IDs unique, numeric-only projections checked, deliberately changed direct-event die rejected and public Python scripts compiled. git diff --check and replay ignore/tracking checks passed. Full application checks remain unrun for previously documented environment limits; application code unchanged. BB3 is paused in source015 after home turn5/action9 damage, at away turn5 start. The broader research-and-close-game goal remains active and incomplete.
+
+## 2026-11-10 - Existing-corpus secondary casualty checkpoint
+
+Continued with the Computer Use skill in existing saved source005. Normal playback of first-half home turn3/action2 independently displays Catcher3 versus Norse Raider Lineman47, Defender Down/Both Down, defender knocked down, armor8+ [6,4] Success, injury[5,6] Casualty, casualty D16=14+D6=2 Head Injury, then Injured. UI-079 preserves six numeric source records94/0–97/1 and links ResultCasualtyRoll Outcome6 to that label. Action seeking cleared intermediate log entries; replaying the action normally retained the damage chain. No printed jersey number is used as a raw player ID.
+
+Private nested-message scan across27 originals found16 two-die type12 emissions, secondary faces2:2,3:3,4:1,5:4,6:6, no1. Counts include repeated/transformed apothecary question records and cannot be treated as independent attempts. Remaining raw candidates for secondary3/4 are documented without assumed names. Scan and output stay ignored under replays/.analysis/.
+
+Validation: all fourteen source verifiers passed at79 cases /307 step records /6 direct events; unique IDs, numeric projections, deliberate direct-event mutation rejection and public Python compilation passed. Full app checks remain unrun for previously documented environment limits; application code unchanged. Plan, backlog and research docs updated without issue closure or production mapping promotion. BB3 remains paused at source005, home turn3/action2, with Head Injury visible in the expanded log. The full research-and-close-game goal remains active and incomplete.
+
+## 2026-11-10 - Two further secondary casualty labels
+
+The previous goal turn progressed by saving UI-079 Head Injury and documenting the representation-scoped face1 gap. This continuation used Computer Use to load two existing saved files and independently read their loading factions:006 Khorne versus Norse;026 Shambling Undead versus Underworld Denizens.
+
+UI-080: first-half home turn6/action2, Khorngor5 blocks Norse Raider Lineman44; Both Down/Defender Stumbles, defender knocked down, AV8+[6,6], injury[5,6] Casualty, D16=14+D6=4 Broken Arm and Injured. Six source records120/0–123/1 preserve the chain; raw casualty Outcome7, no casualty modifiers. UI-081: second-half home turn12/action11, Ghoul Runner10 blocks Skaven Thrower46; single Defender Down, AV8+[3,6], injury[5,5] Casualty, D16=14+D6=3 Smashed Knee and Injured; ball Bounce8 to[22,2]. Seven source records384/0–387/2 preserve the chain; raw casualty Outcome5, no casualty modifiers. Normal playback retained intermediate log entries that action seeking clears.
+
+Validation: all sixteen source verifiers passed at81 cases /320 step records /6 direct events; IDs unique, numeric-only projections checked, deliberate direct-event mutation rejected and public Python scripts compiled. No runtime or scoring code changed; full app checks remain unrun for the previously documented environment limits. Updated evidence, plan and backlog without closing any issue. BB3 remains paused in source026 at home turn12/action11 with Smashed Knee and Bounce visible. The broader research-and-close-game goal remains active and incomplete; secondary face1, complete tables and additional policy/state evidence remain open.
+
+## 2026-11-10 - Direct installed-image naming evidence
+
+After UI-080/081, read the installed game's executable as a static file and found explicit enum-name pointers followed by numeric values. Added scripts/extract-bb3-enums.py and tests/fixtures/evidence/bb3-installed-enums.json:82 reflected tables /1,428 entries in BoardData and NetGameplay namespaces. Source SHA-256590787b522ad4404b2e8a7570993375114a794fa4288d88a8595ab9dfbd7d6ae,110,167,040 bytes. The extractor validates bounded PE32+ headers/sections, exact ASCII names, unique pointer/value pairings, contiguous stride16 arrays and unique values, preserving name/entry offsets. It neither executes the game image nor reads process memory. Installation bytes were not modified or committed.
+
+Installed snapshot verification passed. Six synthetic standard-library probes passed: nonsequential numeric IDs and offsets, malformed/truncated image rejection, missing pair, ambiguous reference, noncontiguous array and duplicate values. Deliberately changing one saved enum value caused CLI snapshot verification to reject. These checks validate extraction, not complete game-rule behavior. The39 UI table roll rows plus direct-event13/92 observations correspond to compiled names; the two96-entry roll tables agree. UI names such as Rush/Interfere/Projectile Vomit remain distinct from compiled GFI/Interception/VomitAccuracy identifiers. Source020 period2 can now be read as the ExtraTime identifier, pending direct playback corroboration.
+
+The snapshot also exposes namespace differences: NetGameplay StepType34 Bite, SequenceType19 Bite and PitchRemoval5 FriendlyFans are absent in the corresponding BoardData tables; BoardData PlayerStatus8 Invalid is absent in NetGameplay; Weather10 is BoardData COUNT versus NetGameplay DazzlingSun. No global numeric namespace is safe. Added INSTALLED_ENUM_EVIDENCE.md and linked it from the plan, backlog and replay findings. No runtime semantic/scoring changes or issue closures; full application checks remain unrun for the previously documented environment constraints. BB3 remains open at the source026 result screen after leaving playback; the overall research-and-close-game objective is still incomplete.
+
+## 2026-11-10 - Extra Time and direct prayer source verification
+
+The preceding goal turn answered a corpus-mining question but made no authoritative research change. Revalidated the live BB3 window and continued through the Computer Use skill in saved source020. UI-082 preserves the earlier observed Prayers to Nuffle13 / Fouling Frenzy / Drive popup as EventPrayerTable5/6 plus EventAddEffect5/7. No RollType or team identifier is fabricated. UI-083 independently reads away turn11/action9 Pestigor38 versus Runner8: Horns, Both Down/Both Down, attacker Block, Defender Down, AV8+ [1,5] Failure, Prone and Bounce2 to[22,14]. Earlier Skill29 Used1/QuestionDumpOff followed by Used0 remains explicitly raw context: no clearly observed Dump Off decision label is claimed.
+
+UI-084 uses the next-period control to read EXTRA TIME with17-24 buttons, then seeks home20 and waits for its settled log: away end of turn19 / Failed action followed by home Turn nb20, score2-1. BoardState813 is preserved as a complete numeric projection (Period2, GameTurn20/19, CurrentPhase5), with EventEndTurn812 Reason2. Unlike previously observed prematurely advanced counters, this is an actual displayed twentieth home turn. Missing fields are not interpreted as defaults.
+
+The initial source verifier rejected020 at its default15MiB decoded cap, matching the documented oversized-corpus finding. Added an explicit bounded research-only --max-decoded-mib15-32 option, default15; the private checker opts into32 only for020. Three independent probes cover default rejection/explicit acceptance, invalid/unbounded override rejection and exact BoardState mutation detection. All seventeen verifiers now pass at84 cases /327 distinct step records /10 direct records; numeric-only projections, unique IDs and the earlier deliberate direct-die mutation rejection pass. Nine Python research tests and the82-table/1,428-entry installed snapshot verification pass. Full app checks remain unrun for the previously documented environment constraints; no application code changed.
+
+Updated evidence, plan and backlog without promoting runtime mappings or closing issues. Raw sources/private analysis remain ignored. BB3 remains open and paused at source020 home turn20 in Extra Time. The full data-gathering-and-close-game objective is still incomplete; complete policies, missing negative cases, state defaults and held-out acceptance remain outstanding.
+
+## 2026-11-10 - Defender reaction attribution and skill tooltip evidence
+
+The preceding goal turn made authoritative progress with UI-082-084 and a bounded offline verifier option. Revalidated the live game at source020 Extra Time/home20, sought away20 and advanced one observed action at a time. Action6 displays USE DUMP-OFF? for home8 during away46's Blitz. Playback displays home8 using Dump-off, Quick pass3+ die5-2 Accurate (opponent tackle zone-1, Disturbing Presence-1), home6 Catch2+ die6-3 Success (tackle zones-2, Disturbing Presence-1), and home6 has the Ball. Away46 then stands and resumes the block, selects Defender Down from Defender Down/Both Down, knocks home8 down and fails AV8+ [2,1], leaving him prone. Counter6 to7 occurs within this reaction. UI-085 preserves all ten step records604-610, explicitly separating turn owner, initiator, skill owner, passer, receiver and damage subject. The earlier UI-083 decision is not retrospectively labeled.
+
+Exited saved playback and inspected a Nurgle roster read-only. Clicking skill icons exposes persistent text tooltips. Added GAME_SKILL_REFERENCE.md with23 manual paraphrases (GR-001-023): Really Stupid, Disturbing Presence, Foul Appearance, Loner4, Mighty Blow1, Regeneration, Tentacles, Guard, Multiple Block, Thick Skull, Plague Ridden, Block, Horns, Decay, Diving Tackle, Strip Ball, Sure Hands, Tackle, Dodge, Dauntless, Shadowing, Claws and Wrestle. IDs derive separately from EBB3BoardDataSkill; every pair matches the installed snapshot. This route supplies rule conditions absent from sampled rolls, including natural6 for Tentacles/Shadowing, strict greater-than for Dauntless, ST/MA differences, state exceptions and distinct Stunty injury behavior. Short tooltips do not prove full precedence or unspecified consequence policies. No roster/resource changes were made.
+
+All seventeen source verifiers pass at85 cases /337 distinct step records /10 direct records;41 UI-named roll families unchanged. Unique IDs/numeric projections and deliberate direct-event mutation rejection pass. Nine independent Python research tests pass; all23 manual reference IDs are unique and names/values match the compiled table. git diff --check and ignored/untracked raw-source checks pass. Full app checks remain unrun for the previously documented environment constraints; application code unchanged. Updated current plan/backlog/evidence and append-only logs without issue closure.
+
+BB3 remains open on Teams > Templates (currently empty). The full gather-missing-data-and-close-game objective is incomplete. Other skill tooltips, full injury/casualty/referee tables, missing negative cases and source/version/state acceptance remain open. Templates may provide access to remaining skill descriptions; this has not yet been established.
+
+## 2026-11-10 - Existing replay mining and cross-corpus gap audit
+
+In response to the user's question about remaining value in existing files, rescanned all27 private replays and12 demos for direct/nested dice-bearing nodes under decoded sequence StringMessages. Found the previously missing secondary casualty face1 in demo source hash7bef0a74bff43ae56da5edf6abed7d8cb182da85a4da591acb78943afebcbcaf, sequence376/step1/message4: type12 dice[13,1], Outcome6, after modified armor[3,5] and injury[6,5], followed by removal and Regeneration die4/Outcome1. Installed enum6 is HeadInjury; this is raw/compiled evidence awaiting independent UI annotation, not a new UI case. All six secondary faces now have raw examples across the two corpora. Earlier absence statements remain scoped to the27 local files.
+
+Scoped referee search finds two Bribe emissions, both die2/Outcome1; nine Argue emissions with faces2/4/5/6. No failed Bribe or die1 Argue found. Questions/summaries may repeat rolls; counts are emissions and the search excludes top-level events. Private script/results remain ignored. Updated findings and next-ready plan with remaining state/decision/held-out mining priorities. Nine Python research tests and git diff --check pass; ignored audit output verified. No app behavior, issue status or UI evidence counts changed. Full application checks were not run for this research/documentation change. The broader game-data-gathering objective remains incomplete; no game-close action was taken in this turn.
+
+## 2026-11-10 - Demo casualty face1 independently confirmed
+
+The preceding goal turn made authoritative progress by discovering a raw demo casualty face1 and documenting the cross-corpus scan. Revalidated the running game through Computer Use on the new Human research template. Read Dirty Player(+1), then added Pro using6 of its unlimited template SPP and read the owned-skill tooltip. Added GR-024/025: foul armor-or-injury+1 and a Pro3+ gate excluding armor/injury/casualty. Experimental player is level2/value70,000/Pro; pre-existing competitive rosters were not edited. Catalogue hover/drag attempts did not reliably expose descriptions, so do not reuse them as a guaranteed tooltip method.
+
+Hotseat match settings opened before selecting teams exposed no Back control; mouse-back, BackSpace and scrolling did not return to setup. No match started or settings were changed. Quit through the menu, verified the BB3 window absent, relaunched the pre-existing executable and recovered the main menu after startup. The displayed build string was bb3-1-steam-57968; this does not prove equality to replay serialization version. To validate the new raw casualty case, copied the repository demo into the game's local replay folder without overwrite (scoped filesystem write approved), verified SHA-256, then opened it through Saved Replays. This provides a working import route for the repository demos.
+
+UI-086 independently confirms home13/action6 Renegade Ogre versus Zombie Lineman: Bone Head2+ die2 succeeds, Push/Defender Down pool, defender knocked down, Mighty Blow(+1) makes armor9+ [3,5] succeed, injury[6,5] Casualty, casualty[13,1] Head Injury and Regeneration4+ die4 success. Six exact numeric records373-376 retain actor2/damage subject43. A sanitized UI alias is not the raw player ID. Loading faction labels were not captured. Normal playback preserved the full chain; the pause reached action7 with action6 log still visible. Added bb3-ui-demo-009.json and synchronized findings/plan/backlog/UI evidence. All secondary faces1-6 now have separately observed examples across the original corpus and demo; complete distributions/policies remain open.
+
+Validation: all eighteen hashed source verifiers pass at86 UI cases /343 distinct step records /10 direct events, with deliberate direct-event mutation rejected. Nine research unit probes pass. All25 manual skill reference name/ID pairs agree with the compiled snapshot, IDs unique; git diff --check and ignored-audit checks pass. No runtime/scoring code changed or remediation issue closed. Full app checks were not run for this evidence/documentation change. BB3 remains open and paused at the imported demo's home13/action7, expanded log showing Head Injury and successful Regeneration. The full research-and-close-game objective remains active and incomplete; no final closure is claimed by the recovery restart.
+
+## 2026-11-10 - Quantified remaining value in existing files
+
+Answered the user's existing-replay mining question by joining inventory hashes against the seventeen local positive UI fixtures. Independently decoded the ten unmatched source hashes and verified every stored step count:13,004 StepResult emissions total. A direct StringMessage scan preserves37 targeted candidate emissions with private numeric locators. FireballHit48 has Outcome0/1 counts4/4; Chainsaw67 has1/8; Loner71 has5/4; BreatheFire97 has3/5. Interception6 has one Outcome0, Pro15 one Outcome0 and Animosity74 one Outcome1. These are raw emissions under compiled identifiers, not new semantic annotations or deduplicated attempts. The files are source-held-out from positive fixtures, not a pristine blind test set.
+
+Updated findings and plan. Generated held-out-source-inventory.json and held-out-target-candidates.json remain under ignored replays/.analysis/. No application code, UI evidence totals or issue status changed. Full application checks were not run for this documentation/private-triage change. No Computer Use action or game-close action was taken; the broader research objective remains incomplete.
+
+## 2026-11-10 - Controlled failed-bribe and mitigation observations
+
+The preceding goal turn answered the user's corpus-mining question without an authoritative research change. Revalidated the live BB3 window through Computer Use and continued the actual mirrored Human custom-team hotseat match. Blue turn3 AV7+ [3,3] failed but triggered the referee; Bribe2 succeeded, consumed one of three bribes, preserved the player and continued that turn. Blue turn4 Stunty injury[5,4] directly produced Badly Hurt; red's ordinary apothecary changed it to No Injury and was consumed. No casualty-table dice or reroll-choice UI appeared in that branch. Blue turn5's later Stunty injury[4,6] instead proceeded to a separate D16=4 Badly Hurt casualty. The paths must remain distinct.
+
+Red turn7 AV9+ [2,2] failed and triggered the referee. Selected Argue the Call produced die5 Neutral, disabled a further argument for that decision and left bribery available. Bribe1 Failure consumed3 to2 and offered another bribe for the same ejection. The separately selected second Bribe4 Success consumed2 to1 and kept the player. Subsequent turn-end was explicitly Time out, not evidence for a referee-induced turnover. The next red-turn8 foul AV9+ [2,5] failed without an ejection. HOTSEAT_EXPERIMENTS.md preserves HS-001–010, distinguishing the preceding session's setup/fouls from freshly observed cases. No exported replay exists yet for this match; HS references do not increase the86 paired UI cases.
+
+Corrected the active skill reference's description of the Human research roster: it is a custom team under Teams with unlimited game resources, not a saved template. Historical template wording in earlier log entries is retained as history and superseded by this correction. The preceding session recruited eleven more players and configured two rerolls, one apothecary and three bribes in both mirrored match copies; no real-money purchases were made. Read bribe/Argue action descriptions and preserved them separately from empirical outcomes and installed numeric namespaces.
+
+Validation: eighteen hashed source verifiers still pass at86 cases /343 distinct steps /10 direct events, including deliberate mutation rejection. All nine independent Python research probes pass. git diff --check passes; private replay-analysis output remains ignored. No runtime code, numeric replay mapping, scoring contract or issue status changed. Full app checks were not run for this documentation/manual-observation change. Game is paused in first-half red turn8 after HS-010; export, natural1 Argue and the broader data-gathering/close-game objective remain incomplete.
+
+
+## 2026-11-10 - Trapdoor and KO mitigation observations
+
+Extended HOTSEAT_EXPERIMENTS.md to HS-014. Second-half blue9 self-skull caused AV9+ [4,6], injury[5,4] KO; ordinary apothecary converted it to on-pitch Stunned while the original failed-action turnover remained. Red9 foul AV[5,5]/injury[4,1] ended in send-off and Failed action; no argument die was observed, so the late attempted Argue click is not accepted as Argue1 evidence.
+
+Treacherous Trapdoor prayer D16=1/Half was observed. Blue lineman5 entered on turn10 (2+ die6 success), then re-entered three times in one turn11 activation (3 success,5 success,1 failure). Failure offered a team reroll; keeping1 removed the player and directly rolled injury[1,3] Stunned without a visible armor step. The turn remained active. Carrier/bounce behavior and exact off-pitch placement remain untested. These observations are UI-only and add no paired raw fixture or production mapping.
+
+Ended both sides through turn16 and observed a normal0–0 result. Replay and Download stayed greyed out; a Download click caused no change. Saved/Replays still held28 files, newest write2026-11-09 19:19:53, checked2026-11-10 02:06:53 local. No controlled-match export was obtained. BB3 remains open on results; the full research-and-close-game goal is incomplete. No runtime change or remediation closure.
+
+Validation: eighteen hashed source verifiers pass (86 paired observations /343 step records /10 direct events); deliberate numeric mutation rejected. Nine research tests pass; git diff --check passes and raw candidate audit remains Git-ignored. Full app lint/typecheck/build were not run for this documentation-only addition.
+
+
+## 2026-11-10 - Source008 failed Pro and recruitment identity reuse
+
+Classified the preceding goal turn as progress: it added controlled KO/trapdoor observations and verified normal hotseat completion without export. Reconnected to the live BB3 window and opened source008 through profile > History > Saved Replays. Its loading screen independently names Imperial Nobility/home and Norse/away. Sought away4, stepped to action1, then used normal playback to retain the full decision chain. Paused during following home4/action1 with the preceding log preserved.
+
+Added UI-087: Chainsaw2+ die1, Pro3+ die1, repeated Chainsaw1, self-armor9+ [2,5]+Chainsaw3 Success and injury[2,1] Stunned; team rerolls remain2. Exact104/105/106 records show final Pro and Chainsaw NewRoll0, team-reroll Used0, intended target11 versus self-damage subject48 and modifier owner48. Added UI-088: following home block has identical two-die pool, defender-owned Block, Attacker Down, attacker armor8+ [1,5] Failure and TURNOVER. No new pool-symbol label is inferred solely from the raw face codes.
+
+Investigated the mismatched visible star identity rather than assuming it names the final recruit. Raw ReplayStep7/1 buys ID48/type1455 at150000;7/3 supplies that Data;8/1 emits EventRemoveMercenary for48/type1455 with Validity0;9/1 buys ID48/type1121 at140000 and9/3 omits Data. Playback retains the earlier portrait/card while the action uses later Chainsaw/Pro behavior. Exact numeric recruitment events and both state snapshots are retained as chain context, without claiming the recruitment UI choices were independently observed or defining universal omission/removal semantics. The first roster occurrence or displayed portrait is insufficient for final identity.
+
+New sanitized fixture bb3-ui-playback-008.json preserves nine step records and six direct context records. Totals:88 UI cases /352 distinct step records /16 direct records across nineteen sources, eighteen local originals plus one demo.41 named roll families unchanged. Nine local sources remain without positive fixtures; the earlier ten-source triage remains explicitly historical. Synchronized plan/backlog/findings/UI evidence. No production mappings, probabilities, scoring or issue statuses changed.
+
+Validation: nineteen source verifiers passed before the five additional recruitment/state records; the changed source008 verifier then passed all nine steps/six direct records. Deliberate recruitment-type mutation rejected at7/1, alongside the earlier direct-event mutation rejection. Nine research unit tests pass; git diff --check passes; private raw/mutation artifacts are Git-ignored. Full application lint/typecheck/build were not run for research-fixture/documentation changes. BB3 remains open and paused at source008 home4/action1; the full evidence-and-close-game objective remains incomplete.
+
+
+## 2026-11-10 02:25 - Source018 Fireball ownership and spell injury
+Goal:
+1. Mine a previously unpaired local replay for directly observed role, boundary and modifier evidence.
+
+Changes made (files):
+1. `tests/fixtures/evidence/bb3-ui-playback-018.json`: UI-089, independently loaded Amazon/home versus Nurgle/away; Fireball4+6 Success/1 Failure/2 Failure, AV10+[6,4] Success and injury[6,2]+Spell1 KO. Preserved four complete numeric steps282/0–3 and four direct events386/1,386/4,388/1,388/3. Visible caster is home; raw PlayerId denotes away victims. Individual hit lines have no subject names and remain ordered raw context. The cast precedes logged away11 End of Turn/home12; top Action9 persists and is not an activation ID.
+2. `tests/fixtures/evidence/bb3-ui-playback-013.json`: corrected UI-044 prose that conflated StepType19 with DamageStep Source3. Existing numeric extracts are unchanged. `docs/REPLAY_UI_EVIDENCE.md` makes this correction explicit and documents the new case.
+3. Synchronized `docs/PROJECT_PLAN.md`, `docs/REMEDIATION_BACKLOG.md`, `docs/LOCAL_REPLAY_FINDINGS.md`:89 cases/356 distinct step records/20 direct context records across twenty sources (nineteen originals plus one demo);41 named roll families unchanged. Eight originals lack positive UI fixtures. Preserved historical checkpoint counts as historical. No production mapping, scoring contract or issue closure.
+
+Commands run + outcomes:
+1. `python -X utf8 replays/.analysis/check-evidence.py` -> all twenty source verifiers pass, globally unique case IDs and numeric-only payloads;89/356/20. Existing direct-event mutation rejected.
+2. `python -m unittest discover -s tests/research -p 'test_*.py'` -> nine tests pass.
+3. Source018 injury ModifierType21 mutated to19 -> rejected at282/3. Source013 reverified after prose correction ->20 steps pass.
+4. `git diff --check` -> passes (line-ending notices only); private mutation artifact is Git-ignored. Full application lint/typecheck/build were not run for research-fixture/documentation-only changes.
+
+Regressions/known gaps:
+1. UI transcriptions remain manual; exact extraction verification does not validate their semantics. EventActiveGamerChanged/card events omit GamerId; universal default/ownership policies remain unresolved. No newly generated hotseat replay export exists. The broader data-gathering/close-game objective is incomplete; BB3 remains open and paused at the source018 away11/home12 boundary.
+
+Explicit handoff next steps:
+1. Mine source011 Breathe Fire failed branches with changed Difficulty, source019 held-out Fireball threshold face4 and source025 failed interference. Continue policy/state/namespace acceptance, prioritizing data that changes contracts over duplicate examples. Natural1 Argue and raw failed Bribe remain missing.
+
+
+## 2026-11-10 02:36 - Source011 breath branches and natural-six catch
+Goal:
+1. Continue gathering missing game/replay evidence; the preceding turn was progress through UI-089 and corrected Fireball namespace prose.
+
+Changes made (files):
+1. `tests/fixtures/evidence/bb3-ui-playback-011.json`: added UI-090–093,20 complete numeric steps from a newly paired source. Loading independently confirms Chaos Dwarf/home and Norse/away. Home3/Action9 Flamesmith7 ST3 targets Yhetee37 ST5; kept Breathe fire4+4−Strength1 fails and next home activation10 proceeds. Final Used0/NewRoll0 retains original4; team rerolls stay3. Home5/Action8 actor8 keeps1, becomes Prone, takes own AV10+[6,2] Failure and playback advances away6. Exact end-turn reason remains untranscribed. Successful home2/Action4 breath5 places39 Prone without an armor emission.
+2. The next home2/Action5 Blitz supplies an independently visible natural6 Catch: attacker Block converts selected Both Down to defender-only knockdown; armor fails, carrier loses possession, bounces exit and return to pitch, away38 Catch1−5 fails, then home3 Catch6−4 succeeds against base4+ and gains possession. Raw Difficulty6 for both catches is bounded despite different negative sums. Do not impose a modified-sum-only contract or universalize the catch exception across families. Throw-in dice roles are raw geometric context, not independently visible labels.
+3. Updated `docs/REPLAY_UI_EVIDENCE.md`, `docs/LOCAL_REPLAY_FINDINGS.md`, `docs/PROJECT_PLAN.md`, `docs/REMEDIATION_BACKLOG.md`: current93 cases/376 distinct steps/20 direct context records across twenty-one saved sources (twenty originals and one demo);41 UI-named families unchanged. Seven originals lack positive UI fixtures. No runtime logic, probability contract or issue closure.
+
+Commands run + outcomes:
+1. `python scripts/verify-replay-evidence.py replays tests/fixtures/evidence/bb3-ui-playback-011.json` ->4 cases/20 steps pass.
+2. `python -X utf8 replays/.analysis/check-evidence.py` -> all twenty-one hashed source verifiers pass; global unique IDs and numeric-only projections;93/376/20; deliberate top-event mutation rejected.
+3. `python -m unittest discover -s tests/research -p 'test_*.py'` -> nine tests pass. Deliberate final Catch6→5 mutation rejects at54/8.
+4. `git diff --check` -> passes; private raw/mutation artifacts remain Git-ignored. Full application lint/typecheck/build were not run for fixture/documentation-only research.
+
+Regressions/known gaps:
+1. Transcriptions remain manual; verifiers prove exact extraction, not semantic correctness. Breathe Fire strength formula, exact natural-one turnover reason, complete natural-roll contracts, state omission/defaults and field/version acceptance remain incomplete. A skill-icon click in playback produced no tooltip; no new rule reference is claimed. Controlled hotseat export remains unavailable. Game remains open and paused at source011 home2/Action5 after the caught return; the full data-and-close-game objective is not complete.
+
+Explicit handoff next steps:
+1. Mine source025 failed interference with large modifiers, source019 Fireball face4 if it changes a remaining contract, and the remaining original source hashes. Read Breathe Fire's actual tooltip through Teams if accessible to establish its precise strength and natural-one rules. Continue a finite requirements audit separating missing game evidence from implementation/deployment acceptance.
+
+
+## 2026-11-10 - Source025 pass chain and finite capture audit
+Goal:
+1. Mine existing replay files for missing semantic evidence and identify concrete further capture requirements.
+
+Changes made (files):
+1. `tests/fixtures/evidence/bb3-ui-playback-025.json`: UI-094, seven complete numeric steps. Independently loaded Elven Union/home versus Skaven/away. Home passer5 picks up6, fumbles Long pass1 with net−1, uses Pass47 and throws Accurate6; away45 fails interference4−4; home4 fails Catch1 and uses Catch6 to replace it with4 Success. Team rerolls stay4/3. Preserved distinct initiator, roller, decision controller, modifier owners and receiver. QuestionInterceptors probability Description2/3 remains unassigned.
+2. Updated UI evidence, local findings, plan and backlog:94 cases/383 distinct step records/20 direct records across22 sources (21 originals plus one demo);41 named families unchanged. No runtime contracts or issue closures.
+3. Added `docs/REPLAY_CAPTURE_GAPS.md`: separates further game data from engineering/deployment acceptance and prioritizes discriminating cases over duplicate footage. Fresh independent decode recount of six original hashes without positive fixtures finds8,408 StepResult emissions; filtered historical targeted scan retains10 candidates (six Loner, three FireballHit, one Animosity). Private report remains ignored.
+4. Breathe Fire reference attempt exposed no Chaos Dwarf among14 creation-menu choices; no team created or currency spent. This does not establish DLC ownership or exhaust reference routes.
+
+Commands run + outcomes:
+1. `python -X utf8 replays/.analysis/check-evidence.py` -> all22 source verifiers pass, globally unique observation IDs and numeric-only payloads;94/383/20. Existing deliberate direct-event mutation rejected.
+2. Source025 QuestionInterceptors GamerId1→0 mutation -> rejected at293/0.
+3. `python -m unittest discover -s tests/research -p 'test_*.py'` -> nine tests pass.
+4. Full application lint/typecheck/build were not run for research-fixture/documentation-only changes.
+
+Regressions/known gaps:
+1. Exact extraction verification does not validate manual UI labels or prove complete policies. Raw failed Bribe and natural1 Argue remain absent from the scoped corpus scan; hotseat export remains unavailable. State/namespace/version and contract acceptance remain incomplete. BB3 remains open and paused after source025's pass chain; the full data-and-close-game request is incomplete.
+
+Explicit handoff next steps:
+1. Use REPLAY_CAPTURE_GAPS to select further cases that change a contract, especially state omission/possession/activation rules. Review the six remaining original hashes for held-out acceptance. Establish a viable raw export route before repeating hotseat-only gap experiments.
+
+
+## 2026-11-10 - Availability, possession and installed offline data
+Goal:
+1. Continue the missing-data/game-close objective. Prior turn was progress: UI-094 verified, current-source recount and finite capture audit saved.
+
+Changes made (files):
+1. `tests/fixtures/evidence/bb3-ui-playback-025.json`: UI-095/096 add15 complete steps and six direct context records. Crowd removal on Defender Down skips armor, rolls injury[1,4] Stunned and leaves40 off-pitch Cell[-1,-1]/Situation1 despite CanAct1/TackleZone1. A separate away48 Blitz changes Push to Both Down through a team reroll4→3; both armor checks fail and the carrier loses the ball to[4,9]. Before-state Carrier5/IsHeld1 becomes omitted in the after-state; UI independently shows the loose ball. Blanket carry-forward would be wrong. No universal omission policy is asserted. ResultUseAction TeamId0 is not sufficient to identify this away actor's roster.
+2. New `scripts/extract-bb3-offline-data.py`, `tests/fixtures/evidence/bb3-offline-rule-data.json`, `docs/OFFLINE_RULE_DATA_EVIDENCE.md`: read two JSON members from the installed rules-engine archive without executing modules. Six static tables/178 rows include105 skills,11 casualty names/effects, five characteristics and46 skill relationships. All121 name/code rows agree with BoardData executable enums after punctuation/case normalization. Archive and member hashes retained; package revision23 is not claimed as replay/client version. Overlapping opaque compiled modules exist in bb3.zip; active load precedence remains unresolved. No mechanics algorithm is inferred from their names.
+3. Preserved the existing client log privately under ignored replays/controlled, SHA-25639e452d2ea14e72abd5f2b7bdf31c70baa6b0a0b482293d5141e86a562918857. Four selected UI-log entries corroborate hotseat Bribe2 Success, Argue5 Neutral, Bribe1 Failure, Bribe4 Success. There are no serialized replay dice/step records in that context. Existing QuickSaveSlot predates the experiment; settings/statistics do not establish a matching replay. No save loaded/modified.
+4. Updated UI evidence, capture gaps, local findings, hotseat notes, installed enum evidence, plan and backlog:96 cases/398 distinct step records/26 direct records across22 saved sources;41 named families unchanged; six original sources without positive fixtures. No production mappings/scoring or issue closures.
+
+Commands run + outcomes:
+1. All22 hashed UI source verifiers pass; global unique IDs/numeric-only projections;96/398/26. Deliberate direct-event, off-pitch CanAct and omitted Carrier mutations reject; changed source025 verifies22 steps/six direct records.
+2. Offline-data --verify passes; deliberately changed casualty code rejects. Independent oversized-archive and duplicate-required-member probes reject. Exact121-row enum comparison finds no mismatch.
+3. Nine Python research unit tests pass. git diff --check passes; private log and mutation artifacts are Git-ignored. Full application lint/typecheck/build were not run for research-only tooling/fixtures/docs.
+
+Regressions/known gaps:
+1. UI transcriptions remain manual. Snapshot checks prove extraction, not semantic completeness. Static effect fields and skill constraints are not probability/action-policy proofs. Failed-Bribe raw replay, natural1 Argue, version/package precedence and supported state/reroll/distribution policies remain incomplete.
+2. BB3 remains open and paused at source025 home11 after away10's Both Down/loose-ball chain. The full data-and-close-game objective remains active and incomplete.
+
+Explicit handoff next steps:
+1. Use installed JSON casualty effects and exact namespaces to narrow acceptance requirements. Establish active offline package provenance if possible. Mine remaining state/default and role cases that distinguish competing contracts; avoid interpreting CanAct or TackleZone without situation/cell. Preserve the client-log snapshot as UI-only corroboration, not fabricated raw replay linkage.
+
+
+## 2026-11-10 - Action ownership field audit and hotseat navigation recovery
+Goal:
+1. Continue gathering missing evidence and then close BB3. Prior goal turn was progress through UI-095/096 and installed static JSON facts. This turn adds corpus attribution evidence and startup provenance; no new gameplay case.
+
+Changes made (files):
+1. Added `scripts/audit-bb3-action-team.py` and `tests/fixtures/evidence/bb3-action-team-audit.json`. Directly decoded all27 originals, without app maps:6,342 ResultUseAction emissions all explicitly have TeamId0. Actors map to initial roster index0/1 in3,309/2,920 cases;113 initial memberships are unresolved. Per-source hashes/version/counts and numeric example locators retained. Initial membership is not dynamic recruitment reconstruction; counts are emissions. UI-096 independently supplies an away actor. TeamId alone cannot discriminate sides in this corpus. No substitute attribution heuristic promoted.
+2. Added `tests/fixtures/evidence/bb3-offline-package-registration.json`: saved hotseat client-log lines979/980 find and register the examined installed rules archive; path equality, line hashes and archive identity checked. External manifest130 bytes/hash532476cced3f29f5ec19eb78388f6d95e5d9e93a63b4f7eced45c82c132c7642 declares rules revision3; internal manifest declares23. Both retained without equating either to ReplayVersion/client build. This proves discovery/registration, not every import or complete path precedence.
+3. Inspected General/Gameplay and skill-display settings without applying settings changes; no replay-recording option found in inspected screens, no Breathe Fire entry between Break Tackle/Cannoneer. Replay player-card icon produced no new description; temporary stadium display toggle restored. Static patch SQL members also proved opaque to a small read; no code/SQL executed or mechanics algorithm claimed.
+4. Prepared a new natural1 Argue trial through Friendly Match/Hotseat. Before selecting teams, Match Settings changed to Unlimited time, No Kick-off Event and No Prayers to Nuffle. Its Back control was absent; right-click, Backspace, B and window reflow did not recover navigation. Restored fullscreen. Go Offline recovered the menu but opened the Connection screen and mode-progress notice. Stopped all game input for manual profile connection under Computer Use authentication guidance; async handoff requested. No second match started, no roster selected, no new dice observation. Online/offline team availability/settings must be revalidated after handoff.
+5. Updated plan, backlog, capture gaps, UI evidence, local findings, offline-data and hotseat docs. Counts remain96 paired cases/398 steps/26 direct records across22 saved sources; no production changes or issue closure.
+
+Commands run + outcomes:
+1. New action-team audit regenerated and exactly matched all27 source counts. Explicit32MiB offline cap needed; default15MiB rejects oversized source, bool/out-of-range caps reject. Deliberate aggregate TeamId0→1 mutation rejected by --verify.
+2. Registration log paths, source log hash and two line hashes checked; static external/internal manifest declarations preserved.
+3. Nine Python research tests pass; new audit module compiles; git diff --check passes; private corpus/log/mutations remain Git-ignored. Full application lint/typecheck/build were not run for research-only changes.
+
+Regressions/known gaps:
+1. Natural1 Argue and raw failed-Bribe linkage remain missing; ownership/state/rule/version acceptance is incomplete. The archive registration is not per-module execution proof. No live process hook, game-code execution or account authentication was automated.
+2. BB3 remains running at the offline Connection notice. Manual profile connection is pending. This is a new UI handoff, not a three-turn impasse audit; independent file research progressed. Goal remains active and incomplete, and the requested final game closure has not occurred.
+
+Explicit handoff next steps:
+1. After the user completes the profile connection, inspect the actual main menu and roster availability. Continue the natural1 Argue trial; configure teams before reopening Match Settings if needed, and recheck clock/prayer settings. If no handoff yet, continue independent corpus/contract analysis without UI input to the Connection screen.
+
+
+## 2026-11-10 - Scoped natural-roll arithmetic audit
+Goal:
+1. Continue the full data-and-close-game objective. The preceding goal turn was progress:27-source action-team audit and startup registration evidence. The profile handoff condition persists for a second consecutive goal turn; this turn completes independent file analysis.
+
+Changes made (files):
+1. Added `scripts/audit-bb3-thresholds.py` and `tests/fixtures/evidence/bb3-threshold-model-audit.json`. Independently scanned27 originals plus12 demos for direct ResultRoll records with one explicit DieType0 die, explicit Requirement and binary Outcome0/1, retaining complete direct modifiers.3,822 raw emissions across31 RollType identifiers qualify; questions/nested/top-level/neutral and other dice types are excluded. No deduplication or semantic acceptance implied.
+2. Nine exact numeric message projections disagree with die+modifiers>=Requirement: eight natural6 (seven Catch/type7 and one Pass/type5) and one Catch1 with+1. Recorded Difficulty agrees with all3,822 binary outcomes and fits max(2,min(6,Requirement−modifierSum)) in this sample. This is a fitted relationship; it cannot establish every family's natural rule where alternatives remain indistinguishable. UI-093 independently covers one of these records; remaining locators are raw review targets.
+3. Preserved specific next UI targets: source016258/1 actor46 Pass6−4 against Requirement4 (also offers an opposing interceptor), source025444/6 receiver40 Catch1+1 against Requirement2 followed by Catch skill6 replacement3 Success in the same step. Raw source025 clock fields show both team turns16; no new UI turn/action label or game-deciding consequence is claimed.
+4. Existing executable tables independently name ProbaDescription2 Success/3 Fail, distinct from RollOutcome0 Failed/1 Succeeded/2 Neutral. Added a naming follow-up to UI-094 notes and installed-enum/UI evidence docs, retaining field-binding/version limits. No numeric extract changed and no additional enum table claimed. Updated capture gaps, local findings, plan/backlog. Paired counts remain96/398/26 across22 saved sources.
+
+Commands run + outcomes:
+1. New39-source audit regenerates and --verify matches. A separate initial private scanner agrees on3,822 emissions, nine discrepancy locators and their full numeric projections. All selected Difficulty fields present; zero binary/difficulty or clamped-threshold disagreements.
+2. Deliberate raw Outcome1→0 mutation is rejected by --verify; bool/out-of-range offline caps reject. Numeric-only projection checks pass; sources deduplicate to39 unique hashes.
+3. Source025 UI fixture reverified after note-only change:3 observations/22 exact steps/six direct records pass. Nine existing research tests pass. New module compiles and git diff --check passes; private audit/mutation files are ignored. Full app lint/typecheck/build were not run for research-only changes.
+
+Regressions/known gaps:
+1. No new game input was sent: read-only snapshot confirms the same offline Connection/mode notice. Manual profile connection is still pending; the previous handoff request remains unanswered. No new trial, Argue1, exported replay or game closure. The goal remains active and incomplete.
+2. Further targeted UI/rule review is needed before accepting the hypotheses. Neutral/binary-only selection, unobserved branch distinctions, source/version limits, ownership/state policies and raw referee gaps remain explicit.
+
+Explicit handoff next steps:
+1. Revalidate the pending profile handoff before game input. After manual connection, inspect actual roster/settings availability and continue the natural1 Argue trial or the two targeted natural-roll replay cases. Do not operate the Connection screen or count a raw candidate as a new GUI observation. If the same handoff remains and meaningful independent research is exhausted, apply the goal's three-turn blocked audit rather than repeating status-only turns.
+
+Cross-fixture reconciliation: two of the nine arithmetic discrepancy locators already have direct UI evidence, not just source011/UI-093. Source016351/1 is UI-049's bomb Catch4+6−3 Success before Explosion; source01154/8 is UI-093's ordinary-ball Catch4+6−4 Success. Seven other locators remain raw review targets. No new UI case is counted; avoid recapturing UI-049 as though it were unobserved.
+
+## 2026-11-10 - Revalidated profile-connection blocker
+
+Goal continuation audit: the preceding turn reproduced existing research audits and nine research tests but added no semantic evidence. A fresh Computer Use window inventory and screenshot confirm BB3 remains running at the Connection screen, with the Online/Offline progress notice over the offline profile controls. The pending manual profile-connection handoff has persisted for at least three consecutive goal turns. Computer Use guidance explicitly forbids automating user authentication dialogs. No input was sent to the connection screen, no new trial was started, and the game was not closed because the requested data collection remains incomplete. The goal is blocked pending the user dismissing the notice and connecting the profile to reach the main menu. Existing raw-linked failed-Bribe/natural-one Argue gaps and precise natural-roll UI targets remain open; rerunning existing audits does not satisfy them.
+
+
+## 2026-11-10 - Offline saved replay and natural-one Catch observation
+
+Offline handoff follow-up (2026-11-10): the user connected the local profile manually. A fresh main-menu observation confirmed the handoff cleared. My Teams is disabled in offline hotseat setup; default rosters transition directly from Chaos Chosen to Chaos Renegades in the inspected portion, providing no Breathe Fire reference through that route. No match was started. Profile → History → Saved Replays remains available offline and successfully loads source025. UI-097 independently displays away16 Action2: Quick pass4+ die5 Accurate, Catch2+ die1+Diving Catch1 Failure, Catch skill replacement3+1 Success, then receiver possession. Reroll counters stay1/1. Three exact records444/0,5,6 bring totals to97 cases/401 steps/26 direct records across22 sources. This closes the UI-transcription gap for that specific arithmetic counterexample, not its broader supported rule contract or a production issue. Source016258/1 Pass6 under negative modifiers remains the next discriminating target; raw-linked failed-Bribe and natural1 Argue gaps remain open. The previous profile handoff is resolved; the game remains open with saved-replay analysis resumed.
+
+
+## 2026-11-10 - Natural-six Pass and activation-loss state evidence
+
+Source016 follow-up (2026-11-10): UI-098 independently displays away8 Action9 Long pass4+ die6-4 Accurate, with Long pass-2 and grouped Disturbing Presence-2. Home interceptor10 then fails Interfere4+ die5-8 (accuracy-3, four tackle zones-4 and Disturbing Presence-1); Bounce2 lands at[6,9] and home8 starts. Four exact steps and five direct context records retain the pass/response, role ownership and held/intermediate/loose ball states. Intermediate309/5 retains Carrier46 after the pass while IsHeld is omitted and the ball coordinate differs from the passer's cell; Carrier alone is not sufficient held-possession evidence. UI-099 adds two separately selected Foul Appearance2+ die1 failures (away Actions5/6), followed by different teammates acting during the same turn. Five exact steps/four BoardState records preserve each actor's explicit CanAct1 to omission transition, subject-owned Skill10, unchanged cells and continued team turn. Omission is not promoted to a universal false/default rule. Current totals99 cases/410 distinct steps/35 direct records across22 saved sources; six original hashes remain unpaired. The source016 numeric verifier passes; deliberate pass-Outcome and intermediate-Carrier mutations reject; global ID/locator recount passes. No runtime mapping, rule contract or backlog issue is closed.
+
+
+## 2026-11-10 - Completed offline hotseat export probe
+
+
+Offline export follow-up (2026-11-10): HS-B used two default Black Orc teams in offline local hotseat, bought no inducements, and finished normally0–0 after both sides ended turn16. The results view exposed no Replay/Download control. At15:38:14Z the replay directory remained28 files with unchanged newest write/length. The temporary Hold→Toggle input test was restored to Hold; pitch selection remained unresolved while menu/End of Turn worked. See HOTSEAT_EXPERIMENTS for setup and limits. No new raw replay, paired case, runtime mapping or issue closure resulted. Raw-linked failed-Bribe/natural1 Argue remain blocked on a viable capture route; existing-file research remains possible. Current paired totals remain99 cases/410 steps/35 direct events across22 sources. The game is open and the full data-gathering objective remains incomplete.
+
+
+## 2026-11-10 - Research backup checkpoint
+
+User requested the replay findings be committed and pushed to preserve the work. Checkpoint scope: ignored-corpus policy, sanitized numeric/UI/installed-data artifacts, six bounded research tools, research tests, and accumulated handoff/experiment documentation. Raw replays, client logs, executable/archive files, generated toolchain/dependencies and in-progress runtime changes remain local. All22 source verifiers pass (99 cases/410 steps/35 direct events); nine research tests pass. Fresh action-team and threshold audits reproduce27 sources/6,342 action records and39 sources/3,822 eligible threshold emissions/nine arithmetic disagreements. Installed-image82-enum/1,428-entry and static JSON178-row verifiers pass. Sanitized JSON privacy scan checks27 files for account/name/GUID fields; no raw original replay filename or credential appears in the selected research docs/tools. Git origin is the intended Brandon-Born/nufflizer repository; fetched master matches the local parent654a85b. Runtime semantic edits are intentionally excluded from this checkpoint because validation is still underway. This backup does not close the analyzer goal or any open semantic issue.

@@ -1,0 +1,2683 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Manually observed BB3 labels paired with sanitized raw numeric extracts. Research evidence only; not proof of complete rule support.",
+  "source": {
+    "sha256": "9afbdd2773e14ac1f92d45a5e56caf0fa183684c51a435418f0b9525c214454e",
+    "replayVersion": "1-4-0-0",
+    "teams": [
+      "Nurgle",
+      "Dark Elf"
+    ],
+    "privacy": "Source filename, coach/team/player names, dates, account identifiers and arbitrary text omitted."
+  },
+  "capture": {
+    "date": "2026-11-09",
+    "method": "Existing saved replay loaded into BB3 and stepped with Computer Use. This is not a newly generated hotseat replay.",
+    "screenshots": "Inspected inline in tool history; no screenshot files exported. Manual transcription is reviewable by replaying the hashed local source.",
+    "locatorConvention": "One-based EventExecuteSequence; zero-based StepResult and message array indices. UI team turns are cumulative 1-16."
+  },
+  "limits": [
+    "One source and one replay version; cross-source and version-held-out acceptance still required.",
+    "Labels and dice transcribed by the agent, not independently human-reviewed. Numeric verifier validates extracts, not semantic transcription.",
+    "Only annotated UI events were observed. Remaining raw messages are chain context, not separately confirmed semantic claims.",
+    "No mappings, scoring contracts or backlog items are promoted or closed by this fixture."
+  ],
+  "cases": [
+    {
+      "id": "UI-042",
+      "ui": {
+        "half": 1,
+        "cumulativeTeamTurn": 7,
+        "side": "away",
+        "displayedActionNumber": 3,
+        "playerId": 37,
+        "targetId": 9,
+        "events": [
+          {
+            "label": "Block action"
+          },
+          {
+            "label": "Jump up Skill",
+            "result": "Used"
+          },
+          {
+            "label": "Jump up",
+            "required": "2+",
+            "dice": [
+              3
+            ],
+            "modifiers": [
+              {
+                "label": "Jump up",
+                "value": 1
+              }
+            ],
+            "result": "Success"
+          },
+          {
+            "label": "Block pool",
+            "faces": [
+              "Defender Stumbles",
+              "Both Down"
+            ]
+          },
+          {
+            "label": "Block Skill",
+            "playerId": 37,
+            "result": "Used"
+          },
+          {
+            "label": "Block result",
+            "result": "Defender Down"
+          },
+          {
+            "label": "Armour Value (AV)",
+            "playerId": 9,
+            "required": "9+",
+            "dice": [
+              2,
+              1
+            ],
+            "result": "Failure"
+          },
+          {
+            "label": "Damage result",
+            "playerId": 9,
+            "result": "Prone"
+          }
+        ]
+      },
+      "notes": "Jump-up raw roll32/skill41 precedes the block pool in PlayerStep/6. Selected face is raw1 Both Down; attacker uses Block skill30 and remains upright. Base 2+ log with +1 still has raw Difficulty2, a clamp counterexample. This establishes this specific skill resolution, not a complete Block policy.",
+      "observationMethod": "Manually read BB3 replay UI through Computer Use; no application parser labels used.",
+      "rawRecords": [
+        {
+          "sequence": 172,
+          "stepIndex": 0,
+          "step": {
+            "PlayerStep": {
+              "Probability": [
+                "100.0"
+              ],
+              "PlayerId": [
+                "37"
+              ],
+              "TargetId": [
+                "9"
+              ],
+              "IsEvaluation": [
+                "0"
+              ],
+              "StepType": [
+                "0"
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "13"
+                  ],
+                  "X": [
+                    "1"
+                  ]
+                }
+              ],
+              "State": [
+                "3"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "13"
+                  ],
+                  "X": [
+                    "0"
+                  ]
+                }
+              ],
+              "Skill": [
+                "0"
+              ]
+            }
+          },
+          "messages": [
+            {
+              "ResultUseAction": {
+                "Action": [
+                  "2"
+                ],
+                "TeamId": [
+                  "0"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sequence": 172,
+          "stepIndex": 1,
+          "step": {
+            "PlayerStep": {
+              "Probability": [
+                "100.0"
+              ],
+              "PlayerId": [
+                "37"
+              ],
+              "TargetId": [
+                "9"
+              ],
+              "IsEvaluation": [
+                "0"
+              ],
+              "StepType": [
+                "6"
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "13"
+                  ],
+                  "X": [
+                    "1"
+                  ]
+                }
+              ],
+              "State": [
+                "1"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "13"
+                  ],
+                  "X": [
+                    "0"
+                  ]
+                }
+              ],
+              "Skill": [
+                "0"
+              ]
+            }
+          },
+          "messages": [
+            {
+              "ResultSkillUsage": {
+                "PlayerId": [
+                  "37"
+                ],
+                "Skill": [
+                  "41"
+                ],
+                "Used": [
+                  "1"
+                ]
+              }
+            },
+            {
+              "ResultRoll": {
+                "Status": [
+                  "1"
+                ],
+                "Requirement": [
+                  "2"
+                ],
+                "Modifiers": [
+                  {
+                    "Modifier": [
+                      {
+                        "PlayerId": [
+                          "-1"
+                        ],
+                        "Skill": [
+                          "-1"
+                        ],
+                        "Effect": [
+                          "-1"
+                        ],
+                        "Value": [
+                          "1"
+                        ],
+                        "ModifierType": [
+                          "32"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Dice": [
+                  {
+                    "Die": [
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "3"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Difficulty": [
+                  "2"
+                ],
+                "RollType": [
+                  "32"
+                ],
+                "Outcome": [
+                  "1"
+                ],
+                "NewRoll": [
+                  "1"
+                ]
+              }
+            },
+            {
+              "QuestionBlockDice": {
+                "RolledDiceIndexes": [
+                  {
+                    "RolledDiceIndexesItem": [
+                      "0",
+                      "1"
+                    ]
+                  }
+                ],
+                "Dice": [
+                  {
+                    "Die": [
+                      {
+                        "DieType": [
+                          "2"
+                        ],
+                        "Value": [
+                          "3"
+                        ]
+                      },
+                      {
+                        "DieType": [
+                          "2"
+                        ],
+                        "Value": [
+                          "1"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "StModifiers": [
+                  {
+                    "Modifier": [
+                      {
+                        "PlayerId": [
+                          "43"
+                        ],
+                        "Skill": [
+                          "-1"
+                        ],
+                        "Effect": [
+                          "-1"
+                        ],
+                        "Value": [
+                          "1"
+                        ],
+                        "ModifierType": [
+                          "11"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "CanChoseDie": [
+                  "1"
+                ],
+                "GamerId": [
+                  "1"
+                ],
+                "DiceOutcomes": [
+                  {
+                    "DiceOutcomesItem": [
+                      "6",
+                      "5"
+                    ]
+                  }
+                ],
+                "CanUseTeamReroll": [
+                  "1"
+                ],
+                "Assists": [
+                  {
+                    "AssistInfos": [
+                      {
+                        "Cell": [
+                          {
+                            "Y": [
+                              "14"
+                            ],
+                            "X": [
+                              "1"
+                            ]
+                          }
+                        ],
+                        "Modifier": [
+                          "1"
+                        ]
+                      },
+                      {
+                        "Cell": [
+                          {
+                            "Y": [
+                              "13"
+                            ],
+                            "X": [
+                              "2"
+                            ]
+                          }
+                        ],
+                        "Modifier": [
+                          "0"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "AttackerChoice": [
+                  "1"
+                ],
+                "RollType": [
+                  "3"
+                ],
+                "RollStatus": [
+                  "1"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sequence": 173,
+          "stepIndex": 0,
+          "step": {
+            "PlayerStep": {
+              "Probability": [
+                "100.0"
+              ],
+              "PlayerId": [
+                "37"
+              ],
+              "TargetId": [
+                "9"
+              ],
+              "IsEvaluation": [
+                "0"
+              ],
+              "StepType": [
+                "6"
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "13"
+                  ],
+                  "X": [
+                    "1"
+                  ]
+                }
+              ],
+              "State": [
+                "3"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "13"
+                  ],
+                  "X": [
+                    "0"
+                  ]
+                }
+              ],
+              "Skill": [
+                "0"
+              ]
+            }
+          },
+          "messages": [
+            {
+              "ResultSkillUsage": {
+                "PlayerId": [
+                  "37"
+                ],
+                "Skill": [
+                  "30"
+                ],
+                "Used": [
+                  "1"
+                ]
+              }
+            },
+            {
+              "ResultBlockRoll": {
+                "RollStatus": [
+                  "1"
+                ],
+                "StModifiers": [
+                  {
+                    "Modifier": [
+                      {
+                        "PlayerId": [
+                          "43"
+                        ],
+                        "Skill": [
+                          "-1"
+                        ],
+                        "Effect": [
+                          "-1"
+                        ],
+                        "Value": [
+                          "1"
+                        ],
+                        "ModifierType": [
+                          "11"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Die": [
+                  {
+                    "DieType": [
+                      "2"
+                    ],
+                    "Value": [
+                      "1"
+                    ]
+                  }
+                ],
+                "Assists": [
+                  {
+                    "AssistInfos": [
+                      {
+                        "Cell": [
+                          {
+                            "Y": [
+                              "14"
+                            ],
+                            "X": [
+                              "1"
+                            ]
+                          }
+                        ],
+                        "Modifier": [
+                          "1"
+                        ]
+                      },
+                      {
+                        "Cell": [
+                          {
+                            "Y": [
+                              "13"
+                            ],
+                            "X": [
+                              "2"
+                            ]
+                          }
+                        ],
+                        "Modifier": [
+                          "0"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "RollType": [
+                  "3"
+                ],
+                "Outcome": [
+                  "5"
+                ],
+                "NewRoll": [
+                  "1"
+                ]
+              }
+            },
+            {
+              "ResultBlockOutcome": {
+                "AttackerId": [
+                  "37"
+                ],
+                "DefenderId": [
+                  "9"
+                ],
+                "Outcome": [
+                  "5"
+                ],
+                "Follow": [
+                  "0"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sequence": 173,
+          "stepIndex": 1,
+          "step": {
+            "DamageStep": {
+              "Applied": [
+                "1"
+              ],
+              "Probability": [
+                "100.0"
+              ],
+              "Source": [
+                "1"
+              ],
+              "PlayerId": [
+                "9"
+              ],
+              "TargetId": [
+                "9"
+              ],
+              "IsEvaluation": [
+                "0"
+              ],
+              "StepType": [
+                "2"
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "13"
+                  ],
+                  "X": [
+                    "1"
+                  ]
+                }
+              ],
+              "State": [
+                "2"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "13"
+                  ],
+                  "X": [
+                    "1"
+                  ]
+                }
+              ],
+              "Skill": [
+                "0"
+              ]
+            }
+          },
+          "messages": [
+            {
+              "ResultRoll": {
+                "Status": [
+                  "1"
+                ],
+                "Requirement": [
+                  "9"
+                ],
+                "Dice": [
+                  {
+                    "Die": [
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "2"
+                        ]
+                      },
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "1"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Difficulty": [
+                  "9"
+                ],
+                "RollType": [
+                  "10"
+                ],
+                "Outcome": [
+                  "0"
+                ],
+                "NewRoll": [
+                  "1"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "UI-043",
+      "ui": {
+        "half": 1,
+        "cumulativeTeamTurn": 8,
+        "activeSide": "away",
+        "side": "home",
+        "displayedActionNumber": 1,
+        "playerId": 1,
+        "targetId": 47,
+        "events": [
+          {
+            "label": "Tentacles Skill",
+            "playerId": 1,
+            "result": "Used"
+          },
+          {
+            "label": "Tentacles",
+            "required": "6+",
+            "dice": [
+              5
+            ],
+            "modifiers": [
+              {
+                "label": "Strength",
+                "value": 2
+              }
+            ],
+            "result": "Success"
+          },
+          {
+            "label": "Trait - End of effect",
+            "playerId": 47,
+            "phase": "Start of following home turn"
+          }
+        ]
+      },
+      "notes": "Home Rotspawn1 owns/rolls Tentacles while away player47 attempts to leave during away turn8. Raw strength modifiers +5 and -3 combine to UI Strength+2 and Difficulty4. Victim's activation ends before a dodge or move; subsequent UI dodges belong to another away player. Preserve roller and affected mover separately.",
+      "observationMethod": "Manually read BB3 replay UI through Computer Use; no application parser labels used.",
+      "rawRecords": [
+        {
+          "sequence": 199,
+          "stepIndex": 0,
+          "step": {
+            "PlayerStep": {
+              "Probability": [
+                "100.0"
+              ],
+              "PlayerId": [
+                "1"
+              ],
+              "TargetId": [
+                "47"
+              ],
+              "IsEvaluation": [
+                "0"
+              ],
+              "StepType": [
+                "26"
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "7"
+                  ],
+                  "X": [
+                    "14"
+                  ]
+                }
+              ],
+              "State": [
+                "3"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "7"
+                  ],
+                  "X": [
+                    "13"
+                  ]
+                }
+              ],
+              "Skill": [
+                "0"
+              ]
+            }
+          },
+          "messages": [
+            {
+              "ResultSkillUsage": {
+                "PlayerId": [
+                  "1"
+                ],
+                "Skill": [
+                  "69"
+                ],
+                "Used": [
+                  "1"
+                ]
+              }
+            },
+            {
+              "ResultRoll": {
+                "Status": [
+                  "1"
+                ],
+                "Requirement": [
+                  "6"
+                ],
+                "Modifiers": [
+                  {
+                    "Modifier": [
+                      {
+                        "PlayerId": [
+                          "1"
+                        ],
+                        "Skill": [
+                          "-1"
+                        ],
+                        "Effect": [
+                          "-1"
+                        ],
+                        "Value": [
+                          "5"
+                        ],
+                        "ModifierType": [
+                          "52"
+                        ]
+                      },
+                      {
+                        "PlayerId": [
+                          "47"
+                        ],
+                        "Skill": [
+                          "-1"
+                        ],
+                        "Effect": [
+                          "-1"
+                        ],
+                        "Value": [
+                          "-3"
+                        ],
+                        "ModifierType": [
+                          "52"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Dice": [
+                  {
+                    "Die": [
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "5"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Difficulty": [
+                  "4"
+                ],
+                "RollType": [
+                  "16"
+                ],
+                "Outcome": [
+                  "1"
+                ],
+                "NewRoll": [
+                  "1"
+                ]
+              }
+            },
+            {
+              "EventAddPlayerEffect": {
+                "PlayerId": [
+                  "47"
+                ],
+                "Effect": [
+                  {
+                    "Durations": [
+                      {
+                        "DurationsItem": [
+                          "0"
+                        ]
+                      }
+                    ],
+                    "ProviderType": [
+                      "4"
+                    ],
+                    "ProviderId": [
+                      "0"
+                    ],
+                    "EffectId": [
+                      "63"
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "UI-044",
+      "ui": {
+        "half": 2,
+        "cumulativeTeamTurn": 12,
+        "phase": "Between home turn12 and away turn12",
+        "side": "away",
+        "affectedSide": "home",
+        "events": [
+          {
+            "label": "Uses card",
+            "result": "Fireball"
+          },
+          {
+            "label": "Fireball hit!",
+            "required": "4+",
+            "dice": [
+              6
+            ],
+            "result": "Success"
+          },
+          {
+            "label": "Fireball hit!",
+            "required": "4+",
+            "dice": [
+              1
+            ],
+            "result": "Failure"
+          },
+          {
+            "label": "Fireball hit!",
+            "required": "4+",
+            "dice": [
+              5
+            ],
+            "result": "Success"
+          },
+          {
+            "label": "Fireball hit!",
+            "required": "4+",
+            "dice": [
+              4
+            ],
+            "result": "Success"
+          },
+          {
+            "label": "Fireball hit!",
+            "required": "4+",
+            "dice": [
+              4
+            ],
+            "result": "Success"
+          },
+          {
+            "label": "Armour Value (AV)",
+            "playerId": 8,
+            "required": "9+",
+            "dice": [
+              6,
+              6
+            ],
+            "result": "Success"
+          },
+          {
+            "label": "Injury",
+            "playerId": 8,
+            "dice": [
+              5,
+              3
+            ],
+            "result": "KO"
+          },
+          {
+            "label": "Armour Value (AV)",
+            "playerId": 2,
+            "required": "9+",
+            "dice": [
+              4,
+              6
+            ],
+            "result": "Success"
+          },
+          {
+            "label": "Injury",
+            "playerId": 2,
+            "dice": [
+              2,
+              3
+            ],
+            "result": "Stunned"
+          },
+          {
+            "label": "Armour Value (AV)",
+            "playerId": 5,
+            "required": "9+",
+            "dice": [
+              5,
+              3
+            ],
+            "modifiers": [
+              {
+                "label": "Spell",
+                "value": 1
+              }
+            ],
+            "result": "Success"
+          },
+          {
+            "label": "Injury",
+            "playerId": 5,
+            "dice": [
+              5,
+              3
+            ],
+            "result": "KO"
+          },
+          {
+            "label": "Armour Value (AV)",
+            "playerId": 11,
+            "required": "10+",
+            "dice": [
+              1,
+              3
+            ],
+            "result": "Failure"
+          },
+          {
+            "label": "Damage result",
+            "playerId": 11,
+            "result": "Prone"
+          },
+          {
+            "label": "Bounce",
+            "dice": [
+              7
+            ],
+            "destination": [
+              16,
+              10
+            ]
+          }
+        ]
+      },
+      "notes": "Five UI Fireball hit lines omit player names; their ordered raw subject IDs are 8,7,2,5,11. Victim damage is paired by the unique dice/subject chain. Type48 success is a spell hit against the named subject, not that subject's beneficial success. PlayerStep StepType19 and DamageStep Source3 (the earlier prose conflated these namespaces); no armor follows the missed subject7. Do not treat the encoded victim as spell initiator. +1 Spell modifier is only displayed for the threshold-changing armor check on player5; inspect raw modifiers separately for other victims.",
+      "observationMethod": "Manually read BB3 replay UI through Computer Use; no application parser labels used.",
+      "rawRecords": [
+        {
+          "sequence": 344,
+          "stepIndex": 0,
+          "step": {
+            "PlayerStep": {
+              "Probability": [
+                "100.0"
+              ],
+              "PlayerId": [
+                "8"
+              ],
+              "TargetId": [
+                "-1"
+              ],
+              "IsEvaluation": [
+                "0"
+              ],
+              "StepType": [
+                "19"
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "11"
+                  ],
+                  "X": [
+                    "16"
+                  ]
+                }
+              ],
+              "State": [
+                "3"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "11"
+                  ],
+                  "X": [
+                    "16"
+                  ]
+                }
+              ],
+              "Skill": [
+                "0"
+              ]
+            }
+          },
+          "messages": [
+            {
+              "ResultRoll": {
+                "Status": [
+                  "1"
+                ],
+                "Requirement": [
+                  "4"
+                ],
+                "Dice": [
+                  {
+                    "Die": [
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "6"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Difficulty": [
+                  "4"
+                ],
+                "RollType": [
+                  "48"
+                ],
+                "Outcome": [
+                  "1"
+                ],
+                "NewRoll": [
+                  "1"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sequence": 344,
+          "stepIndex": 1,
+          "step": {
+            "PlayerStep": {
+              "Probability": [
+                "100.0"
+              ],
+              "PlayerId": [
+                "7"
+              ],
+              "TargetId": [
+                "-1"
+              ],
+              "IsEvaluation": [
+                "0"
+              ],
+              "StepType": [
+                "19"
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "12"
+                  ],
+                  "X": [
+                    "16"
+                  ]
+                }
+              ],
+              "State": [
+                "3"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "11"
+                  ],
+                  "X": [
+                    "16"
+                  ]
+                }
+              ],
+              "Skill": [
+                "0"
+              ]
+            }
+          },
+          "messages": [
+            {
+              "ResultRoll": {
+                "Status": [
+                  "1"
+                ],
+                "Requirement": [
+                  "4"
+                ],
+                "Dice": [
+                  {
+                    "Die": [
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "1"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Difficulty": [
+                  "4"
+                ],
+                "RollType": [
+                  "48"
+                ],
+                "Outcome": [
+                  "0"
+                ],
+                "NewRoll": [
+                  "1"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sequence": 344,
+          "stepIndex": 2,
+          "step": {
+            "PlayerStep": {
+              "Probability": [
+                "100.0"
+              ],
+              "PlayerId": [
+                "2"
+              ],
+              "TargetId": [
+                "-1"
+              ],
+              "IsEvaluation": [
+                "0"
+              ],
+              "StepType": [
+                "19"
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "12"
+                  ],
+                  "X": [
+                    "17"
+                  ]
+                }
+              ],
+              "State": [
+                "3"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "11"
+                  ],
+                  "X": [
+                    "16"
+                  ]
+                }
+              ],
+              "Skill": [
+                "0"
+              ]
+            }
+          },
+          "messages": [
+            {
+              "ResultRoll": {
+                "Status": [
+                  "1"
+                ],
+                "Requirement": [
+                  "4"
+                ],
+                "Dice": [
+                  {
+                    "Die": [
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "5"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Difficulty": [
+                  "4"
+                ],
+                "RollType": [
+                  "48"
+                ],
+                "Outcome": [
+                  "1"
+                ],
+                "NewRoll": [
+                  "1"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sequence": 344,
+          "stepIndex": 3,
+          "step": {
+            "PlayerStep": {
+              "Probability": [
+                "100.0"
+              ],
+              "PlayerId": [
+                "5"
+              ],
+              "TargetId": [
+                "-1"
+              ],
+              "IsEvaluation": [
+                "0"
+              ],
+              "StepType": [
+                "19"
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "10"
+                  ],
+                  "X": [
+                    "15"
+                  ]
+                }
+              ],
+              "State": [
+                "3"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "11"
+                  ],
+                  "X": [
+                    "16"
+                  ]
+                }
+              ],
+              "Skill": [
+                "0"
+              ]
+            }
+          },
+          "messages": [
+            {
+              "ResultRoll": {
+                "Status": [
+                  "1"
+                ],
+                "Requirement": [
+                  "4"
+                ],
+                "Dice": [
+                  {
+                    "Die": [
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "4"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Difficulty": [
+                  "4"
+                ],
+                "RollType": [
+                  "48"
+                ],
+                "Outcome": [
+                  "1"
+                ],
+                "NewRoll": [
+                  "1"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sequence": 344,
+          "stepIndex": 4,
+          "step": {
+            "PlayerStep": {
+              "Probability": [
+                "100.0"
+              ],
+              "PlayerId": [
+                "11"
+              ],
+              "TargetId": [
+                "-1"
+              ],
+              "IsEvaluation": [
+                "0"
+              ],
+              "StepType": [
+                "19"
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "10"
+                  ],
+                  "X": [
+                    "17"
+                  ]
+                }
+              ],
+              "State": [
+                "3"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "11"
+                  ],
+                  "X": [
+                    "16"
+                  ]
+                }
+              ],
+              "Skill": [
+                "0"
+              ]
+            }
+          },
+          "messages": [
+            {
+              "ResultRoll": {
+                "Status": [
+                  "1"
+                ],
+                "Requirement": [
+                  "4"
+                ],
+                "Dice": [
+                  {
+                    "Die": [
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "4"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Difficulty": [
+                  "4"
+                ],
+                "RollType": [
+                  "48"
+                ],
+                "Outcome": [
+                  "1"
+                ],
+                "NewRoll": [
+                  "1"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sequence": 344,
+          "stepIndex": 5,
+          "step": {
+            "DamageStep": {
+              "Applied": [
+                "1"
+              ],
+              "Probability": [
+                "100.0"
+              ],
+              "Source": [
+                "3"
+              ],
+              "PlayerId": [
+                "8"
+              ],
+              "TargetId": [
+                "8"
+              ],
+              "IsEvaluation": [
+                "0"
+              ],
+              "StepType": [
+                "2"
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "11"
+                  ],
+                  "X": [
+                    "16"
+                  ]
+                }
+              ],
+              "State": [
+                "2"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "11"
+                  ],
+                  "X": [
+                    "16"
+                  ]
+                }
+              ],
+              "Skill": [
+                "0"
+              ]
+            }
+          },
+          "messages": [
+            {
+              "ResultRoll": {
+                "Status": [
+                  "1"
+                ],
+                "Requirement": [
+                  "9"
+                ],
+                "Dice": [
+                  {
+                    "Die": [
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "6"
+                        ]
+                      },
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "6"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Difficulty": [
+                  "9"
+                ],
+                "RollType": [
+                  "10"
+                ],
+                "Outcome": [
+                  "1"
+                ],
+                "NewRoll": [
+                  "1"
+                ]
+              }
+            },
+            {
+              "ResultInjuryRoll": {
+                "Status": [
+                  "1"
+                ],
+                "Dice": [
+                  {
+                    "Die": [
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "3"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Source": [
+                  "3"
+                ],
+                "RollType": [
+                  "11"
+                ],
+                "Outcome": [
+                  "2"
+                ]
+              }
+            },
+            {
+              "ResultPlayerRemoval": {
+                "PlayerId": [
+                  "8"
+                ],
+                "Situation": [
+                  "2"
+                ],
+                "Reason": [
+                  "0"
+                ],
+                "Status": [
+                  "3"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sequence": 344,
+          "stepIndex": 6,
+          "step": {
+            "DamageStep": {
+              "Applied": [
+                "1"
+              ],
+              "Probability": [
+                "100.0"
+              ],
+              "Source": [
+                "3"
+              ],
+              "PlayerId": [
+                "2"
+              ],
+              "TargetId": [
+                "2"
+              ],
+              "IsEvaluation": [
+                "0"
+              ],
+              "StepType": [
+                "2"
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "12"
+                  ],
+                  "X": [
+                    "17"
+                  ]
+                }
+              ],
+              "State": [
+                "2"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "12"
+                  ],
+                  "X": [
+                    "17"
+                  ]
+                }
+              ],
+              "Skill": [
+                "0"
+              ]
+            }
+          },
+          "messages": [
+            {
+              "ResultRoll": {
+                "Status": [
+                  "1"
+                ],
+                "Requirement": [
+                  "9"
+                ],
+                "Dice": [
+                  {
+                    "Die": [
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "4"
+                        ]
+                      },
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "6"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Difficulty": [
+                  "9"
+                ],
+                "RollType": [
+                  "10"
+                ],
+                "Outcome": [
+                  "1"
+                ],
+                "NewRoll": [
+                  "1"
+                ]
+              }
+            },
+            {
+              "ResultInjuryRoll": {
+                "Status": [
+                  "1"
+                ],
+                "Dice": [
+                  {
+                    "Die": [
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "2"
+                        ]
+                      },
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "3"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Source": [
+                  "3"
+                ],
+                "RollType": [
+                  "11"
+                ],
+                "Outcome": [
+                  "0"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sequence": 344,
+          "stepIndex": 7,
+          "step": {
+            "DamageStep": {
+              "Applied": [
+                "1"
+              ],
+              "Probability": [
+                "100.0"
+              ],
+              "Source": [
+                "3"
+              ],
+              "PlayerId": [
+                "5"
+              ],
+              "TargetId": [
+                "5"
+              ],
+              "IsEvaluation": [
+                "0"
+              ],
+              "StepType": [
+                "2"
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "10"
+                  ],
+                  "X": [
+                    "15"
+                  ]
+                }
+              ],
+              "State": [
+                "2"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "10"
+                  ],
+                  "X": [
+                    "15"
+                  ]
+                }
+              ],
+              "Skill": [
+                "0"
+              ]
+            }
+          },
+          "messages": [
+            {
+              "ResultRoll": {
+                "Status": [
+                  "1"
+                ],
+                "Requirement": [
+                  "9"
+                ],
+                "Modifiers": [
+                  {
+                    "Modifier": [
+                      {
+                        "PlayerId": [
+                          "-1"
+                        ],
+                        "Skill": [
+                          "-1"
+                        ],
+                        "Effect": [
+                          "-1"
+                        ],
+                        "Value": [
+                          "1"
+                        ],
+                        "ModifierType": [
+                          "21"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Dice": [
+                  {
+                    "Die": [
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "3"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Difficulty": [
+                  "8"
+                ],
+                "RollType": [
+                  "10"
+                ],
+                "Outcome": [
+                  "1"
+                ],
+                "NewRoll": [
+                  "1"
+                ]
+              }
+            },
+            {
+              "ResultInjuryRoll": {
+                "Status": [
+                  "1"
+                ],
+                "Dice": [
+                  {
+                    "Die": [
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "3"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Source": [
+                  "3"
+                ],
+                "RollType": [
+                  "11"
+                ],
+                "Outcome": [
+                  "2"
+                ]
+              }
+            },
+            {
+              "ResultPlayerRemoval": {
+                "PlayerId": [
+                  "5"
+                ],
+                "Situation": [
+                  "2"
+                ],
+                "Reason": [
+                  "0"
+                ],
+                "Status": [
+                  "3"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sequence": 344,
+          "stepIndex": 8,
+          "step": {
+            "DamageStep": {
+              "Applied": [
+                "1"
+              ],
+              "Probability": [
+                "100.0"
+              ],
+              "Source": [
+                "3"
+              ],
+              "PlayerId": [
+                "11"
+              ],
+              "TargetId": [
+                "11"
+              ],
+              "IsEvaluation": [
+                "0"
+              ],
+              "StepType": [
+                "2"
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "10"
+                  ],
+                  "X": [
+                    "17"
+                  ]
+                }
+              ],
+              "State": [
+                "2"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "10"
+                  ],
+                  "X": [
+                    "17"
+                  ]
+                }
+              ],
+              "Skill": [
+                "0"
+              ]
+            }
+          },
+          "messages": [
+            {
+              "ResultRoll": {
+                "Status": [
+                  "1"
+                ],
+                "Requirement": [
+                  "10"
+                ],
+                "Dice": [
+                  {
+                    "Die": [
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "1"
+                        ]
+                      },
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "3"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Difficulty": [
+                  "10"
+                ],
+                "RollType": [
+                  "10"
+                ],
+                "Outcome": [
+                  "0"
+                ],
+                "NewRoll": [
+                  "1"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sequence": 344,
+          "stepIndex": 9,
+          "step": {
+            "BallStep": {
+              "IsEvaluation": [
+                "0"
+              ],
+              "StepType": [
+                "3"
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "10"
+                  ],
+                  "X": [
+                    "16"
+                  ]
+                }
+              ],
+              "State": [
+                "3"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "11"
+                  ],
+                  "X": [
+                    "16"
+                  ]
+                }
+              ],
+              "BallId": [
+                "0"
+              ]
+            }
+          },
+          "messages": [
+            {
+              "ResultRoll": {
+                "Status": [
+                  "1"
+                ],
+                "Requirement": [
+                  "0"
+                ],
+                "Dice": [
+                  {
+                    "Die": [
+                      {
+                        "DieType": [
+                          "1"
+                        ],
+                        "Value": [
+                          "7"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Difficulty": [
+                  "0"
+                ],
+                "RollType": [
+                  "25"
+                ],
+                "Outcome": [
+                  "2"
+                ],
+                "NewRoll": [
+                  "0"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "UI-045",
+      "ui": {
+        "half": 2,
+        "cumulativeTeamTurn": 15,
+        "side": "home",
+        "displayedActionNumber": 8,
+        "playerId": 7,
+        "targetId": 41,
+        "events": [
+          {
+            "label": "Foul action"
+          },
+          {
+            "label": "Armour Value (AV)",
+            "playerId": 41,
+            "required": "9+",
+            "dice": [
+              3,
+              2
+            ],
+            "modifierTotal": 6,
+            "result": "Success"
+          },
+          {
+            "label": "Injury",
+            "playerId": 41,
+            "dice": [
+              1,
+              1
+            ],
+            "result": "Stunned"
+          },
+          {
+            "label": "Referee",
+            "playerId": 7
+          },
+          {
+            "label": "Uses a Bribe",
+            "dice": [
+              2
+            ],
+            "result": "Success"
+          },
+          {
+            "label": "Bribe resource",
+            "beforeDisplayedCount": 1,
+            "after": "Icon absent"
+          }
+        ]
+      },
+      "notes": "Game log attributes the bribe to the team, while PlayerStep/9 carries threatened fouler7. Raw type21 Requirement/Difficulty2 is not printed as a threshold on this UI line. NewRoll0 does not exclude the visible bribe check. Injury doubles trigger referee despite non-double armor dice; successful bribe avoids removal and home play continues to player9's pickup. No Argue the Call die appears in this chosen chain.",
+      "observationMethod": "Manually read BB3 replay UI through Computer Use; no application parser labels used.",
+      "rawRecords": [
+        {
+          "sequence": 417,
+          "stepIndex": 0,
+          "step": {
+            "PlayerStep": {
+              "Probability": [
+                "100.0"
+              ],
+              "PlayerId": [
+                "7"
+              ],
+              "TargetId": [
+                "41"
+              ],
+              "IsEvaluation": [
+                "0"
+              ],
+              "StepType": [
+                "0"
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "8"
+                  ],
+                  "X": [
+                    "14"
+                  ]
+                }
+              ],
+              "State": [
+                "3"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "3"
+                  ],
+                  "X": [
+                    "11"
+                  ]
+                }
+              ],
+              "Skill": [
+                "0"
+              ]
+            }
+          },
+          "messages": [
+            {
+              "ResultUseAction": {
+                "Action": [
+                  "6"
+                ],
+                "TeamId": [
+                  "0"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sequence": 417,
+          "stepIndex": 5,
+          "step": {
+            "PlayerStep": {
+              "Probability": [
+                "100.0"
+              ],
+              "PlayerId": [
+                "7"
+              ],
+              "TargetId": [
+                "41"
+              ],
+              "IsEvaluation": [
+                "0"
+              ],
+              "StepType": [
+                "8"
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "8"
+                  ],
+                  "X": [
+                    "14"
+                  ]
+                }
+              ],
+              "State": [
+                "3"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "7"
+                  ],
+                  "X": [
+                    "15"
+                  ]
+                }
+              ],
+              "Skill": [
+                "0"
+              ]
+            }
+          },
+          "messages": [
+            {
+              "ResultNoRollSuccess": null
+            }
+          ]
+        },
+        {
+          "sequence": 417,
+          "stepIndex": 6,
+          "step": {
+            "DamageStep": {
+              "Applied": [
+                "1"
+              ],
+              "Probability": [
+                "100.0"
+              ],
+              "Source": [
+                "7"
+              ],
+              "PlayerId": [
+                "41"
+              ],
+              "TargetId": [
+                "41"
+              ],
+              "IsEvaluation": [
+                "0"
+              ],
+              "StepType": [
+                "2"
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "8"
+                  ],
+                  "X": [
+                    "14"
+                  ]
+                }
+              ],
+              "State": [
+                "2"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "8"
+                  ],
+                  "X": [
+                    "14"
+                  ]
+                }
+              ],
+              "Skill": [
+                "0"
+              ]
+            }
+          },
+          "messages": [
+            {
+              "ResultRoll": {
+                "Status": [
+                  "1"
+                ],
+                "Requirement": [
+                  "9"
+                ],
+                "Modifiers": [
+                  {
+                    "Modifier": [
+                      {
+                        "PlayerId": [
+                          "3"
+                        ],
+                        "Skill": [
+                          "-1"
+                        ],
+                        "Effect": [
+                          "-1"
+                        ],
+                        "Value": [
+                          "1"
+                        ],
+                        "ModifierType": [
+                          "11"
+                        ]
+                      },
+                      {
+                        "PlayerId": [
+                          "1"
+                        ],
+                        "Skill": [
+                          "-1"
+                        ],
+                        "Effect": [
+                          "-1"
+                        ],
+                        "Value": [
+                          "1"
+                        ],
+                        "ModifierType": [
+                          "11"
+                        ]
+                      },
+                      {
+                        "PlayerId": [
+                          "11"
+                        ],
+                        "Skill": [
+                          "-1"
+                        ],
+                        "Effect": [
+                          "-1"
+                        ],
+                        "Value": [
+                          "1"
+                        ],
+                        "ModifierType": [
+                          "11"
+                        ]
+                      },
+                      {
+                        "PlayerId": [
+                          "2"
+                        ],
+                        "Skill": [
+                          "-1"
+                        ],
+                        "Effect": [
+                          "-1"
+                        ],
+                        "Value": [
+                          "1"
+                        ],
+                        "ModifierType": [
+                          "11"
+                        ]
+                      },
+                      {
+                        "PlayerId": [
+                          "13"
+                        ],
+                        "Skill": [
+                          "-1"
+                        ],
+                        "Effect": [
+                          "-1"
+                        ],
+                        "Value": [
+                          "1"
+                        ],
+                        "ModifierType": [
+                          "11"
+                        ]
+                      },
+                      {
+                        "PlayerId": [
+                          "12"
+                        ],
+                        "Skill": [
+                          "-1"
+                        ],
+                        "Effect": [
+                          "-1"
+                        ],
+                        "Value": [
+                          "1"
+                        ],
+                        "ModifierType": [
+                          "11"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Dice": [
+                  {
+                    "Die": [
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "3"
+                        ]
+                      },
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "2"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Difficulty": [
+                  "3"
+                ],
+                "RollType": [
+                  "10"
+                ],
+                "Outcome": [
+                  "1"
+                ],
+                "NewRoll": [
+                  "1"
+                ]
+              }
+            },
+            {
+              "ResultInjuryRoll": {
+                "Status": [
+                  "1"
+                ],
+                "Dice": [
+                  {
+                    "Die": [
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "1"
+                        ]
+                      },
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "1"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Source": [
+                  "7"
+                ],
+                "RollType": [
+                  "11"
+                ],
+                "Outcome": [
+                  "0"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sequence": 417,
+          "stepIndex": 7,
+          "step": {
+            "PlayerStep": {
+              "Probability": [
+                "100.0"
+              ],
+              "PlayerId": [
+                "7"
+              ],
+              "TargetId": [
+                "-1"
+              ],
+              "IsEvaluation": [
+                "0"
+              ],
+              "StepType": [
+                "9"
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "7"
+                  ],
+                  "X": [
+                    "15"
+                  ]
+                }
+              ],
+              "State": [
+                "1"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "7"
+                  ],
+                  "X": [
+                    "15"
+                  ]
+                }
+              ],
+              "Skill": [
+                "0"
+              ]
+            }
+          },
+          "messages": [
+            {
+              "QuestionBribeUsage": {
+                "GamerId": [
+                  "0"
+                ],
+                "PlayerId": [
+                  "7"
+                ],
+                "Reason": [
+                  "0"
+                ],
+                "ArgueAvailable": [
+                  "1"
+                ],
+                "BribeAvailable": [
+                  "1"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "sequence": 418,
+          "stepIndex": 0,
+          "step": {
+            "PlayerStep": {
+              "Probability": [
+                "100.0"
+              ],
+              "PlayerId": [
+                "7"
+              ],
+              "TargetId": [
+                "-1"
+              ],
+              "IsEvaluation": [
+                "0"
+              ],
+              "StepType": [
+                "9"
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "7"
+                  ],
+                  "X": [
+                    "15"
+                  ]
+                }
+              ],
+              "State": [
+                "3"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "7"
+                  ],
+                  "X": [
+                    "15"
+                  ]
+                }
+              ],
+              "Skill": [
+                "0"
+              ]
+            }
+          },
+          "messages": [
+            {
+              "ResultRoll": {
+                "Status": [
+                  "1"
+                ],
+                "Requirement": [
+                  "2"
+                ],
+                "Dice": [
+                  {
+                    "Die": [
+                      {
+                        "DieType": [
+                          "0"
+                        ],
+                        "Value": [
+                          "2"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Difficulty": [
+                  "2"
+                ],
+                "RollType": [
+                  "21"
+                ],
+                "Outcome": [
+                  "1"
+                ],
+                "NewRoll": [
+                  "0"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Sanitized registration/version evidence from the same client-log snapshot as the controlled hotseat session. Registration is not proof of per-module import resolution.",
+  "clientLog": {
+    "sha256": "39e452d2ea14e72abd5f2b7bdf31c70baa6b0a0b482293d5141e86a562918857",
+    "bytes": 1204464,
+    "records": [
+      {
+        "line": 979,
+        "kind": "found",
+        "archive": "bb3rulesengine.zip",
+        "pathMatchesExaminedArchive": true,
+        "lineSha256": "dcb2abafcdd058508efb56a866473d7635d8153b6efa57436dfcce393bccb465"
+      },
+      {
+        "line": 980,
+        "kind": "registered",
+        "archive": "bb3rulesengine.zip",
+        "pathMatchesExaminedArchive": true,
+        "lineSha256": "15bdd38a3fbdb17a2ff91707858a5179933c71fcaf0a9e8782a46e65a98dc5d1"
+      }
+    ]
+  },
+  "examinedArchive": {
+    "name": "bb3rulesengine.zip",
+    "sha256": "d5b328d7925ccc98ab8ac4a47d6d100e4b8683230025b17ed81b4163935eac61"
+  },
+  "externalManifest": {
+    "sha256": "532476cced3f29f5ec19eb78388f6d95e5d9e93a63b4f7eced45c82c132c7642",
+    "bytes": 130,
+    "declaredPackageVersions": {
+      "bb3lobby.zip": 1,
+      "bb3game.zip": 1,
+      "bb3rulesengine.zip": 3,
+      "Lib.zip": 1,
+      "bb3patches.zip": 1
+    }
+  },
+  "archiveManifest": {
+    "sha256": "837ff447358b2fb3b3bd9f5809be665dd9fdf275c262c418ccf0c8a18a21a5fd",
+    "bytes": 99,
+    "declaredPackageVersions": {
+      "bb3lobby.zip": 2,
+      "Lib.zip": 2,
+      "bb3rulesengine.zip": 23,
+      "bb3game.zip": 23,
+      "bb3patches.zip": 1
+    }
+  },
+  "limits": [
+    "Full log and machine-specific paths remain private and ignored.",
+    "Log proves discovery and path registration in this session; it does not prove every loaded module or all path precedence.",
+    "External manifest declares rules package3 while archive manifest declares23; neither value is equated to ReplayVersion or client build.",
+    "No game code executed, hooked or modified."
+  ]
+}

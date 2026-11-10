@@ -10,3 +10,9 @@ test-results
 .env.local
 
 .generated
+
+# Local replay corpus for analysis; may contain identifying match data.
+/replays/
+
+# Python research-tool bytecode.
+__pycache__/

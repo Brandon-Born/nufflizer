@@ -1,0 +1,972 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Installed static JSON facts; research evidence, not accepted replay behavior.",
+  "source": {
+    "archive": "bb3rulesengine.zip",
+    "sha256": "d5b328d7925ccc98ab8ac4a47d6d100e4b8683230025b17ed81b4163935eac61",
+    "bytes": 2433838,
+    "members": {
+      "version.json": {
+        "sha256": "837ff447358b2fb3b3bd9f5809be665dd9fdf275c262c418ccf0c8a18a21a5fd",
+        "bytes": 99
+      },
+      "Datas/BB3Rules.json": {
+        "sha256": "4b6150c68a612360f4ef8f3af09d321bf83101bc2c6c24c45efb8c6e96b1cee9",
+        "bytes": 518817
+      }
+    },
+    "declaredPackageVersions": {
+      "bb3lobby.zip": 2,
+      "Lib.zip": 2,
+      "bb3rulesengine.zip": 23,
+      "bb3game.zip": 23,
+      "bb3patches.zip": 1
+    }
+  },
+  "limits": [
+    "No game modules imported or executed; only two JSON members read.",
+    "Package version numbers are not replay serialization or installed build versions.",
+    "Skill granting/preventing tables do not establish in-action skill cancellation rules.",
+    "Casualty effects do not supply die-to-outcome probabilities or recovery policies.",
+    "No account, coach, match or player-instance data is read."
+  ],
+  "tables": {
+    "bb3_rules_skill": [
+      {
+        "category": "passing",
+        "code": 21,
+        "data": "accurate"
+      },
+      {
+        "category": "extraordinary",
+        "code": 18,
+        "data": "always hungry"
+      },
+      {
+        "category": "extraordinary",
+        "code": 84,
+        "data": "animal savagery"
+      },
+      {
+        "category": "extraordinary",
+        "code": 98,
+        "data": "animosity (all dwarf and halfling team-mates)"
+      },
+      {
+        "category": "extraordinary",
+        "code": 99,
+        "data": "animosity (all dwarf and human team-mates)"
+      },
+      {
+        "category": "extraordinary",
+        "code": 86,
+        "data": "animosity (all team-mates)"
+      },
+      {
+        "category": "extraordinary",
+        "code": 101,
+        "data": "animosity (big un blockers)"
+      },
+      {
+        "category": "extraordinary",
+        "code": 100,
+        "data": "animosity (orc Linemen)"
+      },
+      {
+        "category": "extraordinary",
+        "code": 102,
+        "data": "animosity (underworld goblin linemen)"
+      },
+      {
+        "category": "strength",
+        "code": 91,
+        "data": "arm bar"
+      },
+      {
+        "category": "extraordinary",
+        "code": 76,
+        "data": "ball and chain"
+      },
+      {
+        "category": "mutation",
+        "code": 74,
+        "data": "big hand"
+      },
+      {
+        "category": "general",
+        "code": 30,
+        "data": "block"
+      },
+      {
+        "category": "extraordinary",
+        "code": 1001,
+        "data": "blood greed"
+      },
+      {
+        "category": "extraordinary",
+        "code": 103,
+        "data": "bloodlust (2+)"
+      },
+      {
+        "category": "extraordinary",
+        "code": 104,
+        "data": "bloodlust (3+)"
+      },
+      {
+        "category": "extraordinary",
+        "code": 80,
+        "data": "bombardier"
+      },
+      {
+        "category": "extraordinary",
+        "code": 31,
+        "data": "bone head"
+      },
+      {
+        "category": "strength",
+        "code": 96,
+        "data": "brawler"
+      },
+      {
+        "category": "strength",
+        "code": 22,
+        "data": "break tackle"
+      },
+      {
+        "category": "extraordinary",
+        "code": 105,
+        "data": "breathe fire"
+      },
+      {
+        "category": "passing",
+        "code": 88,
+        "data": "cannoneer"
+      },
+      {
+        "category": "agility",
+        "code": 6,
+        "data": "catch"
+      },
+      {
+        "category": "extraordinary",
+        "code": 25,
+        "data": "chainsaw"
+      },
+      {
+        "category": "mutation",
+        "code": 75,
+        "data": "claws"
+      },
+      {
+        "category": "passing",
+        "code": 94,
+        "data": "cloud burster"
+      },
+      {
+        "category": "general",
+        "code": 26,
+        "data": "dauntless"
+      },
+      {
+        "category": "extraordinary",
+        "code": 81,
+        "data": "decay"
+      },
+      {
+        "category": "agility",
+        "code": 90,
+        "data": "defensive"
+      },
+      {
+        "category": "general",
+        "code": 27,
+        "data": "dirty player (+1)"
+      },
+      {
+        "category": "extraordinary",
+        "code": 1021,
+        "data": "dirty player (+2)"
+      },
+      {
+        "category": "mutation",
+        "code": 33,
+        "data": "disturbing presence"
+      },
+      {
+        "category": "agility",
+        "code": 28,
+        "data": "diving catch"
+      },
+      {
+        "category": "agility",
+        "code": 34,
+        "data": "diving tackle"
+      },
+      {
+        "category": "agility",
+        "code": 7,
+        "data": "dodge"
+      },
+      {
+        "category": "extraordinary",
+        "code": 5,
+        "data": "drunkard"
+      },
+      {
+        "category": "passing",
+        "code": 29,
+        "data": "dumpoff"
+      },
+      {
+        "category": "mutation",
+        "code": 12,
+        "data": "extra arms"
+      },
+      {
+        "category": "general",
+        "code": 35,
+        "data": "fend"
+      },
+      {
+        "category": "mutation",
+        "code": 10,
+        "data": "foul appearance"
+      },
+      {
+        "category": "general",
+        "code": 36,
+        "data": "frenzy"
+      },
+      {
+        "category": "passing",
+        "code": 1005,
+        "data": "fumblerooskie"
+      },
+      {
+        "category": "strength",
+        "code": 37,
+        "data": "grab"
+      },
+      {
+        "category": "strength",
+        "code": 38,
+        "data": "guard"
+      },
+      {
+        "category": "passing",
+        "code": 39,
+        "data": "hail mary pass"
+      },
+      {
+        "category": "extraordinary",
+        "code": 2,
+        "data": "hit and run"
+      },
+      {
+        "category": "mutation",
+        "code": 15,
+        "data": "horns"
+      },
+      {
+        "category": "extraordinary",
+        "code": 78,
+        "data": "hypnotic gaze"
+      },
+      {
+        "category": "mutation",
+        "code": 92,
+        "data": "iron hard skin"
+      },
+      {
+        "category": "strength",
+        "code": 40,
+        "data": "juggernaut"
+      },
+      {
+        "category": "agility",
+        "code": 41,
+        "data": "jump up"
+      },
+      {
+        "category": "general",
+        "code": 71,
+        "data": "kick"
+      },
+      {
+        "category": "extraordinary",
+        "code": 1007,
+        "data": "kick team-mate"
+      },
+      {
+        "category": "passing",
+        "code": 14,
+        "data": "leader"
+      },
+      {
+        "category": "agility",
+        "code": 11,
+        "data": "leap"
+      },
+      {
+        "category": "extraordinary",
+        "code": 1018,
+        "data": "loner (2+)"
+      },
+      {
+        "category": "extraordinary",
+        "code": 1008,
+        "data": "loner (3+)"
+      },
+      {
+        "category": "extraordinary",
+        "code": 44,
+        "data": "loner (4+)"
+      },
+      {
+        "category": "extraordinary",
+        "code": 1022,
+        "data": "loner (5+)"
+      },
+      {
+        "category": "strength",
+        "code": 13,
+        "data": "mighty blow (+1)"
+      },
+      {
+        "category": "extraordinary",
+        "code": 1009,
+        "data": "mighty blow (+2)"
+      },
+      {
+        "category": "mutation",
+        "code": 1010,
+        "data": "monstrous mouth"
+      },
+      {
+        "category": "strength",
+        "code": 70,
+        "data": "multiple block"
+      },
+      {
+        "category": "passing",
+        "code": 45,
+        "data": "nerves of steel"
+      },
+      {
+        "category": "extraordinary",
+        "code": 46,
+        "data": "no hands"
+      },
+      {
+        "category": "passing",
+        "code": 97,
+        "data": "on the ball"
+      },
+      {
+        "category": "passing",
+        "code": 47,
+        "data": "pass"
+      },
+      {
+        "category": "extraordinary",
+        "code": 9,
+        "data": "pick-me-up"
+      },
+      {
+        "category": "strength",
+        "code": 1012,
+        "data": "pile driver"
+      },
+      {
+        "category": "extraordinary",
+        "code": 1020,
+        "data": "plague ridden"
+      },
+      {
+        "category": "extraordinary",
+        "code": 89,
+        "data": "pogo stick"
+      },
+      {
+        "category": "mutation",
+        "code": 49,
+        "data": "prehensile tail"
+      },
+      {
+        "category": "general",
+        "code": 50,
+        "data": "pro"
+      },
+      {
+        "category": "extraordinary",
+        "code": 95,
+        "data": "projectile vomit"
+      },
+      {
+        "category": "extraordinary",
+        "code": 51,
+        "data": "really stupid"
+      },
+      {
+        "category": "extraordinary",
+        "code": 19,
+        "data": "regeneration"
+      },
+      {
+        "category": "extraordinary",
+        "code": 52,
+        "data": "right stuff"
+      },
+      {
+        "category": "passing",
+        "code": 93,
+        "data": "running pass"
+      },
+      {
+        "category": "agility",
+        "code": 1015,
+        "data": "safe pair of hands"
+      },
+      {
+        "category": "passing",
+        "code": 53,
+        "data": "safe pass"
+      },
+      {
+        "category": "extraordinary",
+        "code": 54,
+        "data": "secret weapon"
+      },
+      {
+        "category": "general",
+        "code": 55,
+        "data": "shadowing"
+      },
+      {
+        "category": "agility",
+        "code": 56,
+        "data": "sidestep"
+      },
+      {
+        "category": "agility",
+        "code": 23,
+        "data": "sneaky git"
+      },
+      {
+        "category": "agility",
+        "code": 8,
+        "data": "sprint"
+      },
+      {
+        "category": "extraordinary",
+        "code": 77,
+        "data": "stab"
+      },
+      {
+        "category": "strength",
+        "code": 17,
+        "data": "stand firm"
+      },
+      {
+        "category": "general",
+        "code": 1,
+        "data": "strip ball"
+      },
+      {
+        "category": "strength",
+        "code": 58,
+        "data": "strong arm"
+      },
+      {
+        "category": "extraordinary",
+        "code": 59,
+        "data": "stunty"
+      },
+      {
+        "category": "agility",
+        "code": 60,
+        "data": "sure feet"
+      },
+      {
+        "category": "general",
+        "code": 61,
+        "data": "sure hands"
+      },
+      {
+        "category": "extraordinary",
+        "code": 1016,
+        "data": "swarming"
+      },
+      {
+        "category": "extraordinary",
+        "code": 1017,
+        "data": "swoop"
+      },
+      {
+        "category": "general",
+        "code": 57,
+        "data": "tackle"
+      },
+      {
+        "category": "extraordinary",
+        "code": 20,
+        "data": "take root"
+      },
+      {
+        "category": "mutation",
+        "code": 69,
+        "data": "tentacles"
+      },
+      {
+        "category": "strength",
+        "code": 63,
+        "data": "thick skull"
+      },
+      {
+        "category": "extraordinary",
+        "code": 64,
+        "data": "throw team-mate"
+      },
+      {
+        "category": "extraordinary",
+        "code": 87,
+        "data": "timmm-ber"
+      },
+      {
+        "category": "extraordinary",
+        "code": 83,
+        "data": "titchy"
+      },
+      {
+        "category": "mutation",
+        "code": 16,
+        "data": "two heads"
+      },
+      {
+        "category": "extraordinary",
+        "code": 67,
+        "data": "unchannelled fury"
+      },
+      {
+        "category": "mutation",
+        "code": 32,
+        "data": "very long legs"
+      },
+      {
+        "category": "general",
+        "code": 68,
+        "data": "wrestle"
+      }
+    ],
+    "bb3_rules_casualty": [
+      {
+        "code": 1,
+        "data": "badly_hurt"
+      },
+      {
+        "code": 7,
+        "data": "broken_arm"
+      },
+      {
+        "code": 10,
+        "data": "dead"
+      },
+      {
+        "code": 9,
+        "data": "dislocated_shoulder"
+      },
+      {
+        "code": 6,
+        "data": "head_injury"
+      },
+      {
+        "code": 4,
+        "data": "lasting_injury"
+      },
+      {
+        "code": 8,
+        "data": "neck_injury"
+      },
+      {
+        "code": 0,
+        "data": "no_casualty"
+      },
+      {
+        "code": 3,
+        "data": "serious_injury"
+      },
+      {
+        "code": 2,
+        "data": "seriously_hurt"
+      },
+      {
+        "code": 5,
+        "data": "smashed_knee"
+      }
+    ],
+    "bb3_rules_casualty_effects": [
+      {
+        "allow_temporary_retirement": 0,
+        "casualty": "badly_hurt",
+        "characteristic_malus_data": null,
+        "characteristic_malus_value": 0,
+        "healable_on_roster_player": 0,
+        "healable_on_temporarily_retired_player": 0,
+        "healed_casualty_replacement": null,
+        "is_temporary": 1,
+        "miss_next_game": 0,
+        "niggling_injury": 0
+      },
+      {
+        "allow_temporary_retirement": 1,
+        "casualty": "broken_arm",
+        "characteristic_malus_data": "PA",
+        "characteristic_malus_value": 1,
+        "healable_on_roster_player": 0,
+        "healable_on_temporarily_retired_player": 1,
+        "healed_casualty_replacement": "serious_injury",
+        "is_temporary": 0,
+        "miss_next_game": 1,
+        "niggling_injury": 0
+      },
+      {
+        "allow_temporary_retirement": 0,
+        "casualty": "dead",
+        "characteristic_malus_data": null,
+        "characteristic_malus_value": 0,
+        "healable_on_roster_player": 0,
+        "healable_on_temporarily_retired_player": 0,
+        "healed_casualty_replacement": null,
+        "is_temporary": 0,
+        "miss_next_game": 0,
+        "niggling_injury": 0
+      },
+      {
+        "allow_temporary_retirement": 1,
+        "casualty": "dislocated_shoulder",
+        "characteristic_malus_data": "ST",
+        "characteristic_malus_value": 1,
+        "healable_on_roster_player": 0,
+        "healable_on_temporarily_retired_player": 1,
+        "healed_casualty_replacement": "serious_injury",
+        "is_temporary": 0,
+        "miss_next_game": 1,
+        "niggling_injury": 0
+      },
+      {
+        "allow_temporary_retirement": 1,
+        "casualty": "head_injury",
+        "characteristic_malus_data": "AV",
+        "characteristic_malus_value": 1,
+        "healable_on_roster_player": 0,
+        "healable_on_temporarily_retired_player": 1,
+        "healed_casualty_replacement": "serious_injury",
+        "is_temporary": 0,
+        "miss_next_game": 1,
+        "niggling_injury": 0
+      },
+      {
+        "allow_temporary_retirement": 0,
+        "casualty": "lasting_injury",
+        "characteristic_malus_data": null,
+        "characteristic_malus_value": 0,
+        "healable_on_roster_player": 0,
+        "healable_on_temporarily_retired_player": 0,
+        "healed_casualty_replacement": null,
+        "is_temporary": 0,
+        "miss_next_game": 0,
+        "niggling_injury": 0
+      },
+      {
+        "allow_temporary_retirement": 1,
+        "casualty": "neck_injury",
+        "characteristic_malus_data": "AG",
+        "characteristic_malus_value": 1,
+        "healable_on_roster_player": 0,
+        "healable_on_temporarily_retired_player": 1,
+        "healed_casualty_replacement": "serious_injury",
+        "is_temporary": 0,
+        "miss_next_game": 1,
+        "niggling_injury": 0
+      },
+      {
+        "allow_temporary_retirement": 0,
+        "casualty": "no_casualty",
+        "characteristic_malus_data": null,
+        "characteristic_malus_value": 0,
+        "healable_on_roster_player": 0,
+        "healable_on_temporarily_retired_player": 0,
+        "healed_casualty_replacement": null,
+        "is_temporary": 0,
+        "miss_next_game": 0,
+        "niggling_injury": 0
+      },
+      {
+        "allow_temporary_retirement": 0,
+        "casualty": "serious_injury",
+        "characteristic_malus_data": null,
+        "characteristic_malus_value": 0,
+        "healable_on_roster_player": 1,
+        "healable_on_temporarily_retired_player": 1,
+        "healed_casualty_replacement": "no_casualty",
+        "is_temporary": 0,
+        "miss_next_game": 1,
+        "niggling_injury": 1
+      },
+      {
+        "allow_temporary_retirement": 0,
+        "casualty": "seriously_hurt",
+        "characteristic_malus_data": null,
+        "characteristic_malus_value": 0,
+        "healable_on_roster_player": 0,
+        "healable_on_temporarily_retired_player": 0,
+        "healed_casualty_replacement": null,
+        "is_temporary": 1,
+        "miss_next_game": 1,
+        "niggling_injury": 0
+      },
+      {
+        "allow_temporary_retirement": 1,
+        "casualty": "smashed_knee",
+        "characteristic_malus_data": "MA",
+        "characteristic_malus_value": 1,
+        "healable_on_roster_player": 0,
+        "healable_on_temporarily_retired_player": 1,
+        "healed_casualty_replacement": "serious_injury",
+        "is_temporary": 0,
+        "miss_next_game": 1,
+        "niggling_injury": 0
+      }
+    ],
+    "bb3_rules_characteristic": [
+      {
+        "code": 2,
+        "data": "AG",
+        "improvement_factor": -1,
+        "max": 6,
+        "min": 1,
+        "value": 40000
+      },
+      {
+        "code": 4,
+        "data": "AV",
+        "improvement_factor": 1,
+        "max": 11,
+        "min": 3,
+        "value": 10000
+      },
+      {
+        "code": 0,
+        "data": "MA",
+        "improvement_factor": 1,
+        "max": 9,
+        "min": 1,
+        "value": 20000
+      },
+      {
+        "code": 3,
+        "data": "PA",
+        "improvement_factor": -1,
+        "max": 6,
+        "min": 1,
+        "value": 20000
+      },
+      {
+        "code": 1,
+        "data": "ST",
+        "improvement_factor": 1,
+        "max": 8,
+        "min": 1,
+        "value": 80000
+      }
+    ],
+    "bb3_rules_skill_granting": [
+      {
+        "granted_skill": "strong arm",
+        "granting_skill": "throw team-mate"
+      }
+    ],
+    "bb3_rules_skill_preventing": [
+      {
+        "prevented_skill": "diving tackle",
+        "preventing_skill": "ball and chain"
+      },
+      {
+        "prevented_skill": "frenzy",
+        "preventing_skill": "ball and chain"
+      },
+      {
+        "prevented_skill": "grab",
+        "preventing_skill": "ball and chain"
+      },
+      {
+        "prevented_skill": "juggernaut",
+        "preventing_skill": "ball and chain"
+      },
+      {
+        "prevented_skill": "leap",
+        "preventing_skill": "ball and chain"
+      },
+      {
+        "prevented_skill": "multiple block",
+        "preventing_skill": "ball and chain"
+      },
+      {
+        "prevented_skill": "on the ball",
+        "preventing_skill": "ball and chain"
+      },
+      {
+        "prevented_skill": "pile driver",
+        "preventing_skill": "ball and chain"
+      },
+      {
+        "prevented_skill": "shadowing",
+        "preventing_skill": "ball and chain"
+      },
+      {
+        "prevented_skill": "sneaky git",
+        "preventing_skill": "ball and chain"
+      },
+      {
+        "prevented_skill": "thick skull",
+        "preventing_skill": "ball and chain"
+      },
+      {
+        "prevented_skill": "dirty player (+2)",
+        "preventing_skill": "dirty player (+1)"
+      },
+      {
+        "prevented_skill": "dirty player (+1)",
+        "preventing_skill": "dirty player (+2)"
+      },
+      {
+        "prevented_skill": "ball and chain",
+        "preventing_skill": "diving tackle"
+      },
+      {
+        "prevented_skill": "ball and chain",
+        "preventing_skill": "frenzy"
+      },
+      {
+        "prevented_skill": "grab",
+        "preventing_skill": "frenzy"
+      },
+      {
+        "prevented_skill": "ball and chain",
+        "preventing_skill": "grab"
+      },
+      {
+        "prevented_skill": "frenzy",
+        "preventing_skill": "grab"
+      },
+      {
+        "prevented_skill": "ball and chain",
+        "preventing_skill": "leap"
+      },
+      {
+        "prevented_skill": "pogo stick",
+        "preventing_skill": "leap"
+      },
+      {
+        "prevented_skill": "loner (3+)",
+        "preventing_skill": "loner (2+)"
+      },
+      {
+        "prevented_skill": "loner (4+)",
+        "preventing_skill": "loner (2+)"
+      },
+      {
+        "prevented_skill": "loner (5+)",
+        "preventing_skill": "loner (2+)"
+      },
+      {
+        "prevented_skill": "loner (2+)",
+        "preventing_skill": "loner (3+)"
+      },
+      {
+        "prevented_skill": "loner (4+)",
+        "preventing_skill": "loner (3+)"
+      },
+      {
+        "prevented_skill": "loner (5+)",
+        "preventing_skill": "loner (3+)"
+      },
+      {
+        "prevented_skill": "loner (2+)",
+        "preventing_skill": "loner (4+)"
+      },
+      {
+        "prevented_skill": "loner (3+)",
+        "preventing_skill": "loner (4+)"
+      },
+      {
+        "prevented_skill": "loner (5+)",
+        "preventing_skill": "loner (4+)"
+      },
+      {
+        "prevented_skill": "loner (2+)",
+        "preventing_skill": "loner (5+)"
+      },
+      {
+        "prevented_skill": "loner (3+)",
+        "preventing_skill": "loner (5+)"
+      },
+      {
+        "prevented_skill": "loner (4+)",
+        "preventing_skill": "loner (5+)"
+      },
+      {
+        "prevented_skill": "mighty blow (+2)",
+        "preventing_skill": "mighty blow (+1)"
+      },
+      {
+        "prevented_skill": "mighty blow (+1)",
+        "preventing_skill": "mighty blow (+2)"
+      },
+      {
+        "prevented_skill": "ball and chain",
+        "preventing_skill": "multiple block"
+      },
+      {
+        "prevented_skill": "catch",
+        "preventing_skill": "no hands"
+      },
+      {
+        "prevented_skill": "diving catch",
+        "preventing_skill": "no hands"
+      },
+      {
+        "prevented_skill": "extra arms",
+        "preventing_skill": "no hands"
+      },
+      {
+        "prevented_skill": "monstrous mouth",
+        "preventing_skill": "no hands"
+      },
+      {
+        "prevented_skill": "safe pair of hands",
+        "preventing_skill": "no hands"
+      },
+      {
+        "prevented_skill": "strong arm",
+        "preventing_skill": "no hands"
+      },
+      {
+        "prevented_skill": "sure hands",
+        "preventing_skill": "no hands"
+      },
+      {
+        "prevented_skill": "ball and chain",
+        "preventing_skill": "on the ball"
+      },
+      {
+        "prevented_skill": "leap",
+        "preventing_skill": "pogo stick"
+      },
+      {
+        "prevented_skill": "ball and chain",
+        "preventing_skill": "shadowing"
+      }
+    ]
+  }
+}
