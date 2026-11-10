@@ -46,6 +46,10 @@ function validate(input: ProbabilityInput): number {
     throw new ReplayValidationError(
       "Probability requires one to three dice with explicit die types."
     );
+  if (!sumRule(input.eventType) && input.dice.length !== 1)
+    throw new ReplayValidationError(
+      "Numeric check contracts require exactly one D6; multi-die choice semantics are unsupported."
+    );
   input.dice.forEach((value, i) => {
     // Only explicit numeric D6 contracts are modeled. Directional D8 and categorical block faces need different rules.
     const sides = input.dieTypes[i] === 0 ? 6 : undefined;
@@ -100,7 +104,13 @@ export function resolveActualSuccess(
   });
   if (outcomeCode !== undefined && outcomeCode !== 0 && outcomeCode !== 1)
     return unknown("unsupported outcome code");
-  if (target === undefined || !Number.isSafeInteger(target) || !dice.length)
+  if (
+    target === undefined ||
+    !Number.isSafeInteger(target) ||
+    !dice.length ||
+    (!sumRule(eventType) && (dice.length !== 1 || target < 2 || target > 6)) ||
+    dice.some((value) => !Number.isSafeInteger(value) || value < 1 || value > 6)
+  )
     return unknown("missing dice or target");
   const actualSuccess = sumRule(eventType)
     ? dice.reduce((a, b) => a + b, 0) >= target

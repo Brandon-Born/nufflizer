@@ -32,7 +32,7 @@ describe("NUF-021 versioned report contract", () => {
       r.schemaVersion = "1.0" as "2.0";
     },
     (r: ReturnType<typeof report>) => {
-      r.modelVersion = "future" as "dice-only-2";
+      r.modelVersion = "future" as "dice-only-3";
     },
     (r: ReturnType<typeof report>) => {
       r.teams[0].luckScore = NaN;
@@ -129,6 +129,11 @@ describe("NUF-021 versioned report contract", () => {
     );
     const roundTrip = LuckReportSchema.parse(JSON.parse(JSON.stringify(value)));
     expect(roundTrip).toEqual(JSON.parse(JSON.stringify(value)));
-    expect(roundTrip.coverage.scoredByType.ball_handling).toBe(4);
+    const handling = roundTrip.events.filter(
+      (e) => e.type === "ball_handling" && e.scoringStatus === "scored"
+    );
+    expect(roundTrip.coverage.scoredByType.ball_handling).toBe(handling.length);
+    expect(handling.some((e) => e.metadata.rollType === 4)).toBe(true);
+    expect(handling.some((e) => e.metadata.rollType === 7)).toBe(true);
   }, 10000);
 });

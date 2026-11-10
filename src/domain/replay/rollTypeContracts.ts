@@ -8,7 +8,8 @@ export type RollScoringCategory =
   | "injury"
   | "ball_handling"
   | "argue_call"
-  | "movement_risk";
+  | "movement_risk"
+  | "dodge";
 
 export type RollTypeContract = {
   sourceTag: string;
@@ -112,12 +113,13 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
   {
     sourceTag: "ResultRoll",
     rollType: 2,
-    label: "block_check",
+    label: "dodge",
     kind: "scored_deterministic",
     confidence: "high",
     status: "known",
-    scoringCategory: "block",
-    notes: "Single-die threshold check in block sequences."
+    scoringCategory: "dodge",
+    notes:
+      "UI-006/008/009 identify Dodge, including Titchy +1; version 1-4-0-0 numeric D6 scope only."
   },
   {
     sourceTag: "ResultRoll",
@@ -132,42 +134,43 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
   {
     sourceTag: "ResultRoll",
     rollType: 34,
-    label: "armor_modified_check",
-    kind: "scored_deterministic",
+    label: "really_stupid",
+    kind: "excluded_deterministic",
     confidence: "high",
     status: "known",
-    scoringCategory: "armor_break",
-    notes: "Single-die armor-like check with stable +2 style modifiers."
+    notes:
+      "UI-paired identity confirmed; trait/gate policy and consequences are not scored in this slice."
   },
   {
     sourceTag: "ResultRoll",
     rollType: 4,
-    label: "injury_check",
+    label: "pick_up",
     kind: "scored_deterministic",
     confidence: "high",
     status: "known",
-    scoringCategory: "injury",
-    notes: "Single-die injury-like threshold check."
+    scoringCategory: "ball_handling",
+    notes:
+      "UI-002/094 identify Pick up. Sure Hands replacement is separate evidence, not unconditional availability."
   },
   {
     sourceTag: "ResultRoll",
     rollType: 37,
-    label: "injury_variant_check",
-    kind: "scored_deterministic",
+    label: "foul_appearance",
+    kind: "excluded_deterministic",
     confidence: "high",
     status: "known",
-    scoringCategory: "injury",
-    notes: "Single-die injury-like variant check in damage chains."
+    notes:
+      "UI-paired identity confirmed; trait/gate policy and consequences are not scored in this slice."
   },
   {
     sourceTag: "ResultRoll",
     rollType: 71,
-    label: "argue_call_check",
-    kind: "scored_deterministic",
+    label: "loner",
+    kind: "excluded_deterministic",
     confidence: "high",
     status: "known",
-    scoringCategory: "argue_call",
-    notes: "Secret-weapon argue-call check with deterministic threshold."
+    notes:
+      "UI-paired identity confirmed; trait/gate policy and consequences are not scored in this slice."
   },
   {
     sourceTag: "ResultRoll",
@@ -227,13 +230,13 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
   {
     sourceTag: "ResultRoll",
     rollType: 1,
-    label: "movement_risk_check",
+    label: "rush",
     kind: "scored_deterministic",
     confidence: "high",
     status: "known",
     scoringCategory: "movement_risk",
     notes:
-      "Single-die 2+ movement-risk check with stable deterministic threshold and outcome semantics across expanded fixtures."
+      "UI-008/009 identify successful and failed Rush separately from Dodge and self-damage; replay 1-4-0-0 numeric D6 scope only."
   },
   {
     sourceTag: "ResultRoll",
@@ -257,13 +260,13 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
   {
     sourceTag: "ResultRoll",
     rollType: 7,
-    label: "pickup_attempt_check",
+    label: "catch",
     kind: "scored_deterministic",
     confidence: "high",
     status: "known",
     scoringCategory: "ball_handling",
     notes:
-      "Single-die deterministic pickup attempt check with stable threshold/outcome semantics across expanded fixtures."
+      "UI-014/093/097 identify Catch, distinct from Pick up. Natural-one and natural-six examples corroborate effective Difficulty; reroll variants remain separately gated."
   },
   {
     sourceTag: "ResultRoll",

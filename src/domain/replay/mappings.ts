@@ -1,16 +1,16 @@
 export const STEP_TYPE_MAP: Record<number, string> = {
   0: "move",
-  1: "dodge",
+  1: "move",
   2: "damage",
   3: "ball",
-  4: "pickup",
+  4: "catch",
   5: "pass",
   6: "block",
   7: "stand_up",
   8: "handoff",
   9: "catch",
   10: "gfi",
-  11: "interception",
+  11: "pass",
   12: "landing",
   13: "throw_team_mate",
   14: "follow_up",
@@ -31,8 +31,8 @@ export const STEP_TYPE_MAP: Record<number, string> = {
 
 export const ACTION_CODE_MAP: Record<number, string> = {
   1: "move",
-  2: "blitz",
-  3: "block",
+  2: "block",
+  3: "blitz",
   4: "pass",
   5: "handoff",
   6: "foul",
@@ -50,13 +50,13 @@ export const ACTION_CODE_MAP: Record<number, string> = {
 
 export const ROLL_TYPE_MAP: Record<number, string> = {
   0: "no_roll",
-  1: "armor",
-  2: "block_dice",
+  1: "rush",
+  2: "dodge",
   3: "roll_family_3",
-  4: "injury",
+  4: "pick_up",
   5: "scatter",
   6: "bounce",
-  7: "ko_recovery",
+  7: "catch",
   8: "kickoff_scatter",
   9: "kickoff_event",
   10: "armor_chain_check_2d6",
@@ -76,9 +76,9 @@ export const ROLL_TYPE_MAP: Record<number, string> = {
   31: "casualty",
   32: "apothecary_or_doctor",
   33: "regeneration_or_resilience",
-  34: "foul_armor",
+  34: "really_stupid",
   35: "foul_ejection",
-  37: "foul_injury",
+  37: "foul_appearance",
   38: "throw_teammate",
   39: "weather",
   40: "kickoff_table",
@@ -95,7 +95,7 @@ export const ROLL_TYPE_MAP: Record<number, string> = {
   68: "prayer_to_nuffle",
   69: "inducement",
   70: "bribe",
-  71: "secret_weapon",
+  71: "loner",
   72: "chainsaw",
   73: "bombardier",
   74: "bomb_scatter",
@@ -115,7 +115,11 @@ export const END_TURN_REASON_MAP: Record<number, string> = {
   6: "concession_or_admin_end"
 };
 
-export function labelForCode(map: Record<number, string>, code: number | undefined, fallback: string): string {
+export function labelForCode(
+  map: Record<number, string>,
+  code: number | undefined,
+  fallback: string
+): string {
   if (code === undefined) {
     return fallback;
   }

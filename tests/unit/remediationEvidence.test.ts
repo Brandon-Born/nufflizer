@@ -13,18 +13,18 @@ import { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
 import { model, rollEvent, envelope } from "../helpers/replay";
 
 describe("NUF-007/012/013/014/015/019 evidence regressions", () => {
-  it("uses one any-die contract for probability and outcome", () => {
-    expect(
+  it("refuses unsupported multi-die numeric check contracts", () => {
+    expect(() =>
       computeProbabilityForEvent({
         eventType: "ball_handling",
         dice: [2, 2],
         dieTypes: [0, 0],
         difficulty: 4,
         rerollAvailable: false
-      }).baseOdds
-    ).toBe(3 / 4);
+      })
+    ).toThrow(/exactly one D6/);
     expect(
-      resolveActualSuccess(undefined, [2, 2], 4, "ball_handling").actualSuccess
+      resolveActualSuccess(undefined, [2, 2], 4, "ball_handling").deterministic
     ).toBe(false);
     expect(
       resolveActualSuccess(1, [2, 2], 4, "ball_handling").deterministic
@@ -162,7 +162,14 @@ describe("NUF-007/012/013/014/015/019 evidence regressions", () => {
           sourceTag: "QuestionTeamRerollUsage",
           payload: {
             CanUseTeamReroll: 1,
-            RollInfos: { RollType: 7, Dice: { Die: { DieType: 0, Value: 1 } } }
+            RollInfos: {
+              Status: 1,
+              NewRoll: 1,
+              Outcome: 0,
+              Difficulty: 2,
+              RollType: 7,
+              Dice: { Die: { DieType: 0, Value: 1 } }
+            }
           }
         }),
         rollEvent({
@@ -170,7 +177,10 @@ describe("NUF-007/012/013/014/015/019 evidence regressions", () => {
           sourceTag: "ResultTeamRerollUsage",
           payload: { Used: used }
         }),
-        rollEvent(base)
+        rollEvent({
+          ...base,
+          payload: { ...rollEvent().payload, Status: used ? 2 : 1 }
+        })
       ];
       const links = linkTeamRerolls(events);
       expect(links.has(0)).toBe(false);

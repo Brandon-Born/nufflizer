@@ -1,5 +1,9 @@
 # Roll Type Evidence Matrix (Demo Replay Baseline)
 
+## 2026-11-10 scoped semantic update
+
+Model `dice-only-3` now uses UI-backed Rush (1), Dodge (2), Pick up (4), and Catch (7) contracts for replay `1-4-0-0`. The old table labels for 2/4/34/37/71 are superseded: 34/37/71 are Really Stupid/Foul Appearance/Loner and remain unscored. Exact admission, reroll, attribution and natural-roll limits are in [REPORT_CONTRACT.md](REPORT_CONTRACT.md#model-dice-only-3-numeric-scope); `tests/unit/verifiedNumericChecks.test.ts` exercises the exact sanitized playback extracts. Historical counts and unsupported rows below are retained as history, not accepted semantics. No backlog item is closed by this slice.
+
 ## November runtime correction (NUF-008/009)
 
 Ordered extraction now retains `QuestionBlockDice|3`, `ResultRoll|15`, `ResultRoll|21`, `ResultRoll|36`, and `ResultRoll|46`. These have explicit unverified contracts and no semantic promotion. `ResultBlockRoll|3` contains actual face data under `Die`; the historical claim that it has no dice was incorrect. Injury/casualty records also remain random outcomes, not harmless summaries. Block and damage-category contributions are disabled until independent rule and beneficiary evidence exists. Movement/ball-handling numeric threshold analysis remains provisional. Whole-match comparisons abstain; the historical tables below are not current acceptance evidence.

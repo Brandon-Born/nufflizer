@@ -48,7 +48,14 @@ describe("analyzeNufflizerInput", () => {
         0
       );
     expect(byTypeTotal).toBe(report.events.length);
-    expect(report.coverage.excludedByType.argue_call).toBeGreaterThanOrEqual(1);
+    expect(
+      report.events.some(
+        (e) =>
+          e.metadata.rollType === 71 &&
+          e.type === "unknown" &&
+          e.scoringStatus === "excluded"
+      )
+    ).toBe(true);
     expect(report.coverage.scoredByType.movement_risk).toBeGreaterThanOrEqual(
       1
     );
@@ -75,7 +82,7 @@ describe("analyzeNufflizerInput", () => {
     );
   });
 
-  it("scores pickup rollType 7 under ball-handling while preserving other exclusions", () => {
+  it("scores Catch rollType 7 under ball-handling while preserving other exclusions", () => {
     const report = analyzeNufflizerInput(readDemoReplay("demo-goblins1.bbr"));
     const scoredBallHandling = report.events.filter(
       (event) =>

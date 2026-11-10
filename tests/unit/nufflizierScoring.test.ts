@@ -7,6 +7,7 @@ function buildReplayModel(): ReplayModel {
   return {
     matchId: "nuff-test-001",
     rootTag: "Replay",
+    replayVersion: "1-4-0-0",
     teams: [
       { id: "home", name: "Home Team" },
       { id: "away", name: "Away Team" }
@@ -37,6 +38,8 @@ function buildReplayModel(): ReplayModel {
             rollType: 7,
             rollLabel: "block_dice",
             payload: {
+              Status: 1,
+              NewRoll: 1,
               Requirement: 6,
               Difficulty: 6,
               Outcome: 1,
@@ -71,6 +74,8 @@ function buildReplayModel(): ReplayModel {
             rollLabel: "armor_chain_check_2d6",
             stepType: 6,
             payload: {
+              Status: 1,
+              NewRoll: 1,
               Requirement: 2,
               Difficulty: 2,
               Outcome: 0,
@@ -103,6 +108,8 @@ function buildReplayModel(): ReplayModel {
             actorTeamSource: "explicit",
             rollType: 99,
             payload: {
+              Status: 1,
+              NewRoll: 1,
               Requirement: 4,
               Difficulty: 4,
               Outcome: 1,

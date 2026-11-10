@@ -41,7 +41,8 @@ function mapContractCategory(
     category === "injury" ||
     category === "ball_handling" ||
     category === "argue_call" ||
-    category === "movement_risk"
+    category === "movement_risk" ||
+    category === "dodge"
   ) {
     return category;
   }

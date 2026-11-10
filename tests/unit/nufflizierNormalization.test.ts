@@ -23,14 +23,17 @@ describe("nufflizier normalization", () => {
       (event) => event.type === "argue_call"
     );
 
-    expect(argueEvents).toHaveLength(3);
+    expect(argueEvents).toHaveLength(2);
 
-    const roll71 = argueEvents.find((event) => event.metadata.rollType === 71);
+    const roll71 = report.events.find(
+      (event) => event.metadata.rollType === 71
+    );
     const roll42 = argueEvents.find((event) => event.metadata.rollType === 42);
     const roll70 = argueEvents.find((event) => event.metadata.rollType === 70);
 
     expect(roll71?.scoringStatus).toBe("excluded");
-    expect(roll71?.statusReason).toMatch(/awaiting independent evidence/);
+    expect(roll71?.type).toBe("unknown");
+    expect(roll71?.metadata.rollLabel ?? "loner").toBe("loner");
     expect(roll42?.scoringStatus).toBe("excluded");
     expect(roll42?.statusReason).toMatch(
       /unsupported ResultRoll context|missing target threshold/i
@@ -39,7 +42,7 @@ describe("nufflizier normalization", () => {
     expect(roll70?.statusReason).toMatch(/conflicting team attribution/i);
 
     expect(report.coverage.scoredByType.argue_call).toBe(0);
-    expect(report.coverage.excludedByType.argue_call).toBe(3);
+    expect(report.coverage.excludedByType.argue_call).toBe(2);
     expect(
       Object.keys(report.coverage.excludedByReason).some((reason) =>
         /missing target threshold|unsupported ResultRoll context/i.test(reason)

@@ -62,10 +62,10 @@ describe("nufflizier roll-context classification", () => {
     expect(result.scored).toBe(true);
     expect(result.rollCandidate).toBe(true);
     expect(result.eventType).toBe("movement_risk");
-    expect(result.reason).toMatch(/movement_risk_check/i);
+    expect(result.reason).toMatch(/rush/i);
   });
 
-  it("scores rollType 7 as pickup ball-handling context", () => {
+  it("scores rollType 7 as catch ball-handling context", () => {
     const result = classifyRollContext({
       sourceTag: "ResultRoll",
       stepType: 4,
@@ -78,7 +78,7 @@ describe("nufflizier roll-context classification", () => {
     expect(result.scored).toBe(true);
     expect(result.rollCandidate).toBe(true);
     expect(result.eventType).toBe("ball_handling");
-    expect(result.reason).toMatch(/pickup_attempt_check/i);
+    expect(result.reason).toMatch(/catch/i);
   });
 
   it("retains randomizer families as observed outcomes without success odds", () => {

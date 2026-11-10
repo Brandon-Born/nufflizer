@@ -1,6 +1,8 @@
 import { VERDICT_SUMMARIES } from "./explainabilityCopy";
 import { formatDiceContribution, scoredEvidenceForTeam } from "./presentation";
 import { linkTeamRerolls } from "./rerolls";
+import { numericCheckExclusion } from "./numericCheckContract";
+import { labelForRollType } from "@/domain/replay/rollTypeContracts";
 import { createHash } from "node:crypto";
 
 import { LUCK_CATEGORY_WEIGHTS } from "@/domain/nufflizer/constants";
@@ -253,6 +255,7 @@ function defaultCategory(type: LuckEventType | null): LuckEventType {
 }
 
 function buildNormalizedEvent(
+  replayVersion: string | undefined,
   replayTurn: ReplayTurn,
   turnEvents: ReplayEvent[],
   event: ReplayEvent,
@@ -264,6 +267,11 @@ function buildNormalizedEvent(
 ): LuckEvent | null {
   const payload = isRecord(event.payload) ? event.payload : undefined;
   const rollType = event.rollType ?? toNumber(payload?.RollType);
+  const rollLabel = labelForRollType(
+    event.sourceTag,
+    rollType,
+    event.rollLabel ?? "unknown"
+  );
   const { dice, dieTypes } = extractDice(payload);
   const { modifiers, skillsUsed } = extractModifiers(payload);
   const requirement = toNumber(payload?.Requirement);
@@ -321,6 +329,11 @@ function buildNormalizedEvent(
 
   const eventType = defaultCategory(classification.eventType);
   const target = targetLabel(requirement, difficulty);
+  const contractExclusion = numericCheckExclusion(
+    replayVersion,
+    { ...event, rollType },
+    rerollAvailable
+  );
   const resolvedActual = resolveActualSuccess(
     outcomeCode,
     dice,
@@ -337,6 +350,7 @@ function buildNormalizedEvent(
     event.attributionConflict === true ||
     normalizationFlags.includes("ambiguous_team_attribution");
   if (
+    contractExclusion ||
     !classification.scored ||
     !resolvedActual.deterministic ||
     semanticsUnverified ||
@@ -344,11 +358,13 @@ function buildNormalizedEvent(
   ) {
     const exclusionReason = attributionUnresolved
       ? "excluded: unresolved or conflicting team attribution"
-      : semanticsUnverified
-        ? "excluded: category or damage-beneficiary semantics awaiting independent evidence (NUF-009/013)"
-        : !classification.scored
-          ? classification.reason
-          : `excluded: ${resolvedActual.reason}`;
+      : contractExclusion
+        ? `excluded: ${contractExclusion}`
+        : semanticsUnverified
+          ? "excluded: category or damage-beneficiary semantics awaiting independent evidence (NUF-009/013)"
+          : !classification.scored
+            ? classification.reason
+            : `excluded: ${resolvedActual.reason}`;
     return {
       id: `${replayTurn.turnNumber}-${eventIndex}-${event.sourceTag}`,
       turn: replayTurn.turnNumber,
@@ -357,9 +373,10 @@ function buildNormalizedEvent(
       playerId: event.playerId,
       type: eventType,
       probabilitySuccess: null,
-      actualSuccess: resolvedActual.deterministic
-        ? resolvedActual.actualSuccess
-        : null,
+      actualSuccess:
+        !contractExclusion && resolvedActual.deterministic
+          ? resolvedActual.actualSuccess
+          : null,
       delta: 0,
       weightedDelta: 0,
       label: buildMomentLabel(
@@ -391,7 +408,7 @@ function buildNormalizedEvent(
         isRollCandidate,
         targetId: event.targetId,
         rollType,
-        rollLabel: event.rollLabel,
+        rollLabel,
         stepType: event.stepType,
         stepLabel: event.stepLabel,
         actionCode: event.actionCode,
@@ -520,7 +537,7 @@ function buildNormalizedEvent(
       isRollCandidate,
       targetId: event.targetId,
       rollType,
-      rollLabel: event.rollLabel,
+      rollLabel,
       stepType: event.stepType,
       stepLabel: event.stepLabel,
       actionCode: event.actionCode,
@@ -624,6 +641,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         continue;
 
       const normalized = buildNormalizedEvent(
+        replay.replayVersion,
         replayTurn,
         replayTurn.events,
         event,
@@ -755,7 +773,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
 
   return {
     schemaVersion: "2.0",
-    modelVersion: "dice-only-2",
+    modelVersion: "dice-only-3",
     limitations: [
       "Category mappings remain provisional pending NUF-009 independent game evidence.",
       "Block and damage outcomes are retained but excluded pending verified semantics and beneficiary attribution.",

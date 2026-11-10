@@ -92,7 +92,7 @@ function extractReferenceCounts(xml: string): ReferenceCounts {
         const action = Number(
           resultXml.match(/<Action>(-?\d+)<\/Action>/)?.[1] ?? "NaN"
         );
-        if (action === 2) {
+        if (action === 3) {
           counts.blitz += 1;
         }
         if (action === 6) {

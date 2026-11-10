@@ -238,7 +238,13 @@ export function extractStructuredTurnsFromReplayXml(xml: string): {
         const playerId = str(
           payload.PlayerId ?? payload.PushedPlayerId ?? p.PlayerId
         );
-        const teamId = str(payload.TeamId ?? p.TeamId);
+        // ResultUseAction.TeamId is zero for actors on both rosters in all
+        // 6,342 corpus emissions (UI-096/097 also independently show away
+        // actors). Preserve the raw field, but do not treat it as ownership.
+        const teamId =
+          tag === "ResultUseAction"
+            ? undefined
+            : str(payload.TeamId ?? p.TeamId);
         const actionCode = num(payload.Action);
         const rollType = num(payload.RollType);
         register("action", actionCode, ACTION_CODE_MAP);
@@ -252,7 +258,7 @@ export function extractStructuredTurnsFromReplayXml(xml: string): {
                 ? "block"
                 : /Injury|Casualty|Removal/.test(tag)
                   ? "casualty"
-                  : tag === "ResultUseAction" && actionCode === 2
+                  : tag === "ResultUseAction" && actionCode === 3
                     ? "blitz"
                     : tag === "ResultUseAction" && actionCode === 6
                       ? "foul"

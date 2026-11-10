@@ -33,12 +33,14 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page
     .getByLabel("Category", { exact: true })
     .selectOption("ball_handling");
-  await expect(page.getByRole("status")).toContainText("4 matching events");
+  // Independent raw audit: eight fresh Status-1 Pickup/Catch records plus
+  // the linked team-reroll Pickup at 336/0/1; stale/skill replacements excluded.
+  await expect(page.getByRole("status")).toContainText("9 matching events");
   await expect(
     page
       .locator("tbody tr")
       .filter({ hasText: /Ball handling (?:failed|succeeded)/ })
-  ).toHaveCount(4);
+  ).toHaveCount(9);
   await page.locator("summary").first().click();
   await expect(page.getByText(/Source: source-/).first()).toBeVisible();
   const downloadPromise = page.waitForEvent("download");
@@ -46,7 +48,8 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
   expect(report.schemaVersion).toBe("2.0");
-  expect(report.coverage.scoredByType.ball_handling).toBe(4);
+  expect(report.modelVersion).toBe("dice-only-3");
+  expect(report.coverage.scoredByType.ball_handling).toBe(9);
   expect(report.verdict.status).toBe("partial_analysis");
   await page.getByLabel("Category", { exact: true }).selectOption("block");
   await page.getByLabel("Scoring status").selectOption("excluded");
