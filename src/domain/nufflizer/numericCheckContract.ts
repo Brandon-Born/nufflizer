@@ -29,6 +29,8 @@ export function numericCheckExclusion(
     return "verified numeric checks require an explicit effective Difficulty from 2 through 6";
   if (payload.Outcome !== 0 && payload.Outcome !== 1)
     return "verified numeric checks require an explicit binary outcome";
+  if (payload.Modifiers !== undefined && payload.Requirement === undefined)
+    return "numeric check modifiers require a verified base Requirement";
   if (payload.Requirement !== undefined) {
     if (!Number.isSafeInteger(payload.Requirement))
       return "invalid base Requirement for numeric check";

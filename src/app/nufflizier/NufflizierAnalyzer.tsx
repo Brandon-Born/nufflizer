@@ -10,7 +10,9 @@ import {
 import type { LuckEventType, LuckReport } from "@/domain/nufflizer/types";
 import {
   scoredEvidenceForTeam,
-  formatDiceContribution
+  formatDiceContribution,
+  formatPreRollPosition,
+  explainContextImpact
 } from "@/domain/nufflizer/presentation";
 import { readAnalysisResponse } from "@/lib/readAnalysisResponse";
 import { REPLAY_LIMITS } from "@/domain/replay/limits";
@@ -74,8 +76,12 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
       .sort((a, b) =>
         sortOrder === "impact"
           ? Math.abs(b.weightedDelta) - Math.abs(a.weightedDelta)
-          : a.turn - b.turn ||
-            (a.metadata.sourceIndex ?? 0) - (b.metadata.sourceIndex ?? 0)
+          : sortOrder === "context"
+            ? Number(!!b.contextualImpact) - Number(!!a.contextualImpact) ||
+              Math.abs(b.contextualImpact?.contribution ?? 0) -
+                Math.abs(a.contextualImpact?.contribution ?? 0)
+            : a.turn - b.turn ||
+              (a.metadata.sourceIndex ?? 0) - (b.metadata.sourceIndex ?? 0)
       );
   }, [report, tagFilter, typeFilter, teamFilter, scoringFilter, sortOrder]);
 
@@ -404,17 +410,25 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                   <p
                     className={`mt-1 text-2xl font-black ${scoreColor(team.luckScore)}`}
                   >
-                    {report.events.some(
-                      (event) =>
-                        event.teamId === team.teamId &&
-                        event.scoringStatus === "scored"
-                    )
+                    {evidence.total > 0
                       ? team.luckScore.toFixed(1)
                       : "No scored evidence"}
                   </p>
                   <p className="text-xs text-amber-100/75">
                     {team.eventCount} tracked moments; cumulative dice units
                     (provisional weights)
+                  </p>
+                  <p className="mt-1 text-xs text-amber-100/75">
+                    Context:{" "}
+                    {team.impactCount > 0
+                      ? formatDiceContribution(
+                          team.impactScore,
+                          team.impactCount
+                        ) +
+                        " context units across " +
+                        team.impactCount +
+                        (team.impactCount === 1 ? " estimate" : " estimates")
+                      : "Not scored"}
                   </p>
                   <dl className="mt-3 grid grid-cols-2 gap-2 text-xs text-amber-50/90">
                     <div>
@@ -516,6 +530,9 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                 >
                   <option value="chronological">Chronological</option>
                   <option value="impact">Largest dice contribution</option>
+                  <option value="context">
+                    Largest supported context estimate
+                  </option>
                 </select>
                 <select
                   aria-label="Moment tag"
@@ -601,6 +618,9 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                       >
                         <td className="px-2 py-3 font-semibold">
                           {moment.turn}
+                          <div className="text-xs font-normal text-amber-100/75">
+                            {formatPreRollPosition(moment.metadata.preRoll)}
+                          </div>
                         </td>
                         <td className="px-2 py-3">{moment.teamName}</td>
                         <td className="px-2 py-3">
@@ -622,6 +642,11 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                                 : "n/a"}
                               , weight {moment.explainability.weight}.
                             </p>
+                            {moment.contextualImpact ? (
+                              <p className="mt-1 text-xs text-amber-100/80">
+                                {explainContextImpact(moment)}
+                              </p>
+                            ) : null}
                             {moment.explainability.formulaSummary ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {moment.explainability.formulaSummary}.

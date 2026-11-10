@@ -108,6 +108,6 @@ describe("nufflizier roll-context classification", () => {
 
     expect(result.scored).toBe(false);
     expect(result.rollCandidate).toBe(true);
-    expect(result.reason).toMatch(/unsupported ResultRoll context/i);
+    expect(result.reason).toMatch(/pending semantic confirmation/i);
   });
 });

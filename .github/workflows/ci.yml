@@ -38,6 +38,11 @@ jobs:
       - name: Unit tests
         run: pnpm test
 
+      - name: Verify shared quota against Redis
+        run: |
+          command -v redis-server || (sudo apt-get update -qq && sudo apt-get install -y redis-server)
+          pnpm test:quota
+
       - name: Install Playwright Chromium
         run: pnpm exec playwright install --with-deps chromium
 

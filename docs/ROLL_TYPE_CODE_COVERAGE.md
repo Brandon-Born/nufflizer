@@ -1,5 +1,9 @@
 # Roll Type Code Coverage Crosswalk
 
+## Current direct-event evidence
+
+Independent 12-demo raw inventory: `EventRoll|13`. These are visible excluded outcomes; omitted die type/Outcome and unverified modifier or recovery rules do not receive odds. See [raw counts](../tests/fixtures/evidence/bb3-demo-raw-roll-inventory.json). Historical tables below do not control runtime labels or scores.
+
 ## 2026-11-10 scoped semantic update
 
 Model `dice-only-3` now uses UI-backed Rush (1), Dodge (2), Pick up (4), and Catch (7) contracts for replay `1-4-0-0`. The old table labels for 2/4/34/37/71 are superseded: 34/37/71 are Really Stupid/Foul Appearance/Loner and remain unscored. Exact admission, reroll, attribution and natural-roll limits are in [REPORT_CONTRACT.md](REPORT_CONTRACT.md#model-dice-only-3-numeric-scope); `tests/unit/verifiedNumericChecks.test.ts` exercises the exact sanitized playback extracts. Historical counts and unsupported rows below are retained as history, not accepted semantics. No backlog item is closed by this slice.

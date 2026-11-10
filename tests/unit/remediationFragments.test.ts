@@ -49,7 +49,7 @@ describe("NUF-001 minimal source fragments", () => {
         )
     ).toBe(true);
   });
-  it("does not award positive luck for unverified self-damage", () => {
+  it("charges player 50's own armor break to the affected team and leaves unknown injury unscored", () => {
     const replay = parseReplayXml(
       readFileSync("tests/fixtures/remediation/self-damage.xml", "utf8")
     );
@@ -61,11 +61,19 @@ describe("NUF-001 minimal source fragments", () => {
     const damage = report.events.filter(
       (e) => e.playerId === "50" && ["armor_break", "injury"].includes(e.type)
     );
-    expect(damage.length).toBeGreaterThan(0);
+    const armor = damage.find((e) => e.type === "armor_break")!;
+    expect(armor).toMatchObject({
+      teamId: "1",
+      scoringStatus: "scored",
+      actualSuccess: false,
+      metadata: { dice: [1, 6], difficulty: 6 }
+    });
+    // The ten ordered pairs summing 2–5 hold armor; [1,6] fails that check.
+    expect(armor.weightedDelta).toBeCloseTo(-10 / 36, 12);
     expect(
-      damage.every(
-        (e) => e.scoringStatus === "excluded" && e.weightedDelta === 0
-      )
+      damage
+        .filter((e) => e.type === "injury")
+        .every((e) => e.scoringStatus === "excluded" && e.weightedDelta === 0)
     ).toBe(true);
     expect(report.verdict.luckierTeam).toBe("unknown");
   });

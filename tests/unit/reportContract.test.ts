@@ -32,7 +32,7 @@ describe("NUF-021 versioned report contract", () => {
       r.schemaVersion = "1.0" as "2.0";
     },
     (r: ReturnType<typeof report>) => {
-      r.modelVersion = "future" as "dice-only-4";
+      r.modelVersion = "future" as typeof r.modelVersion;
     },
     (r: ReturnType<typeof report>) => {
       r.teams[0].luckScore = NaN;

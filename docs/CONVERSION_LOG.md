@@ -624,3 +624,9 @@ Independent standard-library decode of demo1 identifies kept Pickup4+ die3 (ques
 ## 2026-11-10 - Retained-original implementation publication
 
 The user requested committing and pushing the verified dice-only-4 retained-original implementation and its tests/handoff changes to `nufflizer/master`. This commit includes the previously uncommitted slice; see Git history and the implementation publication record. Semantic/contextual issue statuses and acceptance limits are unchanged. Generated artifacts and private replays remain excluded; remote confirmation is reported after the push.
+
+## 2026-11-10 - Block, armor, context and shared quota checkpoint
+
+Dice-only-5 adds linked raw block symbol distributions and 2D6 armor from the affected player's perspective; injury/recovery and referee probabilities remain unscored. Mobility-possession-1 reports separate, bounded context estimates for verified non-carrier Dodge and open Pickup. The report still abstains from whole-match verdicts. Raw names and namespaces now match the installed evidence, including Land42, Throw a Rock70, Bribe21 and Argue30.
+
+NUF-007 closes bounded arithmetic acceptance; the block/damage/action/state and final product gates stay open. The upload boundary now supports one atomic Redis gate across instances. The user restored CI and selected an isolated Vercel preview. See the implementation log for evidence and hosted verification status. No user replay storage or production deployment was added.

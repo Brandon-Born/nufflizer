@@ -1,11 +1,27 @@
 import { VERDICT_SUMMARIES } from "./explainabilityCopy";
 import { formatDiceContribution, scoredEvidenceForTeam } from "./presentation";
 import { linkTeamRerolls } from "./rerolls";
+import { CONTEXT_MODEL_VERSION, estimateNumericImpact } from "./contextImpact";
+import {
+  reconstructPreRollEvidence,
+  type PreRollEvidence
+} from "@/domain/replay/reconstructContext";
+import { verifyArmorCheck } from "./armorChecks";
+import {
+  BLOCK_FACES,
+  enumerateBlockPool,
+  linkBlockPools,
+  type BlockRecord
+} from "./blockPools";
+import { buildPlayerOwnershipIndex } from "@/domain/replay/attribution";
 import { numericCheckExclusion } from "./numericCheckContract";
 import { labelForRollType } from "@/domain/replay/rollTypeContracts";
 import { createHash } from "node:crypto";
 
-import { LUCK_CATEGORY_WEIGHTS } from "@/domain/nufflizer/constants";
+import {
+  DICE_MODEL_VERSION,
+  LUCK_CATEGORY_WEIGHTS
+} from "@/domain/nufflizer/constants";
 import { classifyRollContext } from "@/domain/nufflizer/classifyRollContext";
 import {
   computeProbabilityForEvent,
@@ -38,6 +54,11 @@ function toArray<T>(value: T | T[] | undefined): T[] {
 }
 
 function toNumber(value: unknown): number | undefined {
+  if (
+    typeof value !== "number" &&
+    !(typeof value === "string" && /^-?\d+(?:\.\d+)?$/.test(value))
+  )
+    return undefined;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
 }
@@ -98,9 +119,9 @@ function extractDice(payload: RecordLike | undefined): {
       RecordLike | RecordLike[] | undefined
   );
   const dice = diceNodes
-    .map((die) => toNumber(die.Value))
+    .map((die) => toNumber(die?.Value))
     .filter((value): value is number => value !== undefined);
-  const dieTypes = diceNodes.map((die) => toNumber(die.DieType) ?? -1);
+  const dieTypes = diceNodes.map((die) => toNumber(die?.DieType) ?? -1);
 
   return { dice, dieTypes };
 }
@@ -118,10 +139,10 @@ function extractModifiers(payload: RecordLike | undefined): {
       RecordLike | RecordLike[] | undefined
   );
   const modifiers = modifierNodes
-    .map((modifier) => toNumber(modifier.Value))
+    .map((modifier) => toNumber(modifier?.Value))
     .filter((value): value is number => value !== undefined);
   const skillsUsed = modifierNodes
-    .map((modifier) => toNumber(modifier.Skill))
+    .map((modifier) => toNumber(modifier?.Skill))
     .filter((value): value is number => value !== undefined && value >= 0);
 
   return {
@@ -240,6 +261,7 @@ function isRollCandidateEvent(event: ReplayEvent): boolean {
   return (
     event.sourceTag === "ResultRoll" ||
     event.sourceTag === "ResultBlockRoll" ||
+    event.sourceTag === "QuestionBlockDice" ||
     event.sourceTag === "ResultInjuryRoll" ||
     event.sourceTag === "ResultCasualtyRoll" ||
     Boolean(isRecord(event.payload) && isRecord(event.payload.Dice)) ||
@@ -257,22 +279,34 @@ function defaultCategory(type: LuckEventType | null): LuckEventType {
 function buildNormalizedEvent(
   replayVersion: string | undefined,
   replayTurn: ReplayTurn,
-  turnEvents: ReplayEvent[],
   event: ReplayEvent,
   eventIndex: number,
   teamNameById: Map<string, string>,
+  playerToTeam: ReadonlyMap<string, string>,
+  blockRecord: BlockRecord | undefined,
+  contextBySource: ReadonlyMap<string, PreRollEvidence>,
   rerollLink?: ReturnType<typeof linkTeamRerolls> extends Map<number, infer T>
     ? T
     : never
 ): LuckEvent | null {
   const payload = isRecord(event.payload) ? event.payload : undefined;
+  const preRoll = contextBySource.get(rerollLink?.questionId ?? event.id ?? "");
   const rollType = event.rollType ?? toNumber(payload?.RollType);
-  const rollLabel = labelForRollType(
-    event.sourceTag,
-    rollType,
-    event.rollLabel ?? "unknown"
-  );
-  const { dice, dieTypes } = extractDice(payload);
+  const rollLabel =
+    replayVersion === "1-4-0-0"
+      ? labelForRollType(
+          event.sourceTag,
+          rollType,
+          event.rollLabel ?? "unknown"
+        )
+      : rollType === undefined
+        ? "unknown"
+        : `roll_${rollType}`;
+  const dicePayload =
+    event.sourceTag === "ResultBlockRoll" && payload?.Die !== undefined
+      ? { Dice: { Die: payload.Die } }
+      : payload;
+  const { dice, dieTypes } = extractDice(dicePayload);
   const { modifiers, skillsUsed } = extractModifiers(payload);
   const requirement = toNumber(payload?.Requirement);
   const difficulty = toNumber(payload?.Difficulty);
@@ -281,7 +315,6 @@ function buildNormalizedEvent(
     rerollAvailable: false,
     rerollUsed: false
   };
-  void turnEvents;
   const normalizationFlags: string[] = [];
   const normalizationNotes: string[] = [];
 
@@ -311,7 +344,7 @@ function buildNormalizedEvent(
     );
   }
 
-  const classification = classifyRollContext({
+  let classification = classifyRollContext({
     sourceTag: event.sourceTag,
     stepType: event.stepType,
     rollType,
@@ -319,7 +352,8 @@ function buildNormalizedEvent(
     difficulty,
     diceCount: dice.length
   });
-  const isRollCandidate = isRollCandidateEvent(event);
+  const isRollCandidate =
+    blockRecord?.kind !== "summary" && isRollCandidateEvent(event);
 
   const resolvedTeamId = resolveTeamId(replayTurn, event);
   const teamId =
@@ -327,9 +361,84 @@ function buildNormalizedEvent(
       ? resolvedTeamId
       : "unresolved";
 
+  const armor = verifyArmorCheck(replayVersion, event, dice, dieTypes);
+  const armorAccepted = armor?.kind === "verified" ? armor : undefined;
+  const armorOwner = armorAccepted && playerToTeam.get(armorAccepted.subject);
+  const blockEvidence =
+    blockRecord?.kind === "pool" ? blockRecord.evidence : undefined;
+  const attackerTeam =
+    blockEvidence && playerToTeam.get(blockEvidence.attackerId);
+  const defenderTeam =
+    blockEvidence && playerToTeam.get(blockEvidence.defenderId);
+  const blockAccepted =
+    blockEvidence &&
+    attackerTeam === teamId &&
+    defenderTeam &&
+    defenderTeam !== attackerTeam &&
+    teamNameById.has(defenderTeam)
+      ? blockEvidence
+      : undefined;
+  const blockOdds = blockAccepted && enumerateBlockPool(blockAccepted.pool);
+  const rawBlock = [
+    "QuestionBlockDice",
+    "ResultBlockRoll",
+    "ResultBlockOutcome"
+  ].includes(event.sourceTag);
+  if (rawBlock)
+    classification = blockAccepted
+      ? {
+          eventType: "block",
+          scored: true,
+          rollCandidate: true,
+          reason: "verified block pool"
+        }
+      : {
+          eventType: "block",
+          scored: false,
+          rollCandidate: isRollCandidate,
+          reason: `excluded: ${blockRecord?.kind === "summary" ? blockRecord.reason : "block pool or its chooser/resolution could not be linked"}`
+        };
+  if (armorAccepted && armorOwner === teamId)
+    classification = {
+      eventType: "armor_break",
+      scored: true,
+      rollCandidate: true,
+      reason: "verified 2D6 armor check"
+    };
+  const armorScored =
+    armorAccepted && armorOwner === teamId ? armorAccepted : undefined;
+  const block =
+    blockAccepted && blockOdds && defenderTeam
+      ? {
+          ...blockAccepted,
+          defenderTeamId: defenderTeam,
+          chooserTeamId: blockAccepted.pool.attackerChooses
+            ? teamId
+            : defenderTeam,
+          distribution: blockOdds.distribution,
+          rankedSymbol: blockOdds.favoredSymbol
+        }
+      : undefined;
+  const damage =
+    armorAccepted && armorOwner === teamId
+      ? {
+          subjectId: armorAccepted.subject,
+          subjectTeamId: teamId,
+          sourceCode: event.damageSource,
+          perspective: "subject_team" as const
+        }
+      : undefined;
   const eventType = defaultCategory(classification.eventType);
-  const target = targetLabel(requirement, difficulty);
+  const target = block
+    ? "Defender Stumbles or Defender Down under the raw symbol order"
+    : armorScored
+      ? `Armor holds below ${difficulty}`
+      : targetLabel(requirement, difficulty);
   const contractExclusion =
+    (armor?.kind === "excluded" ? armor.reason : undefined) ??
+    (armorAccepted && !armorScored
+      ? "armor subject has no verified roster owner"
+      : undefined) ??
     rerollLink?.exclusionReason ??
     numericCheckExclusion(
       replayVersion,
@@ -337,16 +446,31 @@ function buildNormalizedEvent(
       rerollAvailable,
       rerollLink?.retainedOriginal
     );
-  const resolvedActual = resolveActualSuccess(
-    outcomeCode,
-    dice,
-    difficulty ?? requirement,
-    eventType
-  );
+  const resolvedActual = armorScored
+    ? {
+        actualSuccess: armorScored.held,
+        deterministic: true,
+        reason: "armor hold from the subject team's perspective"
+      }
+    : blockOdds
+      ? {
+          actualSuccess: blockOdds.favoredSymbol >= 3,
+          deterministic: true,
+          reason:
+            "raw symbol opportunity, independent of coach choice and applied skills"
+        }
+      : resolveActualSuccess(
+          outcomeCode,
+          dice,
+          difficulty ?? requirement,
+          eventType
+        );
 
   // Disputed category/beneficiary mappings cannot contribute favorable luck.
   const semanticsUnverified =
     classification.scored &&
+    !armorScored &&
+    !block &&
     ["block", "armor_break", "injury", "argue_call"].includes(eventType);
   const attributionUnresolved =
     !teamNameById.has(teamId) ||
@@ -408,6 +532,8 @@ function buildNormalizedEvent(
         actionId: event.actionId,
         sequenceId: event.sequenceId,
         sourceIndex: event.sourceIndex,
+        locator: event.locator,
+        preRoll,
         isRollCandidate,
         targetId: event.targetId,
         rollType,
@@ -437,15 +563,26 @@ function buildNormalizedEvent(
 
   let probability;
   try {
-    probability = computeProbabilityForEvent({
-      eventType,
-      rollType,
-      requirement,
-      difficulty,
-      dice,
-      dieTypes,
-      rerollAvailable
-    });
+    const scopedOdds = armorScored?.probability ?? blockOdds?.chance;
+    probability =
+      scopedOdds !== undefined
+        ? {
+            probabilitySuccess: scopedOdds,
+            baseOdds: scopedOdds,
+            rerollAdjustedOdds: scopedOdds,
+            reason: armorScored
+              ? "2D6 against the effective armor target"
+              : "six-sided block dice with two Push faces"
+          }
+        : computeProbabilityForEvent({
+            eventType,
+            rollType,
+            requirement,
+            difficulty,
+            dice,
+            dieTypes,
+            rerollAvailable
+          });
   } catch (error) {
     return {
       id:
@@ -486,6 +623,19 @@ function buildNormalizedEvent(
   const delta = (actualSuccess ? 1 : 0) - probabilitySuccess;
   const weight = LUCK_CATEGORY_WEIGHTS[eventType];
   const weightedDelta = delta * weight;
+  const contextualImpact =
+    preRoll?.activeTeamId === teamId
+      ? estimateNumericImpact(
+          preRoll,
+          rollType,
+          rerollLink?.retainedOriginal
+            ? "declined_team_reroll"
+            : rerollAvailable
+              ? "full_team_reroll"
+              : undefined,
+          delta
+        )
+      : undefined;
 
   const tags: LuckEvent["tags"] = [];
   if (actualSuccess && probabilitySuccess <= 0.3) {
@@ -506,12 +656,19 @@ function buildNormalizedEvent(
     actualSuccess,
     delta,
     weightedDelta,
-    label: buildMomentLabel(
-      eventType,
-      actualSuccess,
-      probabilitySuccess,
-      difficulty ?? requirement
-    ),
+    contextualImpact,
+    label: armorScored
+      ? actualSuccess
+        ? "Armor held"
+        : "Armor broke"
+      : block
+        ? `Block pool: ${BLOCK_FACES[block.rankedSymbol]} opportunity`
+        : buildMomentLabel(
+            eventType,
+            actualSuccess,
+            probabilitySuccess,
+            difficulty ?? requirement
+          ),
     tags,
     scoringStatus: "scored",
     statusReason: `${classification.reason}; ${probability.reason}; ${resolvedActual.reason}`,
@@ -526,13 +683,9 @@ function buildNormalizedEvent(
         weight,
         weightedDelta
       ),
-      inputsSummary: buildInputsSummary(
-        eventType,
-        target,
-        dice,
-        rerollAvailable,
-        "scored"
-      )
+      inputsSummary: block
+        ? `${block.pool.faces.map((f) => BLOCK_FACES[f]).join(", ")}. ${block.pool.attackerChooses ? "Attacker" : "Defender"} controls the choice. Selected ${BLOCK_FACES[block.selectedFace]}; applied outcome ${block.finalOutcome}. The score measures the raw symbols, before skills or the coach's choice.`
+        : buildInputsSummary(eventType, target, dice, rerollAvailable, "scored")
     },
     metadata: {
       sourceTag: event.sourceTag,
@@ -540,6 +693,10 @@ function buildNormalizedEvent(
       actionId: event.actionId,
       sequenceId: event.sequenceId,
       sourceIndex: event.sourceIndex,
+      locator: event.locator,
+      preRoll,
+      block,
+      damage,
       isRollCandidate,
       targetId: event.targetId,
       rollType,
@@ -581,7 +738,10 @@ function initialAggregate(teamId: string, teamName: string): LuckTeamAggregate {
       argueCall: 0,
       movementRisk: 0
     },
-    eventCount: 0
+    eventCount: 0,
+    impactCount: 0,
+    impactScore: 0,
+    impactByType: { dodge: 0, ball_handling: 0 }
   };
 }
 
@@ -611,7 +771,7 @@ function buildHowScoredSummary(
     .map(([reason, count]) => `${count} ${reason}`);
 
   return [
-    "This is partial dice-only analysis with provisional category weights; it is not contextual impact or calibrated win probability.",
+    "Dice totals add supported outcomes under the stated rules. Context estimates are separate and require verified pre-roll state. Neither is a win probability.",
     `Roll-candidate coverage: ${coverage.rollCandidates.scoredCount} scored and ${coverage.rollCandidates.excludedCount} excluded (${(
       coverage.rollCandidates.scoredRate * 100
     ).toFixed(1)}% scored).`,
@@ -632,9 +792,15 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   );
 
   const events: LuckEvent[] = [];
+  const { playerToTeam } = buildPlayerOwnershipIndex(replay);
+  const contextBySource = reconstructPreRollEvidence(replay);
 
   for (const replayTurn of replay.turns) {
     const rerollLinks = linkTeamRerolls(replayTurn.events);
+    const blockRecords = linkBlockPools(
+      replayTurn.events,
+      replay.replayVersion
+    );
     for (const [eventIndex, event] of replayTurn.events.entries()) {
       if (
         !isRollCandidateEvent(event) &&
@@ -649,10 +815,12 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       const normalized = buildNormalizedEvent(
         replay.replayVersion,
         replayTurn,
-        replayTurn.events,
         event,
         eventIndex,
         teamNameById,
+        playerToTeam,
+        blockRecords.get(eventIndex),
+        contextBySource,
         rerollLinks.get(eventIndex)
       );
       if (!normalized) {
@@ -699,6 +867,14 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     }
 
     if (!aggregate) continue;
+    if (
+      event.contextualImpact &&
+      (event.type === "dodge" || event.type === "ball_handling")
+    ) {
+      aggregate.impactCount++;
+      aggregate.impactScore += event.contextualImpact.contribution;
+      aggregate.impactByType[event.type] += event.contextualImpact.contribution;
+    }
     allScoredCount += 1;
     if (event.metadata.isRollCandidate) {
       rollCandidateScoredCount += 1;
@@ -779,11 +955,12 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
 
   return {
     schemaVersion: "2.0",
-    modelVersion: "dice-only-4",
+    modelVersion: DICE_MODEL_VERSION,
+    contextModelVersion: CONTEXT_MODEL_VERSION,
     limitations: [
       "Category mappings remain provisional pending NUF-009 independent game evidence.",
-      "Block and damage outcomes are retained but excluded pending verified semantics and beneficiary attribution.",
-      "Board-state reconstruction, contextual impact and calibration are not yet supported."
+      "Block scoring measures linked raw symbol pools; skill-adjusted resolution and unsupported damage variants are retained as evidence.",
+      "Context estimates require a reconciled board and a verified terminal roll policy. The mobility/possession scale is a heuristic, not calibrated match impact."
     ],
     id: hashId(idSeed),
     generatedAt: new Date().toISOString(),

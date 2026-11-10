@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import path from "node:path";
 import { readFileSync } from "node:fs";
+import { contextReplayXml } from "../helpers/contextReplay";
 
 const DEMO = path.resolve("demo-replays/demo1.bbr");
 test("real BBR upload exposes evidence, full filters, export and reset", async ({
@@ -27,9 +28,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
       { exact: true }
     )
   ).toBeVisible();
-  await expect(
-    page.getByText("Block: Not scored", { exact: true })
-  ).toHaveCount(2);
+  await expect(page.getByText(/Block: -?\d+\.\d+/).first()).toBeVisible();
   await page
     .getByLabel("Category", { exact: true })
     .selectOption("ball_handling");
@@ -50,7 +49,21 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
   expect(report.schemaVersion).toBe("2.0");
-  expect(report.modelVersion).toBe("dice-only-4");
+  expect(report.modelVersion).toBe("dice-only-5");
+  // Independent raw decode: sequence 6 step 4 offers Push/Stumbles; away
+  // chooses Stumbles (7/0/0) and outcome 6 resolves at 9/0/1.
+  const firstBlock = report.events.find(
+    (event: { metadata: { actionId?: string; block?: unknown } }) =>
+      event.metadata.actionId === "sequence-6-step-4" && event.metadata.block
+  );
+  expect(firstBlock).toMatchObject({
+    type: "block",
+    scoringStatus: "scored",
+    metadata: {
+      block: { pool: { faces: [2, 3] }, selectedFace: 3, finalOutcome: 6 }
+    }
+  });
+  expect(firstBlock.probabilitySuccess).toBeCloseTo(5 / 9, 12);
   expect(report.coverage.scoredByType.ball_handling).toBe(11);
   const retained = report.events.filter(
     (event: { metadata: { rerollPolicy?: string } }) =>
@@ -124,6 +137,36 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
     page.getByText("No scored evidence", { exact: true })
   ).toHaveCount(2);
   expect(errors).toEqual([]);
+});
+
+test("complete pre-roll evidence explains the cost of an exposed pickup", async ({
+  page
+}) => {
+  await page.goto("/nufflizier");
+  await page.setInputFiles('input[name="replay"]', {
+    name: "context.xml",
+    mimeType: "application/xml",
+    buffer: Buffer.from(contextReplayXml({ type: 4, exposed: true }))
+  });
+  await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Nuffle Match Report" })
+  ).toBeVisible();
+  await expect(
+    page.getByText(/Context: -3\.65 context units across 1 estimate/)
+  ).toBeVisible();
+  await page.getByLabel("Sort order", { exact: true }).selectOption("context");
+  const row = page
+    .locator("tbody tr")
+    .filter({ hasText: "Ball handling failed" });
+  await expect(row.getByText("First half, team turn 1")).toBeVisible();
+  await row.locator("summary").click();
+  await expect(
+    row.getByText(/2 other standing teammates still able to move/)
+  ).toBeVisible();
+  await expect(
+    row.getByText(/38% of eligible bounce squares are marked/)
+  ).toBeVisible();
 });
 test("invalid replay and hosting-generated text errors are understandable", async ({
   page

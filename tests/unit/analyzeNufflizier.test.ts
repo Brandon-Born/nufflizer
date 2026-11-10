@@ -101,7 +101,8 @@ describe("analyzeNufflizerInput", () => {
     expect(
       scoredBallHandling.some((event) => event.metadata.rollType === 30)
     ).toBe(false);
-    expect(scoredArmorFromRoll10).toHaveLength(0);
+    expect(scoredArmorFromRoll10.length).toBeGreaterThan(0);
+    expect(scoredArmorFromRoll10.every((e) => e.metadata.damage?.subjectTeamId === e.teamId)).toBe(true);
     expect(
       report.coverage.excludedByReason[
         "excluded: unsupported ResultRoll context for rollType 10"

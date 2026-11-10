@@ -11,7 +11,9 @@ import type { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
 
 import {
   scoredEvidenceForTeam,
-  formatDiceContribution
+  formatDiceContribution,
+  formatPreRollPosition,
+  explainContextImpact
 } from "@/domain/nufflizer/presentation";
 import { runAnalysis } from "@/server/runAnalysis";
 
@@ -69,6 +71,18 @@ function formatTeamSummary(
     `Verdict: ${report.verdict.summary} (dice contribution gap ${formatDiceContribution(report.verdict.scoreGap, report.coverage.allEvents.scoredCount, 1)})`,
     `Roll-candidate coverage: ${(report.coverage.rollCandidates.scoredRate * 100).toFixed(1)}% scored (${report.coverage.rollCandidates.scoredCount} scored, ${report.coverage.rollCandidates.excludedCount} excluded)`,
     `All-event coverage: ${(report.coverage.allEvents.scoredRate * 100).toFixed(1)}% scored (${report.coverage.allEvents.scoredCount} scored, ${report.coverage.allEvents.excludedCount} excluded)`,
+    ...report.teams.map(
+      (team) =>
+        "Context for " +
+        team.teamName +
+        ": " +
+        (team.impactCount
+          ? formatDiceContribution(team.impactScore, team.impactCount) +
+            " context units across " +
+            team.impactCount +
+            (team.impactCount === 1 ? " estimate" : " estimates")
+          : "Not scored")
+    ),
     report.coverage.denominatorDescription,
     ...report.limitations.map((line) => `Limitation: ${line}`),
     "Scored by event type:",
@@ -92,7 +106,7 @@ function formatTeamSummary(
       (moment, index) =>
         `${index + 1}. Replay segment ${moment.turn} | ${moment.teamName} | ${moment.label} | weighted delta ${moment.weightedDelta.toFixed(3)} | ${
           moment.scoringStatus
-        } (${moment.statusReason}) | ${moment.explainability.formulaSummary ?? "no formula"}`
+        } (${moment.statusReason}) | ${moment.explainability.formulaSummary ?? "no formula"}${formatPreRollPosition(moment.metadata.preRoll) ? " | " + formatPreRollPosition(moment.metadata.preRoll) : ""}${moment.contextualImpact ? " | " + explainContextImpact(moment) : ""}`
     )
   ].join("\n");
 }

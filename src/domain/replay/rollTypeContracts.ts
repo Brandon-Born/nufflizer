@@ -1,3 +1,5 @@
+import { ROLL_TYPE_MAP } from "./mappings";
+
 export type RollContractKind =
   "scored_deterministic" | "excluded_deterministic" | "randomizer" | "summary";
 export type RollConfidence = "high" | "medium" | "low";
@@ -26,89 +28,62 @@ function contractKey(sourceTag: string, rollType: number): string {
   return `${sourceTag}|${rollType}`;
 }
 
-// Provisional inventory from sanitized fixtures. Numeric shape and adjacency do not establish BB3 rule meaning.
-// analyzeLuck excludes disputed block/damage categories and abstains from whole-match verdicts (NUF-009).
+// Identity and scoring are separate: block linkage and damage attribution
+// must still pass their versioned runtime contracts.
 const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
   {
     sourceTag: "QuestionBlockDice",
     rollType: 3,
-    label: "unverified_block_question",
+    label: "block_pool",
     kind: "summary",
-    confidence: "low",
-    status: "ambiguous",
+    confidence: "high",
+    status: "known",
+    scoringCategory: "block",
     notes:
-      "Preserved choice/pool evidence; not an additional independent roll. NUF-009/010."
-  },
-  {
-    sourceTag: "ResultRoll",
-    rollType: 15,
-    label: "unverified_roll_15",
-    kind: "excluded_deterministic",
-    confidence: "low",
-    status: "unknown",
-    notes:
-      "Newly visible after ordered extraction; no semantic promotion. NUF-009."
-  },
-  {
-    sourceTag: "ResultRoll",
-    rollType: 21,
-    label: "unverified_roll_21",
-    kind: "excluded_deterministic",
-    confidence: "low",
-    status: "unknown",
-    notes:
-      "Newly visible after ordered extraction; no semantic promotion. NUF-009."
-  },
-  {
-    sourceTag: "ResultRoll",
-    rollType: 36,
-    label: "unverified_roll_36",
-    kind: "excluded_deterministic",
-    confidence: "low",
-    status: "unknown",
-    notes:
-      "Newly visible after ordered extraction; no semantic promotion. NUF-009."
-  },
-  {
-    sourceTag: "ResultRoll",
-    rollType: 46,
-    label: "unverified_roll_46",
-    kind: "excluded_deterministic",
-    confidence: "low",
-    status: "unknown",
-    notes:
-      "Newly visible after ordered extraction; no semantic promotion. NUF-009."
+      "Pool freshness and linked selection are verified separately; a repeated question is not a new roll."
   },
   {
     sourceTag: "ResultBlockRoll",
     rollType: 3,
-    label: "unverified_block_faces",
+    label: "selected_block_die",
     kind: "excluded_deterministic",
     confidence: "high",
     status: "known",
     scoringCategory: "block",
     notes:
-      "Correction: actual face data exists under payload.Die. Keep excluded pending pool/choice/skill semantics, NUF-009/010."
-  },
-  {
-    sourceTag: "ResultInjuryRoll",
-    rollType: 11,
-    label: "unverified_injury_2d6",
-    kind: "excluded_deterministic",
-    confidence: "high",
-    status: "known",
-    scoringCategory: "injury",
-    notes: "Damage chain summary roll emitted after armor-like checks."
+      "Pool freshness and linked selection are verified separately; a repeated question is not a new roll."
   },
   {
     sourceTag: "ResultCasualtyRoll",
     rollType: 12,
-    label: "unverified_casualty",
+    label: "casualty",
     kind: "excluded_deterministic",
     confidence: "high",
     status: "known",
     scoringCategory: "injury",
-    notes: "Casualty severity chain summary roll."
+    notes:
+      "Named damage stage; injury and casualty distributions require their own contracts."
+  },
+  {
+    sourceTag: "ResultInjuryRoll",
+    rollType: 11,
+    label: "injury",
+    kind: "excluded_deterministic",
+    confidence: "high",
+    status: "known",
+    scoringCategory: "injury",
+    notes:
+      "Named damage stage; injury and casualty distributions require their own contracts."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 1,
+    label: "rush",
+    kind: "scored_deterministic",
+    confidence: "high",
+    status: "known",
+    scoringCategory: "movement_risk",
+    notes: "UI-008/009: verified single D6 Rush."
   },
   {
     sourceTag: "ResultRoll",
@@ -119,27 +94,7 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
     status: "known",
     scoringCategory: "dodge",
     notes:
-      "UI-006/008/009 identify Dodge, including Titchy +1; version 1-4-0-0 numeric D6 scope only."
-  },
-  {
-    sourceTag: "ResultRoll",
-    rollType: 10,
-    label: "armor_chain_2d6_check",
-    kind: "scored_deterministic",
-    confidence: "high",
-    status: "known",
-    scoringCategory: "armor_break",
-    notes: "Two-die threshold check strongly tied to block/foul damage chains."
-  },
-  {
-    sourceTag: "ResultRoll",
-    rollType: 34,
-    label: "really_stupid",
-    kind: "excluded_deterministic",
-    confidence: "high",
-    status: "known",
-    notes:
-      "UI-paired identity confirmed; trait/gate policy and consequences are not scored in this slice."
+      "UI-006/008/009: verified single D6 Dodge, independent of the movement container."
   },
   {
     sourceTag: "ResultRoll",
@@ -149,113 +104,27 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
     confidence: "high",
     status: "known",
     scoringCategory: "ball_handling",
-    notes:
-      "UI-002/094 identify Pick up. Sure Hands replacement is separate evidence, not unconditional availability."
-  },
-  {
-    sourceTag: "ResultRoll",
-    rollType: 37,
-    label: "foul_appearance",
-    kind: "excluded_deterministic",
-    confidence: "high",
-    status: "known",
-    notes:
-      "UI-paired identity confirmed; trait/gate policy and consequences are not scored in this slice."
-  },
-  {
-    sourceTag: "ResultRoll",
-    rollType: 71,
-    label: "loner",
-    kind: "excluded_deterministic",
-    confidence: "high",
-    status: "known",
-    notes:
-      "UI-paired identity confirmed; trait/gate policy and consequences are not scored in this slice."
-  },
-  {
-    sourceTag: "ResultRoll",
-    rollType: 8,
-    label: "kickoff_scatter_randomizer",
-    kind: "randomizer",
-    confidence: "high",
-    status: "known",
-    notes: "Three-die directional randomizer with no success threshold."
-  },
-  {
-    sourceTag: "ResultRoll",
-    rollType: 9,
-    label: "kickoff_event_randomizer",
-    kind: "randomizer",
-    confidence: "high",
-    status: "known",
-    notes: "Three-die randomizer chain with outcome=2 and zero target."
-  },
-  {
-    sourceTag: "ResultRoll",
-    rollType: 25,
-    label: "single_die_chain_randomizer",
-    kind: "randomizer",
-    confidence: "high",
-    status: "known",
-    notes: "Single dieType=1 randomizer event with no threshold semantics."
-  },
-  {
-    sourceTag: "ResultRoll",
-    rollType: 26,
-    label: "paired_kickoff_randomizer",
-    kind: "randomizer",
-    confidence: "high",
-    status: "known",
-    notes:
-      "Paired randomizer event with dieType mix (1 and 0) and no threshold."
-  },
-  {
-    sourceTag: "ResultRoll",
-    rollType: 30,
-    label: "special_randomizer_30",
-    kind: "randomizer",
-    confidence: "medium",
-    status: "ambiguous",
-    notes: "Observed once as outcome=2 special chain randomizer."
-  },
-  {
-    sourceTag: "ResultRoll",
-    rollType: 87,
-    label: "chain_randomizer_87",
-    kind: "randomizer",
-    confidence: "high",
-    status: "known",
-    notes: "Frequent zero-target randomizer in chainsaw-like sequences."
-  },
-  {
-    sourceTag: "ResultRoll",
-    rollType: 1,
-    label: "rush",
-    kind: "scored_deterministic",
-    confidence: "high",
-    status: "known",
-    scoringCategory: "movement_risk",
-    notes:
-      "UI-008/009 identify successful and failed Rush separately from Dodge and self-damage; replay 1-4-0-0 numeric D6 scope only."
+    notes: "UI-002/022: verified Pick up."
   },
   {
     sourceTag: "ResultRoll",
     rollType: 5,
-    label: "deterministic_check_5_provisional",
+    label: "pass",
     kind: "excluded_deterministic",
-    confidence: "low",
-    status: "unknown",
-    notes: "Low-frequency deterministic check chain without stable semantics."
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
   },
   {
     sourceTag: "ResultRoll",
     rollType: 6,
-    label: "deterministic_check_6_provisional",
+    label: "interfere",
     kind: "excluded_deterministic",
-    confidence: "low",
-    status: "unknown",
+    confidence: "high",
+    status: "known",
     notes:
-      "Low-frequency deterministic check observed in special-action chains."
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
   },
   {
     sourceTag: "ResultRoll",
@@ -265,92 +134,299 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
     confidence: "high",
     status: "known",
     scoringCategory: "ball_handling",
+    notes: "UI-014/093/097: verified Catch with scoped natural-roll edges."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 8,
+    label: "scatter",
+    kind: "randomizer",
+    confidence: "high",
+    status: "known",
     notes:
-      "UI-014/093/097 identify Catch, distinct from Pick up. Natural-one and natural-six examples corroborate effective Difficulty; reroll variants remain separately gated."
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 9,
+    label: "throw_in",
+    kind: "randomizer",
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 10,
+    label: "armor",
+    kind: "scored_deterministic",
+    confidence: "high",
+    status: "known",
+    scoringCategory: "armor_break",
+    notes:
+      "UI-009/015/020: verified two-D6 armor only within the damage-subject and fixed-assist contract."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 15,
+    label: "pro",
+    kind: "excluded_deterministic",
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 21,
+    label: "bribe",
+    kind: "excluded_deterministic",
+    confidence: "high",
+    status: "known",
+    scoringCategory: "argue_call",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 25,
+    label: "bounce",
+    kind: "randomizer",
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 26,
+    label: "deviate",
+    kind: "randomizer",
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 29,
+    label: "jump_over",
+    kind: "excluded_deterministic",
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 30,
+    label: "argue_the_call",
+    kind: "excluded_deterministic",
+    confidence: "high",
+    status: "known",
+    scoringCategory: "argue_call",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
   },
   {
     sourceTag: "ResultRoll",
     rollType: 31,
-    label: "deterministic_check_31_provisional",
+    label: "dauntless",
     kind: "excluded_deterministic",
-    confidence: "low",
-    status: "unknown",
-    notes: "Single observation deterministic check; semantics not stable."
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
   },
   {
     sourceTag: "ResultRoll",
     rollType: 33,
-    label: "deterministic_check_33_provisional",
+    label: "bone_head",
     kind: "excluded_deterministic",
-    confidence: "medium",
-    status: "ambiguous",
+    confidence: "high",
+    status: "known",
     notes:
-      "Repeated deterministic check with stable 2+ threshold but unclear rule meaning."
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 34,
+    label: "really_stupid",
+    kind: "excluded_deterministic",
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 36,
+    label: "animal_savagery",
+    kind: "excluded_deterministic",
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 37,
+    label: "foul_appearance",
+    kind: "excluded_deterministic",
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
   },
   {
     sourceTag: "ResultRoll",
     rollType: 41,
-    label: "deterministic_check_41_provisional",
+    label: "throw_team_mate",
     kind: "excluded_deterministic",
-    confidence: "low",
-    status: "unknown",
-    notes: "Single observation with heavy modifiers; insufficient evidence."
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 42,
+    label: "land",
+    kind: "excluded_deterministic",
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
   },
   {
     sourceTag: "ResultRoll",
     rollType: 43,
-    label: "deterministic_check_43_provisional",
+    label: "always_hungry",
     kind: "excluded_deterministic",
-    confidence: "low",
-    status: "unknown",
-    notes: "Single observation deterministic check; semantics unclear."
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
   },
   {
     sourceTag: "ResultRoll",
     rollType: 45,
-    label: "deterministic_check_45_provisional",
+    label: "projectile_vomit",
     kind: "excluded_deterministic",
-    confidence: "medium",
-    status: "ambiguous",
+    confidence: "high",
+    status: "known",
     notes:
-      "Deterministic 2+ check that often precedes rollType 10 chain checks."
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 46,
+    label: "regeneration",
+    kind: "excluded_deterministic",
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 48,
+    label: "fireball_hit",
+    kind: "excluded_deterministic",
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
   },
   {
     sourceTag: "ResultRoll",
     rollType: 67,
-    label: "deterministic_check_67_provisional",
+    label: "chainsaw",
     kind: "excluded_deterministic",
-    confidence: "medium",
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 70,
+    label: "throw_a_rock",
+    kind: "randomizer",
+    confidence: "low",
     status: "ambiguous",
-    notes: "Deterministic 2+ setup check immediately followed by rollType 10."
+    notes: "Compiled name retained; replay field behavior remains unverified."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 71,
+    label: "loner",
+    kind: "excluded_deterministic",
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
   },
   {
     sourceTag: "ResultRoll",
     rollType: 73,
-    label: "deterministic_check_73_provisional",
+    label: "shadowing",
     kind: "excluded_deterministic",
-    confidence: "medium",
-    status: "ambiguous",
+    confidence: "high",
+    status: "known",
     notes:
-      "Deterministic special-skill chain check with stable failure patterns."
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
   },
   {
     sourceTag: "ResultRoll",
     rollType: 74,
-    label: "deterministic_check_74_provisional",
+    label: "animosity",
     kind: "excluded_deterministic",
-    confidence: "low",
-    status: "unknown",
-    notes: "Single observation deterministic check within low-frequency chain."
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 87,
+    label: "ball_and_chain_direction",
+    kind: "randomizer",
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
   },
   {
     sourceTag: "ResultRoll",
     rollType: 88,
-    label: "deterministic_check_88_provisional",
+    label: "bomb_hit",
     kind: "excluded_deterministic",
-    confidence: "medium",
-    status: "ambiguous",
-    notes: "Deterministic threshold check in bomb/special-action chain."
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 89,
+    label: "bomb_explode_on_catch",
+    kind: "excluded_deterministic",
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 97,
+    label: "breathe_fire",
+    kind: "excluded_deterministic",
+    confidence: "high",
+    status: "known",
+    notes:
+      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
   }
 ];
 
@@ -369,7 +445,22 @@ export function getRollTypeContract(
     return undefined;
   }
 
-  return contractMap.get(contractKey(sourceTag, rollType as number));
+  const declared = contractMap.get(contractKey(sourceTag, rollType as number));
+  if (declared) return declared;
+  if (
+    (sourceTag === "ResultRoll" || sourceTag === "EventRoll") &&
+    ROLL_TYPE_MAP[rollType!]
+  )
+    return {
+      sourceTag,
+      rollType: rollType!,
+      label: ROLL_TYPE_MAP[rollType!]!,
+      kind: "excluded_deterministic",
+      confidence: "low",
+      status: "ambiguous",
+      notes: "Compiled name only; no supported action or scoring contract."
+    };
+  return undefined;
 }
 
 export function labelForRollType(

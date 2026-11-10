@@ -2,7 +2,7 @@
 
 Updated 2026-11-10. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.0` and model `dice-only-4`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.0` and model `dice-only-5`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -24,9 +24,19 @@ A declined choice (Used0) can instead preserve one original attempt: the questio
 
 This extends the dice-only-3 admission policy without changing schema2.0 or category weights; prior model reports are rejected. It does not deduplicate every possible repeated question or reconstruct all action identities. Loner/Pro/skill policies and resource accounting remain incomplete. Initial attempts can score while unmodeled replacements remain excluded; coverage is partial, not a claim that every causal action is fully modeled.
 
-`ResultUseAction.TeamId` remains in the raw payload but is not used as ownership: all 6,342 emissions in the 27-source audit report zero, including 2,920 actors on the other initial roster. Roster evidence supplies ownership where available; unresolved membership still excludes scoring. Really Stupid (34), Foul Appearance (37), and Loner (71) have corrected names but no scored policy. Block, damage and referee scoring remain excluded. Other historical mapping labels are not newly accepted by this change. The schema stays `2.0`; changed semantics require model `dice-only-4`, so old model reports are rejected rather than silently reinterpreted.
+`ResultUseAction.TeamId` remains in the raw payload but is not used as ownership: all 6,342 emissions in the 27-source audit report zero, including 2,920 actors on the other initial roster. Roster evidence supplies ownership where available; unresolved membership still excludes scoring. Really Stupid (34), Foul Appearance (37), and Loner (71) have corrected names but no scored policy. At the dice-only-4 checkpoint, block, damage and referee scoring were excluded; see the current scope below. Other historical mapping labels are not newly accepted by this change. The schema stays `2.0`; changed semantics require model `dice-only-4`, so old model reports are rejected rather than silently reinterpreted.
 
 See [playback evidence](REPLAY_UI_EVIDENCE.md), [installed enums](INSTALLED_ENUM_EVIDENCE.md), and [local corpus findings](LOCAL_REPLAY_FINDINGS.md) for provenance and limits. This model still returns only partial/insufficient evidence and never a comparative whole-match verdict.
+
+## Model dice-only-5 block, armor and context scope
+
+A linked QuestionBlockDice with one to three type-2 dice and explicit freshly rolled indices supplies a raw block pool. An applied selection and ResultBlockOutcome must reconcile to the same step participants without crossing a different action. A repeated Carrier snapshot does not break linkage; a new activation or different participants do. Repeated controller handoff/failed-Loner pools have no fresh indices, and selected/final result records are evidence rather than additional dice. Full team replacements and Brawler's one replaced Both Down require the corresponding choice, matching participants and unchanged retained faces. Conditional/unknown replacements remain unsupported. Chooser and attacker/defender roster teams are distinct.
+
+The raw ranking is Attacker Down, Both Down, Push, Defender Stumbles, Defender Down. Enumerate all six faces per fresh die (Push occurs twice), select the maximum rank for attacker choice or minimum for defender choice, and retain a five-category distribution. A favorable raw opportunity is one of the two defender-down symbols under that ranking. The observed selected face, skill-adjusted options and final outcome are separately preserved and do not enter the probability calculation. This measures the pool, not the chance of actually knocking down a player through their skills, surf geometry or ball consequences.
+
+A fresh ResultRoll|10 inside a matching DamageStep requires two explicit D6, binary result, a 2–12 base/effective target, and unique subject ownership. Empty modifier lists and pre-roll foul assists are supported. Post-roll choices, unverified skill effects, contradictory dice/targets and ambiguous owners are excluded. The favorable outcome is **armor holds**, so a self-fall break hurts the affected team and opponent damage is not credited twice. Injury, casualty and recovery chains still have no scored distribution.
+
+Context model mobility-possession-1 only estimates a non-carrier Dodge or open-square Pickup with a verified terminal reroll policy and exact pre-roll observations. Separate team/context totals and optional per-event components reconcile in the shared schema. Dice scoring remains available when state is incomplete. This is a selected supported subset; the observed policy may only be visible after an initial failure. Do not compare team context totals as unbiased full-match estimates or use them to infer a winner. See [STATE_RECONSTRUCTION.md](STATE_RECONSTRUCTION.md).
 
 ## Empty evidence versus measured zero
 
@@ -42,6 +52,6 @@ HTTP callers request worker-side serialization with the same terminating deadlin
 
 ## Reproducible verification
 
-`corepack pnpm verify` runs lint, typecheck, all unit suites, production build and browser flows sequentially. `test:e2e` prepares the worker and rebuilds the production application before starting Playwright; it cannot silently use a previous `.next` UI build. CI uses the same production build/browser command after its frozen install, audit and unit checks, without a duplicate production build.
+`corepack pnpm verify` runs lint, typecheck, all unit suites, the real Redis quota integration, production build and browser flows sequentially. `test:e2e` prepares the worker and rebuilds the production application before starting Playwright; it cannot silently use a previous `.next` UI build. CI uses the same production build/browser command after its frozen install, audit and unit checks, without a duplicate production build.
 
 Independent checks include deliberately inconsistent schema/model versions, totals, coverage, weights, event ownership, key-moment references and fabricated verdicts; bounded body reads and cancellation; exact worker output-size boundaries; real-BBR upload/export/filter/reset; malformed-success responses; HTML 413/504 errors; and user cancellation. Deployment-wide quotas, Vercel deployment acceptance, complete semantic/context goldens and committed CI evidence remain open.

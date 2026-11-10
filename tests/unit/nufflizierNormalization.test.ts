@@ -15,7 +15,7 @@ function readModelFixture(name: string): ReplayModel {
 }
 
 describe("nufflizier normalization", () => {
-  it("keeps argue-call variants scored/excluded with transparent reasons", () => {
+  it("keeps historical false referee labels outside the referee category", () => {
     const report = analyzeReplayLuck(
       readModelFixture("argue-edge-replay.json")
     );
@@ -23,29 +23,33 @@ describe("nufflizier normalization", () => {
       (event) => event.type === "argue_call"
     );
 
-    expect(argueEvents).toHaveLength(2);
+    expect(argueEvents).toHaveLength(0);
 
     const roll71 = report.events.find(
       (event) => event.metadata.rollType === 71
     );
-    const roll42 = argueEvents.find((event) => event.metadata.rollType === 42);
-    const roll70 = argueEvents.find((event) => event.metadata.rollType === 70);
+    const roll42 = report.events.find(
+      (event) => event.metadata.rollType === 42
+    );
+    const roll70 = report.events.find(
+      (event) => event.metadata.rollType === 70
+    );
 
     expect(roll71?.scoringStatus).toBe("excluded");
     expect(roll71?.type).toBe("unknown");
-    expect(roll71?.metadata.rollLabel ?? "loner").toBe("loner");
+    expect(roll71?.metadata.rollLabel).toBe("roll_71");
     expect(roll42?.scoringStatus).toBe("excluded");
     expect(roll42?.statusReason).toMatch(
-      /unsupported ResultRoll context|missing target threshold/i
+      /pending semantic confirmation|missing target threshold/i
     );
     expect(roll70?.scoringStatus).toBe("excluded");
     expect(roll70?.statusReason).toMatch(/conflicting team attribution/i);
 
     expect(report.coverage.scoredByType.argue_call).toBe(0);
-    expect(report.coverage.excludedByType.argue_call).toBe(2);
+    expect(report.coverage.excludedByType.argue_call).toBe(0);
     expect(
       Object.keys(report.coverage.excludedByReason).some((reason) =>
-        /missing target threshold|unsupported ResultRoll context/i.test(reason)
+        /missing target threshold|pending semantic confirmation/i.test(reason)
       )
     ).toBe(true);
   });
@@ -55,7 +59,7 @@ describe("nufflizier normalization", () => {
       readModelFixture("argue-edge-replay.json")
     );
     const roll70 = report.events.find(
-      (event) => event.type === "argue_call" && event.metadata.rollType === 70
+      (event) => event.metadata.rollType === 70
     );
 
     expect(roll70).toBeDefined();
@@ -79,7 +83,7 @@ describe("nufflizier normalization", () => {
       readModelFixture("argue-rolltype-42.json")
     );
     const roll42 = report.events.filter(
-      (event) => event.type === "argue_call" && event.metadata.rollType === 42
+      (event) => event.metadata.rollType === 42
     );
 
     expect(roll42.length).toBeGreaterThan(0);

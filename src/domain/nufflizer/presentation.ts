@@ -24,3 +24,43 @@ export function formatDiceContribution(
 ): string {
   return scoredCount ? value.toFixed(digits) : "Not scored";
 }
+
+export function formatPreRollPosition(
+  context: LuckReport["events"][number]["metadata"]["preRoll"]
+): string | null {
+  if (!context || context.teamTurn === null) return null;
+  const period =
+    context.period === "first_half"
+      ? "First half"
+      : context.period === "second_half"
+        ? "Second half"
+        : context.period === "extra_time"
+          ? "Extra time"
+          : null;
+  return [period, "team turn " + context.teamTurn].filter(Boolean).join(", ");
+}
+
+export function explainContextImpact(
+  event: LuckReport["events"][number]
+): string | null {
+  const impact = event.contextualImpact;
+  if (!impact) return null;
+  const { availableMoves, possession, markedBounce } = impact.components;
+  return (
+    [
+      "Failure would end the turn with " +
+        availableMoves +
+        " other standing teammates still able to move",
+      possession ? "success would secure the ball" : null,
+      possession
+        ? Math.round(markedBounce * 100) +
+          "% of eligible bounce squares are marked by an opponent"
+        : null
+    ]
+      .filter(Boolean)
+      .join("; ") +
+    ". " +
+    impact.contribution.toFixed(2) +
+    " context units under the recorded reroll policy."
+  );
+}

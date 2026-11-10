@@ -89,7 +89,7 @@ function field(nodes: OrderedNode[], tag: string): string {
   return node ? textOf(children(node, tag)) : "";
 }
 function asObject(nodes: OrderedNode[]): RecordLike {
-  const out: RecordLike = {};
+  const out: RecordLike = Object.create(null) as RecordLike;
   for (const node of nodes) {
     const tag = tagOf(node);
     if (!tag || tag === "#text" || tag === "#comment") continue;
@@ -97,11 +97,9 @@ function asObject(nodes: OrderedNode[]): RecordLike {
     const value = inner.some((n) => !tagOf(n).startsWith("#"))
       ? asObject(inner)
       : textOf(inner);
-    if (tag in out)
-      out[tag] = [
-        ...(Array.isArray(out[tag]) ? (out[tag] as unknown[]) : [out[tag]]),
-        value
-      ];
+    const previous = out[tag];
+    if (Array.isArray(previous)) previous.push(value);
+    else if (tag in out) out[tag] = [previous, value];
     else out[tag] = value;
   }
   return out;
@@ -213,7 +211,11 @@ export function extractStructuredTurnsFromReplayXml(
       );
     return { tag, payload };
   }
-  function sequenceEvents(nodes: OrderedNode[]) {
+  function sequenceEvents(
+    nodes: OrderedNode[],
+    replayStep: number | undefined,
+    childIndex: number
+  ) {
     sequence++;
     for (const [stepIndex, stepNode] of find(nodes, "StepResult").entries()) {
       const stepNodes = children(stepNode, "StepResult");
@@ -228,6 +230,15 @@ export function extractStructuredTurnsFromReplayXml(
       const context = {
         sequenceId: `sequence-${sequence}`,
         actionId: `sequence-${sequence}-step-${stepIndex}`,
+        stepTag: step.tag,
+        stepActorId: str(p.PlayerId),
+        stepTargetId: str(p.TargetId),
+        damageSource: step.tag === "DamageStep" ? num(p.Source) : undefined,
+        locator: {
+          replayStep,
+          childIndex: replayStep === undefined ? undefined : childIndex,
+          stepIndex
+        },
         stepType: num(p.StepType),
         playerId: str(p.PlayerId),
         targetId: str(p.TargetId),
@@ -241,7 +252,10 @@ export function extractStructuredTurnsFromReplayXml(
         payload: p,
         ...context
       });
-      for (const message of find(stepNodes, "StringMessage")) {
+      for (const [messageIndex, message] of find(
+        stepNodes,
+        "StringMessage"
+      ).entries()) {
         const { tag, payload } = decode(
           field(children(message, "StringMessage"), "MessageData")
         );
@@ -279,6 +293,7 @@ export function extractStructuredTurnsFromReplayXml(
                           : "unknown";
         push({
           ...context,
+          locator: { ...context.locator, messageIndex },
           type,
           sourceTag: tag,
           playerId,
@@ -357,7 +372,7 @@ export function extractStructuredTurnsFromReplayXml(
         // snapshot once. A checkpoint is not another random event.
       }
       if (tag === "EventExecuteSequence") {
-        sequenceEvents(inner);
+        sequenceEvents(inner, directReplayStep, childIndex);
         continue;
       }
       if (tag === "EventActiveGamerChanged") {
@@ -366,6 +381,10 @@ export function extractStructuredTurnsFromReplayXml(
         push({
           type: "unknown",
           sourceTag: tag,
+          locator:
+            directReplayStep === undefined
+              ? undefined
+              : { replayStep: directReplayStep, childIndex },
           gamerId: activeGamer,
           payload: asObject(inner)
         });
@@ -396,6 +415,10 @@ export function extractStructuredTurnsFromReplayXml(
         push({
           type: turn.possibleTurnover ? "turnover" : "unknown",
           sourceTag: tag,
+          locator:
+            directReplayStep === undefined
+              ? undefined
+              : { replayStep: directReplayStep, childIndex },
           reasonCode: turn.endTurnReason,
           payload: asObject(inner)
         });
@@ -403,7 +426,30 @@ export function extractStructuredTurnsFromReplayXml(
         continue;
       }
       if (tag.startsWith("Event")) {
-        push({ type: "unknown", sourceTag: tag, payload: asObject(inner) });
+        const payload = asObject(inner);
+        // Direct EventRoll stores numeric XML fields as strings and can omit
+        // DieType and Outcome. Keep omissions; never coerce them to zero.
+        const roll = tag === "EventRoll" ? payload : undefined;
+        const rollType =
+          roll &&
+          typeof roll.RollType === "string" &&
+          /^\d{1,6}$/.test(roll.RollType)
+            ? Number(roll.RollType)
+            : undefined;
+        if (rollType !== undefined) register("roll", rollType, ROLL_TYPE_MAP);
+        push({
+          type: rollType === undefined ? "unknown" : "roll",
+          sourceTag: tag,
+          playerId: roll ? str(roll.PlayerId) : undefined,
+          teamId: roll ? str(roll.TeamId) : undefined,
+          rollType,
+          rollLabel: labelForCode(ROLL_TYPE_MAP, rollType, "roll"),
+          locator:
+            directReplayStep === undefined
+              ? undefined
+              : { replayStep: directReplayStep, childIndex },
+          payload
+        });
         continue;
       }
       walk(inner);

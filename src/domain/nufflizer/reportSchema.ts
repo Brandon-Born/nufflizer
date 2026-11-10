@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { VERDICT_SUMMARIES } from "./explainabilityCopy";
-import { LUCK_CATEGORY_WEIGHTS } from "./constants";
+import { CONTEXT_MODEL_VERSION } from "./contextImpact";
+import { DICE_MODEL_VERSION, LUCK_CATEGORY_WEIGHTS } from "./constants";
 import { REPLAY_LIMITS } from "@/domain/replay/limits";
 
 export const LuckEventTypeSchema = z.enum([
@@ -29,6 +30,67 @@ export const LuckEventMetadataSchema = z.strictObject({
   actionId: text.optional(),
   sequenceId: text.optional(),
   sourceIndex: count.optional(),
+  locator: z
+    .strictObject({
+      replayStep: z.number().int().positive().optional(),
+      childIndex: z.number().int().min(0).optional(),
+      stepIndex: z.number().int().min(0).optional(),
+      messageIndex: z.number().int().min(0).optional()
+    })
+    .optional(),
+  preRoll: z
+    .strictObject({
+      checkpointAfter: count,
+      checkpointReplayStep: z.number().int().positive().optional(),
+      phaseCode: z.number().int().nonnegative().nullable(),
+      period: z.enum(["first_half", "second_half", "extra_time"]).nullable(),
+      activeTeamId: text.nullable(),
+      teamTurn: z.number().int().positive().nullable(),
+      turnsRemaining: count.nullable(),
+      activationId: text.nullable(),
+      actorCell: z
+        .strictObject({
+          x: z.number().int().min(0).max(25),
+          y: z.number().int().min(0).max(14)
+        })
+        .nullable(),
+      actorCarriesBall: z.boolean().nullable(),
+      movementCheckLinked: z.boolean(),
+      otherUsefulActivations: z.number().int().min(0).max(64).nullable(),
+      pickupBounceExposure: probability.nullable()
+    })
+    .optional(),
+  block: z
+    .strictObject({
+      pool: z.strictObject({
+        faces: z.array(z.number().int().min(0).max(4)).min(1).max(3),
+        rolledIndexes: z.array(z.number().int().min(0).max(2)).min(1).max(3),
+        outcomes: z.array(z.number().int().min(0).max(6)).min(1).max(3),
+        attackerChooses: z.boolean(),
+        sourceId: text.optional()
+      }),
+      attackerId: text,
+      defenderId: text,
+      defenderTeamId: text,
+      chooserTeamId: text,
+      chooserGamerId: z.number().int().min(0).max(1).optional(),
+      selectedFace: z.number().int().min(0).max(4),
+      selectedOutcome: z.number().int().min(0).max(6),
+      finalOutcome: z.number().int().min(0).max(6),
+      finalSourceId: text.optional(),
+      reroll: z.enum(["initial", "team", "brawler"]),
+      distribution: z.array(probability).length(5),
+      rankedSymbol: z.number().int().min(0).max(4)
+    })
+    .optional(),
+  damage: z
+    .strictObject({
+      subjectId: text,
+      subjectTeamId: text,
+      sourceCode: finite.optional(),
+      perspective: z.literal("subject_team")
+    })
+    .optional(),
   isRollCandidate: z.boolean().optional(),
   mergedBlockAnchorId: text.optional(),
   rollType: finite.optional(),
@@ -62,6 +124,18 @@ export const LuckEventSchema = z.strictObject({
   actualSuccess: z.boolean().nullable(),
   delta: finite,
   weightedDelta: finite,
+  contextualImpact: z
+    .strictObject({
+      policy: z.enum(["declined_team_reroll", "full_team_reroll"]),
+      components: z.strictObject({
+        availableMoves: finite.min(0),
+        possession: finite.min(0),
+        markedBounce: probability
+      }),
+      difference: finite.min(0),
+      contribution: finite
+    })
+    .optional(),
   label: text,
   tags: z.array(LuckMomentTagSchema).max(2),
   scoringStatus: LuckScoringStatusSchema,
@@ -89,7 +163,10 @@ export const LuckTeamAggregateSchema = z.strictObject({
     argueCall: finite,
     movementRisk: finite
   }),
-  eventCount: count
+  eventCount: count,
+  impactCount: count,
+  impactScore: finite,
+  impactByType: z.strictObject({ dodge: finite, ball_handling: finite })
 });
 // This model can only abstain. Supporting comparative verdicts requires a new, validated model version.
 export const LuckVerdictSchema = z.strictObject({
@@ -120,7 +197,8 @@ function near(a: number, b: number): boolean {
 export const LuckReportSchema = z
   .strictObject({
     schemaVersion: z.literal("2.0"),
-    modelVersion: z.literal("dice-only-4"),
+    modelVersion: z.literal(DICE_MODEL_VERSION),
+    contextModelVersion: z.literal(CONTEXT_MODEL_VERSION),
     limitations: z.array(text).min(1).max(REPLAY_LIMITS.events),
     id: text.min(1),
     generatedAt: z.iso.datetime(),
@@ -206,6 +284,61 @@ export const LuckReportSchema = z
         ([reason, n]) => report.coverage.excludedByReason[reason] === n
       ), "Exclusion reasons must conserve excluded records.");
     for (const event of report.events) {
+      const context = event.metadata.preRoll;
+      if (context && event.metadata.sourceIndex !== undefined)
+        require(context.checkpointAfter <
+          event.metadata
+            .sourceIndex, "Pre-roll evidence must precede its source.");
+      const impact = event.contextualImpact;
+      if (impact) {
+        require(event.scoringStatus === "scored" &&
+          !!context &&
+          context.activeTeamId === event.teamId &&
+          (event.type === "dodge" ||
+            event.type ===
+              "ball_handling"), "Context requires a scored roll and verified pre-roll ownership.");
+        require(near(
+          impact.difference,
+          Object.values(impact.components).reduce((a, b) => a + b, 0)
+        ) &&
+          near(
+            impact.contribution,
+            event.delta * impact.difference
+          ), "Contextual contribution must reconcile with its components.");
+      }
+      const block = event.metadata.block;
+      const damage = event.metadata.damage;
+      if (block) {
+        require(event.type === "block" &&
+          teamIds.has(block.defenderTeamId) &&
+          block.defenderTeamId !== event.teamId &&
+          block.chooserTeamId ===
+            (block.pool.attackerChooses
+              ? event.teamId
+              : block.defenderTeamId), "Block roles must use opposing verified teams.");
+        require(block.pool.faces.length === block.pool.outcomes.length &&
+          new Set(block.pool.rolledIndexes).size ===
+            block.pool.rolledIndexes.length &&
+          block.pool.rolledIndexes.every((i) => i < block.pool.faces.length) &&
+          near(
+            block.distribution.reduce((sum, n) => sum + n, 0),
+            1
+          ), "Block probabilities and fresh indices must reconcile.");
+        if (event.scoringStatus === "scored")
+          require(event.probabilitySuccess !== null &&
+            near(
+              event.probabilitySuccess,
+              block.distribution[3]! + block.distribution[4]!
+            ) &&
+            event.actualSuccess ===
+              block.rankedSymbol >=
+                3, "Block chance and outcome must agree with the raw symbol contract.");
+      }
+      if (damage)
+        require(event.type === "armor_break" &&
+          damage.subjectId === event.playerId &&
+          damage.subjectTeamId ===
+            event.teamId, "Armor uses the affected player's perspective.");
       if (event.scoringStatus === "excluded") {
         require(event.probabilitySuccess === null &&
           event.delta === 0 &&
@@ -240,6 +373,27 @@ export const LuckReportSchema = z
       const owned = report.events.filter(
         (event) => event.teamId === team.teamId
       );
+      const impacts = owned.filter(
+        (event) => event.contextualImpact !== undefined
+      );
+      require(team.impactCount === impacts.length &&
+        near(
+          team.impactScore,
+          impacts.reduce(
+            (sum, event) => sum + event.contextualImpact!.contribution,
+            0
+          )
+        ), "Context totals must reconcile.");
+      for (const type of ["dodge", "ball_handling"] as const)
+        require(near(
+          team.impactByType[type],
+          impacts
+            .filter((event) => event.type === type)
+            .reduce(
+              (sum, event) => sum + event.contextualImpact!.contribution,
+              0
+            )
+        ), "Context categories must reconcile.");
       const contributions = owned.filter(
         (event) => event.scoringStatus === "scored"
       );

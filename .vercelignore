@@ -1,0 +1,8 @@
+demo-replays/
+replays/
+tests/
+docs/
+.github/
+.generated/
+test-results/
+playwright-report/

@@ -11,7 +11,7 @@ The app is one-shot and ephemeral: upload -> analyze -> read/download report.
 
 ## Current Status and Agent Backlog
 
-The November 2026 remediation adds bounded ingestion, terminating workers, patched dependencies, versioned partial reports, and full-evidence filters. Reports currently abstain from whole-match comparisons. Only provisional numeric threshold dice contributions are available; block, damage, referee semantics, state reconstruction, and contextual impact await independent acceptance evidence. Passing the suite does not establish unverified game-rule mappings.
+The November 2026 remediation adds bounded ingestion, terminating workers, patched dependencies, versioned partial reports, and full-evidence filters. Reports currently abstain from whole-match comparisons. Supported dice contributions include numeric movement and ball handling, raw linked block pools, and verified armor from the affected team’s side. Some Dodge and Pickup events can also show a separate pre-roll context estimate. Injury, referee outcomes, broader tactical state and whole-match comparisons still need evidence. Passing the suite does not establish unverified game-rule mappings.
 
 Start remediation with [PROJECT_PLAN.md](docs/PROJECT_PLAN.md) and [REMEDIATION_BACKLOG.md](docs/REMEDIATION_BACKLOG.md). The backlog contains 28 permanent issue IDs with source locations, reproduction evidence, dependencies, and acceptance criteria. The operating guide is [AGENTS.md](AGENTS.md).
 
@@ -59,11 +59,14 @@ corepack pnpm verify
 corepack pnpm lint
 corepack pnpm typecheck
 corepack pnpm test
+corepack pnpm test:quota
 corepack pnpm build
 corepack pnpm test:e2e
 ```
 
-`test:e2e` prepares the worker and rebuilds the production app before starting the browser server. `verify` runs lint, typecheck, unit tests, that build, and browser tests sequentially; no prior `.next` build is reused as proof of current source behavior.
+`test:e2e` prepares the worker and rebuilds the production app before starting the browser server. `verify` runs lint, typecheck, unit tests, the Redis integration, that build, and browser tests sequentially; no prior `.next` build is reused as proof of current source behavior.
+
+Redis 7 and its CLI are required on PATH for the isolated quota integration. The app can run locally without Redis. See the ingestion contract for the production setup.
 
 ## Demo Replays
 

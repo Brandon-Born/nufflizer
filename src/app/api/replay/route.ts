@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { appConfig } from "@/lib/config";
 import { analyzeUpload } from "@/server/upload/analyzeUpload";
 export const runtime = "nodejs";
-export const maxDuration = 15;
+export const maxDuration = 20;
 export async function POST(request: Request) {
   const response =
     appConfig.legacyReplayApiMode === "enabled"

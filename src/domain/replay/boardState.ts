@@ -21,6 +21,7 @@ export type ObservedTeam = {
   players: ObservedPlayer[];
 };
 export type ObservedBoard = {
+  stable: boolean | null;
   periodCode: number | null;
   phaseCode: number | null;
   turnsPerPeriod: number | null;
@@ -156,6 +157,7 @@ export function observeBoardCheckpoint(
     ...source,
     status: "observed",
     board: {
+      stable: flag(raw.IsStable),
       periodCode: nonnegative(raw.Period),
       phaseCode: nonnegative(raw.CurrentPhase),
       turnsPerPeriod: nonnegative(raw.TurnsPerPeriod),

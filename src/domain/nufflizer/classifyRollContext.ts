@@ -114,23 +114,13 @@ export function classifyRollContext(
     };
   }
 
-  if (context.rollType === 42 || context.rollType === 70) {
-    if (!hasTargetThreshold(context)) {
-      return {
-        eventType: "argue_call",
-        scored: false,
-        rollCandidate: true,
-        reason: "excluded: missing target threshold"
-      };
-    }
-
+  if (context.rollType === 21 || context.rollType === 30)
     return {
       eventType: "argue_call",
       scored: false,
       rollCandidate: true,
-      reason: `excluded: unsupported ResultRoll context for rollType ${context.rollType}`
+      reason: "excluded: referee outcome and resource policy not yet verified"
     };
-  }
 
   if (contract?.kind === "randomizer") {
     return {

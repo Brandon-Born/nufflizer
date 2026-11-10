@@ -24,6 +24,16 @@ export type ReplayEvent = {
   sourceIndex?: number;
   sequenceId?: string;
   actionId?: string;
+  stepTag?: string;
+  stepActorId?: string;
+  stepTargetId?: string;
+  damageSource?: number;
+  locator?: {
+    replayStep?: number;
+    childIndex?: number;
+    stepIndex?: number;
+    messageIndex?: number;
+  };
   type: ReplayEventType;
   sourceTag: string;
   sourceLabel?: string;

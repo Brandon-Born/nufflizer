@@ -3,20 +3,41 @@ import { ReplayValidationError } from "@/lib/errors";
 import { REPLAY_LIMITS } from "@/domain/replay/limits";
 import { AnalysisExecutionError, runAnalysis } from "../runAnalysis";
 import { readReplayUpload, UploadError } from "./readReplayUpload";
-import { consumeLocalUploadQuota } from "./rateLimit";
+import { acquireUpload } from "./rateLimit";
+import type { UploadGate } from "./sharedQuota";
 
 export async function analyzeUpload(
   request: Request,
-  legacy = false
+  legacy = false,
+  gate: UploadGate = acquireUpload
 ): Promise<NextResponse> {
-  if (!consumeLocalUploadQuota())
+  if (request.signal.aborted)
+    return NextResponse.json(
+      { error: "Upload cancelled.", code: "CANCELLED" },
+      { status: 499 }
+    );
+  const slot = await gate();
+  if (slot.kind !== "admitted") {
+    const rateLimited = slot.kind === "rate_limit";
     return NextResponse.json(
       {
-        error: "Too many requests. Please wait a minute and retry.",
-        code: "RATE_LIMIT"
+        error: rateLimited
+          ? "Too many uploads. Please wait and retry."
+          : slot.kind === "busy"
+            ? "Analysis is busy. Please retry shortly."
+            : "Upload capacity is temporarily unavailable. Please retry shortly.",
+        code: rateLimited
+          ? "RATE_LIMIT"
+          : slot.kind === "busy"
+            ? "BUSY"
+            : "QUOTA_UNAVAILABLE"
       },
-      { status: 429, headers: { "Retry-After": "60" } }
+      {
+        status: rateLimited ? 429 : 503,
+        headers: { "Retry-After": String(slot.retryAfter) }
+      }
     );
+  }
   try {
     const input = await readReplayUpload(request);
     const report = legacy
@@ -70,5 +91,7 @@ export async function analyzeUpload(
       { error: "Failed to analyze replay.", code: "ANALYSIS_FAILED" },
       { status: 500 }
     );
+  } finally {
+    await slot.release();
   }
 }

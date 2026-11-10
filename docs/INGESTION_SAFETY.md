@@ -1,6 +1,6 @@
 # Ingestion and execution contract
 
-Updated 2026-11-09. Owning IDs: NUF-002–007, 023–026. Local safeguards are implemented; deployment-wide abuse controls and deployed verification remain open.
+Updated 2026-11-10. Owning IDs: NUF-002–007, 023–026. Local safeguards and the shared Redis gate are implemented. Hosted quota verification is separate from local integration evidence.
 
 ## Shared bounds
 
@@ -22,10 +22,10 @@ HTTP report serialization now runs inside the same worker deadline and enforces 
 
 - HTTP 400 `INVALID_REPLAY`: invalid root, missing/duplicate teams, unsupported version, malformed nested encoding/XML or roll fields. No verdict is produced.
 - HTTP 400 `INVALID_UPLOAD`: invalid multipart/file shape or unsupported extension; 413 for byte limits, 408 for upload timeout, 499 for cancellation.
-- HTTP 504 `TIMEOUT` / 499 `CANCELLED`: terminated analysis, no fabricated report. HTTP 503 `BUSY` bounds local concurrency.
+- HTTP 504 `TIMEOUT` / 499 `CANCELLED`: terminated analysis, no fabricated report. HTTP 503 `BUSY` bounds concurrency.
 - HTTP 413 `REPORT_TOO_LARGE`: serialized JSON exceeds 4,000,000 bytes; use a smaller file or CLI.
-- HTTP 429 `RATE_LIMIT` with `Retry-After: 60`: local aggregate ten-request/minute safeguard. It ignores attacker-supplied forwarding headers and stores one bounded bucket. **It is not deployment-wide enforcement (NUF-024).**
-- CLI input/execution failures print a descriptive error to stderr and exit nonzero. JSON reports include schema `2.0`, model `dice-only-2`, limitations and explicit verdict status. Unknown odds/results are null, not invented zeros/failures. Weighted numeric contributions are additive dice units; no tactical or calibrated probability claim is made.
+- HTTP 429 RATE_LIMIT includes the shared quota window remaining in Retry-After. An unavailable required backend returns 503 QUOTA_UNAVAILABLE before body reading.
+- CLI input/execution failures print a descriptive error to stderr and exit nonzero. JSON reports include schema `2.0`, model `dice-only-5`, limitations and explicit verdict status. Unknown odds/results are null, not invented zeros/failures. Weighted numeric contributions are additive dice units; no tactical or calibrated probability claim is made.
 
 ## Dependency and deployment evidence
 
@@ -37,4 +37,12 @@ Primary references checked during remediation:
 - [Parser advisory inventory](https://github.com/NaturalIntelligence/fast-xml-parser/security/advisories), including [repeated DOCTYPE bypass](https://github.com/NaturalIntelligence/fast-xml-parser/security/advisories/GHSA-8r6m-32jq-jx6q).
 - [Vercel limits](https://vercel.com/docs/functions/limitations): 4.5 MB request/nonstreamed-response caps. The smaller application limits reserve multipart/error headroom. Browser errors also handle platform-generated non-JSON 413/504 responses.
 
-No deployment account/configuration is present in the checkout. NUF-023 remains open until a deployed near-limit upload, response, timeout and traced-worker smoke succeeds. NUF-024 requires a deployment-wide quota/concurrency backend or verified platform firewall policy; local limits cannot establish that acceptance criterion. No replay persistence has been added. Local quota metadata is one count/reset timestamp, expires after 60 seconds, contains no client identifiers and is not logged; deployment-wide metadata retention must be documented with the eventual backend.
+## Shared quota and preview deployment
+
+The production Vercel environment requires a shared gate. Set server-only NUFFLIZIER_QUOTA_REDIS_REST_URL and NUFFLIZIER_QUOTA_REDIS_REST_TOKEN to an HTTPS Redis REST endpoint supporting JSON-array commands and Lua EVAL. NUFFLIZIER_QUOTA_NAMESPACE optionally isolates project/environment keys; default nufflizier-preview and nufflizier-production namespaces separate the environments. Set NUFFLIZIER_UPLOAD_LIMITER=shared to require it explicitly (including in previews). An incomplete configuration or backend failure returns 503, without falling back to local quotas. Unconfigured local and preview builds use the bounded process gate only.
+
+One atomic Redis script uses the backend clock to enforce ten admitted uploads per 60-second window and two concurrent leases across instances. Slots are acquired before reading multipart bodies, released after analysis/cancellation, and expire in 25 seconds if the request dies. Both APIs share the same gate when legacy is explicitly enabled. Both routes allow 20 seconds of function time; their existing 10-second upload and 4-second worker deadlines are unchanged. A quota call is bounded to 850 ms and a 1 KiB reply. No IP, forwarded header, user ID, replay, report or filename is sent to Redis. It stores one expiring count and at most two random lease IDs, with TTLs of 60 and 25 seconds respectively. Backend persistence/backups are an operator setting, not replay storage.
+
+Run corepack pnpm test:quota with Redis 7 and its CLI on PATH. The integration invokes two independent handler gates using the production Lua against one private Redis Unix socket, verifying admission, forwarded-header resistance, body-read avoidance, cleanup, expiry and fail-closed errors. CI runs it after the unit tests. The [Redis atomic scripting contract](https://redis.io/docs/latest/develop/programmability/) and [JSON command format](https://upstash.com/docs/redis/features/restapi#post-command-in-body) document the backend protocol. A real hosted store remains a separate acceptance check.
+
+The authorized target is a separate nufflizer-preview Vercel project; the legacy bb-trainer project is not used. The preview build uses frozen dependencies and excludes evidence/test replay files. No production alias or persistent replay storage is needed. Record exact deployment observations in the implementation log.
