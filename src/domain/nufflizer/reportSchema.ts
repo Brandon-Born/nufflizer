@@ -23,8 +23,14 @@ const probability = finite.min(0).max(1);
 const numbers = z.array(finite).max(REPLAY_LIMITS.xmlNodes);
 export const LuckEventMetadataSchema = z.strictObject({
   originalDice: z.unknown().optional(),
+  rerollOriginalId: text.optional(),
   rerollQuestionId: text.optional(),
+  rerollDecisionId: text.optional(),
+  rerollResource: z.enum(["team", "skill"]).optional(),
+  teamRerollsSpent: z.union([z.literal(0), z.literal(1)]).optional(),
+  rerollSkill: z.enum(["Catch", "Dodge", "Sure Hands"]).optional(),
   rerollPolicy: text.optional(),
+  mergedRerollAnchorId: text.optional(),
   sourceTag: text,
   sourceId: text.optional(),
   actionId: text.optional(),

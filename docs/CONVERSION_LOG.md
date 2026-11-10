@@ -634,3 +634,7 @@ NUF-007 closes bounded arithmetic acceptance; the block/damage/action/state and 
 ## 2026-11-10 - Hosted shared quota and primary parser cost
 
 NUF-024 closes on independent Redis integration and isolated Vercel Preview quota/lease evidence. The shared gate fails closed when its temporary free Preview store expires. NUF-023 remains open after successful app/platform size checks and a real replay timeout. Primary analysis avoids allocating a second source-step tree when top-level metadata is available; 12 demo replay models agree with the full parse, and legacy fallback keeps the full tree. Execution/size limits and score contracts stay unchanged. See the implementation record for hosted measurements and the Linux reproduction.
+
+## 2026-11-10 - Recorded skill rerolls and board parse projection
+
+Dice-only-6 counts supported same-step Dodge, Catch and Sure Hands rerolls once, with original dice, choice and result provenance and explicit team cost. Conditional/mixed skills and broader action accounting stay open. Primary parsing skips unused snapshot fields without changing the ordered evidence or the legacy raw tree. Restored frozen CI passed on d669cd5; the previous Preview passed exact upload size boundaries but still timed out on larger real replays. See the implementation record for deployment and corpus evidence.

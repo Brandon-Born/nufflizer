@@ -13,7 +13,13 @@ import {
 } from "./mappings";
 import { labelForRollType } from "./rollTypeContracts";
 import type { ReplayEvent, ReplayTurn, ReplayUnknownCode } from "./types";
-import { SAFE_XML_OPTIONS, parseSafeXml, type ValidatedXml } from "./safeXml";
+import {
+  SAFE_XML_OPTIONS,
+  parseSafeXml,
+  projectReplayBoards,
+  type ValidatedXml,
+  type XmlProjection
+} from "./safeXml";
 import { REPLAY_LIMITS } from "./limits";
 import { ReplayValidationError } from "@/lib/errors";
 
@@ -88,7 +94,6 @@ function field(nodes: OrderedNode[], tag: string): string {
   const node = find(nodes, tag)[0];
   return node ? textOf(children(node, tag)) : "";
 }
-type Projection = { readonly [field: string]: true | Projection };
 const cellProjection = { X: true, Y: true } as const;
 const boardProjection = {
   Period: true,
@@ -117,10 +122,14 @@ const boardProjection = {
       }
     }
   },
-  Ball: { Cell: cellProjection, Carrier: true, IsHeld: true }
-} as const satisfies Projection;
+  Ball: { Cell: cellProjection, Carrier: true, IsHeld: true },
+  Bomb: { Carrier: true }
+} as const satisfies XmlProjection;
 
-function asObject(nodes: OrderedNode[], projection?: Projection): RecordLike {
+function asObject(
+  nodes: OrderedNode[],
+  projection?: XmlProjection
+): RecordLike {
   const out: RecordLike = Object.create(null) as RecordLike;
   for (const node of nodes) {
     const tag = tagOf(node);
@@ -142,7 +151,8 @@ function asObject(nodes: OrderedNode[], projection?: Projection): RecordLike {
 
 export function extractStructuredTurnsFromReplayXml(
   xml: ValidatedXml,
-  replayVersion?: string
+  replayVersion?: string,
+  projectSnapshots = false
 ): {
   turns: ReplayTurn[];
   unknownCodes: ReplayUnknownCode[];
@@ -151,7 +161,9 @@ export function extractStructuredTurnsFromReplayXml(
   const tree = new XMLParser({
     ...SAFE_XML_OPTIONS,
     preserveOrder: true
-  }).parse(xml) as OrderedNode[];
+  }).parse(
+    projectSnapshots ? projectReplayBoards(xml, boardProjection) : xml
+  ) as OrderedNode[];
   const turns: ReplayTurn[] = [];
   const boardCheckpoints: ReplayBoardCheckpoint[] = [];
   let replayStep = 0;

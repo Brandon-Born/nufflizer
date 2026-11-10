@@ -682,7 +682,8 @@ export function parseReplayXml(
 
   const structured = extractStructuredTurnsFromReplayXml(
     validatedXml,
-    replayVersion
+    replayVersion,
+    options.omitRawReplaySteps
   );
   if (
     options.omitRawReplaySteps &&

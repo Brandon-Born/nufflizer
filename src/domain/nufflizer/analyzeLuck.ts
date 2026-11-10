@@ -1,6 +1,10 @@
 import { VERDICT_SUMMARIES } from "./explainabilityCopy";
 import { formatDiceContribution, scoredEvidenceForTeam } from "./presentation";
-import { linkTeamRerolls } from "./rerolls";
+import {
+  linkObservedSkillRerolls,
+  linkTeamRerolls,
+  type RerollLink
+} from "./rerolls";
 import { CONTEXT_MODEL_VERSION, estimateNumericImpact } from "./contextImpact";
 import {
   reconstructPreRollEvidence,
@@ -285,12 +289,12 @@ function buildNormalizedEvent(
   playerToTeam: ReadonlyMap<string, string>,
   blockRecord: BlockRecord | undefined,
   contextBySource: ReadonlyMap<string, PreRollEvidence>,
-  rerollLink?: ReturnType<typeof linkTeamRerolls> extends Map<number, infer T>
-    ? T
-    : never
+  rerollLink?: RerollLink
 ): LuckEvent | null {
   const payload = isRecord(event.payload) ? event.payload : undefined;
-  const preRoll = contextBySource.get(rerollLink?.questionId ?? event.id ?? "");
+  const preRoll = contextBySource.get(
+    rerollLink?.originalId ?? rerollLink?.questionId ?? event.id ?? ""
+  );
   const rollType = event.rollType ?? toNumber(payload?.RollType);
   const rollLabel =
     replayVersion === "1-4-0-0"
@@ -314,6 +318,19 @@ function buildNormalizedEvent(
   const { rerollAvailable, rerollUsed } = rerollLink ?? {
     rerollAvailable: false,
     rerollUsed: false
+  };
+  const rerollMetadata = {
+    rerollAvailable,
+    rerollUsed,
+    originalDice: rerollLink?.originalDice,
+    rerollOriginalId: rerollLink?.originalId,
+    rerollQuestionId: rerollLink?.questionId,
+    rerollDecisionId: rerollLink?.decisionId,
+    rerollResource: rerollLink?.resource,
+    teamRerollsSpent: rerollLink?.teamRerollsSpent,
+    rerollSkill: rerollLink?.skill,
+    rerollPolicy: rerollLink?.policy,
+    mergedRerollAnchorId: rerollLink?.mergedIntoId
   };
   const normalizationFlags: string[] = [];
   const normalizationNotes: string[] = [];
@@ -339,9 +356,7 @@ function buildNormalizedEvent(
 
   if (!rerollAvailable && skillsUsed.length > 0) {
     normalizationFlags.push("skill_modifier_present_without_explicit_reroll");
-    normalizationNotes.push(
-      "skill modifiers observed without explicit team reroll question"
-    );
+    normalizationNotes.push("skill modifiers alone do not establish a reroll");
   }
 
   let classification = classifyRollContext({
@@ -353,7 +368,9 @@ function buildNormalizedEvent(
     diceCount: dice.length
   });
   const isRollCandidate =
-    blockRecord?.kind !== "summary" && isRollCandidateEvent(event);
+    !rerollLink?.mergedIntoId &&
+    blockRecord?.kind !== "summary" &&
+    isRollCandidateEvent(event);
 
   const resolvedTeamId = resolveTeamId(replayTurn, event);
   const teamId =
@@ -549,11 +566,7 @@ function buildNormalizedEvent(
         dieTypes,
         modifiers,
         modifiersSum: modifiers.reduce((sum, value) => sum + value, 0),
-        rerollAvailable,
-        rerollUsed,
-        originalDice: rerollLink?.originalDice,
-        rerollQuestionId: rerollLink?.questionId,
-        rerollPolicy: rerollLink?.policy,
+        ...rerollMetadata,
         skillsUsed,
         normalizationFlags,
         normalizationNotes
@@ -630,7 +643,7 @@ function buildNormalizedEvent(
           rollType,
           rerollLink?.retainedOriginal
             ? "declined_team_reroll"
-            : rerollAvailable
+            : rerollLink?.resource === "team"
               ? "full_team_reroll"
               : undefined,
           delta
@@ -671,7 +684,7 @@ function buildNormalizedEvent(
           ),
     tags,
     scoringStatus: "scored",
-    statusReason: `${classification.reason}; ${probability.reason}; ${resolvedActual.reason}`,
+    statusReason: `${classification.reason}; ${probability.reason}; ${resolvedActual.reason}${rerollLink?.policy ? `; ${rerollLink.policy}` : ""}`,
     explainability: {
       target,
       baseOdds: probability.baseOdds,
@@ -712,11 +725,7 @@ function buildNormalizedEvent(
       dieTypes,
       modifiers,
       modifiersSum: modifiers.reduce((sum, value) => sum + value, 0),
-      rerollAvailable,
-      rerollUsed,
-      originalDice: rerollLink?.originalDice,
-      rerollQuestionId: rerollLink?.questionId,
-      rerollPolicy: rerollLink?.policy,
+      ...rerollMetadata,
       skillsUsed,
       normalizationFlags,
       normalizationNotes
@@ -797,6 +806,12 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
 
   for (const replayTurn of replay.turns) {
     const rerollLinks = linkTeamRerolls(replayTurn.events);
+    linkObservedSkillRerolls(
+      replayTurn.events,
+      replay.replayVersion,
+      playerToTeam,
+      rerollLinks
+    );
     const blockRecords = linkBlockPools(
       replayTurn.events,
       replay.replayVersion
@@ -930,7 +945,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       0
     ),
     denominatorDescription:
-      "Roll candidates include every reported random outcome, including unknown families and randomizers; allEvents additionally includes retained block/damage summaries. Neither percentage measures state reconstruction or whole-match confidence.",
+      "Roll candidates include unknown families and randomizers. Linked checks are counted once; allEvents additionally includes retained evidence such as block selections and first dice. Neither percentage measures state reconstruction or whole-match confidence.",
     allEvents: {
       scoredCount: allScoredCount,
       excludedCount: allExcludedCount,

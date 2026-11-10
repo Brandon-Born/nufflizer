@@ -48,7 +48,8 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   // Independent raw audit: eight fresh Status-1 Pickup/Catch records, the
   // team-rerolled Pickup at 336/0/1, and two retained originals from questions
   // at 60/0/3 (Pickup4+, die3) and 61/2/0 (Catch5+, die3), kept at 61/0/1
-  // and 62/0/1 after Used0. Other stale/skill replacements remain excluded.
+  // and 62/0/1 after Used0. One fresh Pickup is grouped with its verified
+  // Sure Hands replacement below; unsupported stale/replacement records stay excluded.
   await expect(page.getByRole("status")).toContainText("11 matching events");
   await expect(
     page
@@ -62,7 +63,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
   expect(report.schemaVersion).toBe("2.0");
-  expect(report.modelVersion).toBe("dice-only-5");
+  expect(report.modelVersion).toBe("dice-only-6");
   // Independent raw decode: sequence 6 step 4 offers Push/Stumbles; away
   // chooses Stumbles (7/0/0) and outcome 6 resolves at 9/0/1.
   const firstBlock = report.events.find(
@@ -78,6 +79,24 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   });
   expect(firstBlock.probabilitySuccess).toBeCloseTo(5 / 9, 12);
   expect(report.coverage.scoredByType.ball_handling).toBe(11);
+  // Independent raw decode at 86/1/messages 2–4: Pickup3+ die1, Sure Hands,
+  // fresh die4. Retain both dice and score the single successful check.
+  const pickup = report.events.find(
+    (event: { metadata: { actionId?: string; rerollSkill?: string } }) =>
+      event.metadata.actionId === "sequence-86-step-1" &&
+      event.metadata.rerollSkill === "Sure Hands"
+  );
+  expect(pickup).toMatchObject({
+    actualSuccess: true,
+    scoringStatus: "scored",
+    metadata: {
+      rerollResource: "skill",
+      teamRerollsSpent: 0,
+      originalDice: { Die: { DieType: 0, Value: 1 } },
+      dice: [4]
+    }
+  });
+  expect(pickup.probabilitySuccess).toBeCloseTo(8 / 9, 12);
   const retained = report.events.filter(
     (event: { metadata: { rerollPolicy?: string } }) =>
       event.metadata.rerollPolicy?.startsWith("Retained original")

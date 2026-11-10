@@ -104,3 +104,65 @@ export function parseValidatedXml(
       : {})
   }).parse(xml) as Record<string, unknown>;
 }
+
+export type XmlProjection = { readonly [field: string]: true | XmlProjection };
+
+// ReplayStep/BoardState contains repeated snapshots whose only consumers use
+// the fields in this projection. Operate on already validated source and
+// retain every sibling, so replay step/message locators stay exact.
+export function projectReplayBoards(
+  xml: ValidatedXml,
+  fields: XmlProjection
+): ValidatedXml {
+  // Numeric references must still reach the parser's codepoint checks even
+  // when they occur in otherwise unused data.
+  if (!xml.includes("<BoardState") || xml.includes("&#")) return xml;
+  const tokens =
+    /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<(\/?)([^\s<>"'!?/]+)(?:[^"'<>]|"[^"]*"|'[^']*')*>/g;
+  const names: string[] = [];
+  const rules: (true | XmlProjection | undefined)[] = [];
+  const parts: string[] = [];
+  let skipDepth = -1;
+  let keepFrom = 0;
+  for (const match of xml.matchAll(tokens)) {
+    const [tag, closing, name] = match;
+    if (!name) continue;
+    if (closing) {
+      if (names.pop() !== name) return xml;
+      rules.pop();
+      if (skipDepth === names.length) {
+        keepFrom = match.index + tag!.length;
+        skipDepth = -1;
+      }
+      continue;
+    }
+    const depth = names.length;
+    const parent = rules[depth - 1];
+    const empty = tag!.endsWith("/>");
+    let rule: true | XmlProjection | undefined =
+      parent === true ? true : undefined;
+    if (skipDepth < 0 && parent && parent !== true) {
+      if (Object.hasOwn(parent, name)) {
+        rule = parent[name];
+      } else {
+        parts.push(xml.slice(keepFrom, match.index));
+        if (empty) keepFrom = match.index + tag!.length;
+        else skipDepth = depth;
+      }
+    } else if (
+      depth === 2 &&
+      (names[0] === "Replay" || names[0] === "MatchReplay") &&
+      names[1] === "ReplayStep" &&
+      name === "BoardState"
+    ) {
+      rule = fields;
+    }
+    if (!empty) {
+      names.push(name);
+      rules.push(rule);
+    }
+  }
+  if (names.length || skipDepth !== -1 || parts.length === 0) return xml;
+  parts.push(xml.slice(keepFrom));
+  return parts.join("") as ValidatedXml;
+}

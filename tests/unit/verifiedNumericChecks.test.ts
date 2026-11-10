@@ -54,23 +54,51 @@ describe("UI-backed numeric check contracts, replay 1-4-0-0", () => {
     }
     expect(report.verdict.luckierTeam).toBe("unknown");
   });
-  it("identifies UI-002 Pick up and excludes its unmodeled Sure Hands replacement", () => {
+  it("counts UI-002's two failed Pickup dice once under Sure Hands", () => {
     const report = analyzeReplayLuck(fragment("001", "UI-002", [], [44]));
     const pickup = report.events.filter((e) => e.metadata.rollType === 4);
     expect(pickup).toHaveLength(2);
     expect(pickup[0]).toMatchObject({
       type: "ball_handling",
       teamId: "1",
-      actualSuccess: false,
-      scoringStatus: "scored"
-    });
-    expect(pickup[0]!.probabilitySuccess).toBeCloseTo(2 / 3, 12);
-    expect(pickup[1]).toMatchObject({
       scoringStatus: "excluded",
-      probabilitySuccess: null,
-      weightedDelta: 0
+      metadata: {
+        isRollCandidate: false,
+        mergedRerollAnchorId: pickup[1]!.metadata.sourceId
+      }
     });
-    expect(pickup[1]!.statusReason).toMatch(/reroll policy/);
+    expect(pickup[1]).toMatchObject({
+      scoringStatus: "scored",
+      actualSuccess: false,
+      metadata: {
+        rerollResource: "skill",
+        rerollSkill: "Sure Hands",
+        teamRerollsSpent: 0,
+        rerollOriginalId: pickup[0]!.metadata.sourceId,
+        originalDice: { Die: { DieType: 0, Value: 1 } },
+        dice: [1]
+      }
+    });
+    expect(pickup[1]!.probabilitySuccess).toBeCloseTo(8 / 9, 12);
+    expect(pickup[1]!.statusReason).toMatch(/Sure Hands.*no team reroll/);
+    expect(report.coverage.scoredByType.ball_handling).toBe(1);
+  });
+  it("counts UI-028's ordinary Dodge separately from its skill-rerolled Dodge", () => {
+    const report = analyzeReplayLuck(fragment("003", "UI-028", [10, 11], [41]));
+    const dodges = report.events.filter((e) => e.metadata.rollType === 2);
+    expect(dodges).toHaveLength(3);
+    expect(dodges[0]).toMatchObject({
+      scoringStatus: "scored",
+      actualSuccess: true
+    });
+    expect(dodges[0]!.probabilitySuccess).toBeCloseTo(2 / 3, 12);
+    expect(dodges[1]!.metadata.isRollCandidate).toBe(false);
+    expect(dodges[2]).toMatchObject({
+      scoringStatus: "scored",
+      actualSuccess: true,
+      metadata: { rerollSkill: "Dodge", teamRerollsSpent: 0, dice: [4] }
+    });
+    expect(dodges[2]!.probabilitySuccess).toBeCloseTo(8 / 9, 12);
   });
   it("links UI-014's hand-off recipient Catch reroll once, with original question dice", () => {
     const report = analyzeReplayLuck(fragment("001", "UI-014", [2, 9], []));
@@ -80,7 +108,8 @@ describe("UI-backed numeric check contracts, replay 1-4-0-0", () => {
       playerId: "2",
       type: "ball_handling",
       scoringStatus: "scored",
-      actualSuccess: true
+      actualSuccess: true,
+      metadata: { rerollResource: "team", teamRerollsSpent: 1 }
     });
     expect(catches[0]!.probabilitySuccess).toBeCloseTo(8 / 9, 12);
     expect(catches[0]!.metadata.originalDice).toEqual({
@@ -96,7 +125,11 @@ describe("UI-backed numeric check contracts, replay 1-4-0-0", () => {
       teamId: "1",
       actualSuccess: false,
       scoringStatus: "scored",
-      metadata: { rerollAvailable: false, rerollUsed: false }
+      metadata: {
+        rerollAvailable: false,
+        rerollUsed: false,
+        teamRerollsSpent: 0
+      }
     });
     expect(pickups[0]!.probabilitySuccess).toBeCloseTo(2 / 3, 12);
     expect(pickups[0]!.metadata.originalDice).toEqual({
@@ -104,16 +137,59 @@ describe("UI-backed numeric check contracts, replay 1-4-0-0", () => {
     });
     expect(pickups[0]!.metadata.rerollPolicy).toMatch(/retained original/i);
   });
-  it("retains UI-097's natural-one Catch failure despite Diving Catch +1", () => {
+  it("retains UI-097's natural-one Catch die and scores the skill-rerolled success once", () => {
     const report = analyzeReplayLuck(fragment("025", "UI-097", [], [40, 49]));
     const catches = report.events.filter((e) => e.metadata.rollType === 7);
     expect(catches).toHaveLength(2);
     expect(catches[0]).toMatchObject({
       playerId: "40",
       teamId: "1",
-      actualSuccess: false,
-      scoringStatus: "scored"
+      scoringStatus: "excluded",
+      metadata: { outcomeCode: 0, dice: [1], isRollCandidate: false }
     });
+    expect(catches[1]).toMatchObject({
+      playerId: "40",
+      teamId: "1",
+      scoringStatus: "scored",
+      actualSuccess: true,
+      metadata: {
+        rerollSkill: "Catch",
+        teamRerollsSpent: 0,
+        dice: [3],
+        originalDice: { Die: { DieType: 0, Value: 1 } }
+      }
+    });
+    expect(catches[1]!.probabilitySuccess).toBeCloseTo(35 / 36, 12);
+  });
+  it.each([
+    "stale",
+    "different actor",
+    "wrong skill",
+    "contradictory die",
+    "interrupted",
+    "missing owner"
+  ])("does not replace UI-097's original with %s evidence", (variant) => {
+    const replay = fragment("025", "UI-097", [], [40, 49]);
+    const turn = replay.turns.find((item) =>
+      item.events.some((event) => event.rollType === 7)
+    )!;
+    const start = turn.events.findIndex((event) => event.rollType === 7);
+    const skill = turn.events[start + 1]!;
+    const final = turn.events[start + 2]!;
+    if (variant === "stale") final.payload!.NewRoll = 0;
+    if (variant === "different actor") skill.payload!.PlayerId = 49;
+    if (variant === "wrong skill") skill.payload!.Skill = 28;
+    if (variant === "contradictory die") final.payload!.Outcome = 0;
+    if (variant === "interrupted")
+      turn.events.splice(
+        start + 1,
+        0,
+        rollEvent({ sourceTag: "UnknownRecord" })
+      );
+    if (variant === "missing owner") replay.playerOwnershipKeys = [];
+    const catches = analyzeReplayLuck(replay).events.filter(
+      (event) => event.metadata.rollType === 7
+    );
     expect(catches[0]!.probabilitySuccess).toBeCloseTo(5 / 6, 12);
     expect(catches[1]!.scoringStatus).toBe("excluded");
   });

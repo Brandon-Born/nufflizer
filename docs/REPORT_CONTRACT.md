@@ -2,7 +2,7 @@
 
 Updated 2026-11-10. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.0` and model `dice-only-5`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.0` and model `dice-only-6`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -38,6 +38,10 @@ A fresh ResultRoll|10 inside a matching DamageStep requires two explicit D6, bin
 
 Context model mobility-possession-1 only estimates a non-carrier Dodge or open-square Pickup with a verified terminal reroll policy and exact pre-roll observations. Separate team/context totals and optional per-event components reconcile in the shared schema. Dice scoring remains available when state is incomplete. This is a selected supported subset; the observed policy may only be visible after an initial failure. Do not compare team context totals as unbiased full-match estimates or use them to infer a winner. See [STATE_RECONSTRUCTION.md](STATE_RECONSTRUCTION.md).
 
+## Model dice-only-6 recorded skill rerolls
+
+UI-002/028/094/097 show two fresh numeric dice separated by explicit Sure Hands, Dodge or Catch usage in the same player step. A uniquely owned actor, same step/family/target/modifiers, failed initial D6 and a valid replacement are required. The original remains visible as linked evidence and the completed check contributes once under `1-(1-p)^2`. A failed replacement without a verified ending stays unsupported; UI-002's immediate recorded bounce supplies the terminal failure for Pickup. The report records the two dice, both roll locators, the skill-use locator, and zero team rerolls spent on that check. A verified full team reroll records one spent, while declining records zero. Unsupported mixtures of skill and team choices, Pro, Loner, Pass and turn-wide resource reconciliation remain open. The existing tactical model still only covers its verified team policies.
+
 ## Empty evidence versus measured zero
 
 A contribution sum over no scored events is mathematically zero in JSON, but is not a measurement of even luck. UI/CLI presentation uses the number of scored records for that team/category: no records displays **Not scored** (or **No scored evidence** for a team); a measured sum of zero displays a numeric zero. The insufficient-evidence verdict always abstains. Unknown probabilities/results are null, not zero/failure.
@@ -54,4 +58,4 @@ HTTP callers request worker-side serialization with the same terminating deadlin
 
 `corepack pnpm verify` runs lint, typecheck, all unit suites, the real Redis quota integration, production build and browser flows sequentially. `test:e2e` prepares the worker and rebuilds the production application before starting Playwright; it cannot silently use a previous `.next` UI build. CI uses the same production build/browser command after its frozen install, audit and unit checks, without a duplicate production build.
 
-Independent checks include deliberately inconsistent schema/model versions, totals, coverage, weights, event ownership, key-moment references and fabricated verdicts; bounded body reads and cancellation; exact worker output-size boundaries; real-BBR upload/export/filter/reset; malformed-success responses; HTML 413/504 errors; and user cancellation. Deployment-wide quotas, Vercel deployment acceptance, complete semantic/context goldens and committed CI evidence remain open.
+Independent checks include deliberately inconsistent schema/model versions, totals, coverage, weights, event ownership, key-moment references and fabricated verdicts; bounded body reads and cancellation; exact worker output-size boundaries; real-BBR upload/export/filter/reset; malformed-success responses; HTML 413/504 errors; and user cancellation. See the remediation ledger for hosted quota, build and CI evidence and remaining rule, context and deployment acceptance.

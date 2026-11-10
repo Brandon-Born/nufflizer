@@ -1,6 +1,6 @@
 # Ingestion and execution contract
 
-Updated 2026-11-10. Owning IDs: NUF-002–007, 023–026. Local safeguards and the shared Redis gate are implemented. Hosted quota verification is separate from local integration evidence.
+Updated 2026-11-10. Owning IDs: NUF-002–007, 023–026. Local safeguards and the shared Redis gate are implemented. Both real Redis integration and the isolated hosted Preview verify the shared quota. See the implementation log for measurements and the Preview store's lifetime.
 
 ## Shared bounds
 
@@ -25,7 +25,7 @@ HTTP report serialization now runs inside the same worker deadline and enforces 
 - HTTP 504 `TIMEOUT` / 499 `CANCELLED`: terminated analysis, no fabricated report. HTTP 503 `BUSY` bounds concurrency.
 - HTTP 413 `REPORT_TOO_LARGE`: serialized JSON exceeds 4,000,000 bytes; use a smaller file or CLI.
 - HTTP 429 RATE_LIMIT includes the shared quota window remaining in Retry-After. An unavailable required backend returns 503 QUOTA_UNAVAILABLE before body reading.
-- CLI input/execution failures print a descriptive error to stderr and exit nonzero. JSON reports include schema `2.0`, model `dice-only-5`, limitations and explicit verdict status. Unknown odds/results are null, not invented zeros/failures. Weighted numeric contributions are additive dice units; no tactical or calibrated probability claim is made.
+- CLI input/execution failures print a descriptive error to stderr and exit nonzero. JSON reports include schema `2.0`, model `dice-only-6`, limitations and explicit verdict status. Unknown odds/results are null, not invented zeros/failures. Weighted numeric contributions are additive dice units; no calibrated probability claim is made.
 
 ## Dependency and deployment evidence
 

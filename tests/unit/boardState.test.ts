@@ -7,9 +7,8 @@ import {
 } from "@/domain/replay/boardState";
 import { envelope, rollXml, sequence } from "../helpers/replay";
 
-type Projection = {
-  [tag: string]: null | string | Projection | (string | Projection)[];
-};
+type Projection = { [tag: string]: Atom | Atom[] };
+type Atom = null | string | number | Projection;
 type EventEvidence = {
   replayStep: number;
   eventIndex: number;
@@ -21,7 +20,7 @@ function xml(projection: Projection): string {
       (Array.isArray(values) ? values : [values])
         .map(
           (value) =>
-            `<${tag}>${value === null ? "" : typeof value === "string" ? value : xml(value)}</${tag}>`
+            `<${tag}>${value === null ? "" : typeof value === "object" ? xml(value) : value}</${tag}>`
         )
         .join("")
     )
@@ -89,6 +88,34 @@ function synthetic(overrides: Record<string, unknown> = {}) {
 }
 
 describe("NUF-016 ordered, explicitly observed board checkpoints", () => {
+  it("prunes only unused snapshot fields without changing carrier order or message locators", () => {
+    const board = xml({ BoardState: synthetic() }).replace(
+      "</BoardState>",
+      '<Bomb><Carrier>-1</Carrier><Effects/></Bomb><Unused key="1>0"><![CDATA[</BoardState>]]><!-- <Carrier>99</Carrier> --><Look><Carrier>100</Carrier></Look></Unused></BoardState>'
+    );
+    const original = envelope(
+      `<ReplayStep>${board}<Clock/>${sequence([rollXml()])}</ReplayStep>`
+    );
+    const full = parseReplayXml(original);
+    const projected = parseReplayXml(original, { omitRawReplaySteps: true });
+    expect(projected.boardCheckpoints).toEqual(full.boardCheckpoints);
+    expect(projected.turns).toEqual(full.turns);
+    expect(
+      projected.turns[0]!.events.find(
+        (event) => event.sourceTag === "ResultRoll"
+      )!.locator
+    ).toMatchObject({
+      replayStep: 1,
+      childIndex: 2,
+      messageIndex: 0
+    });
+    expect(() =>
+      parseReplayXml(
+        original.replace("<Effects/>", "<Effects>&#99999999;</Effects>"),
+        { omitRawReplaySteps: true }
+      )
+    ).toThrow(/character reference/);
+  });
   it("preserves UI-096's held ball then clears unsupported possession when fields disappear", () => {
     const checkpoints = playback("025", "UI-096").boardCheckpoints!;
     expect(checkpoints.map((c) => [c.replayStep, c.childIndex])).toEqual([

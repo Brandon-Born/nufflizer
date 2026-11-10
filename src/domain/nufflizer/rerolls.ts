@@ -1,34 +1,58 @@
 import type { ReplayEvent } from "@/domain/replay/types";
+import { numericCheckExclusion } from "./numericCheckContract";
 
-type Link = {
+export type RerollLink = {
   rerollAvailable: boolean;
   rerollUsed: boolean;
   questionId?: string;
   originalDice?: unknown;
   retainedOriginal?: boolean;
   exclusionReason?: string;
-  resource?: "team";
+  resource?: "team" | "skill";
+  teamRerollsSpent?: 0 | 1;
+  skill?: "Catch" | "Dodge" | "Sure Hands";
+  originalId?: string;
+  decisionId?: string;
+  mergedIntoId?: string;
   policy?: string;
 };
-function isFailedSingleD6(roll: Record<string, unknown>): boolean {
+function singleD6(roll: Record<string, unknown>): number | undefined {
   const dice = roll.Dice as
     { Die?: { DieType?: unknown; Value?: unknown } } | undefined;
   const die = dice?.Die;
-  return (
-    die?.DieType === 0 &&
+  return die?.DieType === 0 &&
     Number.isInteger(die.Value) &&
     Number(die.Value) >= 1 &&
-    Number(die.Value) <= 6 &&
+    Number(die.Value) <= 6
+    ? Number(die.Value)
+    : undefined;
+}
+function isFailedSingleD6(roll: Record<string, unknown>): boolean {
+  const face = singleD6(roll);
+  return (
+    face !== undefined &&
     Number.isInteger(roll.Difficulty) &&
     Number(roll.Difficulty) >= 2 &&
     Number(roll.Difficulty) <= 6 &&
-    Number(die.Value) < Number(roll.Difficulty)
+    face < Number(roll.Difficulty)
+  );
+}
+function sameRoll(
+  a: Record<string, unknown>,
+  b: Record<string, unknown>
+): boolean {
+  return (
+    a.Difficulty === b.Difficulty &&
+    a.Requirement === b.Requirement &&
+    JSON.stringify(a.Modifiers) === JSON.stringify(b.Modifiers)
   );
 }
 // Questions carry the original failed dice. Choice and result often occur in a later sequence.
 // Match the explicit actor/step/target/roll contract; proximity alone is never sufficient.
-export function linkTeamRerolls(events: ReplayEvent[]): Map<number, Link> {
-  const links = new Map<number, Link>();
+export function linkTeamRerolls(
+  events: ReplayEvent[]
+): Map<number, RerollLink> {
+  const links = new Map<number, RerollLink>();
   const initialRollsInStep = new Set<string>();
   let pending:
     | {
@@ -46,16 +70,6 @@ export function linkTeamRerolls(events: ReplayEvent[]): Map<number, Link> {
       a.targetId !== undefined &&
       a.targetId === b.targetId &&
       (!a.actorTeamId || !b.actorTeamId || a.actorTeamId === b.actorTeamId)
-    );
-  }
-  function sameRoll(
-    a: Record<string, unknown>,
-    b: Record<string, unknown>
-  ): boolean {
-    return (
-      a.Difficulty === b.Difficulty &&
-      a.Requirement === b.Requirement &&
-      JSON.stringify(a.Modifiers) === JSON.stringify(b.Modifiers)
     );
   }
   function sameDie(
@@ -191,8 +205,10 @@ export function linkTeamRerolls(events: ReplayEvent[]): Map<number, Link> {
         rerollAvailable: fullTeam,
         rerollUsed: choice.payload?.Used === 1,
         questionId: question.id,
+        decisionId: choice.id,
         originalDice: roll?.Dice,
         resource: fullTeam ? "team" : undefined,
+        teamRerollsSpent: fullTeam ? 1 : retainedOriginal ? 0 : undefined,
         policy: fullTeam
           ? "Full team reroll on the recorded failed initial attempt; choice quality is not scored."
           : retainedOriginal
@@ -203,4 +219,152 @@ export function linkTeamRerolls(events: ReplayEvent[]): Map<number, Link> {
     pending = undefined;
   }
   return links;
+}
+
+const SKILL_CHECKS = new Map<
+  number,
+  { code: number; stepType: number; name: NonNullable<RerollLink["skill"]> }
+>([
+  [2, { code: 7, stepType: 1, name: "Dodge" }],
+  [4, { code: 61, stepType: 1, name: "Sure Hands" }],
+  [7, { code: 6, stepType: 4, name: "Catch" }]
+]);
+
+// UI-002/028/094/097 independently identify these same-step fresh pairs.
+// Do not infer that a modifier, an available skill or a stale result rerolled dice.
+export function linkObservedSkillRerolls(
+  events: ReplayEvent[],
+  replayVersion: string | undefined,
+  playerToTeam: ReadonlyMap<string, string>,
+  links: Map<number, RerollLink>
+): void {
+  if (replayVersion !== "1-4-0-0") return;
+  const records = new Map<string, number>();
+  const key = (event: ReplayEvent, rollType: number) =>
+    event.actionId + ":" + rollType;
+  for (const event of events) {
+    if (!event.actionId) continue;
+    const family =
+      event.sourceTag === "ResultRoll"
+        ? event.rollType
+        : event.sourceTag === "QuestionTeamRerollUsage" ||
+            event.sourceTag === "QuestionSkillUsage"
+          ? (event.payload?.RollInfos as { RollType?: unknown } | undefined)
+              ?.RollType
+          : undefined;
+    if (typeof family !== "number" || !SKILL_CHECKS.has(family)) continue;
+    const group = key(event, family);
+    records.set(group, (records.get(group) ?? 0) + 1);
+  }
+
+  for (const [index, original] of events.entries()) {
+    const family = original.rollType;
+    const rule = family === undefined ? undefined : SKILL_CHECKS.get(family);
+    if (
+      !rule ||
+      family === undefined ||
+      original.sourceTag !== "ResultRoll" ||
+      !original.actionId ||
+      !original.id ||
+      !original.playerId ||
+      original.stepTag !== "PlayerStep" ||
+      original.stepType !== rule.stepType ||
+      original.stepActorId !== original.playerId ||
+      original.targetId !== "-1" ||
+      original.stepTargetId !== original.targetId ||
+      records.get(key(original, family)) !== 2
+    )
+      continue;
+    const skill = events[index + 1];
+    const final = events[index + 2];
+    const first = original.payload;
+    const replacement = final?.payload;
+    const owner = playerToTeam.get(original.playerId);
+    if (
+      !owner ||
+      !first ||
+      !replacement ||
+      !skill?.id ||
+      !final?.id ||
+      skill.sourceTag !== "ResultSkillUsage" ||
+      final.sourceTag !== "ResultRoll" ||
+      final.rollType !== family ||
+      skill.payload?.Used !== 1 ||
+      skill.payload.Skill !== rule.code ||
+      String(skill.payload.PlayerId) !== original.playerId ||
+      links.has(index) ||
+      links.has(index + 2)
+    )
+      continue;
+    if (
+      [original, skill, final].some(
+        (event) =>
+          event.actionId !== original.actionId ||
+          event.stepTag !== "PlayerStep" ||
+          event.stepType !== original.stepType ||
+          event.stepActorId !== original.playerId ||
+          event.targetId !== original.targetId ||
+          event.stepTargetId !== original.targetId ||
+          event.playerId !== original.playerId ||
+          event.actorTeamId !== owner ||
+          event.attributionConflict ||
+          (event.teamId !== undefined && event.teamId !== owner)
+      )
+    )
+      continue;
+    if (
+      first.Status !== 1 ||
+      first.Outcome !== 0 ||
+      !isFailedSingleD6(first) ||
+      replacement.Status !== 2 ||
+      !sameRoll(first, replacement) ||
+      numericCheckExclusion(replayVersion, original, false) ||
+      numericCheckExclusion(replayVersion, final, true)
+    )
+      continue;
+    const face = singleD6(replacement);
+    if (
+      face === undefined ||
+      replacement.Outcome !== Number(face >= Number(replacement.Difficulty))
+    )
+      continue;
+    if (replacement.Outcome === 0) {
+      // A failed replacement alone does not establish that there was no
+      // further choice. UI-002 links a failed Pickup to the following bounce.
+      const bounce = events[index + 3];
+      const direction = events[index + 4];
+      if (
+        family !== 4 ||
+        bounce?.sourceTag !== "BallStep" ||
+        bounce.stepType !== 3 ||
+        !bounce.actionId ||
+        bounce.sequenceId !== original.sequenceId ||
+        bounce.actionId === original.actionId ||
+        direction?.sourceTag !== "ResultRoll" ||
+        direction.rollType !== 25 ||
+        direction.actionId !== bounce.actionId
+      )
+        continue;
+    }
+    links.set(index, {
+      rerollAvailable: false,
+      rerollUsed: false,
+      mergedIntoId: final.id,
+      exclusionReason:
+        "first die retained as evidence for the skill-rerolled check"
+    });
+    links.set(index + 2, {
+      rerollAvailable: true,
+      rerollUsed: true,
+      resource: "skill",
+      teamRerollsSpent: 0,
+      skill: rule.name,
+      originalId: original.id,
+      originalDice: first.Dice,
+      decisionId: skill.id,
+      policy:
+        rule.name +
+        " rerolled the failed die; no team reroll spent on this check."
+    });
+  }
 }
