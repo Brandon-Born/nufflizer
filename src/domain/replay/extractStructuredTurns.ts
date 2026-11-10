@@ -498,11 +498,15 @@ export function extractStructuredTurnsFromReplayXml(
         finish();
         continue;
       }
-      if (tag.startsWith("Event")) {
+      const directMessage =
+        directReplayStep !== undefined &&
+        (tag.startsWith("Question") || tag.startsWith("Result"));
+      if (tag.startsWith("Event") || directMessage) {
         const payload = asObject(inner);
-        // Direct EventRoll stores numeric XML fields as strings and can omit
-        // DieType and Outcome. Keep omissions; never coerce them to zero.
-        const roll = tag === "EventRoll" ? payload : undefined;
+        // Direct roll messages use string fields and can omit DieType and
+        // Outcome. Their locators distinguish them from encoded steps.
+        const roll =
+          tag === "EventRoll" || tag === "ResultRoll" ? payload : undefined;
         const rollType =
           roll &&
           typeof roll.RollType === "string" &&
@@ -513,7 +517,13 @@ export function extractStructuredTurnsFromReplayXml(
         push({
           type: rollType === undefined ? "unknown" : "roll",
           sourceTag: tag,
-          playerId: roll ? str(roll.PlayerId) : undefined,
+          playerId:
+            roll ||
+            tag === "QuestionBribeUsage" ||
+            tag === "ResultPlayerRemoval" ||
+            tag === "ResultPlayerSentOff"
+              ? str(payload.PlayerId)
+              : undefined,
           teamId: roll ? str(roll.TeamId) : undefined,
           rollType,
           rollLabel: labelForCode(ROLL_TYPE_MAP, rollType, "roll"),

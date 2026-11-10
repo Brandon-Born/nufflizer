@@ -142,12 +142,14 @@ function extractParsedCounts(xml: string): ReferenceCounts {
         event.sourceTag
       )
     ).length,
-    casualty: allEvents.filter((event) =>
-      [
-        "ResultInjuryRoll",
-        "ResultCasualtyRoll",
-        "ResultPlayerRemoval"
-      ].includes(event.sourceTag)
+    casualty: allEvents.filter(
+      (event) =>
+        event.actionId !== undefined &&
+        [
+          "ResultInjuryRoll",
+          "ResultCasualtyRoll",
+          "ResultPlayerRemoval"
+        ].includes(event.sourceTag)
     ).length,
     turnover: replay.turns.filter((turn) => turn.possibleTurnover).length
   };

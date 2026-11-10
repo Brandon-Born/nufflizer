@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { parseReplayXml } from "@/domain/replay/parseXml";
 import { analyzeReplayLuck } from "@/domain/nufflizer/analyzeLuck";
+import { decodeReplayInput } from "@/domain/replay/decodeReplay";
+import { playbackFragment } from "../helpers/playback";
 
 describe("NUF-001 minimal source fragments", () => {
   it("preserves original question dice and adjusts only the explicitly linked replacement", () => {
@@ -76,5 +78,101 @@ describe("NUF-001 minimal source fragments", () => {
         .every((e) => e.scoringStatus === "excluded" && e.weightedDelta === 0)
     ).toBe(true);
     expect(report.verdict.luckierTeam).toBe("unknown");
+  });
+});
+
+describe("NUF-008 ordered movement and direct results", () => {
+  it("keeps UI-002's declaration and two risk-free moves before the pickup step", () => {
+    const replay = playbackFragment("001", "UI-002", [], [44]);
+    const events = replay.turns.flatMap((turn) => turn.events);
+    const declaration = events.find(
+      (event) => event.sourceTag === "ResultUseAction"
+    )!;
+    const moves = events.filter(
+      (event) => event.sourceTag === "ResultMoveOutcome"
+    );
+    expect(declaration).toMatchObject({
+      playerId: "44",
+      stepType: 0,
+      locator: { stepIndex: 0 }
+    });
+    expect(
+      moves.map((event) => [event.playerId, event.locator?.stepIndex])
+    ).toEqual([
+      ["44", 1],
+      ["44", 2],
+      ["44", 3]
+    ]);
+    const moveSteps = events.filter(
+      (event) => event.sourceTag === "PlayerStep" && event.stepType === 1
+    );
+    expect(moveSteps.map((event) => event.payload?.CellTo)).toEqual([
+      { X: 16, Y: 11 },
+      { X: 17, Y: 10 },
+      { X: 18, Y: 10 }
+    ]);
+    expect(
+      events
+        .filter((event) => event.rollType === 4)
+        .map((event) => event.actionId)
+    ).toEqual([moves[2]!.actionId, moves[2]!.actionId]);
+    expect(
+      new Set([declaration, ...moves].map((event) => event.actionId)).size
+    ).toBe(4);
+  });
+
+  it("retains demo1's direct referee and removal records with stable order across a clock insertion", () => {
+    const xml = decodeReplayInput(
+      readFileSync("demo-replays/demo1.bbr", "utf8")
+    ).xml;
+    const marker = "<QuestionBribeUsage>";
+    const withClock = xml.replace(marker, "<Clock/>" + marker);
+    expect(withClock).not.toBe(xml);
+    for (const input of [xml, withClock]) {
+      const replay = parseReplayXml(input);
+      const events = replay.turns.flatMap((turn) => turn.events);
+      const direct = events.filter(
+        (event) =>
+          [369, 370].includes(event.locator?.replayStep ?? 0) &&
+          event.actionId === undefined &&
+          [
+            "QuestionBribeUsage",
+            "ResultRoll",
+            "ResultPlayerSentOff",
+            "ResultPlayerRemoval"
+          ].includes(event.sourceTag)
+      );
+      expect(
+        direct.map((event) => [
+          event.sourceTag,
+          event.locator?.replayStep,
+          event.locator?.childIndex
+        ])
+      ).toEqual([
+        ["QuestionBribeUsage", 369, input === xml ? 3 : 4],
+        ["ResultRoll", 370, 1],
+        ["ResultPlayerSentOff", 370, 2],
+        ["ResultPlayerRemoval", 370, 3]
+      ]);
+      expect(direct[3]).toMatchObject({
+        playerId: "10",
+        payload: { Situation: "5", Reason: "2", Status: "6" }
+      });
+      const roll = analyzeReplayLuck(replay).events.find(
+        (event) => event.metadata.sourceId === direct[1]!.id
+      );
+      expect(roll).toMatchObject({
+        teamId: "unresolved",
+        type: "argue_call",
+        scoringStatus: "excluded",
+        probabilitySuccess: null,
+        metadata: {
+          dice: [3],
+          rollType: 30,
+          outcomeCode: 2,
+          isRollCandidate: true
+        }
+      });
+    }
   });
 });

@@ -270,6 +270,15 @@ function isRollCandidateEvent(event: ReplayEvent): boolean {
     (/Roll/.test(event.sourceTag) && !/RerollUsage/.test(event.sourceTag))
   );
 }
+
+function isDirectResultOrQuestion(event: ReplayEvent): boolean {
+  return (
+    event.locator?.replayStep !== undefined &&
+    event.locator.stepIndex === undefined &&
+    (event.sourceTag.startsWith("Result") ||
+      event.sourceTag.startsWith("Question"))
+  );
+}
 function normalizeExcludedReason(reason: string): string {
   return reason;
 }
@@ -541,6 +550,9 @@ function buildNormalizedEvent(
       : undefined) ??
     (isKoRecovery && !koRecovery
       ? "KO recovery requires an unmodified 4+ direct roll with matching outcome and roster evidence"
+      : undefined) ??
+    (event.sourceTag === "ResultRoll" && isDirectResultOrQuestion(event)
+      ? "direct replay roll has no verified scoring contract in this source format"
       : undefined) ??
     rerollLink?.exclusionReason ??
     numericCheckExclusion(
@@ -945,6 +957,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       if (
         !apothecary.has(eventIndex) &&
         !isRollCandidateEvent(event) &&
+        !isDirectResultOrQuestion(event) &&
         ![
           "ResultBlockOutcome",
           "ResultPushBack",

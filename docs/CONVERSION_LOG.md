@@ -658,3 +658,7 @@ Dice-only-10 records a verified Loner gate and its team resource cost separately
 ## 2026-11-10 - Direct KO recovery
 
 Dice-only-11 scores the directly recorded unmodified KO recovery check for the affected player's verified roster. The direct failure shape omits Outcome. The contract keeps that omission and scores it only when the single die is below the recorded 4+ target.
+
+## 2026-11-10 - Direct questions, results and ordered movement
+
+Dice-only-12 retains direct questions and results alongside encoded action messages. Direct referee rolls add evidence coverage with unknown odds, and decision/removal records keep their order without adding dice. NUF-008 closes on ordered-source acceptance. Full state reconstruction remains NUF-016.
