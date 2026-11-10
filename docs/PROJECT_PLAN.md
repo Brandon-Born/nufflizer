@@ -29,10 +29,10 @@ Baseline reviewed commit: `b06d50e9fa2b42b821f4f8b30ef3894c10f588ca`. The remedi
 - The legacy endpoint defaults to disabled; enabled compatibility shares safe input controls.
 - Reports are schema `2.0`, model `dice-only-3`. Zero evidence returns `insufficient_evidence`; usable numeric dice evidence returns `partial_analysis`. Whole-match comparisons abstain. Unknown odds/results are null. Provisional dice contributions are additive and retain precision.
 - Replay `1-4-0-0` has scoped UI-backed Rush (1), Dodge (2), Pick up (4), and Catch (7) numeric contracts. Freshness/status, one explicit D6, effective target, binary outcome and ownership are required; contradictory thresholds and unmodeled replacements are excluded. Catch-specific natural-one/six edges have playback evidence. Block/Blitz action labels are corrected. `ResultUseAction.TeamId=0` is preserved as raw evidence but no longer assigns the acting side. See [REPORT_CONTRACT.md](REPORT_CONTRACT.md#model-dice-only-3-numeric-scope).
-- Real block pools, injury/casualty records, unknown families and unresolved ownership are observable and reduce coverage. Disputed block/damage/referee contributions are excluded; this is a mitigation, not completed semantic support. No board-state or contextual consequence model is implemented.
+- Real block pools, injury/casualty records, unknown families and unresolved ownership are observable and reduce coverage. Disputed block/damage/referee contributions are excluded; this is a mitigation, not completed semantic support. Ordered, conservative board checkpoints are now parsed; an exact pre-roll reducer and contextual consequence model remain unimplemented. See [STATE_RECONSTRUCTION.md](STATE_RECONSTRUCTION.md).
 - Reroll linkage uses actor/step/target/roll evidence across sequences; the original question dice are retained. Turn-6 cross-attribution is fixed, but full skill policies/resource accounting and duplicate semantics remain open.
 - UI/CLI derive types from the same runtime Zod report schema; it rejects inconsistent totals/coverage, unsupported versions and fabricated comparative verdicts. Missing scored evidence displays “Not scored.” UI/CLI share copy. UI filters all evidence before paging, shows source segment locators, resets filters, and handles non-JSON errors. Actual half/team-turn/activation labels await reconstruction.
-- Current Node 22 verification passes 215 unit tests in 34 files, the production build and four Chromium browser flows, including a real sanitized `.bbr`, malformed reports, cancellation and hosting errors. This does not verify game-rule mappings, production-wide quotas, or Vercel deployment behavior. See [REPORT_CONTRACT.md](REPORT_CONTRACT.md).
+- Current Node 22 verification passes 228 unit tests in 35 files, the production build and four Chromium browser flows, including a real sanitized `.bbr`, malformed reports, cancellation and hosting errors. This does not verify game-rule mappings, production-wide quotas, or Vercel deployment behavior. See [REPORT_CONTRACT.md](REPORT_CONTRACT.md).
 
 See [INGESTION_SAFETY.md](INGESTION_SAFETY.md), [the ledger](REMEDIATION_BACKLOG.md#ledger), and [the implementation record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation).
 
@@ -43,7 +43,7 @@ See [INGESTION_SAFETY.md](INGESTION_SAFETY.md), [the ledger](REMEDIATION_BACKLOG
 | Replay decoding, parsing, attribution | partial | NUF-002–013; parsing is not production-validated |
 | Probability and actual-outcome contracts | partial | NUF-007, 009–013 |
 | Coverage and verdict reliability | partial | NUF-014–015 |
-| Board/state reconstruction and contextual impact | pending | NUF-016–019 |
+| Board/state reconstruction and contextual impact | partial | NUF-016–019 |
 | API/UI/CLI surfaces | partial | NUF-003, 015, 020–024 |
 | Legacy coaching stack | legacy-kept | NUF-025; do not add primary features here |
 | Test infrastructure | partial | Existing checks run; NUF-001, 022, 026 add independent correctness evidence |
@@ -85,9 +85,13 @@ Controlled match follow-up: [HOTSEAT_EXPERIMENTS.md](HOTSEAT_EXPERIMENTS.md) rec
 
 ## 2026-11-10 verified numeric implementation checkpoint
 
-The accumulated research is preserved on GitHub at `34fc68421a1371bb66e14f072160b33fedca26b0`. Subsequent runtime work applies a deliberately limited part of that evidence: corrected core labels/categories and action ownership, strict numeric admission, and one explicitly linked full team-reroll policy. Exact sanitized playback fragments exercise the production parser/scorer, including UI-006 away attribution, UI-008/009 separate Rush/Dodge, UI-002 Pickup, UI-014 recipient Catch at 8/9, and UI-093/097 Catch edge rules. Known Really Stupid/Foul Appearance/Loner identities remain unscored policies.
+The accumulated research is preserved on GitHub at `34fc68421a1371bb66e14f072160b33fedca26b0`; the tested numeric runtime slice is also remotely verified at `f52189727c76121f992ffd7302d9b10140f640b8`. Subsequent runtime work applies a deliberately limited part of that evidence: corrected core labels/categories and action ownership, strict numeric admission, and one explicitly linked full team-reroll policy. Exact sanitized playback fragments exercise the production parser/scorer, including UI-006 away attribution, UI-008/009 separate Rush/Dodge, UI-002 Pickup, UI-014 recipient Catch at 8/9, and UI-093/097 Catch edge rules. Known Really Stupid/Foul Appearance/Loner identities remain unscored policies.
 
 The earlier research paragraphs record their checkpoint state; their “runtime unchanged” statements do not describe this subsequent implementation. NUF-007/009/012/013 remain in progress. No contextual model, complete skill/resource policy, damage/block support or comparative verdict is claimed. Failed Bribe and natural-one Argue remain without paired raw evidence; both completed hotseat probes produced no export, so repeating that route is not prerequisite to independent engineering.
+
+## 2026-11-10 observed state checkpoint slice
+
+NUF-016 is now in progress. `ReplayModel.boardCheckpoints` preserves ordered, source-linked numeric board observations with null omissions, conservative held-possession reconciliation and explicit off-pitch geometry. Last-observation lookup excludes future snapshots; it is not an exact pre-roll reducer. Thirteen regressions include exact UI-095/096/098/099/084 event projections and adversarial boundaries. Scores/report semantics remain dice-only-3. See [STATE_RECONSTRUCTION.md](STATE_RECONSTRUCTION.md) for supported behavior and remaining policies, and [REPLAY_CAPTURE_GAPS.md](REPLAY_CAPTURE_GAPS.md#current-game-dependent-stopping-criteria) for finite game-dependent targets. Game collection is not complete; software work is independently actionable.
 
 ## Carried-Forward Commitments
 

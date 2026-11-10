@@ -672,7 +672,10 @@ export function parseReplayXml(xml: string): ReplayModel {
   const replayVersion = resolveReplayVersion(rootNode);
   validateReplayVersion(replayVersion);
 
-  const structured = extractStructuredTurnsFromReplayXml(validatedXml);
+  const structured = extractStructuredTurnsFromReplayXml(
+    validatedXml,
+    replayVersion
+  );
   const teamsFromGameInfos = extractTeamsFromGameInfos(rootNode);
   const rawTeamCandidates = collectTeamCandidates(rootNode);
   const candidateIds = rawTeamCandidates.map(
@@ -754,6 +757,7 @@ export function parseReplayXml(xml: string): ReplayModel {
     turns,
     unknownCodes: structured.unknownCodes,
     parserDiagnostics,
+    boardCheckpoints: structured.boardCheckpoints,
     raw: rootNode
   };
 }

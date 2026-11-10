@@ -1,3 +1,5 @@
+import type { ReplayBoardCheckpoint } from "./boardState";
+
 export type ReplayTeam = {
   id: string;
   name: string;
@@ -99,6 +101,7 @@ export type ReplayModel = {
   turns: ReplayTurn[];
   unknownCodes: ReplayUnknownCode[];
   parserDiagnostics?: ReplayParserDiagnostics;
+  boardCheckpoints?: ReplayBoardCheckpoint[];
   raw: unknown;
 };
 

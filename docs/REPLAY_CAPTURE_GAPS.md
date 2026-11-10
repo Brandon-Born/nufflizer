@@ -2,6 +2,14 @@
 
 Checkpoint: 2026-11-10, UI-099. This scopes further data collection for NUF-007–016 and NUF-022. It does not replace the authoritative remediation backlog or certify production behavior.
 
+## Current game-dependent stopping criteria
+
+Game-dependent collection is not complete. Its stopping point is defined per intended supported contract: independent identity/rule evidence, distinguishing outcome branches, roles, original/replacement policy and immediate state consequences, corroborated in a held-out source where applicable. Additional footage of an already resolved branch is not a completion requirement. The six original sources without positive fixtures are a source-diversity opportunity, not a quota requiring six duplicate observations. Parser/probability tests, implementation, calibration and deployment checks can continue offline and do not themselves require BB3 to remain open.
+
+The Rush/Dodge/Pickup/Catch numeric slice is implemented and tested; its basic identity checks need no duplicate gameplay capture. [Observed board checkpoints](STATE_RECONSTRUCTION.md) now preserve the existing removal, possession, availability and overtime counterexamples without assuming omitted defaults. Remaining game/reference work targets held-out action/turn boundaries, legal activation and omission rules, supported skill/choice combinations and damage/recovery policies. Raw-linked failed Bribe and natural1 Argue still require a viable capture route before those branches can be supported; two completed hotseat matches yielded no export and are not being repeated.
+
+Concrete next playback target: source009 sequence221/step0/message0 (ReplayStep282), player39's failed Dodge4+ on3, followed by self-armor and EventEndTurn282/child2 Reason2. The before/after BoardStates281/3 and282/8 record team turns6/7 ->7/7. This is an independently decoded candidate, not a new UI annotation or accepted consequence contract. Inspect the actual failure/turn-ending banner and next team activation; compare with UI-099's activation-only failure. It adds held-out state/turn evidence rather than another numeric-label example. Playback currently encounters a Windows Security firewall prompt covering BB3; the user must dismiss that prompt under the Computer Use safety rules. Independent coding is continuing.
+
 ## What the existing files can still provide
 
 The paired evidence now contains99 manually annotated cases,410 exact step records and35 direct context records from22 saved sources:21 local originals and one repository demo. All22 source verifiers pass.41 roll families have observed names; that count is not a count of fully accepted rule contracts. All paired sources declare ReplayVersion1-4-0-0, so dates alone do not establish version coverage.

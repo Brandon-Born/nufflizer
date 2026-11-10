@@ -1,4 +1,8 @@
 import { XMLParser } from "fast-xml-parser";
+import {
+  observeBoardCheckpoint,
+  type ReplayBoardCheckpoint
+} from "./boardState";
 import { z } from "zod";
 import {
   ACTION_CODE_MAP,
@@ -103,9 +107,13 @@ function asObject(nodes: OrderedNode[]): RecordLike {
   return out;
 }
 
-export function extractStructuredTurnsFromReplayXml(xml: string): {
+export function extractStructuredTurnsFromReplayXml(
+  xml: string,
+  replayVersion?: string
+): {
   turns: ReplayTurn[];
   unknownCodes: ReplayUnknownCode[];
+  boardCheckpoints: ReplayBoardCheckpoint[];
 } {
   validateSafeXml(xml);
   const tree = new XMLParser({
@@ -113,6 +121,8 @@ export function extractStructuredTurnsFromReplayXml(xml: string): {
     preserveOrder: true
   }).parse(xml) as OrderedNode[];
   const turns: ReplayTurn[] = [];
+  const boardCheckpoints: ReplayBoardCheckpoint[] = [];
+  let replayStep = 0;
   const unknown = new Map<string, ReplayUnknownCode>();
   let sequence = 0;
   let eventCount = 0;
@@ -309,10 +319,43 @@ export function extractStructuredTurnsFromReplayXml(xml: string): {
     turns.push(turn);
     turn = newTurn();
   }
-  function walk(nodes: OrderedNode[]) {
+  function walk(
+    nodes: OrderedNode[],
+    directReplayStep?: number,
+    joinedNotification = false
+  ) {
+    let childIndex = -1;
     for (const node of nodes) {
       const tag = tagOf(node);
       const inner = children(node, tag);
+      if (!tag.startsWith("#")) childIndex++;
+      if (tag === "ReplayStep") {
+        walk(inner, ++replayStep);
+        continue;
+      }
+      if (tag === "NotificationGameJoined") {
+        walk(inner, undefined, true);
+        continue;
+      }
+      if (
+        (tag === "BoardState" && directReplayStep !== undefined) ||
+        (tag === "InitialBoardState" && joinedNotification)
+      ) {
+        if (boardCheckpoints.length >= REPLAY_LIMITS.events)
+          throw new ReplayValidationError(
+            "Replay exceeds the board checkpoint limit."
+          );
+        boardCheckpoints.push(
+          observeBoardCheckpoint(asObject(inner), replayVersion, {
+            kind: tag === "InitialBoardState" ? "initial" : "board",
+            afterSourceIndex: eventCount,
+            replayStep: directReplayStep ?? null,
+            childIndex: directReplayStep === undefined ? null : childIndex
+          })
+        );
+        // Keep legacy Carrier emissions/counts while observing the complete
+        // snapshot once. A checkpoint is not another random event.
+      }
       if (tag === "EventExecuteSequence") {
         sequenceEvents(inner);
         continue;
@@ -370,6 +413,7 @@ export function extractStructuredTurnsFromReplayXml(xml: string): {
   if (turn.events.length) finish();
   return {
     turns,
+    boardCheckpoints,
     unknownCodes: [...unknown.values()].sort(
       (a, b) => b.occurrences - a.occurrences
     )
