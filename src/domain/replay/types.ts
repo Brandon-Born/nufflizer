@@ -5,6 +5,8 @@ export type ReplayTeam = {
 };
 
 export type ReplayEventType =
+  | "unknown"
+  | "step"
   | "block"
   | "blitz"
   | "foul"
@@ -16,12 +18,17 @@ export type ReplayEventType =
   | "turnover";
 
 export type ReplayEvent = {
+  id?: string;
+  sourceIndex?: number;
+  sequenceId?: string;
+  actionId?: string;
   type: ReplayEventType;
   sourceTag: string;
   sourceLabel?: string;
   playerId?: string;
   targetId?: string;
   teamId?: string;
+  attributionConflict?: boolean;
   actorTeamId?: string;
   actorTeamSource?: "explicit" | "player_map" | "turn_inferred";
   gamerId?: string;
@@ -86,6 +93,7 @@ export type ReplayModel = {
   replayVersion?: string;
   teams: ReplayTeam[];
   analysisTeamId?: string;
+  playerOwnershipKeys?: string[];
   playerNamesByTeamAndId?: Record<string, string>;
   playerNamesById?: Record<string, string>;
   turns: ReplayTurn[];

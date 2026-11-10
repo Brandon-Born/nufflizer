@@ -1,0 +1,35 @@
+{
+  "source": "demo-replays/demo1.bbr",
+  "sequenceIndex": "one-based EventExecuteSequence order in original decoded source",
+  "header": "Synthetic minimal envelope/unnamed ownership records; embedded messages retained verbatim from sanitized source",
+  "fragments": [
+    {
+      "name": "reroll-cross-link",
+      "sequences": [
+        69,
+        70,
+        72,
+        73,
+        74,
+        75,
+        76
+      ]
+    },
+    {
+      "name": "self-damage",
+      "sequences": [
+        177,
+        178,
+        179,
+        180
+      ]
+    },
+    {
+      "name": "real-block-injury",
+      "sequences": [
+        7,
+        17
+      ]
+    }
+  ]
+}

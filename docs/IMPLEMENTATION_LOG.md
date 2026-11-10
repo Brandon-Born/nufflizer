@@ -639,3 +639,136 @@ Explicit handoff next steps:
 1. Prioritize rollType evidence-gate execution for `ResultRoll|33` (highest remaining impact).
 2. Keep roll-type docs and evidence artifacts synchronized whenever demo fixture corpus changes.
 3. Re-run full validation after the next roll-family promotion.
+
+## 2026-11-09 15:35 - Adversarial remediation backlog and agent handoff
+Goal:
+1. Turn the complete adversarial review and requested consequence-sensitive luck system into an actionable backlog discoverable by a follow-up coding agent.
+
+Changes made (files):
+1. `docs/REMEDIATION_BACKLOG.md`: 28 stable IDs, priority/dependency/status ledger, reproduction evidence and runnable probe, source locations, work packets, acceptance criteria, execution instructions, review crosswalk, and closure template.
+2. `docs/PROJECT_PLAN.md`: current trust limits, subsystem status, milestones, next three issues, and retained historical updates; old active commitments mapped to new owner IDs.
+3. `AGENTS.md`, `README.md`, `docs/PROJECT_BLUEPRINT.md`: entry-point links, context-sensitive product goal, and corrected readiness framing.
+4. `docs/REPLAY_INVESTIGATION.md`, `docs/ROLL_TYPE_EVIDENCE_MATRIX.md`, `docs/ROLL_TYPE_CODE_COVERAGE.md`: historical-evidence notices directing semantic revalidation to the backlog.
+5. `docs/CONVERSION_LOG.md`, `docs/IMPLEMENTATION_LOG.md`: append-only planning/change records.
+
+Commands run + outcomes:
+1. `git status --short`, `git rev-parse HEAD`, targeted document reads, and `git diff --stat` -> inspected clean starting tree and reviewed baseline `b06d50e9fa2b42b821f4f8b30ef3894c10f588ca`.
+2. `git diff --check` -> passed.
+3. Python documentation consistency check -> passed: 28 unique packet/ledger IDs, all issues open, no dependency cycles, required Find/Work/Acceptance fields, existing local Markdown targets, and balanced fenced blocks.
+4. Runtime test/build suite not rerun for this documentation-only change. The preceding review's successful checks and their correctness limitations are recorded in the backlog as dated baseline evidence.
+5. Executed the backlog's bounded reproduction command -> all five cases reported successfully. Additional checks -> suggested issue order satisfies all dependencies; both historical logs preserved byte-for-byte as prefixes.
+
+Regressions/known gaps:
+1. No runtime remediation was performed; every backlog item remains open.
+2. Confirmed defects and unresolved semantic mappings must be reproduced/revalidated against the implementing agent's current checkout.
+3. Dependency findings/platform limits need refresh during remediation; no deployed Vercel result was obtained in the review.
+
+Explicit handoff next steps:
+1. Read `docs/REMEDIATION_BACKLOG.md` and execute NUF-001 to preserve independently expected reproductions.
+2. Address NUF-004 dependency/entity safety and NUF-005 bounded ingestion, then continue in dependency order.
+3. Keep IDs and acceptance criteria stable, assign new IDs to newly found defects, update the ledger, and append closure evidence to both logs as appropriate.
+
+## 2026-11-09 - Safe ingestion and truthful report remediation
+
+Issue(s): NUF-001–006, NUF-025 (done); NUF-007/008/012–015/019–022/026/027 (in progress); NUF-009/023/024 (blocked); NUF-010/011/016–018/028 (open).
+State: partial backlog implementation; seven locally verified closures, 21 incomplete items. No final semantic/product acceptance is claimed.
+Baseline: `b06d50e9fa2b42b821f4f8b30ef3894c10f588ca`. Pre-existing planning/documentation changes were preserved. Commit: not created; changes are in the working tree.
+
+Baseline reproduction and independently expected behavior:
+1. Before runtime edits, `scripts/remediation-probe.ts` captured all five supplied review probes plus a twelve-demo corpus inventory in `tests/fixtures/remediation/review-baseline.jsonl`. Declaration/format variants yielded zero scored events or empty reports; junk and the zero-event fixture yielded even verdicts. Baseline demo1 coverage was 168/178 despite excluded real block/injury records.
+2. Added `annotations.json` with ownership IDs, raw facts, explicit null unknown fields, independent arithmetic/XML expectations and rule-evidence status. `scripts/extract-review-fixtures.ts` preserves minimal reroll, self-damage and block/injury source fragments; `fragments-provenance.json` locates the original one-based sequences. No sensitive identifiers were introduced beyond already sanitized source payloads.
+3. Numeric reference expectations are independently enumerated: any-die `[2,2]` at 4+ fails with 3/4 success probability; every 2D6 threshold is checked against 36 outcomes; a chosen full independent team reroll at 2+ has 35/36 success probability. These are arithmetic contracts, not proof of BB3 enum/skill meanings.
+4. `scripts/context-review-probe.ts` seeds the still-open source-position/context/additivity reproductions. It makes the absence of board/counterfactual support explicit; its observations are not promoted into tests that endorse the defective context-invariant behavior.
+
+Changes and source/test paths:
+- `src/domain/replay/{decodeReplay,safeXml,limits,parseXml,extractStructuredTurns,types,attribution,rollTypeContracts}.ts`: safe, bounded, ordered source decoding; explicit team/version/envelope/event policies; stable locators; unknown messages; unnamed ownership/conflict evidence.
+- `src/server/{analysisWorker,runAnalysis}.ts`, `src/server/upload/*`, `scripts/build-analyzer.mjs`, both API routes, CLI and Next tracing: bounded multipart streaming, response guard, terminating workers with cancellation/cleanup, local concurrency and aggregate quota, default-disabled compatibility.
+- `package.json`, `pnpm-lock.yaml`, CI: supported framework/parser/validation upgrades, compatible patched PostCSS override, Node 22/pnpm 9/frozen install/audit. Generated worker bundles remain ignored and are prepared automatically.
+- `src/domain/nufflizer/*`, UI/CLI copy and landing page: bounded numeric probability/outcome parity, contradiction/missing-type exclusion, explicit linked rerolls/original dice, visible unknowns, abstention, versioned shared types, additive unrounded numeric totals, full-event filtering before bounded paging/reset and useful errors.
+- `tests/unit/remediation{Ingestion,Execution,Evidence,BoundaryParity,Fragments}.test.ts`, existing affected suites, `tests/helpers/*`, and real `.bbr` browser coverage. Historical shape/adjacency promotion assertions were replaced by raw-fact preservation/arithmetic invariants; historical evidence JSON was not silently regenerated as new truth. Incorrect contradictory synthetic examples were corrected while keeping contradiction-specific rejection tests.
+
+Acceptance criteria verified for closed issues:
+
+| Issue | Criterion evidence / result |
+| --- | --- |
+| NUF-001 | Runnable review/corpus/context probes, independent annotations and three minimal source fragments cover the review observations; baseline predates semantic edits. Missing independent rule/context evidence remains explicitly owned by NUF-009/016/017. Fixed probes are passing regressions; no permanent skipped tests were introduced. |
+| NUF-002 | Original/declaration/comment/CRLF/pretty/attribute/empty-element and wrapped-base64 variants preserve teams, order, odds and scores. Both supported roots are exercised; unsupported roots and malformed outer/embedded XML reject visibly instead of disappearing. Real demo1 original/declaration/whitespace reports agree in `current-observations.jsonl`. |
+| NUF-003 | Junk, missing dice, malformed embedded base64/XML, invalid numeric roll fields, missing/duplicate teams and unsupported versions have explicit errors. Seven invalid cases return HTTP 400 `INVALID_REPLAY` and nonzero CLI exit with no JSON verdict. Recognizable incomplete data yields an explicitly insufficient/partial report. Decoder/parser limits apply to direct service input as well as transfer entry points. |
+| NUF-004 | Refreshed production audit: original 44 advisories → zero after framework/parser/Zod/transitive patches and compatible PostCSS override. Both XML parsers disable custom entities and reject DTD declarations before tree parsing. Bounded outer/embedded entity, numeric-text and normal safe-text regressions pass. Build and production browser checks pass; CI audits dependencies without suppression. |
+| NUF-005 | Stream reading enforces total bytes independently of content length; extra/duplicate multipart parts reject. Exact file limit accepted, one extra byte rejected. zlib output bound is enforced during expansion. Depth (including quoted delimiter bypass), node, embedded-message and event limits reject within bounded tests. All twelve demos parse. A representative worker observation records timing/RSS/response size; RSS is an observation, not a peak-memory guarantee. |
+| NUF-006 | A real demo parse is terminated on a 100ms test deadline; the parent remains responsive and a concurrent small request succeeds. Client cancellation terminates work, awaits cleanup and releases concurrency; pre-aborted work never starts. HTTP/CLI use the worker boundary. Next production output traces include `.generated/analysis-worker.cjs`, and browser uploads exercise it. Vercel-specific deployment acceptance remains NUF-023. |
+| NUF-025 | Missing/invalid/disabled config returns HTTP 410 and successor metadata without parsing uploads. Explicit enabled compatibility returns its payload using the hardened reader/worker. Deprecation, HTTP-date Sunset and successor Link headers agree with README; no modules/tests were deleted and primary API/CLI remain functional. |
+
+Validation commands/results (Node v22.17.1, pnpm 9.0.0, Next 15.5.29, parser 5.12.0, Zod 4.6.7; report schema 2.0/model dice-only-2):
+1. `corepack pnpm audit --prod --json` (refreshed after final lockfile changes) → zero info/low/moderate/high/critical advisories. Registry access required the normal sandbox network escalation; no automatic approval rejection occurred.
+2. `CI=true corepack pnpm install --frozen-lockfile` → passed. A fresh source copy under `/tmp/nufflizier-fresh-xzpjiemp` installed 503 packages from the frozen lockfile. Deliberately changing the manifest's Zod spec in a separate temporary directory caused `ERR_PNPM_OUTDATED_LOCKFILE`; no silent resolution was permitted.
+3. Fresh-copy `corepack pnpm lint` → passed; `corepack pnpm typecheck` → passed; `corepack pnpm test` → **134/134 tests in 30 files passed**, including legacy/shared-parser checks and every new regression suite. `test:nufflizier` now runs the full unit suite rather than silently omitting differently named security/parser cases.
+4. Fresh-copy `corepack pnpm build` → passed. Build ran before the production browser server. Traced API artifacts include the bundled worker. No remote CI run or committed candidate was created; NUF-026 remains in progress for that evidence.
+5. `PLAYWRIGHT_BROWSERS_PATH=/tmp/nufflizier-remediation-browsers corepack pnpm test:e2e` against the production build → two flows passed. Browser plugin unavailable; repository Playwright was used. Flow: `/nufflizier` → real `demo1.bbr` upload → partial report → all four ball-handling events → evidence detail → JSON export → excluded-block filter → reset → zero-evidence report. A second flow checks junk replay and hosting-generated HTML 413 errors. Desktop 1280×720 and mobile 390×844 screenshots were inspected; meaningful content, page identity, no framework overlay, no page/console errors in the real upload flow, and interaction assertions passed. Screenshot evidence: `/tmp/nufflizier-evidence-desktop.png`, `/tmp/nufflizier-evidence-mobile.png` (temporary QA artifacts, not required dependencies).
+6. Representative local `demo1.bbr` worker: 1,787ms, 677,098-byte serialized report, 613 reported records, 30/443 scored random-outcome candidates (6.77%), four ball-handling events and an abstaining partial verdict. Process RSS before/after was 89,030,656/133,824,512 bytes; this is not peak RSS or a cross-machine benchmark. `tests/fixtures/remediation/execution-observation.json` records the observation.
+7. `scripts/remediation-probe.ts` → all twelve demos analyzed without unexplained crashes; original/declaration/whitespace variants agree; junk rejects; zero-event smoke returns insufficient evidence. Current observations are separate from historical baseline evidence. `git diff --check` and document checks for 28 stable packets/ledger rows, status values, local link targets and balanced fences passed.
+
+Remaining limitations / blockers:
+1. NUF-009: available sanitized demos and documents do not independently prove BB3 roll/step/action/skill/face/status namespace semantics. Requested another authoritative/local evidence route from the user; none has been supplied in this run. BB2 mappings were not substituted for BB3 evidence. NUF-010/011/016–018 remain open, and partial progress in NUF-007/008/012–015/019–022 does not close their unmet acceptance criteria.
+2. In particular, disputed block/damage/referee events are retained but excluded; self-damage is safely prevented from awarding positive luck, not yet correctly valued as negative damage luck. A full skill/Pro reroll policy, status-flag deduplication, resource accounting, orphan outcomes and causal coverage reconciliation are still required. No tactical state, contextual counterfactuals, calibrated strength labels, supported-analysis/even comparison or win probabilities are claimed.
+3. NUF-023: no configured Vercel deployment/account access is present. Near-limit request/response, cancellation/timeout and actual platform worker smoke remain unverified despite local tracing/browser success.
+4. NUF-024: no configured shared quota/concurrency backend or verified platform edge policy exists. The bounded one-bucket local safeguard ignores attacker-controlled forwarding headers but does not meet the multiple-instance acceptance criterion. Eventual backend metadata privacy/retention and failure policy remain required.
+5. NUF-026/027/028 remain incomplete for a committed, remotely tested candidate, final rule/context/operational reconciliation and all predecessor evidence. No deployment, publication or final backlog completion is claimed.
+
+Next ready issue: obtain NUF-009 independent semantic evidence and NUF-024/023 deployment configuration; then complete the dependency graph with the existing permanent criteria intact.
+
+## 2026-11-09 - Report contracts and independent engineering
+
+Issue(s): NUF-015/019/021/022/023/026/027 (independent engineering advanced); NUF-006 (response execution boundary strengthened); NUF-009 (status corrected to in_progress).
+State: in_progress for the full owning backlog items. Seven prior local closures remain; no new whole-item closure or full semantic acceptance is claimed.
+Commit: not created; all work remains in the shared working tree. Existing implementation/planning changes were preserved.
+
+User clarification and scope:
+1. The user confirmed that the original replay mappings were reverse-engineered and no official source exists, then asked whether other work can continue without PC/game captures. Official enum documentation is not required by the backlog. NUF-009 is now active empirical investigation; controlled captures can strengthen confidence but are not a prerequisite for independent software work.
+2. This change deliberately implements report, response, execution and verification guarantees that can be tested without inferring another game-rule ID. Existing mapping/category uncertainty and contextual acceptance criteria remain intact.
+
+Baseline reproductions / independently expected behavior:
+1. UI previously cast any successful JSON body to LuckReport. Contradictory totals or malformed success bodies could reach rendering; only TypeScript definitions were shared. A report contract must reject inconsistent values independently of whether the underlying game mapping is correct.
+2. Unknown category/team contributions were shown numerically in some UI/CLI text, despite having no scored evidence. An empty mathematical sum must be distinguishable from measured zero luck contribution.
+3. HTTP JSON serialization occurred on the API thread after worker completion. The same terminating budget should encompass report serialization, with a byte cap before copying the result to the parent. Exact output-cap/one-byte-overflow cases are independent numeric references.
+4. `test:e2e` started an existing production build without rebuilding it; a browser test could silently use stale UI code. The public test command now rebuilds the worker/app and CI runs that production build/browser step once.
+5. During final contract review, a bounded probe changed an insufficient report's headline to “Home was decisively luckier.” The first schema accepted it even though structured verdict fields abstained. The final schema binds the headline to shared, status-specific model text; a dedicated tampering regression rejects this contradiction.
+
+Changes and paths:
+- `src/domain/nufflizer/reportSchema.ts`: strict versioned Zod schema, structural/arithmetic conservation checks, model-weight checks and evidence-qualified verdict/headline constraints. `types.ts` now derives every report type from the executable schema.
+- `src/server/services/analyzeNufflizer.ts`: validates generated primary reports before returning them from the worker.
+- `src/lib/readAnalysisResponse.ts`: streaming success-body cap of 4,000,000 bytes, bounded 4 KiB error bodies, cancellation on declared/actual overflow, schema validation before consumption, and distinct messages for incompatible data, network interruption, cancellation and hosting errors.
+- `src/domain/nufflizer/presentation.ts`, `explainabilityCopy.ts`, `analyzeLuck.ts`, UI and CLI: shared evidence-qualified numeric formatting and status-specific headlines; measured zero is distinct from Not scored. Supported numeric values/weights/game classifications are not retuned.
+- `src/server/{analysisWorker,runAnalysis}.ts`, `src/server/upload/analyzeUpload.ts`: worker-side HTTP serialization/output cap, 11-byte legacy-envelope headroom, typed REPORT_TOO_LARGE/RESOURCE_LIMIT results and cleanup. The API thread only parses/constructs bounded JSON; the final response guard remains. CLI output is not restricted by the HTTP response cap.
+- `package.json`, CI: `verify` runs lint→typecheck→unit tests→production build→browser. `test:e2e` always prepares/rebuilds production artifacts; CI no longer separately repeats that build.
+- New `reportContract.test.ts`, `readAnalysisResponse.test.ts`, `reportPresentation.test.ts`; extended execution and browser suites. `docs/REPORT_CONTRACT.md`, ingestion contract, README, plan and ledger explain guarantees/limitations and the corrected reverse-engineering route.
+
+Acceptance evidence for the implemented portions:
+1. Contract tests accept existing truthful partial/insufficient reports and a real demo round-trip. They reject unsupported versions; nonfinite/out-of-range values; fabricated verdict fields/headlines; changed weights; missing outcome/ownership/evidence; duplicate IDs; altered key moments; and inconsistent coverage, exclusion counts, categories, team totals/counts and gap. These tests establish report consistency, not game semantics.
+2. Response tests reject malformed successful JSON/HTML, non-string error fields, overlarge success streams with missing/false content lengths and oversized error pages. Declared overlarge bodies and actual overflows cancel their streams. AbortError is preserved, while network interruption remains distinguishable from size failure.
+3. Presentation tests distinguish zero scored records (“Not scored”) from a genuine zero sum with scored evidence. Per-team/category counts exclude unsupported records and other teams. UI/CLI use the same helper; report JSON preserves mathematical sums and explicit evidence status.
+4. Real workers reject oversized serialized reports, accept the exact byte cap and reject a cap one byte below the generated size. Invalid cap configuration does not allocate a worker. Cleanup releases worker slots after success/rejection. Existing deadline, client-cancellation, concurrent-parent responsiveness, API/CLI invalid-input and legacy tests still pass.
+5. Browser coverage validates a real `.bbr`, all four ball-handling records, JSON export, full filters/reset and zero-evidence presentation. New flows reject inconsistent HTTP-200 reports without rendering them, show an HTML-504 timeout clearly, and cancel pending uploads back to an enabled idle form with no fabricated report.
+
+Commands/results:
+1. Fresh source copy `/tmp/nufflizier-contract-fresh-4eokv_9_`: `CI=true corepack pnpm install --frozen-lockfile` passed; lockfile resolution was skipped and all 503 packages installed from the existing dependency set. No dependency versions changed in this follow-up.
+2. Fresh-copy `PLAYWRIGHT_BROWSERS_PATH=/tmp/nufflizier-remediation-browsers corepack pnpm verify` passed: lint, typecheck, **191/191 unit tests in 33 files**, production Next.js build, and **4/4 Playwright flows**. The production build preceded the browser server, using current source. Final tightening of the headline check was included in this full verification.
+3. Focused contract/response/execution/parity suites passed during implementation, including the exact response-budget boundaries. No existing semantic evidence snapshot was regenerated to manufacture acceptance.
+4. Browser plugin unavailable; repository Playwright tested the production app at `http://127.0.0.1:3000/nufflizier`, desktop 1280×720 and mobile 390×844. Page identity/content, no framework overlay, no real-upload page/console errors, interaction flow and screenshots were checked. Screenshots inspected: `/tmp/nufflizier-contract-desktop.png`, `/tmp/nufflizier-contract-mobile.png`; temporary artifacts only. No Windows PC was accessed or game played.
+5. `git diff --check` and the stable-ID/status/link documentation checks passed. No commit, push, deployment, publication, remote message or replay persistence was created.
+
+Remaining limitations / next ready work:
+- NUF-009 is not blocked on official documentation. Continue annotated empirical contracts from raw replay facts, checkpoints, cross-fixture counterexamples and independent rule arithmetic; optional controlled gameplay captures can corroborate those inferences.
+- NUF-021 still needs completed contextual explanations after state/value work. Report consistency cannot establish correct roll/skill/beneficiary meanings or causal deduplication, so semantic/context IDs and final golden-corpus acceptance remain open.
+- NUF-023 deployed smoke, NUF-024 shared quota/concurrency configuration and NUF-026 committed/CI evidence remain outstanding. Local verification does not establish platform-wide controls or Vercel behavior.
+
+## 2026-11-09 - Commit and push of the remediation candidate
+
+User request: commit and push the reviewed implementation and handoff changes.
+Target: current branch `master`, tracked upstream `nufflizer/master` at `https://github.com/Brandon-Born/nufflizer.git`. The separate `origin` remote remains the legacy `bb-trainer` repository and is not the publication target.
+Commit: this commit (see Git history); baseline `b06d50e9fa2b42b821f4f8b30ef3894c10f588ca`.
+
+Pre-publication evidence:
+1. Refreshed `nufflizer/master`; reviewed the tracked/untracked file inventory, dependency/CI changes, fixture sizes and whitespace checks. Generated worker/build outputs, local environment files and temporary browser artifacts remain ignored.
+2. The final source was already validated from a clean frozen install: lint, typecheck, 191 unit tests in 33 files, production build and four browser flows passed. The workspace production build also passed. No runtime changes were made for the commit/push step; this entry and the plan only record publication state.
+3. Seven prior local closures remain; NUF-009 is active reverse-engineering work. Remote CI evidence, deployed validation, shared abuse controls and full semantic/context acceptance remain outstanding. Committing/pushing does not mark these requirements complete.

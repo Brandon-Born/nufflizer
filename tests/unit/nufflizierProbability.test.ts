@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { computeProbabilityForEvent, resolveActualSuccess } from "@/domain/nufflizer/probability";
+import {
+  computeProbabilityForEvent,
+  resolveActualSuccess
+} from "@/domain/nufflizer/probability";
 
 describe("nufflizier probability engine", () => {
   it("computes deterministic single-die odds", () => {
@@ -61,17 +64,11 @@ describe("nufflizier probability engine", () => {
     expect(result.baseOdds).toBeCloseTo(15 / 36, 4);
   });
 
-  it("resolves deterministic outcome codes", () => {
-    expect(resolveActualSuccess(1, [1], 6)).toEqual({
-      actualSuccess: true,
-      deterministic: true,
-      reason: "resolved by explicit success outcome code"
-    });
-    expect(resolveActualSuccess(0, [6], 2)).toEqual({
-      actualSuccess: false,
-      deterministic: true,
-      reason: "resolved by explicit failure outcome code"
-    });
+  it("refuses explicit outcomes that contradict the dice contract", () => {
+    expect(resolveActualSuccess(1, [1], 6).deterministic).toBe(false);
+    expect(resolveActualSuccess(0, [6], 2).deterministic).toBe(false);
+    expect(resolveActualSuccess(1, [6], 6).actualSuccess).toBe(true);
+    expect(resolveActualSuccess(0, [1], 2).actualSuccess).toBe(false);
   });
 
   it("resolves by dice total when outcome code is absent", () => {

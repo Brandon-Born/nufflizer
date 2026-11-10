@@ -1,5 +1,7 @@
 # Replay Investigation Notes (2026-02-08)
 
+> 2026-11-09 review notice: retain these observations as historical evidence, but revalidate semantic labels before using them for scoring. The review confirmed real block/injury exclusions, unreachable dodge scoring, and incorrect reroll/beneficiary handling. [REMEDIATION_BACKLOG.md](REMEDIATION_BACKLOG.md), especially NUF-008–014, owns the corrections and supersedes the old promotion order.
+
 These notes summarize observed structure from sanitized demo replay files:
 
 1. `demo-replays/demo1.bbr`

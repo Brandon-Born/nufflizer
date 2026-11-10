@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { classifyRollContext } from "@/domain/nufflizer/classifyRollContext";
 
 describe("nufflizier roll-context classification", () => {
-  it("treats ResultBlockRoll rollType 3 as non-scored summary context", () => {
+  it("retains actual unscored block pools in the observed denominator", () => {
     const result = classifyRollContext({
       sourceTag: "ResultBlockRoll",
       stepType: 6,
@@ -14,12 +14,12 @@ describe("nufflizier roll-context classification", () => {
     });
 
     expect(result.scored).toBe(false);
-    expect(result.rollCandidate).toBe(false);
+    expect(result.rollCandidate).toBe(true);
     expect(result.eventType).toBe("block");
-    expect(result.reason).toMatch(/summary event/i);
+    expect(result.reason).toMatch(/categorical semantics/i);
   });
 
-  it("treats ResultInjuryRoll rollType 11 as non-scored injury summary context", () => {
+  it("counts unscored ResultInjuryRoll rollType 11 as random-outcome evidence", () => {
     const result = classifyRollContext({
       sourceTag: "ResultInjuryRoll",
       stepType: 6,
@@ -30,8 +30,8 @@ describe("nufflizier roll-context classification", () => {
     });
 
     expect(result.scored).toBe(false);
-    expect(result.rollCandidate).toBe(false);
-    expect(result.reason).toMatch(/injury-chain summary/i);
+    expect(result.rollCandidate).toBe(true);
+    expect(result.reason).toMatch(/injury-chain dice/i);
   });
 
   it("scores rollType 10 as deterministic armor-break", () => {
@@ -81,7 +81,7 @@ describe("nufflizier roll-context classification", () => {
     expect(result.reason).toMatch(/pickup_attempt_check/i);
   });
 
-  it("excludes randomizer families from roll-candidate coverage", () => {
+  it("retains randomizer families as observed outcomes without success odds", () => {
     const result = classifyRollContext({
       sourceTag: "ResultRoll",
       stepType: 3,
@@ -92,11 +92,11 @@ describe("nufflizier roll-context classification", () => {
     });
 
     expect(result.scored).toBe(false);
-    expect(result.rollCandidate).toBe(false);
+    expect(result.rollCandidate).toBe(true);
     expect(result.reason).toMatch(/randomizer roll family/i);
   });
 
-  it("keeps unsupported roll families excluded and non-candidate", () => {
+  it("keeps unsupported random outcomes in the coverage denominator", () => {
     const result = classifyRollContext({
       sourceTag: "ResultRoll",
       stepType: 1,
@@ -107,7 +107,7 @@ describe("nufflizier roll-context classification", () => {
     });
 
     expect(result.scored).toBe(false);
-    expect(result.rollCandidate).toBe(false);
+    expect(result.rollCandidate).toBe(true);
     expect(result.reason).toMatch(/unsupported ResultRoll context/i);
   });
 });

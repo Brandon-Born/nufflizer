@@ -34,13 +34,13 @@ function buildReplayModel(): ReplayModel {
             teamId: "home",
             actorTeamId: "home",
             actorTeamSource: "explicit",
-            rollType: 2,
+            rollType: 7,
             rollLabel: "block_dice",
             payload: {
               Requirement: 6,
               Difficulty: 6,
               Outcome: 1,
-              Dice: { Die: { DieType: 0, Value: 5 } }
+              Dice: { Die: { DieType: 0, Value: 6 } }
             }
           }
         ]
@@ -67,19 +67,14 @@ function buildReplayModel(): ReplayModel {
             teamId: "away",
             actorTeamId: "away",
             actorTeamSource: "explicit",
-            rollType: 10,
+            rollType: 7,
             rollLabel: "armor_chain_check_2d6",
             stepType: 6,
             payload: {
               Requirement: 2,
               Difficulty: 2,
               Outcome: 0,
-              Dice: {
-                Die: [
-                  { DieType: 0, Value: 1 },
-                  { DieType: 0, Value: 1 }
-                ]
-              }
+              Dice: { Die: { DieType: 0, Value: 1 } }
             }
           }
         ]
@@ -111,7 +106,7 @@ function buildReplayModel(): ReplayModel {
               Requirement: 4,
               Difficulty: 4,
               Outcome: 1,
-              Dice: { Die: { DieType: 0, Value: 5 } }
+              Dice: { Die: { DieType: 0, Value: 6 } }
             }
           }
         ]
@@ -126,7 +121,10 @@ describe("nufflizier scoring", () => {
   it("builds a luck verdict and score gap", () => {
     const report = analyzeReplayLuck(buildReplayModel());
 
-    expect(["home", "away"]).toContain(report.verdict.luckierTeam);
+    expect(report.verdict).toMatchObject({
+      luckierTeam: "unknown",
+      status: "partial_analysis"
+    });
     expect(report.verdict.scoreGap).toBeGreaterThan(0);
     expect(report.teams).toHaveLength(2);
     expect(report.keyMoments.length).toBeGreaterThan(0);
@@ -141,9 +139,15 @@ describe("nufflizier scoring", () => {
     expect(
       report.events
         .filter((event) => event.scoringStatus === "scored")
-        .every((event) => (event.explainability.formulaSummary?.length ?? 0) > 0)
+        .every(
+          (event) => (event.explainability.formulaSummary?.length ?? 0) > 0
+        )
     ).toBe(true);
-    expect(report.events.every((event) => event.explainability.inputsSummary.length > 0)).toBe(true);
+    expect(
+      report.events.every(
+        (event) => event.explainability.inputsSummary.length > 0
+      )
+    ).toBe(true);
   });
 
   it("marks blessed and shaftaroonie moments", () => {
@@ -160,6 +164,8 @@ describe("nufflizier scoring", () => {
 
     expect(statuses.has("scored")).toBe(true);
     expect(statuses.has("excluded")).toBe(true);
-    expect(report.events.every((event) => event.statusReason.length > 0)).toBe(true);
+    expect(report.events.every((event) => event.statusReason.length > 0)).toBe(
+      true
+    );
   });
 });

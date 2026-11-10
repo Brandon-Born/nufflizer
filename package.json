@@ -4,45 +4,56 @@
   "private": true,
   "packageManager": "pnpm@9.0.0",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "node scripts/build-analyzer.mjs && next dev",
+    "build": "node scripts/build-analyzer.mjs && next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:nufflizier": "vitest run tests/unit/nufflizier*.test.ts && playwright test tests/e2e/smoke.spec.ts",
+    "test": "node scripts/build-analyzer.mjs && vitest run",
+    "test:nufflizier": "corepack pnpm test && corepack pnpm test:e2e",
     "test:legacy": "vitest run tests/unit/analyzeReplay.test.ts tests/unit/coachingOutput.test.ts tests/unit/teamScoping.test.ts tests/unit/demoReplayStructured.test.ts tests/unit/rulesPlayerLinking.test.ts tests/unit/legacyReplayApiRoute.test.ts",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
-    "nufflizier": "node --import tsx src/cli/nufflizier.ts"
+    "test:e2e": "node scripts/build-analyzer.mjs && next build && playwright test",
+    "nufflizier": "node scripts/build-analyzer.mjs && node --import tsx src/cli/nufflizier.ts",
+    "prepare:analyzer": "node scripts/build-analyzer.mjs",
+    "verify": "corepack pnpm lint && corepack pnpm typecheck && corepack pnpm test && corepack pnpm test:e2e"
   },
   "bin": {
     "nufflizier": "./bin/nufflizier"
   },
   "dependencies": {
-    "fast-xml-parser": "^5.1.0",
-    "next": "^14.2.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "zod": "^3.23.8"
+    "fast-xml-parser": "^5.12.0",
+    "next": "^15.5.29",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@playwright/test": "^1.49.1",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.0.1",
-    "@types/node": "^22.9.0",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.3",
-    "autoprefixer": "^10.4.20",
+    "@playwright/test": "^1.65.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.6.2",
+    "esbuild": "0.27.3",
     "eslint": "^8.57.1",
-    "eslint-config-next": "^14.2.0",
+    "eslint-config-next": "^15.5.29",
     "jsdom": "^25.0.1",
-    "postcss": "^8.4.49",
-    "prettier": "^3.3.3",
-    "tailwindcss": "^3.4.14",
-    "typescript": "^5.6.3",
-    "tsx": "^4.19.2",
-    "vitest": "^2.1.5"
+    "postcss": "^8.5.32",
+    "prettier": "^3.9.10",
+    "tailwindcss": "^3.4.19",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.9"
+  },
+  "engines": {
+    "node": ">=22 <23"
+  },
+  "pnpm": {
+    "overrides": {
+      "postcss": "^8.5.32"
+    }
   }
 }

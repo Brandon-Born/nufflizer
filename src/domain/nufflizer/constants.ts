@@ -1,6 +1,7 @@
 import type { LuckEventType } from "@/domain/nufflizer/types";
 
 export const LUCK_CATEGORY_WEIGHTS: Record<LuckEventType, number> = {
+  unknown: 0,
   block: 0.75,
   armor_break: 1.0,
   injury: 1.5,
@@ -11,6 +12,7 @@ export const LUCK_CATEGORY_WEIGHTS: Record<LuckEventType, number> = {
 };
 
 export const ROLL_TYPE_BY_EVENT: Record<LuckEventType, number[]> = {
+  unknown: [],
   block: [2],
   armor_break: [10, 34],
   injury: [4, 37],

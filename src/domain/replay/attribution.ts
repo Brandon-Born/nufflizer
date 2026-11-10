@@ -1,4 +1,8 @@
-import type { ReplayEvent, ReplayModel, ReplayTurn } from "@/domain/replay/types";
+import type {
+  ReplayEvent,
+  ReplayModel,
+  ReplayTurn
+} from "@/domain/replay/types";
 
 export type TeamInferenceConfidence = "low" | "medium" | "high";
 
@@ -14,7 +18,9 @@ export type TurnOwnershipInference = {
   scoreByTeam: Record<string, number>;
 };
 
-function parseTeamPlayerKey(key: string): { teamId: string; playerId: string } | null {
+function parseTeamPlayerKey(
+  key: string
+): { teamId: string; playerId: string } | null {
   const separatorIndex = key.indexOf(":");
   if (separatorIndex <= 0 || separatorIndex >= key.length - 1) {
     return null;
@@ -32,7 +38,11 @@ function parseTeamPlayerKey(key: string): { teamId: string; playerId: string } |
   };
 }
 
-function normalizeOwnershipInput(input: Pick<ReplayModel, "playerNamesByTeamAndId"> | undefined): Record<string, string> {
+function normalizeOwnershipInput(
+  input:
+    | Pick<ReplayModel, "playerNamesByTeamAndId" | "playerOwnershipKeys">
+    | undefined
+): Record<string, string> {
   if (!input) {
     return {};
   }
@@ -40,8 +50,17 @@ function normalizeOwnershipInput(input: Pick<ReplayModel, "playerNamesByTeamAndI
   return input.playerNamesByTeamAndId ?? {};
 }
 
-export function buildPlayerOwnershipIndex(input: Pick<ReplayModel, "playerNamesByTeamAndId"> | undefined): PlayerOwnershipIndex {
-  const byTeam = normalizeOwnershipInput(input);
+export function buildPlayerOwnershipIndex(
+  input:
+    | Pick<ReplayModel, "playerNamesByTeamAndId" | "playerOwnershipKeys">
+    | undefined
+): PlayerOwnershipIndex {
+  const byTeam = {
+    ...normalizeOwnershipInput(input),
+    ...Object.fromEntries(
+      (input?.playerOwnershipKeys ?? []).map((key) => [key, ""])
+    )
+  };
   const playerToTeam = new Map<string, string>();
   const teamToPlayers = new Map<string, Set<string>>();
   const ambiguousPlayerIds = new Set<string>();
@@ -80,7 +99,11 @@ export function buildPlayerOwnershipIndex(input: Pick<ReplayModel, "playerNamesB
   };
 }
 
-function addScore(scores: Map<string, number>, teamId: string | undefined, score: number): void {
+function addScore(
+  scores: Map<string, number>,
+  teamId: string | undefined,
+  score: number
+): void {
   if (!teamId) {
     return;
   }
@@ -89,7 +112,12 @@ function addScore(scores: Map<string, number>, teamId: string | undefined, score
 }
 
 function eventWeight(event: ReplayEvent): number {
-  if (event.type === "dodge" || event.type === "blitz" || event.type === "foul" || event.type === "reroll") {
+  if (
+    event.type === "dodge" ||
+    event.type === "blitz" ||
+    event.type === "foul" ||
+    event.type === "reroll"
+  ) {
     return 4;
   }
 
@@ -114,7 +142,10 @@ function toObjectScores(scores: Map<string, number>): Record<string, number> {
   return result;
 }
 
-function confidenceFromTopScores(topScore: number, secondScore: number): TeamInferenceConfidence {
+function confidenceFromTopScores(
+  topScore: number,
+  secondScore: number
+): TeamInferenceConfidence {
   const delta = topScore - secondScore;
 
   if (topScore >= 10 && delta >= 5) {
@@ -128,7 +159,10 @@ function confidenceFromTopScores(topScore: number, secondScore: number): TeamInf
   return "low";
 }
 
-function inferEventTeamId(event: ReplayEvent, ownershipIndex: PlayerOwnershipIndex): { teamId?: string; source?: ReplayEvent["actorTeamSource"] } {
+function inferEventTeamId(
+  event: ReplayEvent,
+  ownershipIndex: PlayerOwnershipIndex
+): { teamId?: string; source?: ReplayEvent["actorTeamSource"] } {
   if (event.actorTeamId) {
     return {
       teamId: event.actorTeamId,
@@ -156,7 +190,10 @@ function inferEventTeamId(event: ReplayEvent, ownershipIndex: PlayerOwnershipInd
   return {};
 }
 
-export function inferTurnOwnership(turn: ReplayTurn, ownershipIndex: PlayerOwnershipIndex): TurnOwnershipInference {
+export function inferTurnOwnership(
+  turn: ReplayTurn,
+  ownershipIndex: PlayerOwnershipIndex
+): TurnOwnershipInference {
   const scores = new Map<string, number>();
 
   addScore(scores, turn.teamId, 3);
@@ -167,7 +204,11 @@ export function inferTurnOwnership(turn: ReplayTurn, ownershipIndex: PlayerOwner
   }
 
   if (turn.ballCarrierPlayerId) {
-    addScore(scores, ownershipIndex.playerToTeam.get(turn.ballCarrierPlayerId), 3);
+    addScore(
+      scores,
+      ownershipIndex.playerToTeam.get(turn.ballCarrierPlayerId),
+      3
+    );
   }
 
   const ranked = Array.from(scores.entries()).sort((a, b) => b[1] - a[1]);
@@ -195,7 +236,10 @@ export function inferTurnOwnership(turn: ReplayTurn, ownershipIndex: PlayerOwner
   };
 }
 
-export function annotateTurnAttribution(turn: ReplayTurn, ownershipIndex: PlayerOwnershipIndex): ReplayTurn {
+export function annotateTurnAttribution(
+  turn: ReplayTurn,
+  ownershipIndex: PlayerOwnershipIndex
+): ReplayTurn {
   const inferred = inferTurnOwnership(turn, ownershipIndex);
 
   const events: ReplayEvent[] = turn.events.map((event): ReplayEvent => {
@@ -204,6 +248,11 @@ export function annotateTurnAttribution(turn: ReplayTurn, ownershipIndex: Player
     if (existing.teamId) {
       return {
         ...event,
+        attributionConflict: Boolean(
+          event.playerId &&
+          ownershipIndex.playerToTeam.get(event.playerId) &&
+          ownershipIndex.playerToTeam.get(event.playerId) !== existing.teamId
+        ),
         actorTeamId: existing.teamId,
         actorTeamSource: existing.source as ReplayEvent["actorTeamSource"]
       };
@@ -222,7 +271,10 @@ export function annotateTurnAttribution(turn: ReplayTurn, ownershipIndex: Player
 
   const nextTurnTeamId =
     turn.teamId ??
-    (inferred.teamId && (inferred.confidence === "high" || inferred.confidence === "medium") ? inferred.teamId : undefined);
+    (inferred.teamId &&
+    (inferred.confidence === "high" || inferred.confidence === "medium")
+      ? inferred.teamId
+      : undefined);
 
   return {
     ...turn,
@@ -252,7 +304,12 @@ function eventBelongsToTeam(
   return true;
 }
 
-export function scopeTurnToTeam(turn: ReplayTurn, scopedTeamId: string, ownershipIndex: PlayerOwnershipIndex, turnNumber: number): ReplayTurn {
+export function scopeTurnToTeam(
+  turn: ReplayTurn,
+  scopedTeamId: string,
+  ownershipIndex: PlayerOwnershipIndex,
+  turnNumber: number
+): ReplayTurn {
   const inferred = inferTurnOwnership(turn, ownershipIndex);
   const inferredTeamId = inferred.teamId ?? turn.teamId;
 
@@ -264,7 +321,8 @@ export function scopeTurnToTeam(turn: ReplayTurn, scopedTeamId: string, ownershi
         return {
           ...event,
           actorTeamId: inferredEvent.teamId,
-          actorTeamSource: inferredEvent.source as ReplayEvent["actorTeamSource"]
+          actorTeamSource:
+            inferredEvent.source as ReplayEvent["actorTeamSource"]
         };
       }
 
@@ -278,16 +336,27 @@ export function scopeTurnToTeam(turn: ReplayTurn, scopedTeamId: string, ownershi
 
       return event;
     })
-    .filter((event) => eventBelongsToTeam(event, scopedTeamId, inferredTeamId, ownershipIndex));
+    .filter((event) =>
+      eventBelongsToTeam(event, scopedTeamId, inferredTeamId, ownershipIndex)
+    );
 
-  const carrierTeamId = turn.ballCarrierPlayerId ? ownershipIndex.playerToTeam.get(turn.ballCarrierPlayerId) : undefined;
+  const carrierTeamId = turn.ballCarrierPlayerId
+    ? ownershipIndex.playerToTeam.get(turn.ballCarrierPlayerId)
+    : undefined;
   const scopedCarrier =
-    turn.ballCarrierPlayerId && carrierTeamId && carrierTeamId !== scopedTeamId ? undefined : turn.ballCarrierPlayerId;
+    turn.ballCarrierPlayerId && carrierTeamId && carrierTeamId !== scopedTeamId
+      ? undefined
+      : turn.ballCarrierPlayerId;
 
   const actionTexts = Array.from(
     new Set(
       scopedEvents
-        .flatMap((event) => [event.type, event.sourceTag, event.actionLabel, event.stepLabel])
+        .flatMap((event) => [
+          event.type,
+          event.sourceTag,
+          event.actionLabel,
+          event.stepLabel
+        ])
         .filter((value): value is string => Boolean(value))
         .map((value) => value.toLowerCase())
     )

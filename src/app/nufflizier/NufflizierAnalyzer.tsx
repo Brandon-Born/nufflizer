@@ -1,89 +1,26 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
-import { CATEGORY_EXAMPLE_LINES, HOW_TO_READ_LINES } from "@/domain/nufflizer/explainabilityCopy";
+import {
+  CATEGORY_EXAMPLE_LINES,
+  HOW_TO_READ_LINES
+} from "@/domain/nufflizer/explainabilityCopy";
 
-type LuckEventType = "block" | "armor_break" | "injury" | "dodge" | "ball_handling" | "argue_call" | "movement_risk";
-type LuckMomentTag = "blessed" | "shaftaroonie";
-type LuckScoringStatus = "scored" | "excluded";
+import type { LuckEventType, LuckReport } from "@/domain/nufflizer/types";
+import {
+  scoredEvidenceForTeam,
+  formatDiceContribution
+} from "@/domain/nufflizer/presentation";
+import { readAnalysisResponse } from "@/lib/readAnalysisResponse";
+import { REPLAY_LIMITS } from "@/domain/replay/limits";
 
-type LuckEvent = {
-  id: string;
-  turn: number;
-  teamId: string;
-  teamName: string;
-  playerId?: string;
-  type: LuckEventType;
-  probabilitySuccess: number;
-  actualSuccess: boolean;
-  delta: number;
-  weightedDelta: number;
+const EVENT_TYPE_OPTIONS: Array<{
+  value: "all" | LuckEventType;
   label: string;
-  tags: LuckMomentTag[];
-  scoringStatus: LuckScoringStatus;
-  statusReason: string;
-  explainability: {
-    target: string;
-    baseOdds?: number;
-    rerollAdjustedOdds?: number;
-    weight: number;
-    formulaSummary?: string;
-    inputsSummary: string;
-  };
-};
-
-type LuckReport = {
-  id: string;
-  generatedAt: string;
-  match: {
-    id: string;
-    homeTeam: string;
-    awayTeam: string;
-  };
-  verdict: {
-    luckierTeam: "home" | "away" | "even";
-    scoreGap: number;
-    summary: string;
-  };
-  coverage: {
-    allEvents: {
-      scoredCount: number;
-      excludedCount: number;
-      scoredRate: number;
-    };
-    rollCandidates: {
-      scoredCount: number;
-      excludedCount: number;
-      scoredRate: number;
-    };
-    scoredByType: Record<LuckEventType, number>;
-    excludedByType: Record<LuckEventType, number>;
-    excludedByReason: Record<string, number>;
-  };
-  weightTable: Record<LuckEventType, number>;
-  howScoredSummary: string[];
-  teams: Array<{
-    teamId: string;
-    teamName: string;
-    luckScore: number;
-    categoryScores: {
-      block: number;
-      armorBreak: number;
-      injury: number;
-      dodge: number;
-      ballHandling: number;
-      argueCall: number;
-      movementRisk: number;
-    };
-    eventCount: number;
-  }>;
-  keyMoments: LuckEvent[];
-  events: LuckEvent[];
-};
-
-const EVENT_TYPE_OPTIONS: Array<{ value: "all" | LuckEventType; label: string }> = [
-  { value: "all", label: "All events" },
+}> = [
+  { value: "all", label: "All categories" },
+  { value: "unknown", label: "Unknown category" },
   { value: "block", label: "Block" },
   { value: "armor_break", label: "Armor break" },
   { value: "injury", label: "Injury" },
@@ -100,35 +37,62 @@ const TAG_OPTIONS = [
 ] as const;
 
 export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
+  const abortRef = useRef<AbortController | null>(null);
+  const [teamFilter, setTeamFilter] = useState("all");
+  const [scoringFilter, setScoringFilter] = useState("scored");
+  const [sortOrder, setSortOrder] = useState("chronological");
+  const [page, setPage] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<LuckReport | null>(null);
-  const [tagFilter, setTagFilter] = useState<(typeof TAG_OPTIONS)[number]["value"]>("all");
-  const [typeFilter, setTypeFilter] = useState<(typeof EVENT_TYPE_OPTIONS)[number]["value"]>("all");
+  const [tagFilter, setTagFilter] =
+    useState<(typeof TAG_OPTIONS)[number]["value"]>("all");
+  const [typeFilter, setTypeFilter] =
+    useState<(typeof EVENT_TYPE_OPTIONS)[number]["value"]>("all");
 
   const filteredMoments = useMemo(() => {
     if (!report) {
       return [];
     }
 
-    return report.keyMoments.filter((event) => {
-      if (tagFilter !== "all" && !event.tags.includes(tagFilter)) {
-        return false;
-      }
+    return report.events
+      .filter((event) => {
+        if (teamFilter !== "all" && event.teamId !== teamFilter) return false;
+        if (scoringFilter !== "all" && event.scoringStatus !== scoringFilter)
+          return false;
+        if (tagFilter !== "all" && !event.tags.includes(tagFilter)) {
+          return false;
+        }
 
-      if (typeFilter !== "all" && event.type !== typeFilter) {
-        return false;
-      }
+        if (typeFilter !== "all" && event.type !== typeFilter) {
+          return false;
+        }
 
-      return true;
-    });
-  }, [report, tagFilter, typeFilter]);
+        return true;
+      })
+      .sort((a, b) =>
+        sortOrder === "impact"
+          ? Math.abs(b.weightedDelta) - Math.abs(a.weightedDelta)
+          : a.turn - b.turn ||
+            (a.metadata.sourceIndex ?? 0) - (b.metadata.sourceIndex ?? 0)
+      );
+  }, [report, tagFilter, typeFilter, teamFilter, scoringFilter, sortOrder]);
+
+  function resetFilters() {
+    setTagFilter("all");
+    setTypeFilter("all");
+    setTeamFilter("all");
+    setScoringFilter("scored");
+    setSortOrder("chronological");
+    setPage(0);
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     setReport(null);
+    resetFilters();
 
     const formData = new FormData(event.currentTarget);
     const replayFile = formData.get("replay");
@@ -137,6 +101,12 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
       return;
     }
 
+    if (replayFile.size > REPLAY_LIMITS.inputBytes) {
+      setError("Replay file too large. Maximum size is 4 MB.");
+      return;
+    }
+    const controller = new AbortController();
+    abortRef.current = controller;
     setIsLoading(true);
     setStatus("Uploading replay...");
 
@@ -147,32 +117,34 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
       setStatus("Reading replay and rolling Nufflizier...");
       const response = await fetch("/api/nufflizier/analyze", {
         method: "POST",
-        body: uploadData
+        body: uploadData,
+        signal: controller.signal
       });
 
-      if (!response.ok) {
-        const body = (await response.json()) as { error?: string };
-        throw new Error(body.error ?? "Replay analysis failed.");
-      }
-
-      const body = (await response.json()) as LuckReport;
+      const body = await readAnalysisResponse(response);
       setReport(body);
-      setStatus("Done. Nuffle has spoken.");
+      setStatus("Analysis complete. Review the evidence limits below.");
     } catch (requestError) {
-      const message = requestError instanceof Error ? requestError.message : "Unexpected error.";
+      const message =
+        requestError instanceof Error && requestError.name === "AbortError"
+          ? "Analysis cancelled."
+          : requestError instanceof Error
+            ? requestError.message
+            : "Unexpected error.";
       setError(message);
       setStatus(null);
     } finally {
+      abortRef.current = null;
       setIsLoading(false);
     }
   }
 
   function scoreColor(score: number): string {
-    if (score >= 8) {
+    if (score > 0) {
       return "text-emerald-200";
     }
 
-    if (score <= -8) {
+    if (score < 0) {
       return "text-rose-200";
     }
 
@@ -184,7 +156,9 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
       return;
     }
 
-    const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(report, null, 2)], {
+      type: "application/json"
+    });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
@@ -199,15 +173,22 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
         <p className="inline-flex rounded-full border border-amber-300/60 bg-amber-100/60 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-900">
           Nufflizier
         </p>
-        <h1 className="text-4xl font-black tracking-tight text-amber-100">Blessed by Nuffle Analyzer</h1>
+        <h1 className="text-4xl font-black tracking-tight text-amber-100">
+          Blessed by Nuffle Analyzer
+        </h1>
         <p className="max-w-3xl text-sm text-amber-50/90">
-          One-shot flow ({routeLabel}): upload one replay, analyze luck swings, see who got blessed and who got the shaftaroonie.
+          One-shot flow ({routeLabel}): inspect supported dice outcomes and
+          evidence gaps. Whole-match and contextual verdicts remain under
+          validation.
         </p>
       </section>
 
-      <form onSubmit={handleSubmit} className="rounded-xl border border-amber-300/30 bg-black/35 p-6 shadow-xl backdrop-blur">
+      <form
+        onSubmit={handleSubmit}
+        className="rounded-xl border border-amber-300/30 bg-black/35 p-6 shadow-xl backdrop-blur"
+      >
         <label className="block space-y-2 text-sm font-medium text-amber-100">
-          <span>Replay file (.xml or .bbr)</span>
+          <span>Replay file (.xml or .bbr), maximum 4 MB</span>
           <input
             className="block w-full rounded-md border border-amber-200/40 bg-black/30 px-3 py-2 text-sm text-amber-50"
             type="file"
@@ -226,10 +207,16 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
             {isLoading ? "Rolling..." : "Analyze Nuffle Luck"}
           </button>
 
+          {isLoading ? (
+            <button type="button" onClick={() => abortRef.current?.abort()}>
+              Cancel analysis
+            </button>
+          ) : null}
           {report ? (
             <button
               type="button"
               onClick={() => {
+                resetFilters();
                 setReport(null);
                 setError(null);
                 setStatus(null);
@@ -251,39 +238,76 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
           ) : null}
         </div>
 
-        {status ? <p className="mt-3 text-xs text-amber-100/90">{status}</p> : null}
+        {status ? (
+          <p className="mt-3 text-xs text-amber-100/90">{status}</p>
+        ) : null}
       </form>
 
       {error ? (
-        <section className="rounded-lg border border-red-300/60 bg-red-900/30 px-4 py-3 text-sm text-red-100">{error}</section>
+        <section className="rounded-lg border border-red-300/60 bg-red-900/30 px-4 py-3 text-sm text-red-100">
+          {error}
+        </section>
       ) : null}
 
       {report ? (
         <section className="space-y-6 rounded-xl border border-amber-300/30 bg-black/35 p-6 shadow-xl backdrop-blur">
           <header className="space-y-2">
-            <h2 className="text-xl font-bold text-amber-100">Nuffle Match Report</h2>
-            <p className="text-xs text-amber-100/80">Generated at {new Date(report.generatedAt).toLocaleString()}</p>
-            <p className="text-xs text-amber-100/80">Match: {report.match.id}</p>
+            <h2 className="text-xl font-bold text-amber-100">
+              Nuffle Match Report
+            </h2>
+            <p className="text-xs text-amber-100/80">
+              Generated at {new Date(report.generatedAt).toLocaleString()}
+            </p>
+            <p className="text-xs text-amber-100/80">
+              Match: {report.match.id}
+            </p>
           </header>
 
           <div className="rounded-lg border border-amber-300/20 bg-amber-950/20 p-4">
-            <p className="text-lg font-semibold text-amber-100">{report.verdict.summary}</p>
-            <p className="mt-1 text-sm text-amber-50/90">Score gap: {report.verdict.scoreGap.toFixed(1)}</p>
-            <p className="mt-1 text-sm text-amber-50/90">
-              Roll-candidate coverage: {(report.coverage.rollCandidates.scoredRate * 100).toFixed(1)}% scored (
-              {report.coverage.rollCandidates.scoredCount} scored, {report.coverage.rollCandidates.excludedCount} excluded)
+            <p className="text-lg font-semibold text-amber-100">
+              {report.verdict.summary}
             </p>
             <p className="mt-1 text-sm text-amber-50/90">
-              All-event coverage: {(report.coverage.allEvents.scoredRate * 100).toFixed(1)}% scored ({report.coverage.allEvents.scoredCount}{" "}
-              scored, {report.coverage.allEvents.excludedCount} excluded)
+              Supported dice contribution gap:{" "}
+              {formatDiceContribution(
+                report.verdict.scoreGap,
+                report.coverage.allEvents.scoredCount,
+                1
+              )}
             </p>
+            <p className="mt-1 text-sm text-amber-50/90">
+              Roll-candidate coverage:{" "}
+              {(report.coverage.rollCandidates.scoredRate * 100).toFixed(1)}%
+              scored ({report.coverage.rollCandidates.scoredCount} scored,{" "}
+              {report.coverage.rollCandidates.excludedCount} excluded)
+            </p>
+            <p className="mt-1 text-sm text-amber-50/90">
+              Reported-event coverage:{" "}
+              {(report.coverage.allEvents.scoredRate * 100).toFixed(1)}% scored
+              ({report.coverage.allEvents.scoredCount} scored,{" "}
+              {report.coverage.allEvents.excludedCount} excluded)
+            </p>
+            <p className="mt-2 text-xs">
+              {report.coverage.denominatorDescription} Source records retained
+              by parser: {report.coverage.sourceRecordCount}.
+            </p>
+            <ul className="mt-2 list-disc pl-5 text-sm">
+              {report.limitations.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
             {Object.keys(report.coverage.excludedByReason).length > 0 ? (
-              <p className="mt-2 text-sm text-amber-100">Some events were excluded when replay context was nondeterministic.</p>
+              <p className="mt-2 text-sm text-amber-100">
+                Some events were excluded when replay context was
+                nondeterministic.
+              </p>
             ) : null}
           </div>
 
           <section className="rounded-xl border border-amber-300/20 bg-black/20 p-4">
-            <h3 className="text-base font-semibold text-amber-100">How to read this report</h3>
+            <h3 className="text-base font-semibold text-amber-100">
+              How to read this report
+            </h3>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-50/90">
               {HOW_TO_READ_LINES.map((line) => (
                 <li key={line}>{line}</li>
@@ -300,15 +324,20 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
           </section>
 
           <section className="rounded-xl border border-amber-300/20 bg-black/20 p-4">
-            <h3 className="text-base font-semibold text-amber-100">How this was scored</h3>
+            <h3 className="text-base font-semibold text-amber-100">
+              How this was scored
+            </h3>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-50/90">
               {report.howScoredSummary.map((line, index) => (
                 <li key={`${index}-${line}`}>{line}</li>
               ))}
             </ul>
             <p className="mt-3 text-xs text-amber-100/80">
-              Weights: block {report.weightTable.block}, armor {report.weightTable.armor_break}, injury {report.weightTable.injury}, dodge{" "}
-              {report.weightTable.dodge}, ball handling {report.weightTable.ball_handling}, argue {report.weightTable.argue_call}, movement{" "}
+              Weights: block {report.weightTable.block}, armor{" "}
+              {report.weightTable.armor_break}, injury{" "}
+              {report.weightTable.injury}, dodge {report.weightTable.dodge},
+              ball handling {report.weightTable.ball_handling}, argue{" "}
+              {report.weightTable.argue_call}, movement{" "}
               {report.weightTable.movement_risk}.
             </p>
             <div className="mt-3 overflow-x-auto">
@@ -321,19 +350,32 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {Object.entries(report.coverage.scoredByType).map(([eventType, scoredCount]) => (
-                    <tr key={eventType} className="border-b border-amber-300/10">
-                      <td className="px-2 py-1">{eventType}</td>
-                      <td className="px-2 py-1">{scoredCount}</td>
-                      <td className="px-2 py-1">{report.coverage.excludedByType[eventType as LuckEventType]}</td>
-                    </tr>
-                  ))}
+                  {Object.entries(report.coverage.scoredByType).map(
+                    ([eventType, scoredCount]) => (
+                      <tr
+                        key={eventType}
+                        className="border-b border-amber-300/10"
+                      >
+                        <td className="px-2 py-1">{eventType}</td>
+                        <td className="px-2 py-1">{scoredCount}</td>
+                        <td className="px-2 py-1">
+                          {
+                            report.coverage.excludedByType[
+                              eventType as LuckEventType
+                            ]
+                          }
+                        </td>
+                      </tr>
+                    )
+                  )}
                 </tbody>
               </table>
             </div>
             {Object.keys(report.coverage.excludedByReason).length > 0 ? (
               <div className="mt-3">
-                <h4 className="text-sm font-semibold text-amber-100">Top exclusion reasons</h4>
+                <h4 className="text-sm font-semibold text-amber-100">
+                  Top exclusion reasons
+                </h4>
                 <ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-amber-50/90">
                   {Object.entries(report.coverage.excludedByReason)
                     .sort((a, b) => b[1] - a[1])
@@ -349,31 +391,142 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
           </section>
 
           <div className="grid gap-4 md:grid-cols-2">
-            {report.teams.map((team) => (
-              <article key={team.teamId} className="rounded-xl border border-amber-300/20 bg-black/20 p-4">
-                <h3 className="text-base font-bold text-amber-100">{team.teamName}</h3>
-                <p className={`mt-1 text-2xl font-black ${scoreColor(team.luckScore)}`}>{team.luckScore.toFixed(1)}</p>
-                <p className="text-xs text-amber-100/75">{team.eventCount} tracked moments</p>
-                <dl className="mt-3 grid grid-cols-2 gap-2 text-xs text-amber-50/90">
-                  <div>Block: {team.categoryScores.block.toFixed(2)}</div>
-                  <div>Armor: {team.categoryScores.armorBreak.toFixed(2)}</div>
-                  <div>Injury: {team.categoryScores.injury.toFixed(2)}</div>
-                  <div>Dodge: {team.categoryScores.dodge.toFixed(2)}</div>
-                  <div>Ball: {team.categoryScores.ballHandling.toFixed(2)}</div>
-                  <div>Argue: {team.categoryScores.argueCall.toFixed(2)}</div>
-                  <div>Move risk: {team.categoryScores.movementRisk.toFixed(2)}</div>
-                </dl>
-              </article>
-            ))}
+            {report.teams.map((team) => {
+              const evidence = scoredEvidenceForTeam(report, team.teamId);
+              return (
+                <article
+                  key={team.teamId}
+                  className="rounded-xl border border-amber-300/20 bg-black/20 p-4"
+                >
+                  <h3 className="text-base font-bold text-amber-100">
+                    {team.teamName}
+                  </h3>
+                  <p
+                    className={`mt-1 text-2xl font-black ${scoreColor(team.luckScore)}`}
+                  >
+                    {report.events.some(
+                      (event) =>
+                        event.teamId === team.teamId &&
+                        event.scoringStatus === "scored"
+                    )
+                      ? team.luckScore.toFixed(1)
+                      : "No scored evidence"}
+                  </p>
+                  <p className="text-xs text-amber-100/75">
+                    {team.eventCount} tracked moments; cumulative dice units
+                    (provisional weights)
+                  </p>
+                  <dl className="mt-3 grid grid-cols-2 gap-2 text-xs text-amber-50/90">
+                    <div>
+                      Block:{" "}
+                      {formatDiceContribution(
+                        team.categoryScores.block,
+                        evidence.byType.block
+                      )}
+                    </div>
+                    <div>
+                      Armor:{" "}
+                      {formatDiceContribution(
+                        team.categoryScores.armorBreak,
+                        evidence.byType.armor_break
+                      )}
+                    </div>
+                    <div>
+                      Injury:{" "}
+                      {formatDiceContribution(
+                        team.categoryScores.injury,
+                        evidence.byType.injury
+                      )}
+                    </div>
+                    <div>
+                      Dodge:{" "}
+                      {formatDiceContribution(
+                        team.categoryScores.dodge,
+                        evidence.byType.dodge
+                      )}
+                    </div>
+                    <div>
+                      Ball:{" "}
+                      {formatDiceContribution(
+                        team.categoryScores.ballHandling,
+                        evidence.byType.ball_handling
+                      )}
+                    </div>
+                    <div>
+                      Argue:{" "}
+                      {formatDiceContribution(
+                        team.categoryScores.argueCall,
+                        evidence.byType.argue_call
+                      )}
+                    </div>
+                    <div>
+                      Move risk:{" "}
+                      {formatDiceContribution(
+                        team.categoryScores.movementRisk,
+                        evidence.byType.movement_risk
+                      )}
+                    </div>
+                  </dl>
+                </article>
+              );
+            })}
           </div>
 
           <div className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h4 className="text-sm font-semibold text-amber-100">Key moments timeline</h4>
+              <h4 className="text-sm font-semibold text-amber-100">
+                Replay evidence
+              </h4>
               <div className="flex flex-wrap items-center gap-2">
                 <select
+                  aria-label="Team"
+                  value={teamFilter}
+                  onChange={(e) => {
+                    setTeamFilter(e.target.value);
+                    setPage(0);
+                  }}
+                >
+                  <option value="all">All teams</option>
+                  {report.teams.map((team) => (
+                    <option key={team.teamId} value={team.teamId}>
+                      {team.teamName}
+                    </option>
+                  ))}
+                  <option value="unresolved">Unresolved</option>
+                </select>
+                <select
+                  aria-label="Scoring status"
+                  value={scoringFilter}
+                  onChange={(e) => {
+                    setScoringFilter(e.target.value);
+                    setPage(0);
+                  }}
+                >
+                  <option value="scored">Scored</option>
+                  <option value="excluded">Excluded</option>
+                  <option value="all">All evidence</option>
+                </select>
+                <select
+                  aria-label="Sort order"
+                  value={sortOrder}
+                  onChange={(e) => {
+                    setSortOrder(e.target.value);
+                    setPage(0);
+                  }}
+                >
+                  <option value="chronological">Chronological</option>
+                  <option value="impact">Largest dice contribution</option>
+                </select>
+                <select
+                  aria-label="Moment tag"
                   value={tagFilter}
-                  onChange={(event) => setTagFilter(event.target.value as (typeof TAG_OPTIONS)[number]["value"])}
+                  onChange={(event) => (
+                    setTagFilter(
+                      event.target
+                        .value as (typeof TAG_OPTIONS)[number]["value"]
+                    ),
+                    setPage(0)
+                  )}
                   className="rounded-md border border-amber-200/40 bg-black/40 px-2 py-1 text-xs text-amber-50"
                 >
                   {TAG_OPTIONS.map((option) => (
@@ -383,8 +536,15 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                   ))}
                 </select>
                 <select
+                  aria-label="Category"
                   value={typeFilter}
-                  onChange={(event) => setTypeFilter(event.target.value as (typeof EVENT_TYPE_OPTIONS)[number]["value"])}
+                  onChange={(event) => (
+                    setTypeFilter(
+                      event.target
+                        .value as (typeof EVENT_TYPE_OPTIONS)[number]["value"]
+                    ),
+                    setPage(0)
+                  )}
                   className="rounded-md border border-amber-200/40 bg-black/40 px-2 py-1 text-xs text-amber-50"
                 >
                   {EVENT_TYPE_OPTIONS.map((option) => (
@@ -396,11 +556,32 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
               </div>
             </div>
 
+            <p className="text-sm" role="status">
+              {filteredMoments.length
+                ? `${filteredMoments.length} matching events; page ${page + 1} of ${Math.ceil(filteredMoments.length / 50)}`
+                : "No events match these filters. Try all evidence or another category."}
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                disabled={page === 0}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                Previous page
+              </button>
+              <button
+                type="button"
+                disabled={(page + 1) * 50 >= filteredMoments.length}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Next page
+              </button>
+            </div>
             <div className="overflow-x-auto">
               <table className="min-w-full border-collapse text-sm text-amber-50">
                 <thead>
                   <tr className="border-b border-amber-300/20 text-left">
-                    <th className="px-2 py-2">Turn</th>
+                    <th className="px-2 py-2">Replay segment</th>
                     <th className="px-2 py-2">Team</th>
                     <th className="px-2 py-2">Moment</th>
                     <th className="px-2 py-2">Expected</th>
@@ -411,44 +592,75 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredMoments.map((moment) => (
-                    <tr key={moment.id} className="border-b border-amber-300/10 align-top">
-                      <td className="px-2 py-3 font-semibold">{moment.turn}</td>
-                      <td className="px-2 py-3">{moment.teamName}</td>
-                      <td className="px-2 py-3">
-                        <div>{moment.label}</div>
-                        <details className="mt-1">
-                          <summary className="cursor-pointer text-xs text-amber-100/80">Why</summary>
-                          <p className="mt-1 text-xs text-amber-100/80">
-                            {moment.statusReason}. Target: {moment.explainability.target}. Base odds{" "}
-                            {moment.explainability.baseOdds !== undefined ? `${(moment.explainability.baseOdds * 100).toFixed(1)}%` : "n/a"},
-                            reroll-adjusted{" "}
-                            {moment.explainability.rerollAdjustedOdds !== undefined
-                              ? `${(moment.explainability.rerollAdjustedOdds * 100).toFixed(1)}%`
-                              : "n/a"}
-                            , weight {moment.explainability.weight}.
-                          </p>
-                          {moment.explainability.formulaSummary ? (
-                            <p className="mt-1 text-xs text-amber-100/80">{moment.explainability.formulaSummary}.</p>
-                          ) : null}
-                          <p className="mt-1 text-xs text-amber-100/80">{moment.explainability.inputsSummary}.</p>
-                        </details>
-                      </td>
-                      <td className="px-2 py-3">{(moment.probabilitySuccess * 100).toFixed(1)}%</td>
-                      <td className="px-2 py-3">{moment.actualSuccess ? "Success" : "Fail"}</td>
-                      <td className="px-2 py-3">{moment.weightedDelta.toFixed(3)}</td>
-                      <td className="px-2 py-3">{moment.scoringStatus}</td>
-                      <td className="px-2 py-3">
-                        {moment.tags.length > 0 ? (
-                          <span className="inline-flex rounded-full border border-amber-200/40 px-2 py-1 text-xs font-semibold uppercase">
-                            {moment.tags.join(", ")}
-                          </span>
-                        ) : (
-                          <span className="text-amber-100/70">-</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredMoments
+                    .slice(page * 50, page * 50 + 50)
+                    .map((moment) => (
+                      <tr
+                        key={moment.id}
+                        className="border-b border-amber-300/10 align-top"
+                      >
+                        <td className="px-2 py-3 font-semibold">
+                          {moment.turn}
+                        </td>
+                        <td className="px-2 py-3">{moment.teamName}</td>
+                        <td className="px-2 py-3">
+                          <div>{moment.label}</div>
+                          <details className="mt-1">
+                            <summary className="cursor-pointer text-xs text-amber-100/80">
+                              Why
+                            </summary>
+                            <p className="mt-1 text-xs text-amber-100/80">
+                              {moment.statusReason}. Target:{" "}
+                              {moment.explainability.target}. Base odds{" "}
+                              {moment.explainability.baseOdds !== undefined
+                                ? `${(moment.explainability.baseOdds * 100).toFixed(1)}%`
+                                : "n/a"}
+                              , reroll-adjusted{" "}
+                              {moment.explainability.rerollAdjustedOdds !==
+                              undefined
+                                ? `${(moment.explainability.rerollAdjustedOdds * 100).toFixed(1)}%`
+                                : "n/a"}
+                              , weight {moment.explainability.weight}.
+                            </p>
+                            {moment.explainability.formulaSummary ? (
+                              <p className="mt-1 text-xs text-amber-100/80">
+                                {moment.explainability.formulaSummary}.
+                              </p>
+                            ) : null}
+                            <p className="mt-1 text-xs text-amber-100/80">
+                              {moment.explainability.inputsSummary}. Source:{" "}
+                              {moment.metadata.sourceId ?? moment.id}; action:{" "}
+                              {moment.metadata.actionId ?? "unknown"}.
+                            </p>
+                          </details>
+                        </td>
+                        <td className="px-2 py-3">
+                          {moment.probabilitySuccess === null
+                            ? "Unknown"
+                            : `${(moment.probabilitySuccess * 100).toFixed(1)}%`}
+                        </td>
+                        <td className="px-2 py-3">
+                          {moment.actualSuccess === null
+                            ? "Unknown"
+                            : moment.actualSuccess
+                              ? "Success"
+                              : "Fail"}
+                        </td>
+                        <td className="px-2 py-3">
+                          {moment.weightedDelta.toFixed(3)}
+                        </td>
+                        <td className="px-2 py-3">{moment.scoringStatus}</td>
+                        <td className="px-2 py-3">
+                          {moment.tags.length > 0 ? (
+                            <span className="inline-flex rounded-full border border-amber-200/40 px-2 py-1 text-xs font-semibold uppercase">
+                              {moment.tags.join(", ")}
+                            </span>
+                          ) : (
+                            <span className="text-amber-100/70">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>

@@ -1,5 +1,12 @@
 # Roll Type Code Coverage Crosswalk
 
+## November runtime correction (NUF-008/009)
+
+Ordered extraction now retains `QuestionBlockDice|3`, `ResultRoll|15`, `ResultRoll|21`, `ResultRoll|36`, and `ResultRoll|46`. These have explicit unverified contracts and no semantic promotion. `ResultBlockRoll|3` contains actual face data under `Die`; the historical claim that it has no dice was incorrect. Injury/casualty records also remain random outcomes, not harmless summaries. Block and damage-category contributions are disabled until independent rule and beneficiary evidence exists. Movement/ball-handling numeric threshold analysis remains provisional. Whole-match comparisons abstain; the historical tables below are not current acceptance evidence.
+
+
+> 2026-11-09 review notice: this crosswalk describes historical implementation behavior, not proof that its labels or probabilities are correct. In particular, real block/injury outcomes are excluded and dodge scoring is unreachable at the reviewed baseline. Follow [REMEDIATION_BACKLOG.md](REMEDIATION_BACKLOG.md), especially NUF-009–015 and NUF-027, before promoting additional families or treating known-family coverage as whole-match confidence.
+
 This document maps each observed `sourceTag|rollType` pair to current code behavior so future agents can target specific gaps quickly.
 
 Primary implementation files:

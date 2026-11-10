@@ -1,15 +1,17 @@
-export const HOW_TO_READ_LINES = [
-  "Expected is the chance the play should work based on the replay context at roll time.",
-  "Weighted delta is luck swing: (actual result - expected chance) x category weight.",
-  "Scored means deterministic replay context was sufficient; excluded means the event is shown for transparency but not counted."
-] as const;
+export const VERDICT_SUMMARIES = {
+  insufficient_evidence: "Insufficient evidence to compare team luck.",
+  partial_analysis:
+    "Partial dice analysis. Whole-match luck cannot be determined from the supported evidence."
+} as const;
 
+export const HOW_TO_READ_LINES = [
+  "Expected is the chance under the stated numeric dice contract, where supported.",
+  "Weighted delta is (actual result - expected chance) x provisional category weight. Team totals add these contributions; these are dice units, not win probabilities or match impact.",
+  "Excluded records have unknown odds where the contract is unverified. Unknown does not mean an even match.",
+  "Replay segments are source order, not validated half or team turns."
+] as const;
 export const CATEGORY_EXAMPLE_LINES = [
-  "Block: dice faces where stronger outcomes are less likely.",
-  "Armor break: target roll to crack armor.",
-  "Injury: target roll for removal/severity outcomes.",
-  "Dodge: agility-style roll to escape pressure.",
-  "Ball handling: pickup attempts (including rollType 7), plus catch/pass/handoff style control rolls.",
-  "Argue call: referee call roll outcomes.",
-  "Movement risk: 2+ movement/rush checks that can chain into consequence rolls on failure."
+  "Movement risk and ball handling currently use provisional threshold contracts; category meanings await independent verification.",
+  "Block pools and damage chains remain visible but excluded from scoring until their semantics and beneficiaries are verified.",
+  "Dodge, special actions and referee variants require further rule evidence; no whole-match luck verdict is currently supported."
 ] as const;

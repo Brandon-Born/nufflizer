@@ -1,0 +1,20 @@
+{
+  "kind": "local observation, not peak RSS or a benchmark guarantee",
+  "runtime": "v22.17.1",
+  "durationMs": 1787,
+  "processRssBefore": 89030656,
+  "processRssAfter": 133824512,
+  "reportBytes": 677098,
+  "eventCount": 613,
+  "coverage": {
+    "scoredCount": 30,
+    "excludedCount": 413,
+    "scoredRate": 0.06772009029345373
+  },
+  "verdict": {
+    "luckierTeam": "unknown",
+    "status": "partial_analysis",
+    "scoreGap": 0.3611111111111108,
+    "summary": "Partial dice analysis. Whole-match luck cannot be determined from the supported evidence."
+  }
+}

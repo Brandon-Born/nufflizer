@@ -8,12 +8,17 @@ Build and maintain **Nufflizier**, a Blood Bowl 3 replay luck analyzer that acce
 2. Category breakdown (block, armor break, injury, dodge, ball handling, argue-call style events).
 3. Key timeline moments for unlikely successes and likely failures.
 
+The target is context-sensitive luck: account for lost useful activations, possession/exposure, scoring threats, player availability, and game clock. Correct dice semantics and attribution must precede impact weighting; missing evidence must never produce a confident or fabricated even-luck verdict.
+
 The app is deployable on Vercel and intentionally one-shot (ephemeral results, no required persistence).
 
 ## 2) Handoff Docs (Read First)
 1. `docs/PROJECT_PLAN.md` - current state, conversion matrix, prioritized backlog, next tasks.
 2. `docs/CONVERSION_LOG.md` - append-only migration history from BB Trainer to Nufflizier.
 3. `docs/IMPLEMENTATION_LOG.md` - append-only session execution ledger.
+4. `docs/REMEDIATION_BACKLOG.md` - authoritative November 2026 remediation queue, permanent issue IDs, reproductions, dependencies, and acceptance criteria. Use this queue instead of the historical February roll-family promotion order.
+
+Current trust warning: the November review found core semantic, attribution, coverage, and upload-safety defects despite passing existing tests. Read the current plan and backlog before interpreting historical completion claims. Keep issue IDs stable, reproduce each defect, and close work only with independent acceptance evidence and updated logs.
 
 ## 3) Current Runtime Shape (as of 2026-02-11)
 1. Primary UI: `/nufflizier` (with `/upload` alias).
@@ -24,7 +29,7 @@ The app is deployable on Vercel and intentionally one-shot (ephemeral results, n
 ## 4) Required Tech Stack
 Use the following unless explicitly changed by the user:
 1. Next.js (App Router) + TypeScript.
-2. Node.js 20+ runtime behavior.
+2. Node.js 22.x runtime behavior (declared in package.json and CI).
 3. React + Tailwind CSS.
 4. Zod for boundary validation.
 5. `fast-xml-parser` for replay parsing.

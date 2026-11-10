@@ -1,13 +1,27 @@
+import { VERDICT_SUMMARIES } from "./explainabilityCopy";
+import { formatDiceContribution, scoredEvidenceForTeam } from "./presentation";
+import { linkTeamRerolls } from "./rerolls";
 import { createHash } from "node:crypto";
 
 import { LUCK_CATEGORY_WEIGHTS } from "@/domain/nufflizer/constants";
 import { classifyRollContext } from "@/domain/nufflizer/classifyRollContext";
-import { computeProbabilityForEvent, resolveActualSuccess } from "@/domain/nufflizer/probability";
-import type { LuckEvent, LuckEventType, LuckReport, LuckTeamAggregate } from "@/domain/nufflizer/types";
-import type { ReplayEvent, ReplayModel, ReplayTurn } from "@/domain/replay/types";
+import {
+  computeProbabilityForEvent,
+  resolveActualSuccess
+} from "@/domain/nufflizer/probability";
+import type {
+  LuckEvent,
+  LuckEventType,
+  LuckReport,
+  LuckTeamAggregate
+} from "@/domain/nufflizer/types";
+import type {
+  ReplayEvent,
+  ReplayModel,
+  ReplayTurn
+} from "@/domain/replay/types";
 
 type RecordLike = Record<string, unknown>;
-const BLOCK_CHAIN_SOURCE_TAGS = new Set(["ResultBlockRoll", "ResultBlockOutcome", "ResultPushBack"]);
 
 function isRecord(value: unknown): value is RecordLike {
   return typeof value === "object" && value !== null;
@@ -24,11 +38,6 @@ function toArray<T>(value: T | T[] | undefined): T[] {
 function toNumber(value: unknown): number | undefined {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
-}
-
-function roundTo(value: number, digits = 1): number {
-  const factor = 10 ** digits;
-  return Math.round(value * factor) / factor;
 }
 
 function clamp01(value: number): number {
@@ -71,7 +80,10 @@ function eventTypeLabel(type: LuckEventType): string {
   return type[0].toUpperCase() + type.slice(1);
 }
 
-function extractDice(payload: RecordLike | undefined): { dice: number[]; dieTypes: number[] } {
+function extractDice(payload: RecordLike | undefined): {
+  dice: number[];
+  dieTypes: number[];
+} {
   if (!payload) {
     return {
       dice: [],
@@ -79,21 +91,30 @@ function extractDice(payload: RecordLike | undefined): { dice: number[]; dieType
     };
   }
 
-  const diceNodes = toArray((payload.Dice as RecordLike | undefined)?.Die as RecordLike | RecordLike[] | undefined);
+  const diceNodes = toArray(
+    (payload.Dice as RecordLike | undefined)?.Die as
+      RecordLike | RecordLike[] | undefined
+  );
   const dice = diceNodes
     .map((die) => toNumber(die.Value))
     .filter((value): value is number => value !== undefined);
-  const dieTypes = diceNodes.map((die) => toNumber(die.DieType) ?? 0);
+  const dieTypes = diceNodes.map((die) => toNumber(die.DieType) ?? -1);
 
   return { dice, dieTypes };
 }
 
-function extractModifiers(payload: RecordLike | undefined): { modifiers: number[]; skillsUsed: number[] } {
+function extractModifiers(payload: RecordLike | undefined): {
+  modifiers: number[];
+  skillsUsed: number[];
+} {
   if (!payload) {
     return { modifiers: [], skillsUsed: [] };
   }
 
-  const modifierNodes = toArray((payload.Modifiers as RecordLike | undefined)?.Modifier as RecordLike | RecordLike[] | undefined);
+  const modifierNodes = toArray(
+    (payload.Modifiers as RecordLike | undefined)?.Modifier as
+      RecordLike | RecordLike[] | undefined
+  );
   const modifiers = modifierNodes
     .map((modifier) => toNumber(modifier.Value))
     .filter((value): value is number => value !== undefined);
@@ -107,40 +128,22 @@ function extractModifiers(payload: RecordLike | undefined): { modifiers: number[
   };
 }
 
-function extractRerollFlags(turnEvents: ReplayEvent[], eventIndex: number): { rerollAvailable: boolean; rerollUsed: boolean } {
-  let rerollAvailable = false;
-  let rerollUsed = false;
-  const lookahead = turnEvents.slice(eventIndex + 1, eventIndex + 5);
-
-  for (const nextEvent of lookahead) {
-    if (nextEvent.sourceTag === "QuestionTeamRerollUsage") {
-      const payload = isRecord(nextEvent.payload) ? nextEvent.payload : undefined;
-      const canUseTeamReroll = toNumber(payload?.CanUseTeamReroll) ?? 0;
-      const canUseProReroll = toNumber(payload?.CanUseProReroll) ?? 0;
-      rerollAvailable = rerollAvailable || canUseTeamReroll > 0 || canUseProReroll > 0;
-    }
-
-    if (nextEvent.sourceTag === "ResultTeamRerollUsage") {
-      const payload = isRecord(nextEvent.payload) ? nextEvent.payload : undefined;
-      const used = toNumber(payload?.Used) ?? 0;
-      if (used > 0) {
-        rerollAvailable = true;
-        rerollUsed = true;
-      }
-    }
-  }
-
-  return {
-    rerollAvailable,
-    rerollUsed
-  };
+function resolveTeamId(
+  turn: ReplayTurn,
+  event: ReplayEvent
+): string | undefined {
+  void turn;
+  return event.actorTeamSource === "turn_inferred"
+    ? undefined
+    : (event.actorTeamId ?? event.teamId);
 }
 
-function resolveTeamId(turn: ReplayTurn, event: ReplayEvent): string | undefined {
-  return event.actorTeamId ?? event.teamId ?? turn.teamId ?? turn.inferredTeamId;
-}
-
-function buildMomentLabel(type: LuckEventType, actualSuccess: boolean, probabilitySuccess?: number, difficulty?: number): string {
+function buildMomentLabel(
+  type: LuckEventType,
+  actualSuccess: boolean,
+  probabilitySuccess?: number,
+  difficulty?: number
+): string {
   const action = eventTypeLabel(type);
   const targetPrefix = difficulty && difficulty > 0 ? `${difficulty}+ ` : "";
 
@@ -164,11 +167,22 @@ function targetLabel(requirement?: number, difficulty?: number): string {
   return `${target}+ target`;
 }
 
-function buildFormulaSummary(actualSuccess: boolean, probabilitySuccess: number, weight: number, weightedDelta: number): string {
+function buildFormulaSummary(
+  actualSuccess: boolean,
+  probabilitySuccess: number,
+  weight: number,
+  weightedDelta: number
+): string {
   return `weighted delta = (${actualSuccess ? 1 : 0} - ${probabilitySuccess.toFixed(3)}) x ${weight.toFixed(2)} = ${weightedDelta.toFixed(3)}`;
 }
 
-function buildInputsSummary(type: LuckEventType, target: string, dice: number[], rerollAvailable: boolean, scoringStatus: LuckEvent["scoringStatus"]): string {
+function buildInputsSummary(
+  type: LuckEventType,
+  target: string,
+  dice: number[],
+  rerollAvailable: boolean,
+  scoringStatus: LuckEvent["scoringStatus"]
+): string {
   const diceText = dice.length > 0 ? `[${dice.join(", ")}]` : "none";
   return `${eventTypeLabel(type)} | target ${target} | dice ${diceText} | reroll available ${rerollAvailable ? "yes" : "no"} | status ${scoringStatus}`;
 }
@@ -177,7 +191,9 @@ function isPlayableTeamName(name: string): boolean {
   return !/^Team \d+$/i.test(name.trim());
 }
 
-function selectMatchTeams(replay: ReplayModel): [ReplayModel["teams"][number], ReplayModel["teams"][number]] {
+function selectMatchTeams(
+  replay: ReplayModel
+): [ReplayModel["teams"][number], ReplayModel["teams"][number]] {
   const usage = new Map<string, number>();
   for (const turn of replay.turns) {
     const teamId = turn.teamId ?? turn.inferredTeamId;
@@ -208,116 +224,32 @@ function selectMatchTeams(replay: ReplayModel): [ReplayModel["teams"][number], R
 
   const placeholder = replay.teams[0] ?? { id: "away", name: "Away Team" };
   const home = replay.teams[0] ?? { id: "home", name: "Home Team" };
-  return [home, placeholder.id === home.id ? { id: "away", name: "Away Team" } : placeholder];
+  return [
+    home,
+    placeholder.id === home.id ? { id: "away", name: "Away Team" } : placeholder
+  ];
 }
 
 function hashId(value: string): string {
   return createHash("sha1").update(value).digest("hex").slice(0, 12);
 }
 
-function eventIndexFromId(eventId: string): number | null {
-  const tokens = eventId.split("-");
-  if (tokens.length < 3) {
-    return null;
-  }
-
-  const index = Number(tokens[1]);
-  return Number.isFinite(index) ? index : null;
+function isRollCandidateEvent(event: ReplayEvent): boolean {
+  return (
+    event.sourceTag === "ResultRoll" ||
+    event.sourceTag === "ResultBlockRoll" ||
+    event.sourceTag === "ResultInjuryRoll" ||
+    event.sourceTag === "ResultCasualtyRoll" ||
+    Boolean(isRecord(event.payload) && isRecord(event.payload.Dice)) ||
+    (/Roll/.test(event.sourceTag) && !/RerollUsage/.test(event.sourceTag))
+  );
 }
-
-function isRollCandidateEvent(event: ReplayEvent, dice: number[], classification: ReturnType<typeof classifyRollContext>): boolean {
-  if (event.sourceTag !== "ResultRoll" || dice.length === 0) {
-    return false;
-  }
-
-  return classification.rollCandidate;
-}
-
 function normalizeExcludedReason(reason: string): string {
-  if (reason.startsWith("excluded: merged into block anchor ")) {
-    return "excluded: merged into block anchor";
-  }
-
   return reason;
 }
 
-function mergeBlockChainContext(events: LuckEvent[]): void {
-  const blockAnchors = events.filter(
-    (event) =>
-      event.scoringStatus === "scored" &&
-      event.type === "block" &&
-      event.metadata.sourceTag === "ResultRoll" &&
-      event.metadata.rollType === 2
-  );
-
-  for (const event of events) {
-    if (!BLOCK_CHAIN_SOURCE_TAGS.has(event.metadata.sourceTag)) {
-      continue;
-    }
-
-    const memberEventIndex = eventIndexFromId(event.id);
-    if (memberEventIndex === null) {
-      continue;
-    }
-
-    const candidateAnchors = blockAnchors
-      .map((anchor) => {
-        const anchorIndex = eventIndexFromId(anchor.id);
-        if (anchor.turn !== event.turn || anchorIndex === null) {
-          return null;
-        }
-
-        const distance = Math.abs(anchorIndex - memberEventIndex);
-        if (distance > 6) {
-          return null;
-        }
-
-        const teamMatch = anchor.teamId === event.teamId;
-        const playerMatch = event.playerId ? anchor.playerId === event.playerId : false;
-        const targetMatch = event.metadata.targetId ? anchor.metadata.targetId === event.metadata.targetId : false;
-
-        return {
-          anchor,
-          anchorIndex,
-          distance,
-          teamMatch,
-          playerMatch,
-          targetMatch
-        };
-      })
-      .filter((candidate): candidate is NonNullable<typeof candidate> => candidate !== null);
-
-    if (candidateAnchors.length === 0) {
-      continue;
-    }
-
-    candidateAnchors.sort((left, right) => {
-      if (left.teamMatch !== right.teamMatch) {
-        return left.teamMatch ? -1 : 1;
-      }
-
-      const leftMatchScore = Number(left.playerMatch) + Number(left.targetMatch);
-      const rightMatchScore = Number(right.playerMatch) + Number(right.targetMatch);
-      if (leftMatchScore !== rightMatchScore) {
-        return rightMatchScore - leftMatchScore;
-      }
-
-      if (left.distance !== right.distance) {
-        return left.distance - right.distance;
-      }
-
-      return left.anchorIndex - right.anchorIndex;
-    });
-
-    const bestAnchor = candidateAnchors[0]!.anchor;
-    event.scoringStatus = "excluded";
-    event.statusReason = `excluded: merged into block anchor ${bestAnchor.id}`;
-    event.metadata.mergedBlockAnchorId = bestAnchor.id;
-  }
-}
-
 function defaultCategory(type: LuckEventType | null): LuckEventType {
-  return type ?? "block";
+  return type ?? "unknown";
 }
 
 function buildNormalizedEvent(
@@ -325,7 +257,10 @@ function buildNormalizedEvent(
   turnEvents: ReplayEvent[],
   event: ReplayEvent,
   eventIndex: number,
-  teamNameById: Map<string, string>
+  teamNameById: Map<string, string>,
+  rerollLink?: ReturnType<typeof linkTeamRerolls> extends Map<number, infer T>
+    ? T
+    : never
 ): LuckEvent | null {
   const payload = isRecord(event.payload) ? event.payload : undefined;
   const rollType = event.rollType ?? toNumber(payload?.RollType);
@@ -334,13 +269,19 @@ function buildNormalizedEvent(
   const requirement = toNumber(payload?.Requirement);
   const difficulty = toNumber(payload?.Difficulty);
   const outcomeCode = toNumber(payload?.Outcome);
-  const { rerollAvailable, rerollUsed } = extractRerollFlags(turnEvents, eventIndex);
+  const { rerollAvailable, rerollUsed } = rerollLink ?? {
+    rerollAvailable: false,
+    rerollUsed: false
+  };
+  void turnEvents;
   const normalizationFlags: string[] = [];
   const normalizationNotes: string[] = [];
 
   if (event.actorTeamId && event.teamId && event.actorTeamId !== event.teamId) {
     normalizationFlags.push("ambiguous_team_attribution");
-    normalizationNotes.push(`actorTeamId ${event.actorTeamId} differs from teamId ${event.teamId}`);
+    normalizationNotes.push(
+      `actorTeamId ${event.actorTeamId} differs from teamId ${event.teamId}`
+    );
   }
 
   if (difficulty === undefined && requirement === undefined) {
@@ -348,14 +289,18 @@ function buildNormalizedEvent(
     normalizationNotes.push("difficulty and requirement were both missing");
   }
 
-  if (dice.length > 0 && dieTypes.some((dieType) => dieType === 0)) {
+  if (dice.length > 0 && dieTypes.some((dieType) => dieType === -1)) {
     normalizationFlags.push("insufficient_dice_metadata");
-    normalizationNotes.push("one or more dice were missing die type; default die sides were inferred");
+    normalizationNotes.push(
+      "one or more dice were missing die type; probability will not be inferred"
+    );
   }
 
   if (!rerollAvailable && skillsUsed.length > 0) {
     normalizationFlags.push("skill_modifier_present_without_explicit_reroll");
-    normalizationNotes.push("skill modifiers observed without explicit team reroll question");
+    normalizationNotes.push(
+      "skill modifiers observed without explicit team reroll question"
+    );
   }
 
   const classification = classifyRollContext({
@@ -366,19 +311,44 @@ function buildNormalizedEvent(
     difficulty,
     diceCount: dice.length
   });
-  const isRollCandidate = isRollCandidateEvent(event, dice, classification);
+  const isRollCandidate = isRollCandidateEvent(event);
 
-  const teamId = resolveTeamId(replayTurn, event);
-  if (!teamId) {
-    return null;
-  }
+  const resolvedTeamId = resolveTeamId(replayTurn, event);
+  const teamId =
+    resolvedTeamId && teamNameById.has(resolvedTeamId)
+      ? resolvedTeamId
+      : "unresolved";
 
   const eventType = defaultCategory(classification.eventType);
   const target = targetLabel(requirement, difficulty);
-  const resolvedActual = resolveActualSuccess(outcomeCode, dice, difficulty ?? requirement);
+  const resolvedActual = resolveActualSuccess(
+    outcomeCode,
+    dice,
+    difficulty ?? requirement,
+    eventType
+  );
 
-  if (!classification.scored || !resolvedActual.deterministic) {
-    const exclusionReason = !classification.scored ? classification.reason : `excluded: ${resolvedActual.reason}`;
+  // Disputed category/beneficiary mappings cannot contribute favorable luck.
+  const semanticsUnverified =
+    classification.scored &&
+    ["block", "armor_break", "injury", "argue_call"].includes(eventType);
+  const attributionUnresolved =
+    !teamNameById.has(teamId) ||
+    event.attributionConflict === true ||
+    normalizationFlags.includes("ambiguous_team_attribution");
+  if (
+    !classification.scored ||
+    !resolvedActual.deterministic ||
+    semanticsUnverified ||
+    attributionUnresolved
+  ) {
+    const exclusionReason = attributionUnresolved
+      ? "excluded: unresolved or conflicting team attribution"
+      : semanticsUnverified
+        ? "excluded: category or damage-beneficiary semantics awaiting independent evidence (NUF-009/013)"
+        : !classification.scored
+          ? classification.reason
+          : `excluded: ${resolvedActual.reason}`;
     return {
       id: `${replayTurn.turnNumber}-${eventIndex}-${event.sourceTag}`,
       turn: replayTurn.turnNumber,
@@ -386,21 +356,38 @@ function buildNormalizedEvent(
       teamName: teamNameById.get(teamId) ?? teamId,
       playerId: event.playerId,
       type: eventType,
-      probabilitySuccess: 0,
-      actualSuccess: resolvedActual.actualSuccess,
+      probabilitySuccess: null,
+      actualSuccess: resolvedActual.deterministic
+        ? resolvedActual.actualSuccess
+        : null,
       delta: 0,
       weightedDelta: 0,
-      label: buildMomentLabel(eventType, resolvedActual.actualSuccess, undefined, difficulty ?? requirement),
+      label: buildMomentLabel(
+        eventType,
+        resolvedActual.actualSuccess,
+        undefined,
+        difficulty ?? requirement
+      ),
       tags: [],
       scoringStatus: "excluded",
       statusReason: exclusionReason,
       explainability: {
         target,
         weight: LUCK_CATEGORY_WEIGHTS[eventType],
-        inputsSummary: buildInputsSummary(eventType, target, dice, rerollAvailable, "excluded")
+        inputsSummary: buildInputsSummary(
+          eventType,
+          target,
+          dice,
+          rerollAvailable,
+          "excluded"
+        )
       },
       metadata: {
         sourceTag: event.sourceTag,
+        sourceId: event.id,
+        actionId: event.actionId,
+        sequenceId: event.sequenceId,
+        sourceIndex: event.sourceIndex,
         isRollCandidate,
         targetId: event.targetId,
         rollType,
@@ -425,15 +412,52 @@ function buildNormalizedEvent(
     };
   }
 
-  const probability = computeProbabilityForEvent({
-    eventType,
-    rollType,
-    requirement,
-    difficulty,
-    dice,
-    dieTypes,
-    rerollAvailable
-  });
+  let probability;
+  try {
+    probability = computeProbabilityForEvent({
+      eventType,
+      rollType,
+      requirement,
+      difficulty,
+      dice,
+      dieTypes,
+      rerollAvailable
+    });
+  } catch (error) {
+    return {
+      id:
+        event.id ?? `${replayTurn.turnNumber}-${eventIndex}-${event.sourceTag}`,
+      turn: replayTurn.turnNumber,
+      teamId,
+      teamName: teamNameById.get(teamId) ?? teamId,
+      playerId: event.playerId,
+      type: eventType,
+      probabilitySuccess: null,
+      actualSuccess: null,
+      delta: 0,
+      weightedDelta: 0,
+      label: "Unsupported dice contract",
+      tags: [],
+      scoringStatus: "excluded",
+      statusReason: `excluded: ${error instanceof Error ? error.message : "invalid dice contract"}`,
+      explainability: {
+        target,
+        weight: 0,
+        inputsSummary:
+          "Dice metadata is incomplete or invalid; no odds inferred."
+      },
+      metadata: {
+        sourceTag: event.sourceTag,
+        sourceId: event.id,
+        sourceIndex: event.sourceIndex,
+        isRollCandidate,
+        rollType,
+        dice,
+        dieTypes,
+        normalizationFlags
+      }
+    };
+  }
   const probabilitySuccess = probability.probabilitySuccess;
   const actualSuccess = resolvedActual.actualSuccess;
   const delta = (actualSuccess ? 1 : 0) - probabilitySuccess;
@@ -459,7 +483,12 @@ function buildNormalizedEvent(
     actualSuccess,
     delta,
     weightedDelta,
-    label: buildMomentLabel(eventType, actualSuccess, probabilitySuccess, difficulty ?? requirement),
+    label: buildMomentLabel(
+      eventType,
+      actualSuccess,
+      probabilitySuccess,
+      difficulty ?? requirement
+    ),
     tags,
     scoringStatus: "scored",
     statusReason: `${classification.reason}; ${probability.reason}; ${resolvedActual.reason}`,
@@ -468,14 +497,29 @@ function buildNormalizedEvent(
       baseOdds: probability.baseOdds,
       rerollAdjustedOdds: probability.rerollAdjustedOdds,
       weight,
-      formulaSummary: buildFormulaSummary(actualSuccess, probabilitySuccess, weight, weightedDelta),
-      inputsSummary: buildInputsSummary(eventType, target, dice, rerollAvailable, "scored")
+      formulaSummary: buildFormulaSummary(
+        actualSuccess,
+        probabilitySuccess,
+        weight,
+        weightedDelta
+      ),
+      inputsSummary: buildInputsSummary(
+        eventType,
+        target,
+        dice,
+        rerollAvailable,
+        "scored"
+      )
     },
     metadata: {
-        sourceTag: event.sourceTag,
-        isRollCandidate,
-        targetId: event.targetId,
-        rollType,
+      sourceTag: event.sourceTag,
+      sourceId: event.id,
+      actionId: event.actionId,
+      sequenceId: event.sequenceId,
+      sourceIndex: event.sourceIndex,
+      isRollCandidate,
+      targetId: event.targetId,
+      rollType,
       rollLabel: event.rollLabel,
       stepType: event.stepType,
       stepLabel: event.stepLabel,
@@ -490,6 +534,9 @@ function buildNormalizedEvent(
       modifiersSum: modifiers.reduce((sum, value) => sum + value, 0),
       rerollAvailable,
       rerollUsed,
+      originalDice: rerollLink?.originalDice,
+      rerollQuestionId: rerollLink?.questionId,
+      rerollPolicy: rerollLink?.policy,
       skillsUsed,
       normalizationFlags,
       normalizationNotes
@@ -517,6 +564,7 @@ function initialAggregate(teamId: string, teamName: string): LuckTeamAggregate {
 
 function initialCoverageByType(): Record<LuckEventType, number> {
   return {
+    unknown: 0,
     block: 0,
     armor_break: 0,
     injury: 0,
@@ -527,77 +575,62 @@ function initialCoverageByType(): Record<LuckEventType, number> {
   };
 }
 
-function summarizeVerdict(
+function buildHowScoredSummary(
+  verdictSummary: string,
+  coverage: LuckReport["coverage"],
   home: LuckTeamAggregate,
-  away: LuckTeamAggregate
-): {
-  verdict: LuckReport["verdict"];
-  scoreGap: number;
-} {
-  const homeRounded = roundTo(home.luckScore, 1);
-  const awayRounded = roundTo(away.luckScore, 1);
-  const scoreGap = roundTo(Math.abs(homeRounded - awayRounded), 1);
-
-  if (homeRounded === awayRounded) {
-    return {
-      scoreGap,
-      verdict: {
-        luckierTeam: "even",
-        scoreGap,
-        summary: "Nuffle called this one even."
-      }
-    };
-  }
-
-  const luckier = homeRounded > awayRounded ? home : away;
-  const strength = scoreGap >= 15 ? "decisively" : scoreGap >= 8 ? "clearly" : "slightly";
-
-  return {
-    scoreGap,
-    verdict: {
-      luckierTeam: luckier.teamId === home.teamId ? "home" : "away",
-      scoreGap,
-      summary: `${luckier.teamName} was ${strength} blessed by nuffle.`
-    }
-  };
-}
-
-function buildHowScoredSummary(verdictSummary: string, coverage: LuckReport["coverage"], home: LuckTeamAggregate, away: LuckTeamAggregate): string[] {
+  away: LuckTeamAggregate,
+  events: LuckEvent[]
+): string[] {
   const excludedTopReasons = Object.entries(coverage.excludedByReason)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
     .map(([reason, count]) => `${count} ${reason}`);
 
   return [
-    "Nufflizier scores only deterministic roll contexts with stable thresholds and outcomes.",
+    "This is partial dice-only analysis with provisional category weights; it is not contextual impact or calibrated win probability.",
     `Roll-candidate coverage: ${coverage.rollCandidates.scoredCount} scored and ${coverage.rollCandidates.excludedCount} excluded (${(
       coverage.rollCandidates.scoredRate * 100
     ).toFixed(1)}% scored).`,
     `All-event visibility: ${coverage.allEvents.scoredCount} scored and ${coverage.allEvents.excludedCount} excluded (${(
       coverage.allEvents.scoredRate * 100
     ).toFixed(1)}% scored).`,
-    excludedTopReasons.length > 0 ? `Top exclusions: ${excludedTopReasons.join("; ")}.` : "Top exclusions: none.",
-    `${home.teamName} finished at ${home.luckScore.toFixed(1)} versus ${away.teamName} at ${away.luckScore.toFixed(
-      1
-    )}, so verdict is: ${verdictSummary}`
+    excludedTopReasons.length > 0
+      ? `Top exclusions: ${excludedTopReasons.join("; ")}.`
+      : "Top exclusions: none.",
+    `${home.teamName} supported dice contribution: ${formatDiceContribution(home.luckScore, scoredEvidenceForTeam({ events }, home.teamId).total, 1)}; ${away.teamName}: ${formatDiceContribution(away.luckScore, scoredEvidenceForTeam({ events }, away.teamId).total, 1)}. ${verdictSummary}`
   ];
 }
 
 export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   const [homeTeam, awayTeam] = selectMatchTeams(replay);
-  const trackedTeamIds = new Set<string>([homeTeam.id, awayTeam.id]);
-  const teamNameById = new Map<string, string>(replay.teams.map((team) => [team.id, team.name] satisfies [string, string]));
+  const teamNameById = new Map<string, string>(
+    replay.teams.map((team) => [team.id, team.name] satisfies [string, string])
+  );
 
   const events: LuckEvent[] = [];
 
   for (const replayTurn of replay.turns) {
+    const rerollLinks = linkTeamRerolls(replayTurn.events);
     for (const [eventIndex, event] of replayTurn.events.entries()) {
-      const teamId = resolveTeamId(replayTurn, event);
-      if (!teamId || !trackedTeamIds.has(teamId)) {
+      if (
+        !isRollCandidateEvent(event) &&
+        ![
+          "ResultBlockOutcome",
+          "ResultPushBack",
+          "ResultPlayerRemoval"
+        ].includes(event.sourceTag)
+      )
         continue;
-      }
 
-      const normalized = buildNormalizedEvent(replayTurn, replayTurn.events, event, eventIndex, teamNameById);
+      const normalized = buildNormalizedEvent(
+        replayTurn,
+        replayTurn.events,
+        event,
+        eventIndex,
+        teamNameById,
+        rerollLinks.get(eventIndex)
+      );
       if (!normalized) {
         continue;
       }
@@ -606,17 +639,11 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     }
   }
 
-  mergeBlockChainContext(events);
-
   const homeAggregate = initialAggregate(homeTeam.id, homeTeam.name);
   const awayAggregate = initialAggregate(awayTeam.id, awayTeam.name);
   const aggregateById = new Map<string, LuckTeamAggregate>([
     [homeAggregate.teamId, homeAggregate],
     [awayAggregate.teamId, awayAggregate]
-  ]);
-  const weightSums = new Map<string, number>([
-    [homeAggregate.teamId, 0],
-    [awayAggregate.teamId, 0]
   ]);
   const weightedTotals = new Map<string, number>([
     [homeAggregate.teamId, 0],
@@ -632,11 +659,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
 
   for (const event of events) {
     const aggregate = aggregateById.get(event.teamId);
-    if (!aggregate) {
-      continue;
-    }
-
-    aggregate.eventCount += 1;
+    if (aggregate) aggregate.eventCount += 1;
     if (event.scoringStatus === "excluded") {
       allExcludedCount += 1;
       if (event.metadata.isRollCandidate) {
@@ -644,10 +667,14 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       }
       excludedByType[event.type] += 1;
       const reasonKey = normalizeExcludedReason(event.statusReason);
-      excludedByReason.set(reasonKey, (excludedByReason.get(reasonKey) ?? 0) + 1);
+      excludedByReason.set(
+        reasonKey,
+        (excludedByReason.get(reasonKey) ?? 0) + 1
+      );
       continue;
     }
 
+    if (!aggregate) continue;
     allScoredCount += 1;
     if (event.metadata.isRollCandidate) {
       rollCandidateScoredCount += 1;
@@ -670,52 +697,70 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       aggregate.categoryScores.movementRisk += event.weightedDelta;
     }
 
-    const categoryWeight = LUCK_CATEGORY_WEIGHTS[event.type];
-    weightSums.set(event.teamId, (weightSums.get(event.teamId) ?? 0) + categoryWeight);
-    weightedTotals.set(event.teamId, (weightedTotals.get(event.teamId) ?? 0) + event.weightedDelta);
+    weightedTotals.set(
+      event.teamId,
+      (weightedTotals.get(event.teamId) ?? 0) + event.weightedDelta
+    );
   }
 
   for (const teamAggregate of [homeAggregate, awayAggregate]) {
-    const totalWeight = weightSums.get(teamAggregate.teamId) ?? 0;
     const totalWeightedDelta = weightedTotals.get(teamAggregate.teamId) ?? 0;
-    teamAggregate.luckScore = totalWeight > 0 ? roundTo((100 * totalWeightedDelta) / totalWeight, 1) : 0;
-    teamAggregate.categoryScores = {
-      block: roundTo(teamAggregate.categoryScores.block, 3),
-      armorBreak: roundTo(teamAggregate.categoryScores.armorBreak, 3),
-      injury: roundTo(teamAggregate.categoryScores.injury, 3),
-      dodge: roundTo(teamAggregate.categoryScores.dodge, 3),
-      ballHandling: roundTo(teamAggregate.categoryScores.ballHandling, 3),
-      argueCall: roundTo(teamAggregate.categoryScores.argueCall, 3),
-      movementRisk: roundTo(teamAggregate.categoryScores.movementRisk, 3)
-    };
+    teamAggregate.luckScore = totalWeightedDelta;
   }
 
   const keyMoments = events
     .filter((event) => event.scoringStatus === "scored")
-    .sort((a, b) => Math.abs(b.weightedDelta) - Math.abs(a.weightedDelta))
-    .slice(0, 15);
+    .sort((a, b) => Math.abs(b.weightedDelta) - Math.abs(a.weightedDelta));
 
-  const { verdict } = summarizeVerdict(homeAggregate, awayAggregate);
+  const verdict: LuckReport["verdict"] = {
+    luckierTeam: "unknown",
+    status: allScoredCount === 0 ? "insufficient_evidence" : "partial_analysis",
+    scoreGap: Math.abs(homeAggregate.luckScore - awayAggregate.luckScore),
+    summary:
+      VERDICT_SUMMARIES[
+        allScoredCount === 0 ? "insufficient_evidence" : "partial_analysis"
+      ]
+  };
   const allEventsTotalCount = allScoredCount + allExcludedCount;
-  const rollCandidateTotalCount = rollCandidateScoredCount + rollCandidateExcludedCount;
+  const rollCandidateTotalCount =
+    rollCandidateScoredCount + rollCandidateExcludedCount;
   const coverage = {
+    sourceRecordCount: replay.turns.reduce(
+      (count, turn) => count + turn.events.length,
+      0
+    ),
+    denominatorDescription:
+      "Roll candidates include every reported random outcome, including unknown families and randomizers; allEvents additionally includes retained block/damage summaries. Neither percentage measures state reconstruction or whole-match confidence.",
     allEvents: {
       scoredCount: allScoredCount,
       excludedCount: allExcludedCount,
-      scoredRate: allEventsTotalCount > 0 ? roundTo(allScoredCount / allEventsTotalCount, 3) : 0
+      scoredRate:
+        allEventsTotalCount > 0 ? allScoredCount / allEventsTotalCount : 0
     },
     rollCandidates: {
       scoredCount: rollCandidateScoredCount,
       excludedCount: rollCandidateExcludedCount,
-      scoredRate: rollCandidateTotalCount > 0 ? roundTo(rollCandidateScoredCount / rollCandidateTotalCount, 3) : 0
+      scoredRate:
+        rollCandidateTotalCount > 0
+          ? rollCandidateScoredCount / rollCandidateTotalCount
+          : 0
     },
     scoredByType,
     excludedByType,
-    excludedByReason: Object.fromEntries(Array.from(excludedByReason.entries()).sort((a, b) => b[1] - a[1]))
+    excludedByReason: Object.fromEntries(
+      Array.from(excludedByReason.entries()).sort((a, b) => b[1] - a[1])
+    )
   } satisfies LuckReport["coverage"];
-  const idSeed = `${replay.matchId}:${events.length}:${homeAggregate.luckScore}:${awayAggregate.luckScore}`;
+  const idSeed = `${replay.matchId}:${JSON.stringify(events)}`;
 
   return {
+    schemaVersion: "2.0",
+    modelVersion: "dice-only-2",
+    limitations: [
+      "Category mappings remain provisional pending NUF-009 independent game evidence.",
+      "Block and damage outcomes are retained but excluded pending verified semantics and beneficiary attribution.",
+      "Board-state reconstruction, contextual impact and calibration are not yet supported."
+    ],
     id: hashId(idSeed),
     generatedAt: new Date().toISOString(),
     match: {
@@ -726,33 +771,15 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     verdict,
     coverage,
     weightTable: { ...LUCK_CATEGORY_WEIGHTS },
-    howScoredSummary: buildHowScoredSummary(verdict.summary, coverage, homeAggregate, awayAggregate),
+    howScoredSummary: buildHowScoredSummary(
+      verdict.summary,
+      coverage,
+      homeAggregate,
+      awayAggregate,
+      events
+    ),
     teams: [homeAggregate, awayAggregate],
-    keyMoments: keyMoments.map((event) => ({
-      ...event,
-      probabilitySuccess: roundTo(event.probabilitySuccess, 3),
-      explainability: {
-        ...event.explainability,
-        baseOdds: event.explainability.baseOdds !== undefined ? roundTo(event.explainability.baseOdds, 3) : undefined,
-        rerollAdjustedOdds:
-          event.explainability.rerollAdjustedOdds !== undefined ? roundTo(event.explainability.rerollAdjustedOdds, 3) : undefined,
-        weight: roundTo(event.explainability.weight, 3)
-      },
-      delta: roundTo(event.delta, 3),
-      weightedDelta: roundTo(event.weightedDelta, 3)
-    })),
-    events: events.map((event) => ({
-      ...event,
-      probabilitySuccess: roundTo(event.probabilitySuccess, 3),
-      explainability: {
-        ...event.explainability,
-        baseOdds: event.explainability.baseOdds !== undefined ? roundTo(event.explainability.baseOdds, 3) : undefined,
-        rerollAdjustedOdds:
-          event.explainability.rerollAdjustedOdds !== undefined ? roundTo(event.explainability.rerollAdjustedOdds, 3) : undefined,
-        weight: roundTo(event.explainability.weight, 3)
-      },
-      delta: roundTo(event.delta, 3),
-      weightedDelta: roundTo(event.weightedDelta, 3)
-    }))
+    keyMoments,
+    events
   };
 }

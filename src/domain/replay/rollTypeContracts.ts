@@ -1,7 +1,14 @@
-export type RollContractKind = "scored_deterministic" | "excluded_deterministic" | "randomizer" | "summary";
+export type RollContractKind =
+  "scored_deterministic" | "excluded_deterministic" | "randomizer" | "summary";
 export type RollConfidence = "high" | "medium" | "low";
 export type RollKnowledgeStatus = "known" | "ambiguous" | "unknown";
-export type RollScoringCategory = "block" | "armor_break" | "injury" | "ball_handling" | "argue_call" | "movement_risk";
+export type RollScoringCategory =
+  | "block"
+  | "armor_break"
+  | "injury"
+  | "ball_handling"
+  | "argue_call"
+  | "movement_risk";
 
 export type RollTypeContract = {
   sourceTag: string;
@@ -18,23 +25,75 @@ function contractKey(sourceTag: string, rollType: number): string {
   return `${sourceTag}|${rollType}`;
 }
 
-// Evidence-based contracts from the sanitized demo replay fixture set under demo-replays/.
+// Provisional inventory from sanitized fixtures. Numeric shape and adjacency do not establish BB3 rule meaning.
+// analyzeLuck excludes disputed block/damage categories and abstains from whole-match verdicts (NUF-009).
 const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
+  {
+    sourceTag: "QuestionBlockDice",
+    rollType: 3,
+    label: "unverified_block_question",
+    kind: "summary",
+    confidence: "low",
+    status: "ambiguous",
+    notes:
+      "Preserved choice/pool evidence; not an additional independent roll. NUF-009/010."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 15,
+    label: "unverified_roll_15",
+    kind: "excluded_deterministic",
+    confidence: "low",
+    status: "unknown",
+    notes:
+      "Newly visible after ordered extraction; no semantic promotion. NUF-009."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 21,
+    label: "unverified_roll_21",
+    kind: "excluded_deterministic",
+    confidence: "low",
+    status: "unknown",
+    notes:
+      "Newly visible after ordered extraction; no semantic promotion. NUF-009."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 36,
+    label: "unverified_roll_36",
+    kind: "excluded_deterministic",
+    confidence: "low",
+    status: "unknown",
+    notes:
+      "Newly visible after ordered extraction; no semantic promotion. NUF-009."
+  },
+  {
+    sourceTag: "ResultRoll",
+    rollType: 46,
+    label: "unverified_roll_46",
+    kind: "excluded_deterministic",
+    confidence: "low",
+    status: "unknown",
+    notes:
+      "Newly visible after ordered extraction; no semantic promotion. NUF-009."
+  },
   {
     sourceTag: "ResultBlockRoll",
     rollType: 3,
-    label: "block_dice_faces_summary",
-    kind: "summary",
+    label: "unverified_block_faces",
+    kind: "excluded_deterministic",
     confidence: "high",
     status: "known",
     scoringCategory: "block",
-    notes: "Outcome-only block face summary without threshold/dice payload."
+    notes:
+      "Correction: actual face data exists under payload.Die. Keep excluded pending pool/choice/skill semantics, NUF-009/010."
   },
   {
     sourceTag: "ResultInjuryRoll",
     rollType: 11,
-    label: "injury_chain_2d6_summary",
-    kind: "summary",
+    label: "unverified_injury_2d6",
+    kind: "excluded_deterministic",
     confidence: "high",
     status: "known",
     scoringCategory: "injury",
@@ -43,8 +102,8 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
   {
     sourceTag: "ResultCasualtyRoll",
     rollType: 12,
-    label: "casualty_chain_d6_summary",
-    kind: "summary",
+    label: "unverified_casualty",
+    kind: "excluded_deterministic",
     confidence: "high",
     status: "known",
     scoringCategory: "injury",
@@ -144,7 +203,8 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
     kind: "randomizer",
     confidence: "high",
     status: "known",
-    notes: "Paired randomizer event with dieType mix (1 and 0) and no threshold."
+    notes:
+      "Paired randomizer event with dieType mix (1 and 0) and no threshold."
   },
   {
     sourceTag: "ResultRoll",
@@ -191,7 +251,8 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
     kind: "excluded_deterministic",
     confidence: "low",
     status: "unknown",
-    notes: "Low-frequency deterministic check observed in special-action chains."
+    notes:
+      "Low-frequency deterministic check observed in special-action chains."
   },
   {
     sourceTag: "ResultRoll",
@@ -220,7 +281,8 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
     kind: "excluded_deterministic",
     confidence: "medium",
     status: "ambiguous",
-    notes: "Repeated deterministic check with stable 2+ threshold but unclear rule meaning."
+    notes:
+      "Repeated deterministic check with stable 2+ threshold but unclear rule meaning."
   },
   {
     sourceTag: "ResultRoll",
@@ -247,7 +309,8 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
     kind: "excluded_deterministic",
     confidence: "medium",
     status: "ambiguous",
-    notes: "Deterministic 2+ check that often precedes rollType 10 chain checks."
+    notes:
+      "Deterministic 2+ check that often precedes rollType 10 chain checks."
   },
   {
     sourceTag: "ResultRoll",
@@ -265,7 +328,8 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
     kind: "excluded_deterministic",
     confidence: "medium",
     status: "ambiguous",
-    notes: "Deterministic special-skill chain check with stable failure patterns."
+    notes:
+      "Deterministic special-skill chain check with stable failure patterns."
   },
   {
     sourceTag: "ResultRoll",
@@ -288,10 +352,16 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
 ];
 
 const contractMap = new Map<string, RollTypeContract>(
-  OBSERVED_ROLL_TYPE_CONTRACTS.map((contract) => [contractKey(contract.sourceTag, contract.rollType), contract])
+  OBSERVED_ROLL_TYPE_CONTRACTS.map((contract) => [
+    contractKey(contract.sourceTag, contract.rollType),
+    contract
+  ])
 );
 
-export function getRollTypeContract(sourceTag: string, rollType: number | undefined): RollTypeContract | undefined {
+export function getRollTypeContract(
+  sourceTag: string,
+  rollType: number | undefined
+): RollTypeContract | undefined {
   if (!Number.isFinite(rollType)) {
     return undefined;
   }
@@ -299,17 +369,26 @@ export function getRollTypeContract(sourceTag: string, rollType: number | undefi
   return contractMap.get(contractKey(sourceTag, rollType as number));
 }
 
-export function labelForRollType(sourceTag: string, rollType: number | undefined, fallbackLabel: string): string {
+export function labelForRollType(
+  sourceTag: string,
+  rollType: number | undefined,
+  fallbackLabel: string
+): string {
   const contract = getRollTypeContract(sourceTag, rollType);
   return contract?.label ?? fallbackLabel;
 }
 
-export function isRollCandidateContract(contract: RollTypeContract | undefined): boolean {
+export function isRollCandidateContract(
+  contract: RollTypeContract | undefined
+): boolean {
   if (!contract) {
     return false;
   }
 
-  return contract.kind === "scored_deterministic" || contract.kind === "excluded_deterministic";
+  return (
+    contract.kind === "scored_deterministic" ||
+    contract.kind === "excluded_deterministic"
+  );
 }
 
 export function listObservedRollTypeContracts(): RollTypeContract[] {

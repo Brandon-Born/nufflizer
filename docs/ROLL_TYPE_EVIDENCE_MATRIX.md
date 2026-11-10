@@ -1,5 +1,12 @@
 # Roll Type Evidence Matrix (Demo Replay Baseline)
 
+## November runtime correction (NUF-008/009)
+
+Ordered extraction now retains `QuestionBlockDice|3`, `ResultRoll|15`, `ResultRoll|21`, `ResultRoll|36`, and `ResultRoll|46`. These have explicit unverified contracts and no semantic promotion. `ResultBlockRoll|3` contains actual face data under `Die`; the historical claim that it has no dice was incorrect. Injury/casualty records also remain random outcomes, not harmless summaries. Block and damage-category contributions are disabled until independent rule and beneficiary evidence exists. Movement/ball-handling numeric threshold analysis remains provisional. Whole-match comparisons abstain; the historical tables below are not current acceptance evidence.
+
+
+> 2026-11-09 review notice: this table preserves historical hypotheses and counts, not verified current semantics. The review found actual block/injury records excluded and movement checks labeled as blocks. Stable dice shapes and sequence proximity do not prove rule identity. Revalidate all promoted/provisional mappings under [NUF-009 through NUF-013](REMEDIATION_BACKLOG.md#work-packets); current work priority is defined by the new backlog, not the historical frequency ordering below.
+
 Date: 2026-02-11  
 Fixtures analyzed:
 1. `demo-replays/demo1.bbr`

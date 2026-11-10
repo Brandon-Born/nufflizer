@@ -4,7 +4,10 @@ import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 function readFixture(name: string): string {
-  return readFileSync(path.resolve(process.cwd(), "tests", "fixtures", "replays", name), "utf-8");
+  return readFileSync(
+    path.resolve(process.cwd(), "tests", "fixtures", "replays", name),
+    "utf-8"
+  );
 }
 
 async function loadPostHandler() {
@@ -24,7 +27,12 @@ describe("POST /api/replay legacy gate", () => {
     const POST = await loadPostHandler();
 
     const formData = new FormData();
-    formData.append("replay", new File([readFixture("sample-basic.xml")], "sample-basic.xml", { type: "application/xml" }));
+    formData.append(
+      "replay",
+      new File([readFixture("sample-basic.xml")], "sample-basic.xml", {
+        type: "application/xml"
+      })
+    );
 
     const request = new Request("http://localhost/api/replay", {
       method: "POST",
@@ -37,7 +45,9 @@ describe("POST /api/replay legacy gate", () => {
     expect(response.status).toBe(200);
     expect(payload).toHaveProperty("report");
     expect(response.headers.get("Deprecation")).toBe("true");
-    expect(response.headers.get("Sunset")).toBe("2026-04-30T00:00:00Z");
+    expect(response.headers.get("Sunset")).toBe(
+      "Thu, 30 Apr 2026 00:00:00 GMT"
+    );
     expect(response.headers.get("Link")).toContain("/api/nufflizier/analyze");
   });
 
@@ -59,7 +69,9 @@ describe("POST /api/replay legacy gate", () => {
       replacement: "/api/nufflizier/analyze"
     });
     expect(response.headers.get("Deprecation")).toBe("true");
-    expect(response.headers.get("Sunset")).toBe("2026-04-30T00:00:00Z");
+    expect(response.headers.get("Sunset")).toBe(
+      "Thu, 30 Apr 2026 00:00:00 GMT"
+    );
     expect(response.headers.get("Link")).toContain("/api/nufflizier/analyze");
   });
 });

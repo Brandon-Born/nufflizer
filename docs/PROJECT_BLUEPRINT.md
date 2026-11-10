@@ -1,5 +1,9 @@
 # Project Blueprint: Nufflizier (Web + API + CLI)
 
+## Current Planning Authority (2026-11-09)
+
+[PROJECT_PLAN.md](PROJECT_PLAN.md) and [REMEDIATION_BACKLOG.md](REMEDIATION_BACKLOG.md) supersede the milestone ordering and readiness claims in the February implementation history below. The adversarial review found real block/injury exclusions, unreachable dodge scoring, reroll and damage-attribution errors, misleading coverage, parser failures, and upload-security gaps. Context-sensitive impact requires state reconstruction and a versioned consequence model (NUF-016–019); fixed category weights do not implement that capability. The current ledger records seven locally verified closures and the remaining semantic/deployment work. The historical sections below do not override those statuses.
+
 ## Product Summary
 Nufflizier is a replay-driven luck analysis tool for Blood Bowl 3.
 
@@ -16,6 +20,7 @@ Output:
 1. `docs/PROJECT_PLAN.md` (current status and backlog)
 2. `docs/CONVERSION_LOG.md` (append-only migration log)
 3. `docs/IMPLEMENTATION_LOG.md` (append-only execution log)
+4. `docs/REMEDIATION_BACKLOG.md` (authoritative issue ledger and acceptance criteria)
 
 ## Baseline Decisions
 1. Deployment target: Vercel.
@@ -25,12 +30,12 @@ Output:
 5. Backward compatibility: legacy coaching pipeline is currently `legacy-kept`.
 6. Explainability priority: transparency of weights and assumptions is required, even for a for-fun tool.
 
-## Current Implementation State (2026-02-11)
+## Historical Implementation State (2026-02-11; revalidation required)
 1. Primary runtime surface is implemented:
 - UI route `/nufflizier` (with `/upload` alias)
 - API route `POST /api/nufflizier/analyze`
 - CLI `nufflizier analyze`
-2. Parser + attribution foundation is production-usable for replay fixtures.
+2. Parser + attribution foundation exists; its earlier production-readiness claim is withdrawn pending the November remediation gate.
 3. Luck analysis domain exists (`src/domain/nufflizer/*`) with normalization, probability, and scoring.
 4. Report now includes explainability metadata (`scored` vs `excluded`, coverage metrics, “how scored” summaries, and normalization flags for ambiguous contexts).
 5. Legacy coaching modules still exist and are tested but are not the primary product path.
@@ -64,7 +69,7 @@ Replay file (.xml/.bbr)
 3. CLI
 - `pnpm nufflizier analyze <replay_file> --format json|text`
 
-## Milestone Plan
+## Historical Milestone Plan (superseded by November remediation)
 
 ### M0 - Foundation (Completed)
 Deliverables:

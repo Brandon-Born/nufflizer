@@ -1,0 +1,381 @@
+# Nufflizier adversarial remediation backlog
+
+Created: 2026-11-09. Reviewed baseline: `b06d50e9fa2b42b821f4f8b30ef3894c10f588ca`.
+
+This is the authoritative implementation backlog for the November 2026 review and the requested context-sensitive luck analyzer. Read [AGENTS.md](../AGENTS.md), [PROJECT_PLAN.md](PROJECT_PLAN.md), and the two execution logs first. The February roll-family promotion order is superseded. **Runtime remediation is underway. Seven reproduction/ingestion/execution issues are implemented and locally verified; the full analyzer is not complete. See the ledger and the current implementation record.**
+
+## Product outcome
+
+A user uploads a BB3 `.xml` or `.bbr` replay and receives a defensible account of dice luck and its match consequences. A failed 2+ dodge with one applicable full reroll has a 1/36 failure probability. Its impact depends on what the failure costs: useful activations, possession, scoring opportunities, player availability, and remaining time. A final optional block can matter little; a final action deciding the match can matter enormously.
+
+Preserve one-shot processing, no required replay persistence, pure domain logic, shared API/CLI calculations, sanitized fixtures, and the existing architecture boundaries. New analysis belongs in the Nufflizier pipeline, not the legacy coaching stack. Do not replace missing evidence with an LLM guess or invented rule mappings.
+
+## Instructions for the implementing agent
+
+1. Inspect the current tree and reproduce the issue before editing. The observations below describe the reviewed commit, not every future checkout.
+2. Work on one coherent issue or dependency group at a time. The ledger is the status source of truth: `open`, `in_progress`, `blocked`, or `done`. Record evidence blockers precisely and continue independent work.
+3. Add regression tests with independently derived expectations for changed parser, probability, attribution, and scoring behavior. A snapshot of current output is not a correctness oracle. Never make a test green by silently weakening a requirement or relabeling the current behavior as correct.
+4. Preserve `NUF-001` through `NUF-028` permanently. Add newly discovered problems under the next unused ID; do not renumber, delete, or silently absorb unresolved work. Splitting an item requires linked child IDs and retention of all acceptance criteria.
+5. A completed item needs all acceptance criteria satisfied, implementation/test paths, validation commands and results, and a commit reference when one exists. Use the evidence/notes column to link the relevant implementation-log entry. A plan, skipped test, exclusion, or unsupported family is not completed support.
+6. Run focused tests while implementing. Before completing a significant change run `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm test`, `corepack pnpm build`, and applicable `corepack pnpm test:e2e`. Run build and browser-server checks sequentially. Include legacy checks when shared parsing or the legacy boundary changes.
+7. Update this ledger and `PROJECT_PLAN.md`; append migration impact to `CONVERSION_LOG.md` and execution evidence to `IMPLEMENTATION_LOG.md`. Do not rewrite historical log entries. Update semantic documentation whenever an assumption changes.
+8. Gather missing evidence from available sanitized fixtures first. If controlled game captures or deployed-environment access are unavailable, record the exact missing case and its effect on support. Do not claim calibrated win probabilities, production safety, or complete coverage without the corresponding evidence.
+
+Execution note (2026-11-09): safety/report mitigation work proceeded where independent of missing semantic evidence. An exclusion or an abstention is not completed block/injury/context support. Dependencies remain acceptance requirements.
+
+Suggested sequential order: **001 → 004 → 005 → 006 → 026 → 002 → 003 → 007 → 008 → 009 → 013 → 012 → 010 → 011 → 014 → 015 → 016 → 017 → 018 → 019 → 020 → 021 → 023 → 024 → 025 → 022 → 027 → 028**. Tests and documentation accompany each item; 022 and 027 are final reconciliation, not permission to postpone them.
+
+## Ledger
+
+P1 means a trust, safety, or core-product blocker. P2 means required reporting/operational work; it still belongs in the final acceptance gate. Dependencies are issue suffixes below and refer to implementation completion unless a task explicitly permits an initial investigation first.
+
+| ID | Priority | Work item | Dependencies | Status | Evidence / notes |
+| --- | --- | --- | --- | --- | --- |
+| NUF-001 | P1 | Preserve review reproductions and independent reference cases | None | done | Minimal raw fragments, baseline/current corpus inventory, independent arithmetic tests and runnable contextual seed probes; missing rule evidence explicitly owned by NUF-009; [record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation) |
+| NUF-002 | P1 | XML document root and formatting invariance | 001 | done | Ordered XML parsing; declaration/comment/CRLF/format/empty-element invariance; malformed inner messages reject visibly; [record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation) |
+| NUF-003 | P1 | Replay structure and boundary validation | 001, 002 | done | Bounded Zod event/envelope validation; seven invalid-input cases agree across HTTP and CLI; no input-error 500; [record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation) |
+| NUF-004 | P1 | Dependency advisories and XML entity handling | None | done | Patched framework/parser/validation + transitive dependencies; fresh production audit: zero advisories; both XML parser guards tested; [record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation) |
+| NUF-005 | P1 | Bound request reading and decompression | 001 | done | Stream, zlib-output, message, depth/node/event and file caps; boundary/false-length/multipart regressions; all 12 demos parse; [record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation) |
+| NUF-006 | P1 | Enforce analysis budgets and cancellation | 005 | done | Terminating worker deadline/cancellation, parent responsiveness, cleanup/concurrency and local production tracing/browser checks; [record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation) |
+| NUF-007 | P1 | Exact, bounded probability and outcome contracts | 003 | in_progress | Bounded numeric sum/any-die contracts, type-zero handling and contradiction rejection; natural/action-specific contracts need NUF-009; [record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation) |
+| NUF-008 | P1 | Preserve ordered sequences, actions, and state transitions | 002, 003 | in_progress | Ordered source/sequence/step IDs and unknown payload preservation; verified activation/state/action-chain semantics still pending; [record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation) |
+| NUF-009 | P1 | Revalidate roll, step, and action semantics | 001, 008 | in_progress | Reverse-engineering is the intended route; official enum definitions are not required. User confirmed no official source exists. Infer contracts from raw facts, cross-fixture counterexamples and rule arithmetic; controlled captures can strengthen confidence; [record](IMPLEMENTATION_LOG.md#2026-11-09---report-contracts-and-independent-engineering) |
+| NUF-010 | P1 | Real block pools, choices, skills, and outcomes | 007, 009, 012, 013 | open | Real pool faces retained under payload.Die and counted; categorical skills/choice distributions still need NUF-009 evidence; [record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation) |
+| NUF-011 | P1 | Armor, injury, casualty, and recovery chains | 007, 009, 013 | open | Damage records retained and excluded; verified stage distributions/subject/mitigation/recovery still missing; [record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation) |
+| NUF-012 | P1 | Action-linked rerolls and resource consumption | 007, 008, 009, 013 | in_progress | Turn-6 cross-link corrected using actor/step/target/roll evidence; original question dice retained; skill policy/status dedup/resources unresolved; [record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation) |
+| NUF-013 | P1 | Actor, subject, controller, and beneficiary attribution | 008, 009 | in_progress | Unnamed roster ownership/conflicts retained; uncertain damage contributes zero; correct negative self-damage and source-specific roles still unresolved; [record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation) |
+| NUF-014 | P1 | Honest observed-outcome and attribution coverage | 009, 010, 011, 012, 013 | in_progress | Unknown/randomizer/block/injury/unresolved records now lower coverage; source-record count and denominators disclosed; causal dedup/orphan accounting pending; [record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation) |
+| NUF-015 | P1 | Insufficient-evidence and partial-analysis verdicts | 003, 014 | in_progress | Zero evidence abstains; partial status/unknown odds shared across surfaces; supported-analysis/even prerequisites await semantic completion; [record](IMPLEMENTATION_LOG.md#2026-11-09---report-contracts-and-independent-engineering) |
+| NUF-016 | P1 | Reconstruct board, possession, activations, and game clock | 008, 009, 010, 011, 012, 013 | open | Await verified phase, cell, status, skill and namespace mappings from NUF-009; no tactical state invented; [record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation) |
+| NUF-017 | P1 | Explainable pre-roll contextual value model | 007, 016 | open | Await NUF-016 and valid counterfactual successor states; no heuristic tactical value claimed; [record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation) |
+| NUF-018 | P1 | Causal action accounting without double counting | 010, 011, 012, 017 | open | Await verified random/action chains and contextual value; deterministic damage summaries excluded from totals; [record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation) |
+| NUF-019 | P1 | Additive impact totals and calibrated interpretation | 014, 015, 018 | in_progress | Additive dice/category totals reconcile without rounding/averaging; contextual totals and independent calibration remain open; [record](IMPLEMENTATION_LOG.md#2026-11-09---report-contracts-and-independent-engineering) |
+| NUF-020 | P2 | Full-event filters and truthful timeline navigation | 008, 016, 019 | in_progress | Full-source filtering, chronological/impact views, status/team filters, paging/reset and source locators implemented; real half/team-turn/activation labels await NUF-016; [record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation) |
+| NUF-021 | P2 | Shared report contract and plain-language explanations | 015, 019, 020 | in_progress | Shared runtime Zod schema and inferred types validate model versions, evidence/coverage/category/team reconciliation and abstention. Bounded response reader rejects malformed success/error bodies; missing evidence displays Not scored. Contextual explanations remain open; [record](IMPLEMENTATION_LOG.md#2026-11-09---report-contracts-and-independent-engineering) |
+| NUF-022 | P1 | Independent golden corpus and meaningful browser coverage | 001, 021, 023, 024, 025, 026 | in_progress | 191 unit checks and four production-browser flows (real BBR, error/schema handling, reset/export, cancellation); all demos inventoried; independent rule/context golden and held-out cases still missing; [record](IMPLEMENTATION_LOG.md#2026-11-09---report-contracts-and-independent-engineering) |
+| NUF-023 | P2 | Vercel request/response limits and upload failures | 005, 006, 021 | blocked | 4 MB caps, worker-side response serialization/size enforcement, bounded client response reading, and non-JSON 413/504 handling implemented; no configured Vercel deployment access for required smoke; [record](IMPLEMENTATION_LOG.md#2026-11-09---report-contracts-and-independent-engineering) |
+| NUF-024 | P2 | Deployment-wide abuse controls | 004, 005, 006 | blocked | Bounded aggregate local quota ignores forged forwarding headers; shared quota/concurrency backend or verified edge policy is not configured; [record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation) |
+| NUF-025 | P2 | Legacy endpoint retirement/default gate | 003, 004, 005, 006 | done | Default/invalid config disabled, explicit opt-in hardened; 410 replacement + deprecation/HTTP-date sunset; tests/docs agree; [record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation) |
+| NUF-026 | P2 | Frozen installs and reproducible CI | None | in_progress | Node 22/pnpm 9, frozen CI/audit and mismatch rejection verified. verify runs lint/types/unit/build/browser; test:e2e rebuilds production artifacts to prevent stale-UI passes. Commit-bound CI evidence remains open; [record](IMPLEMENTATION_LOG.md#2026-11-09---report-contracts-and-independent-engineering) |
+| NUF-027 | P2 | Reconcile product claims and evidence documentation | 009, 019, 021, 022, 023, 024, 025 | in_progress | Active copy corrected and historical gates marked non-authoritative; final rule/context/deployment evidence reconciliation depends on open predecessors; [record](IMPLEMENTATION_LOG.md#2026-11-09---report-contracts-and-independent-engineering) |
+| NUF-028 | P1 | Integrated adversarial and product acceptance gate | 001–027 | open | Open: independent rule/context evidence, shared abuse controls, committed CI and deployed acceptance remain required; [record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation) |
+
+## Review evidence and reproduction seeds
+
+These are local observations from 2026-11-09, not claims about a deployed service. Extracted turn numbers below are the old parser's global counters, not validated half/team-turn labels. Do not assume current numeric roll labels are authoritative.
+
+| Evidence | Observed baseline result | Responsible issues |
+| --- | --- | --- |
+| Analyze all 12 `demo-replays/*.bbr` files | Zero scored dodges in every fixture | 009, 010, 014 |
+| `demo1.bbr` | 168 scored events; 94.4% roll-candidate coverage; all 81 `ResultBlockRoll` and 18 `ResultInjuryRoll` records excluded | 009–011, 014 |
+| `demo1.bbr`, extracted turn 6 | Player 42's reroll changes player 37's earlier check; player 42's final rerolled result has no reroll adjustment | 008, 012 |
+| `demo1.bbr`, extracted turn 12, player 50 | Failed movement followed by own armor break/removal; own team receives +0.278 armor luck | 011, 013, 018 |
+| Add an XML declaration to decoded `demo1.bbr` | Root becomes `?xml`; no teams/report events; even verdict | 002, 003, 015 |
+| Replace adjacent `><` with `>\n<` in decoded `demo1.bbr` | Scored-event count falls from 168 to zero | 002, 008 |
+| Upload `<hello>world</hello>` as `.xml` | HTTP 200 with an even verdict | 003, 015 |
+| Supported `ResultRoll` with threshold/outcome, no dice | HTTP 500: probability dice missing | 003, 007 |
+| One supported success plus 100 unknown roll-family events | 100% roll-candidate coverage and decisive verdict | 014, 015, 019 |
+| Same failed 2+ pickup at event position 1 versus 10 | Same −0.917 event contribution | 016–018 |
+| One versus ten identical failed 2+ pickups | Same −83.3 team score | 019 |
+| Multi-die ball-handling `[2,2]`, target 4+, no outcome | Probability uses any-die success, actual result uses sum and reports success | 007 |
+| `demo1.bbr`, ball-handling UI filter | Four scored events exist, none in global top 15, so filter returns no rows | 020 |
+| `tests/fixtures/replays/sample-basic.xml` | Zero scored events; existing API and browser smoke tests still pass | 001, 022 |
+
+Run this bounded, read-only probe from the repository root to rediscover the parser/report defects:
+
+```sh
+node --import tsx - <<'NODE'
+const fs = require('node:fs');
+const { decodeReplayInput } = require('./src/domain/replay/decodeReplay.ts');
+const { analyzeNufflizerInput } = require('./src/server/services/analyzeNufflizer.ts');
+const xml = decodeReplayInput(fs.readFileSync('demo-replays/demo1.bbr', 'utf8')).xml;
+for (const [name, input] of [
+  ['original', xml],
+  ['declaration', '<?xml version="1.0" encoding="utf-8"?>' + xml],
+  ['whitespace', xml.replaceAll('><', '>\n<')],
+  ['not-a-replay', '<hello>world</hello>'],
+  ['smoke-fixture', fs.readFileSync('tests/fixtures/replays/sample-basic.xml', 'utf8')]
+]) {
+  try {
+    const r = analyzeNufflizerInput(input);
+    console.log(name, JSON.stringify({
+      verdict: r.verdict, coverage: r.coverage, eventCount: r.events.length
+    }));
+  } catch (error) {
+    console.log(name, error.message);
+  }
+}
+NODE
+```
+
+For API probes, construct a `FormData` with a `File` named `replay.xml` under field `replay` and invoke `POST` from `src/app/api/nufflizier/analyze/route.ts` with a `Request`. Encode structured `MessageData` twice with base64, as the existing fixtures do. For state/scoring probes, use a minimal two-team `ReplayModel` with explicit ownership and independently stated expected results. Preserve initial roll data in questions when extracting minimal fixtures. Do not use expensive denial-of-service payloads against a live service; resource tests must be bounded and isolated.
+
+Review validation: lint, typecheck, 79 tests in 25 files, production build, and one browser smoke test passed. Those passes did not establish semantic correctness. Browser validation required a temporary Playwright download and permission to bind a local test server; `/tmp` artifacts are not durable evidence or required dependencies. The production dependency audit reported 44 advisories (4 critical, 20 high, 16 moderate, 4 low); refresh it and assess reachability rather than treating that count as 44 confirmed exploits.
+
+## Work packets
+
+### NUF-001 — Preserve review reproductions and independent reference cases
+
+**Find:** `tests/unit/nufflizier*.test.ts`, `tests/unit/replayImplementationBaseline.test.ts`, `tests/fixtures`, `demo-replays`, and the evidence table above.
+
+**Work:** Create small sanitized reproduction cases for each confirmed defect. Establish an annotation format containing source fixture/sequence, actor and subject, action, original/replacement dice, final result, consequence facts, and why the expected interpretation is justified. Separate raw replay facts, independently verified rules, and unresolved hypotheses.
+
+**Acceptance:** Every review observation has a runnable probe or regression case and an owning ID; annotations do not derive expectations by calling the scorer being tested. Record a corpus inventory and baseline before semantic rewrites. Capture at least the block pool, reroll mislink, self-damage, declaration/whitespace, junk XML, and zero-event smoke cases. Missing independent rule evidence is explicitly assigned to NUF-009, not invented. Deliver fixtures/harness and provenance; promote each defect probe into a passing regression with its fix rather than leaving permanent skipped tests.
+
+### NUF-002 — XML document root and formatting invariance
+
+**Find:** `parseXml.ts` root selection and `extractStructuredTurns.ts` token/message regexes.
+
+**Work:** Identify the actual supported document element, ignoring XML declarations/comments. Extract messages using XML structure with document order preserved. Whitespace, normal attribute variation, and equivalent empty-element syntax must not change gameplay meaning. Preserve outer sequence boundaries needed by NUF-008.
+
+**Acceptance:** Original, declaration-prefixed, CRLF, and pretty-printed variants of the same replay yield equivalent teams, ordered actions, probabilities, and scores, ignoring generated timestamps. Malformed XML is rejected. Test multiple supported root shapes and explicitly reject unsupported ones. Inner-message parse failures are counted/disclosed, not silently skipped.
+
+### NUF-003 — Replay structure and boundary validation
+
+**Find:** `parseXml.ts`, `analyzeNufflizer.ts`, API route, `src/cli/nufflizier.ts`.
+
+**Work:** Add bounded Zod validation for the replay envelope and decoded event contracts, not just a nonempty string. Define required team IDs, valid numeric fields, legal structures, duplicate handling, replay-version support, and typed validation errors. Distinguish an invalid file from a recognizable but incomplete/unsupported replay.
+
+**Acceptance:** Junk XML, missing dice, malformed inner base64/XML, invalid numbers, missing/duplicate teams, and unsupported versions have deterministic documented outcomes across API and CLI. User input errors do not become HTTP 500. Unsupported partial content remains visible for coverage. Limits apply through service/CLI entry points as well as HTTP; NUF-015 provides the final partial-report presentation.
+
+### NUF-004 — Dependency advisories and XML entity handling
+
+**Find:** `package.json`, `pnpm-lock.yaml`, both `XMLParser` configurations, `.github/workflows/ci.yml`.
+
+**Work:** Refresh `corepack pnpm audit --prod --json`, inspect maintainer advisories and actual reachable paths, upgrade supported dependencies, and disable unneeded DTD/entity processing in outer and embedded XML. Preserve normal safe XML text handling. Do not blindly change major framework versions without checking migrations and runtime compatibility.
+
+**Acceptance:** No unmitigated reachable high/critical advisory remains in the upload path. Record remaining advisories, reachability, mitigation, and follow-up IDs instead of suppressing them globally. Bounded entity/DOCTYPE regression tests cover both parsers. Build and browser tests pass after upgrades. CI checks dependencies. Reviewed versions were `fast-xml-parser@5.3.4`, `next@14.2.35`, and `zod@3.25.76`; these are historical observations, not upgrade targets.
+
+Primary starting references: [parser entity-expansion DoS](https://github.com/NaturalIntelligence/fast-xml-parser/security/advisories/GHSA-jmr7-xgp7-cmfj), [parser advisory inventory](https://github.com/NaturalIntelligence/fast-xml-parser/security/advisories). Refresh the inventory when implementing; one old patched version may still have later advisories.
+
+### NUF-005 — Bound request reading and decompression
+
+**Find:** `decodeReplay.ts`, both upload routes, `appConfig`, CLI file reading.
+
+**Work:** Enforce byte limits while reading/decompressing, including zlib output bounds, before allocating complete expanded input. Limit multipart fields/files, embedded message sizes, XML depth/node counts, and total events. Treat `Content-Length` as a hint, not enforcement. Share safe decoder behavior with legacy and CLI paths.
+
+**Acceptance:** Bounded tests cover compressed expansion beyond the cap, missing/false content length, extra multipart fields/files, excessive depth/events, and limit boundaries. Rejection occurs within measured memory/work budgets and produces typed errors. All valid demo fixtures remain supported. No huge attacker-controlled allocation or enumeration is required before a size check.
+
+### NUF-006 — Enforce analysis budgets and cancellation
+
+**Find:** Synchronous service execution and post-hoc `maxAnalyzeDurationMs` logging.
+
+**Work:** Introduce an execution boundary capable of terminating expensive parse/analysis work, with explicit input/work/time limits and cancellation cleanup. A timer or `Promise.race` around synchronous work on the same event loop is insufficient. Choose a worker/process/platform approach supported by the deployment target and keep domain functions pure.
+
+**Acceptance:** A bounded slow-analysis test is actually terminated; unrelated requests remain responsive; client cancellation releases work; workers and buffers are cleaned up. API/CLI receive documented timeout/cancellation results, never a fabricated verdict. Record local timing/memory evidence and validate packaging against NUF-023.
+
+### NUF-007 — Exact, bounded probability and outcome contracts
+
+**Find:** `probability.ts`, `classifyRollContext.ts`, dice/modifier extraction in `analyzeLuck.ts`.
+
+**Work:** Use validated die types and legal face/count bounds. Remove inference of die size from an observed value. Resolve probability and actual outcome from the same action-specific contract, including threshold versus sum, modifiers, explicit outcomes, and natural-roll rules where applicable. An unknown outcome code must not automatically become a deterministic success/failure. Distinguish valid D6 type `0` from missing metadata.
+
+**Acceptance:** Independently enumerated supported single-die/2D6 examples pass; `[2,2]` against an any-die 4+ rule cannot resolve as success via sum. Impossible/fractional/nonfinite faces, excessive dice, missing targets, unknown die types, and contradictory evidence are rejected or explicitly excluded without fabricated odds. Runtime is bounded regardless of supplied numeric magnitude. Block-specific distributions are completed in NUF-010; reroll policies in NUF-012.
+
+### NUF-008 — Preserve ordered sequences, actions, and state transitions
+
+**Find:** `extractStructuredTurns.ts`, `types.ts`, `parseXml.ts`, block-chain proximity merging in `analyzeLuck.ts`.
+
+**Work:** Introduce stable sequence/action/roll IDs and source locators. Retain movement cells, all relevant action declarations, block questions/choices, reroll questions and nested roll data, skill use, ball transitions, damage transitions, team changes, and end-phase events. Keep unknown messages in a bounded evidence inventory. Replace nearest-event linkage with explicit source-sequence relationships or a documented unambiguous transition rule.
+
+**Acceptance:** An annotated replay fragment reconstructs the same ordered action chain with optional non-gameplay messages inserted. Distinct adjacent players/actions never merge because they are close in the array. Zero-risk moves and activations remain countable. Repeated snapshot `Carrier` values do not invent possession changes, and carrier `-1` clears possession when the source semantics require it. Missing linkage reduces confidence and is reported.
+
+### NUF-009 — Revalidate roll, step, and action semantics
+
+**Find:** `rollTypeContracts.ts`, `mappings.ts`, `constants.ts`, `classifyRollContext.ts`, existing roll evidence documents.
+
+**Work:** Audit every promoted and provisional mapping against independently annotated actions and the applicable BB3 rules/version. Prioritize actual dodge/block/injury/ball handling over rare-family promotion. Investigate labels `2`, `4`, `34`, `37`, and `71`; retain supported conclusions for `1` and `7` only where evidence warrants them. Audit step/action codes too. Do not infer identity from proximity to a block, a stable target, or the old map itself.
+
+**Acceptance:** Each supported contract has a semantic definition, payload variants, rule/version scope, provenance, positive/negative examples, and owner/beneficiary conventions. Observed dice and modifiers support the claimed rule. All 12 demo fixtures have an inventory of supported, unknown, and disputed families. A real independently verified dodge is reachable as dodge; movement threshold rolls are not mislabeled block. Unresolved families stay visible with honest coverage. Unknown random outcomes are not assumed harmless merely because they lack thresholds.
+
+### NUF-010 — Real block pools, choices, skills, and outcomes
+
+**Find:** `QuestionBlockDice`, `ResultBlockRoll`, `ResultBlockOutcome`, push/follow-up messages; generic block probability handling.
+
+**Work:** Reconstruct initial and rerolled pools, attacker/defender choice, selected face, applicable skills, pushes, knockdowns, and ball displacement. A block is a categorical outcome distribution, not a numeric D6 target. Preserve the distinction between dice luck and a coach's die choice. Use roster/state skill evidence rather than guessing from the face selected.
+
+**Acceptance:** Golden cases cover one/two/three dice, defender-selected dice, double skulls, both-down with differing skills, relevant Block/Dodge/Tackle/Wrestle behavior, pushes/surfs, and available versus used rerolls. Enumerated odds sum to one. Raw pool records and their resolution are counted once, and skipped block support lowers coverage. Explain both the rolled possibilities and selected outcome. If a special skill lacks evidence, mark that context unsupported explicitly.
+
+### NUF-011 — Armor, injury, casualty, and recovery chains
+
+**Find:** `ResultRoll|10`, `ResultInjuryRoll`, `ResultCasualtyRoll`, removals, apothecary/skill messages, current single-die injury labels.
+
+**Work:** Decode the actual damage distributions and stage-specific modifiers, victims, removals, recovery, and mitigation choices. Do not discard an injury merely because it lacks a binary target. Distinguish stunned/KO/casualty and match-relevant availability; do not silently price long-term league damage as current-match impact.
+
+**Acceptance:** Independently annotated normal/modified armor, injury outcomes, self-fall damage, and representative mitigation/recovery chains match expected distributions and states. Positive damage to one's own team cannot be beneficial luck. Armor and conditional injury rolls retain separate conditional probabilities and a shared causal chain. Unsupported variants remain observable and cannot impersonate supported injury checks.
+
+### NUF-012 — Action-linked rerolls and resource consumption
+
+**Find:** `extractRerollFlags`, nested `RollInfos`, `Status`/`NewRoll`, skill and team-reroll messages.
+
+**Work:** Replace four-event lookahead with action-linked state transitions. Track original dice, eligible sources, choice, replacement dice, final outcome, and consumed resource. Validate the meanings of status/new-roll flags before deduplicating. Model source-specific restrictions and conditional skills such as Pro; availability alone does not mean an unconditional full reroll was used.
+
+**Acceptance:** Original fail→reroll success, fail→reroll fail, declined reroll, no eligible reroll, skill reroll, and adjacent unrelated actions are covered. A legal 2+ full-reroll action has 35/36 success and 1/36 failure under the stated policy. First rolls embedded only in questions are recovered; duplicate summary emissions do not create extra attempts. Replay turn-6 reproduction is corrected. Chosen reroll policy and resource cost are explicit so decision quality is not counted as dice luck.
+
+### NUF-013 — Actor, subject, controller, and beneficiary attribution
+
+**Find:** `attribution.ts`, `resolveTeamId`, extraction of `PlayerId`/`TargetId`/`TeamId`/`GamerId`, roster ownership maps.
+
+**Work:** Separate who acts, who is affected, who controls a choice, and which perspective benefits. Validate source-specific ID namespaces. Do not depend on a player having a readable name to establish roster ownership. Detect conflicts between explicit IDs and roster evidence; low-confidence turn inference is not proof of event ownership.
+
+**Acceptance:** The player-50 self-damage reproduction lowers that team's favorable outcome value. Opponent damage is attributed consistently. Cases cover both-down, self-fall, opponent-selected blocks, ambiguous/missing IDs, unnamed players, and overlapping player IDs. Known explicit/roster conflicts are surfaced and resolved with evidence. Swapping team labels swaps the reported perspectives without changing total event meaning. Unresolved events remain in coverage instead of disappearing.
+
+### NUF-014 — Honest observed-outcome and attribution coverage
+
+**Find:** `isRollCandidateEvent`, `classifyRollContext`, pre-normalization skips, report coverage aggregation.
+
+**Work:** Inventory unique observed random outcomes before deciding support. Track eligible/scored/unsupported/malformed/unattributed counts, per team and family, with deduplication of questions/resolutions. Distinguish randomizers, summary records, and game-changing random outcomes that lack success thresholds. Expose state/causal-link coverage separately from dice coverage.
+
+**Acceptance:** One supported roll plus 100 unique unknown rolls cannot yield 100% support. Real unscored block/injury dice reduce relevant coverage. Unattributed rolls are visible in overall totals and an unresolved bucket. Count conservation is tested; duplicate summary messages cannot inflate counts. Critical unknowns can limit verdicts even when they are numerically rare. Explain denominators in UI/CLI and avoid presenting a known-family-only percentage as whole-match confidence.
+
+### NUF-015 — Insufficient-evidence and partial-analysis verdicts
+
+**Find:** `summarizeVerdict`, `LuckReport`, API/UI/CLI error/report handling.
+
+**Work:** Add explicit result states for invalid input, unsupported replay, insufficient evidence, partial analysis, and supported analysis. Separate evidence quality from statistical uncertainty. Define documented prerequisites for comparative and context-impact claims; unknown high-impact events or missing state can require abstention.
+
+**Acceptance:** Zero scored outcomes never yield an even-luck conclusion. One supported success amid 100 unknowns never yields an unqualified decisive verdict. Partial reports expose usable evidence and limitations without inventing values. Known even performance is distinguishable from unknown performance. API, CLI, JSON export, and UI agree on statuses. Thresholds are versioned and justified rather than arbitrary replacements for the existing adjectives.
+
+### NUF-016 — Reconstruct board, possession, activations, and game clock
+
+**Find:** Raw initial board state, ordered message payloads, `ReplayTurn`, `Carrier`, end-turn and active-gamer handling.
+
+**Work:** Build a deterministic reducer with pre/post-action snapshots: positions, standing/prone/stunned/removed players, relevant stats/skills, activations and movement remaining, action resources, ball/carrier/loose position, score, drive, half, team turn, and remaining turns. Derive turn endings from verified reasons, not every non-manual event. Handle setup, kickoff, touchdown, half-end, overtime, and incomplete replay states explicitly.
+
+**Acceptance:** Golden fragments assert state at specific source locations. Possession clears correctly, player moves/removals reconcile, and team turns/halves match annotations. Remaining useful actions derive from legal state, not extracted message count. Unknown state fields stay unknown; invalid transitions lower reconstruction confidence. Initial/final checkpoints agree with replay evidence where available. State reconstruction remains pure and replayable.
+
+### NUF-017 — Explainable pre-roll contextual value model
+
+**Find:** Fixed weights and `weightedDelta` computation; consume NUF-016 state.
+
+**Work:** Define an explicit, versioned team-perspective value function with documented components for possession/security, legal useful activations, scoring/defensive threats, player availability/role, reroll resources, score, and clock. For binary actions use `(actual - p) * (V(success) - V(failure))`; for categorical outcomes use `V(realized) - sum(P(outcome) * V(outcome))`. Values must compare valid counterfactual successor states under a stated continuation/choice policy. Treat future opponent decisions as uncertain, not known at roll time.
+
+**Acceptance:** Matched fixtures prove that an early failure with valuable activations remaining can hurt more than a final optional block, an exposed failed pickup hurts more than a safe one, and a late game-deciding failure can outweigh an early low-stakes one. Irrelevant message order, player names, and future match-result edits cannot change pre-roll leverage. Each contribution exposes component deltas and state evidence. Unknown state falls back to clearly labeled dice-only analysis, never invented tactical context. Heuristic value units are labeled as such; use win-probability units only after independent calibration.
+
+### NUF-018 — Causal action accounting without double counting
+
+**Find:** Event aggregation and key moments; consume action chains and value transitions.
+
+**Work:** Define whether contributions are evaluated per random transition or grouped action and how those reconcile. A failed dodge can induce turnover and damage; its downstream chance rolls must be conditional, and deterministic consequences must not be charged again. Group original/replacement dice correctly. Keep observed aftermath such as a later opponent recovery/score separate from causally attributed impact and from coach decision quality.
+
+**Acceptance:** A fail→fall→armor→injury→removal sequence has an auditable decomposition whose components sum to the action total. Adding duplicate summaries does not change totals. Later lucky opponent rolls are not charged in full to the earlier failed pickup. For a fixed pre-roll state and fixed policy, enumerated probability-weighted luck contributions average to zero. Team perspective/beneficiary conventions are consistent without subtracting or awarding the same swing twice.
+
+### NUF-019 — Additive impact totals and calibrated interpretation
+
+**Find:** Per-team weight denominators, category totals, verdict thresholds, score rounding.
+
+**Work:** Separate raw dice deviation, cumulative contextual impact, and evidence quality. Use a common interpretable scale for comparable impact. Category/action/event contributions must reconcile with team totals. Calibrate any strength labels on an annotated evaluation set and account for sample size, excluded high-impact outcomes, and reconstruction quality. Preserve precision until presentation.
+
+**Acceptance:** Duplicating an identical independently scored opportunity changes cumulative impact appropriately while an explicitly labeled average remains an average. Safe/no-impact events do not dilute an established impact total. Category contributions sum to headline impact within documented rounding tolerance. Team comparisons use the same units and perspective convention. Unsupported events do not strengthen a verdict. Record calibration method, held-out cases, limitations, and model version; do not claim statistical significance from arbitrary score cutoffs.
+
+### NUF-020 — Full-event filters and truthful timeline navigation
+
+**Find:** `.slice(0, 15)` in `analyzeLuck.ts`, `filteredMoments` and timeline UI.
+
+**Work:** Filter the relevant full event/action set before ranking or pagination. Offer chronological and impact views with real half/team turn/activation, player names where available, and stable replay locators. Allow users to inspect excluded/unknown evidence without mixing it into scored totals.
+
+**Acceptance:** All four baseline ball-handling events are discoverable even if none are in the global top 15. Team/category/tag/status combinations work and empty states explain why no rows match. Sort order and labels are truthful. Uploading another replay resets stale filters appropriately. Large reports remain usable with accessible labeled controls and bounded rendering/response behavior.
+
+### NUF-021 — Shared report contract and plain-language explanations
+
+**Find:** Domain `types.ts`, duplicated UI types, CLI rendering, `explainabilityCopy.ts`, landing-page claims.
+
+**Work:** Share and version the report schema across service/API/UI/CLI. Present chance, observed outcome, immediate consequences, contextual contribution, resource use, and evidence limitations separately. Describe important moments in gameplay terms with an expandable calculation/evidence trail. Distinguish observed aftermath from predictions/counterfactuals and decision errors. Handle non-JSON HTTP errors, cancellation, timeout, and partial reports clearly.
+
+**Acceptance:** API/CLI core values agree; exported reports include model/schema versions and enough sanitized evidence to explain contributions. UI copy advertises only supported capabilities. Users can understand why an early dodge failure mattered and why an exposed pickup was dangerous without reading parser code. Unknown values are not shown as zeros or failures. Category/total units are labeled. Error handling works for hosting-generated HTML/text errors as well as application JSON.
+
+### NUF-022 — Independent golden corpus and meaningful browser coverage
+
+**Find:** Existing unit/API/parity tests, `smoke.spec.ts`, evidence snapshots, CI.
+
+**Work:** Extend the seed corpus with independent annotations covering the corrected core families and the context scenarios. Keep calibration and held-out evaluation cases separate. Add semantic golden tests, bounded adversarial tests, and useful invariants; retain legacy safety coverage only where needed. The browser test must upload an actual sanitized `.bbr` and assert known events and explanations.
+
+**Acceptance:** Tests detect the old block exclusion, reroll cross-link, self-damage sign, XML-format failures, unknown-coverage inflation, junk success, early/late invariance, and filter truncation. Include early/late failures, safe/exposed pickups, a late winning action, reroll decline, defender-selected blocks, and incomplete state. Browser coverage checks nonempty expected results, filters, reset, partial/error states, and JSON export. All 12 demos run without unexplained crashes/coverage regressions. Rebaseline snapshots only with a recorded reason and independently supported new expectations.
+
+### NUF-023 — Vercel request/response limits and upload failures
+
+**Find:** `maxReplayBytes`, API request/response serialization, browser upload error handling, deployment config.
+
+**Work:** Verify current platform limits and align the app including multipart overhead, expanded reports, timeouts, and worker packaging. At review time Vercel documented 4.5 MB request/nonstreamed-response limits while the app allowed 5 MiB files. Choose a safe smaller direct-upload limit or a documented ephemeral transfer architecture if larger files are required. Do not silently add long-term replay storage.
+
+**Acceptance:** Just-below/above-limit cases have understandable UI/API behavior. Client/server limits match; non-JSON upstream 413/504 responses are handled. Response size and worker runtime are exercised on a representative large replay. Record a deployed smoke result when environment access exists; otherwise keep deployment verification explicitly open rather than claiming local tests prove Vercel behavior. Reference: [Vercel function limits](https://vercel.com/docs/functions/limitations).
+
+### NUF-024 — Deployment-wide abuse controls
+
+**Find:** Module-level rate maps and forwarded-header client identification in both API routes.
+
+**Work:** Use a platform/shared limiter that survives multiple instances, with bounded concurrency and storage, an explicit trusted-proxy identity policy, and defined failure behavior. Avoid trusting spoofable headers on unsupported hosts. Cover whichever legacy paths remain exposed; return useful retry information.
+
+**Acceptance:** Tests using independent handler instances cannot exceed the intended shared quota merely by switching instances. A forged forwarded-header chain cannot reset identity under the documented deployment policy. Expiration/cardinality and failure-mode tests are bounded. Rejections happen before expensive decoding. Document privacy/retention of any limiter metadata separately from ephemeral replay results; verify actual edge configuration where applicable.
+
+### NUF-025 — Legacy endpoint retirement/default gate
+
+**Find:** `/api/replay`, `lib/config.ts`, legacy ADR and README.
+
+**Work:** Implement a conservative default-disabled legacy endpoint with a documented explicit compatibility opt-in if still required, or document a justified replacement retirement policy based on actual consumers. Avoid deleting modules/tests without dependency evidence. The stated sunset date currently does not enforce anything. Retained compatibility routes must use the same hardened input controls.
+
+**Acceptance:** Default requests receive a clear replacement response; explicit enabled/disabled/invalid configuration behavior is tested. Primary upload/API/CLI remain unaffected. Deprecated headers, sunset policy, docs, and behavior agree. Any unresolved compatibility requirement is recorded with evidence and an owner, not an indefinite default-enabled exception.
+
+### NUF-026 — Frozen installs and reproducible CI
+
+**Find:** `pnpm install --frozen-lockfile=false` in CI, package manager/runtime declarations.
+
+**Work:** Use frozen installs, a supported declared Node runtime, and consistent package-manager/browser setup. Check dependency advisories with documented treatment of reachable versus non-applicable findings. Make the lockfile the tested deployment dependency set.
+
+**Acceptance:** A manifest/lock mismatch fails CI instead of silently resolving new versions. Fresh install→lint→typecheck→tests→build→browser checks works from the committed tree on the supported runtime. Dependency changes are committed with their lockfile. Test scripts cannot pass while silently omitting required new regression suites.
+
+### NUF-027 — Reconcile product claims and evidence documentation
+
+**Find:** README, AGENTS, project plan/blueprint, replay investigation, both roll-type matrices, shared UI/CLI copy.
+
+**Work:** Replace unsupported present-tense claims with the proven implementation status and link each supported rule to fixture/rule provenance. Record corrected historical assumptions explicitly while preserving append-only logs. Keep the distinction between dice support, state reconstruction, heuristic impact, and calibrated probabilities visible.
+
+**Acceptance:** No active document claims dodge/block/injury support absent its acceptance evidence. Historical confidence labels cannot override corrected contracts. New IDs cover any unresolved mapping, platform, calibration, or security gap. Old backlog items such as rare roll families, argue variants, legacy policy, and explainability remain traceable to the new owner IDs; no acceptance requirement is lost during reconciliation.
+
+### NUF-028 — Integrated adversarial and product acceptance gate
+
+**Find:** This ledger, all updated tests/docs, deployed-environment evidence when available.
+
+**Work:** Re-run the original review probes against the final tree and verify the product examples end to end. Produce a concise validation record with commit, runtime/model versions, fixture coverage, commands, performance limits, audit disposition, supported semantics, and remaining limitations.
+
+**Acceptance:** All predecessor IDs have actual closure evidence; no required item is merely deferred or skipped. Fresh-install checks pass, every original defect is fixed or safely rejected with an explicit supported/unsupported contract, and context-sensitive analysis works for the requested core scenarios. The user can upload a real replay and trace a large swing from dice through state consequences to an additive report contribution. No missing evidence yields an even/decisive conclusion. No live malicious load test is required. If deploy verification or independent semantic/calibration evidence is unavailable, leave this gate open and report the exact remaining limitation.
+
+## Review-to-backlog coverage
+
+| Review finding / requirement | Owning IDs |
+| --- | --- |
+| Actual blocks excluded; dodge unreachable; injury mappings disputed | 001, 008–011 |
+| Rerolls attached to unrelated events / original failed dice omitted | 008, 012 |
+| Own damage produces good luck / team attribution conflicts | 011, 013, 018 |
+| No contextual consequence analysis | 016–019 |
+| XML declaration and formatting silently lose data | 002, 008 |
+| Junk XML succeeds; malformed rolls return 500 | 003, 007, 015 |
+| Inflated coverage and unsupported confident verdicts | 014, 015, 019 |
+| Dependency vulnerabilities and entity expansion | 004, 026 |
+| Late size/time checks, attacker-controlled numeric work | 005–007 |
+| Average score confused with cumulative match impact | 019 |
+| Hidden filtered moments and misleading turn timeline | 016, 020 |
+| Tests verify output shape rather than game truth | 001, 022 |
+| Inconsistent multi-die probability/outcome rules | 007, 010 |
+| Vercel size/runtime mismatch and non-JSON errors | 006, 021, 023 |
+| Per-instance rate limiting | 024 |
+| Deprecated legacy route still enabled | 025 |
+| Non-frozen CI dependency installation | 026 |
+| Contradictory docs and unsupported capability claims | 021, 027 |
+| Regular agent can discover, execute, and verify all work | Ledger, execution instructions, 028 |
+
+## Closure record template
+
+Append a record to `IMPLEMENTATION_LOG.md` and link it from the ledger:
+
+```text
+Issue(s): NUF-...
+State: in_progress | blocked | done
+Baseline reproduction and independently expected behavior:
+Changes and relevant source/test paths:
+Acceptance criteria verified (one result per criterion):
+Commands and results:
+Commit (if created):
+Remaining limitations / newly assigned issue IDs:
+Next ready issue:
+```

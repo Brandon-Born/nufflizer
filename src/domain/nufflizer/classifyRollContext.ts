@@ -1,5 +1,8 @@
 import type { LuckEventType } from "@/domain/nufflizer/types";
-import { getRollTypeContract, type RollScoringCategory } from "@/domain/replay/rollTypeContracts";
+import {
+  getRollTypeContract,
+  type RollScoringCategory
+} from "@/domain/replay/rollTypeContracts";
 
 export type ClassificationContext = {
   sourceTag: string;
@@ -29,7 +32,9 @@ function hasTargetThreshold(context: ClassificationContext): boolean {
   return Number.isFinite(target) && (target ?? 0) > 0;
 }
 
-function mapContractCategory(category: RollScoringCategory | undefined): LuckEventType | null {
+function mapContractCategory(
+  category: RollScoringCategory | undefined
+): LuckEventType | null {
   if (
     category === "block" ||
     category === "armor_break" ||
@@ -44,7 +49,17 @@ function mapContractCategory(category: RollScoringCategory | undefined): LuckEve
   return null;
 }
 
-export function classifyRollContext(context: ClassificationContext): ClassificationResult {
+export function classifyRollContext(
+  context: ClassificationContext
+): ClassificationResult {
+  if (context.sourceTag === "ResultBlockRoll")
+    return {
+      eventType: "block",
+      scored: false,
+      rollCandidate: true,
+      reason: "excluded: block pool requires verified categorical semantics"
+    };
+
   if (context.sourceTag === "ResultBlockOutcome") {
     return {
       eventType: "block",
@@ -54,12 +69,17 @@ export function classifyRollContext(context: ClassificationContext): Classificat
     };
   }
 
-  if (context.sourceTag === "ResultPlayerRemoval" || context.sourceTag === "ResultInjuryRoll" || context.sourceTag === "ResultCasualtyRoll") {
+  if (
+    context.sourceTag === "ResultPlayerRemoval" ||
+    context.sourceTag === "ResultInjuryRoll" ||
+    context.sourceTag === "ResultCasualtyRoll"
+  ) {
     return {
       eventType: "injury",
       scored: false,
-      rollCandidate: false,
-      reason: "excluded: injury-chain summary event without deterministic threshold contract"
+      rollCandidate: context.sourceTag !== "ResultPlayerRemoval",
+      reason:
+        "excluded: injury-chain dice require verified distribution and beneficiary"
     };
   }
 
@@ -80,7 +100,8 @@ export function classifyRollContext(context: ClassificationContext): Classificat
         eventType: "argue_call",
         scored: false,
         rollCandidate: false,
-        reason: "excluded: argue-call context missing deterministic ResultRoll contract"
+        reason:
+          "excluded: argue-call context missing deterministic ResultRoll contract"
       };
     }
 
@@ -114,8 +135,9 @@ export function classifyRollContext(context: ClassificationContext): Classificat
     return {
       eventType: null,
       scored: false,
-      rollCandidate: false,
-      reason: "excluded: randomizer roll family without success-threshold semantics"
+      rollCandidate: true,
+      reason:
+        "excluded: randomizer roll family without success-threshold semantics"
     };
   }
 
@@ -123,7 +145,7 @@ export function classifyRollContext(context: ClassificationContext): Classificat
     return {
       eventType: mapContractCategory(contract?.scoringCategory),
       scored: false,
-      rollCandidate: contract?.kind === "scored_deterministic" || contract?.kind === "excluded_deterministic",
+      rollCandidate: true,
       reason: "excluded: missing target threshold"
     };
   }
@@ -159,7 +181,7 @@ export function classifyRollContext(context: ClassificationContext): Classificat
   return {
     eventType: null,
     scored: false,
-    rollCandidate: false,
+    rollCandidate: true,
     reason: `excluded: unsupported ResultRoll context${context.rollType !== undefined ? ` for rollType ${context.rollType}` : ""}`
   };
 }

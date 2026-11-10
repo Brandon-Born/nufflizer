@@ -6,8 +6,8 @@ export default defineConfig({
     baseURL: "http://127.0.0.1:3000"
   },
   webServer: {
-    command: "corepack pnpm dev",
+    command: "corepack pnpm start --hostname 127.0.0.1",
     port: 3000,
-    reuseExistingServer: true
+    reuseExistingServer: false
   }
 });

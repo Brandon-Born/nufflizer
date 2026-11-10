@@ -1,0 +1,249 @@
+{
+  "schemaVersion": 1,
+  "provenance": "Sanitized repository demos, inspected raw payloads; arithmetic expectations are independent of scorer. Numeric game-rule mappings remain NUF-009 hypotheses until corroborated.",
+  "cases": [
+    {
+      "id": "format",
+      "owners": [
+        "NUF-002",
+        "NUF-008"
+      ],
+      "source": "demo1.bbr",
+      "fact": "An XML declaration and inter-element whitespace contain no gameplay data",
+      "expected": "Equivalent teams, ordered messages, odds and scores",
+      "actor": null,
+      "subject": null,
+      "action": null,
+      "originalDice": null,
+      "replacementDice": null,
+      "finalResult": null,
+      "consequenceFacts": null,
+      "independentRuleEvidence": null,
+      "ruleEvidenceStatus": "unverified BB3 mapping; numeric arithmetic and XML structure only are independent reference facts",
+      "probe": "scripts/remediation-probe.ts; tests/unit/remediation*.test.ts"
+    },
+    {
+      "id": "junk",
+      "owners": [
+        "NUF-003",
+        "NUF-015"
+      ],
+      "input": "<hello>world</hello>",
+      "expected": "Validation error, no report",
+      "actor": null,
+      "subject": null,
+      "action": null,
+      "originalDice": null,
+      "replacementDice": null,
+      "finalResult": null,
+      "consequenceFacts": null,
+      "independentRuleEvidence": null,
+      "ruleEvidenceStatus": "unverified BB3 mapping; numeric arithmetic and XML structure only are independent reference facts",
+      "probe": "scripts/remediation-probe.ts; tests/unit/remediation*.test.ts"
+    },
+    {
+      "id": "empty",
+      "owners": [
+        "NUF-015",
+        "NUF-022"
+      ],
+      "source": "tests/fixtures/replays/sample-basic.xml",
+      "fact": "No supported dice payloads",
+      "expected": "Insufficient evidence, never even",
+      "actor": null,
+      "subject": null,
+      "action": null,
+      "originalDice": null,
+      "replacementDice": null,
+      "finalResult": null,
+      "consequenceFacts": null,
+      "independentRuleEvidence": null,
+      "ruleEvidenceStatus": "unverified BB3 mapping; numeric arithmetic and XML structure only are independent reference facts",
+      "probe": "scripts/remediation-probe.ts; tests/unit/remediation*.test.ts"
+    },
+    {
+      "id": "block",
+      "owners": [
+        "NUF-009",
+        "NUF-010",
+        "NUF-014"
+      ],
+      "source": "demo1.bbr:ResultBlockRoll",
+      "fact": "81 pool records were excluded by baseline",
+      "expected": "Retain pools and count unsupported random outcomes; face/skill interpretation requires independent NUF-009 evidence",
+      "actor": null,
+      "subject": null,
+      "action": null,
+      "originalDice": null,
+      "replacementDice": null,
+      "finalResult": null,
+      "consequenceFacts": null,
+      "independentRuleEvidence": null,
+      "ruleEvidenceStatus": "unverified BB3 mapping; numeric arithmetic and XML structure only are independent reference facts",
+      "probe": "scripts/remediation-probe.ts; tests/unit/remediation*.test.ts"
+    },
+    {
+      "id": "reroll",
+      "owners": [
+        "NUF-008",
+        "NUF-012"
+      ],
+      "source": "demo1.bbr:extracted segment 6",
+      "actor": "42",
+      "unrelatedActor": "37",
+      "fact": "Question RollInfos has D6 value 1, rollType 1, target 2; Used=1; final value 6",
+      "expected": "Never adjust player 37 or earlier player 42 rolls by this question",
+      "rule": "If a full independent reroll is applicable and chosen on failure, success is 1-(1/6)^2=35/36; Pro is not unconditional",
+      "subject": null,
+      "action": null,
+      "originalDice": null,
+      "replacementDice": null,
+      "finalResult": null,
+      "consequenceFacts": null,
+      "independentRuleEvidence": null,
+      "ruleEvidenceStatus": "unverified BB3 mapping; numeric arithmetic and XML structure only are independent reference facts",
+      "probe": "scripts/remediation-probe.ts; tests/unit/remediation*.test.ts"
+    },
+    {
+      "id": "self-damage",
+      "owners": [
+        "NUF-011",
+        "NUF-013",
+        "NUF-018"
+      ],
+      "source": "demo1.bbr:extracted segment 12:player 50",
+      "subject": "50",
+      "fact": "Failed movement, armor break, removal on same player",
+      "expected": "Own damage cannot earn positive favorable luck; unresolved chain must abstain",
+      "actor": null,
+      "action": null,
+      "originalDice": null,
+      "replacementDice": null,
+      "finalResult": null,
+      "consequenceFacts": null,
+      "independentRuleEvidence": null,
+      "ruleEvidenceStatus": "unverified BB3 mapping; numeric arithmetic and XML structure only are independent reference facts",
+      "probe": "scripts/remediation-probe.ts; tests/unit/remediation*.test.ts"
+    },
+    {
+      "id": "unknowns",
+      "owners": [
+        "NUF-014",
+        "NUF-015",
+        "NUF-019"
+      ],
+      "fact": "One supported outcome plus 100 unique unknown random outcomes",
+      "expected": "Coverage at most 1/101; abstain from whole-match comparison",
+      "actor": null,
+      "subject": null,
+      "action": null,
+      "originalDice": null,
+      "replacementDice": null,
+      "finalResult": null,
+      "consequenceFacts": null,
+      "independentRuleEvidence": null,
+      "ruleEvidenceStatus": "unverified BB3 mapping; numeric arithmetic and XML structure only are independent reference facts",
+      "probe": "scripts/remediation-probe.ts; tests/unit/remediation*.test.ts"
+    },
+    {
+      "id": "any-die",
+      "owners": [
+        "NUF-007"
+      ],
+      "dice": [
+        2,
+        2
+      ],
+      "target": 4,
+      "expected": "Any-die rule fails; base odds 1-(3/6)^2=3/4",
+      "actor": null,
+      "subject": null,
+      "action": null,
+      "originalDice": null,
+      "replacementDice": null,
+      "finalResult": null,
+      "consequenceFacts": null,
+      "independentRuleEvidence": null,
+      "ruleEvidenceStatus": "unverified BB3 mapping; numeric arithmetic and XML structure only are independent reference facts",
+      "probe": "scripts/remediation-probe.ts; tests/unit/remediation*.test.ts"
+    },
+    {
+      "id": "additive",
+      "owners": [
+        "NUF-019"
+      ],
+      "expected": "Ten independent identical opportunities have ten times the cumulative contribution",
+      "actor": null,
+      "subject": null,
+      "action": null,
+      "originalDice": null,
+      "replacementDice": null,
+      "finalResult": null,
+      "consequenceFacts": null,
+      "independentRuleEvidence": null,
+      "ruleEvidenceStatus": "unverified BB3 mapping; numeric arithmetic and XML structure only are independent reference facts",
+      "probe": "scripts/remediation-probe.ts; tests/unit/remediation*.test.ts"
+    },
+    {
+      "id": "context",
+      "owners": [
+        "NUF-016",
+        "NUF-017",
+        "NUF-018"
+      ],
+      "expected": "Useful activations, possession exposure, and score/clock can change leverage; source position alone cannot",
+      "actor": null,
+      "subject": null,
+      "action": null,
+      "originalDice": null,
+      "replacementDice": null,
+      "finalResult": null,
+      "consequenceFacts": null,
+      "independentRuleEvidence": null,
+      "ruleEvidenceStatus": "controlled state/counterfactual captures missing; owned by NUF-009/016/017",
+      "probe": "scripts/context-review-probe.ts"
+    },
+    {
+      "id": "filters",
+      "owners": [
+        "NUF-020"
+      ],
+      "source": "demo1.bbr",
+      "fact": "4 ball-handling records absent from baseline global top 15",
+      "expected": "Filter full evidence before pagination",
+      "actor": null,
+      "subject": null,
+      "action": null,
+      "originalDice": null,
+      "replacementDice": null,
+      "finalResult": null,
+      "consequenceFacts": null,
+      "independentRuleEvidence": null,
+      "ruleEvidenceStatus": "unverified BB3 mapping; numeric arithmetic and XML structure only are independent reference facts",
+      "probe": "scripts/remediation-probe.ts; tests/unit/remediation*.test.ts"
+    },
+    {
+      "id": "safety",
+      "owners": [
+        "NUF-004",
+        "NUF-005",
+        "NUF-006",
+        "NUF-023",
+        "NUF-024",
+        "NUF-025",
+        "NUF-026"
+      ],
+      "expected": "Bounded resource probes, entity rejection, cancellation, shared quota and frozen install checks",
+      "actor": null,
+      "subject": null,
+      "action": null,
+      "originalDice": null,
+      "replacementDice": null,
+      "finalResult": null,
+      "consequenceFacts": null,
+      "independentRuleEvidence": null,
+      "ruleEvidenceStatus": "unverified BB3 mapping; numeric arithmetic and XML structure only are independent reference facts",
+      "probe": "scripts/remediation-probe.ts; tests/unit/remediation*.test.ts"
+    }
+  ]
+}

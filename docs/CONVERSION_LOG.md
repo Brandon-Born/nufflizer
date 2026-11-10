@@ -336,3 +336,63 @@ Remaining follow-ups:
 Verification evidence:
 1. Validation commands passed in this session: `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm test:e2e`.
 2. rollType 7 evidence gate confirms: 58 observed samples, all scored as `ball_handling`, zero threshold mismatches, zero `7->7` chains, and non-`25` followups present.
+
+## 2026-11-09 - Adversarial remediation backlog and contextual-luck roadmap
+Metadata: commit(s) `uncommitted documentation change`; reviewed baseline `b06d50e9fa2b42b821f4f8b30ef3894c10f588ca`; scope `Planning and handoff correction after adversarial review`; status `partial`.
+
+Converted items:
+1. Added `docs/REMEDIATION_BACKLOG.md` with 28 permanent issue IDs, source locations, bounded reproduction seeds, dependencies, acceptance criteria, review-to-backlog crosswalk, and evidence-based closure requirements.
+2. Replaced the active February priority order in `docs/PROJECT_PLAN.md` with safe ingestion, verified dice/ownership semantics, state reconstruction, contextual impact, and integrated acceptance milestones. Carried forward rare-family, legacy, explainability, and test commitments with explicit owners.
+3. Linked the queue from `AGENTS.md`, `README.md`, and `docs/PROJECT_BLUEPRINT.md`; marked earlier readiness and mapping claims as historical/disputed in the blueprint, replay investigation, and roll-type documents.
+4. Preserved historical status updates and append-only logs. No application, dependency, fixture, or scoring behavior changed.
+
+Remaining follow-ups:
+1. All NUF-001 through NUF-028 remain open. Start with NUF-001, NUF-004, and NUF-005, then follow the backlog dependency order.
+2. Existing test passes do not resolve the independently reproduced semantic, coverage, parser, or safety failures.
+3. Context-sensitive scoring and deployed validation remain implementation work, not completed capabilities.
+
+Verification evidence:
+1. `git diff --check` passed for the documentation changes.
+2. A Python documentation consistency check verified 28 unique work packets/ledger rows, all-open status, an acyclic dependency graph, required packet fields, local Markdown link targets, and balanced code fences.
+3. The preceding read-only review passed lint, typecheck, 79 unit tests, build, and one browser smoke test at the reviewed baseline; those checks were not rerun for this documentation-only change and are explicitly not game-semantic acceptance.
+4. The documented reproduction command executed successfully for all five cases; follow-up checks confirmed the suggested execution order satisfies every dependency and both historical logs remain unchanged prefixes.
+
+## 2026-11-09 - Safe ingestion and truthful report remediation
+Metadata: commit(s) `not created; working-tree implementation`; baseline `b06d50e9fa2b42b821f4f8b30ef3894c10f588ca`; scope `November remediation groundwork`; status `partial overall`.
+
+Converted items:
+1. NUF-001–006 and NUF-025 now have local implementation/acceptance evidence. Added sanitized raw-message fragments with source-sequence provenance, original/current corpus inventories, independent numeric regressions, and runnable probes for still-open contextual defects.
+2. Replaced formatting-sensitive message extraction with ordered XML parsing and stable source/sequence/step locators. Added bounded envelope/event validation, explicit root/version/team policies, strict nested encoding, DTD/entity refusal, safe text handling, streaming file/form limits, zlib output limits and XML/message/event budgets shared with retained compatibility paths.
+3. Added a bundled worker execution boundary for HTTP and CLI with real deadline/cancellation termination and cleanup; disabled the legacy endpoint by default while retaining explicit, hardened compatibility opt-in.
+4. Upgraded supported framework/parser/validation dependencies and their lockfile. CI now declares Node 22, frozen pnpm installs and a production dependency audit. No audit suppression was added; the PostCSS override installs a patched compatible major version.
+5. Applied early truthfulness mitigations for NUF-007–015 and NUF-019–022: same-rule numeric probability/outcomes, no inferred die size, no cross-player four-event reroll lookahead, unnamed ownership/conflict evidence, visible unknown/unattributed/block/damage outcomes, explicit abstention, shared schema/model versions, additive unrounded dice contributions, full-evidence filters/paging and useful error handling.
+6. Corrected active product copy. Block/damage/referee category mappings remain unverified and excluded. Raw numeric threshold contributions use provisional labels/weights; they are not tactical impact, calibrated win probability, or a defensible whole-match comparison.
+
+Historical corrections and remaining work:
+1. `ResultBlockRoll` has actual face data under `Die`; its historical "no dice/outcome-only summary" claim was wrong. Injury/casualty records cannot disappear from the random-outcome denominator merely because they have no binary threshold.
+2. The old shape/adjacency promotion tests were replaced with raw-record preservation and independently derived arithmetic checks. Historical evidence JSON remains unchanged as dated artifacts; it is not treated as semantic acceptance. Existing contradictory synthetic outcome data and inferred missing die types no longer establish scoring correctness.
+3. NUF-009 needs authoritative BB3 enum/skill/state mappings or independently annotated controlled captures. Block/damage/beneficiary/skill/reroll completeness, state reconstruction, counterfactual contextual values, causal accounting and calibration remain open. Safe exclusion does not close those requirements.
+4. NUF-023 needs deployed Vercel acceptance; NUF-024 needs a configured deployment-wide quota/concurrency policy. A local aggregate quota is explicitly not a shared limiter. NUF-026/027/028 remain open for committed CI/final evidence and all predecessors.
+
+Validation and exact acceptance evidence: see the matching 2026-11-09 implementation-log record, `tests/fixtures/remediation/`, and `docs/INGESTION_SAFETY.md`. No commit, deployment, publication, replay persistence or external message was created by this change.
+
+## 2026-11-09 - Report contracts and independent engineering
+Metadata: commit(s) `not created; working-tree changes`; scope `NUF-015/019/021–023/026/027 engineering independent of new game captures`; status `partial backlog implementation`.
+
+Converted items:
+1. Made the Zod report schema the single source for shared TypeScript report types. Service generation and browser consumption now validate version/model, abstaining verdict/headline, finite numeric fields, model weights, ownership, unique event/key-moment references and reconciled coverage/category/team totals.
+2. Added bounded browser reads for success/error responses, cancellation cleanup, useful errors for malformed success JSON, incompatible or inconsistent reports, interrupted downloads and hosting-generated 413/429/504 responses. Invalid data cannot enable rendering/export.
+3. Shared evidence-qualified presentation across UI/CLI: empty category sums display Not scored and empty team evidence is explicit. Numeric zero remains available when scored contributions actually sum to zero. Removed arbitrary magnitude thresholds from score colors; colors indicate sign only.
+4. Moved HTTP report serialization under the worker's terminating deadline and byte cap, including legacy-wrapper headroom. Oversized reports return a typed 413 before large results are copied to the API thread. CLI retains its existing larger-output path. Worker heap-limit failures have an explicit resource-limit error.
+5. Added `verify` for the full sequential quality pipeline. `test:e2e` now rebuilds the production application; CI avoids a redundant build and cannot silently exercise a stale UI artifact. Added report-consistency, body-boundary, output-cap and browser error/cancellation regressions.
+6. Corrected the active handoff after the user clarified that no official replay enum source exists: NUF-009 is active reverse-engineering work, not an external official-documentation blocker. Controlled captures are useful corroboration; empirical investigation and independent engineering can proceed without them. No disputed game mappings were newly promoted by this change.
+
+Remaining work:
+1. Full acceptance for the owning report/context/operational IDs remains open; schema/arithmetic consistency is not proof of BB3 rule meaning, causal uniqueness or tactical consequences.
+2. NUF-023/024 still require deployment configuration/access and shared controls; no Vercel deployment or shared backend was provisioned. NUF-026 awaits a committed candidate/CI evidence. The full backlog is not complete.
+3. See the matching implementation record and `REPORT_CONTRACT.md` for validation and the distinction between runtime contract guarantees and game-semantic evidence.
+
+## 2026-11-09 - Publish the remediation candidate to the tracked repository
+Metadata: commit(s) `this commit; see Git history`; scope `User-requested commit and push`; status `partial backlog implementation`.
+
+Prepared the reviewed runtime, fixture, dependency, CI and documentation changes for `nufflizer/master` (`Brandon-Born/nufflizer`). Preserved the append-only history and existing planning edits. The previously recorded 191 unit tests, four production-browser flows and complete local quality checks remain the validation evidence. No new runtime behavior changed during publication; remote CI/deployment and unfinished semantic/context requirements remain open.

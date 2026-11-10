@@ -1,123 +1,97 @@
 # Nufflizier Project Plan
 
-Last updated: 2026-02-11
+Last updated: 2026-11-09
+
+## Start Here
+
+The authoritative work queue is [REMEDIATION_BACKLOG.md](REMEDIATION_BACKLOG.md). It contains permanent IDs **NUF-001 through NUF-028**, source locations, reproduction seeds, dependencies, acceptance criteria, and closure requirements. Its ledger is the status source of truth. Seven issues (NUF-001–006 and NUF-025) now have local closure evidence; 21 remain incomplete. NUF-023 and NUF-024 need deployment configuration/access. NUF-009 is active reverse-engineering work; official enum definitions are not a prerequisite.
+
+The November adversarial review supersedes the February rare-roll promotion priority. Correct supported replay semantics, upload safety, attribution, and evidence quality before expanding claims or tuning contextual weights. Historical updates below describe earlier implementation work, not current proof of correctness.
 
 ## Mission
-Nufflizier analyzes Blood Bowl 3 replay files (`.xml` and `.bbr`) and outputs a one-shot luck report that identifies:
-1. Which team was luckier overall.
-2. Where low-probability events succeeded and high-probability events failed.
-3. Category-level luck contributions (block, armor break, injury, dodge, ball handling, movement risk, argue-call style events).
-4. A clear, plain-language “why” explanation so non-statistics users can understand how verdicts were produced.
 
-## Transparency Principle
-Nufflizier should optimize for explainability over mystery scoring.
-1. Every top-level verdict must be traceable to visible event-level calculations.
-2. Weights and probability assumptions must be documented and discoverable in both code and docs.
-3. UI copy should explain outcomes in plain language intended for users without a statistics background.
-4. Unknowns/fallbacks must be disclosed instead of hidden.
+Accept a BB3 `.xml` or `.bbr` replay and explain both raw dice luck and how random outcomes changed the match situation. The report must distinguish an early failed dodge that loses useful activations, an exposed failed pickup, a final optional block, and a late game-deciding action. Timing is evidence about impact, not an unconditional early/late multiplier.
 
-## Current System Snapshot
-1. Product surface:
-- Web UI: `/nufflizier` (primary) and `/upload` (alias).
-- API: `POST /api/nufflizier/analyze` (primary), `POST /api/replay` (legacy coaching pipeline, deprecated + gateable).
-- CLI: `pnpm nufflizier analyze <replay_file> --format json|text`.
+Deliver:
 
-2. Active Nufflizier flow:
-- Replay upload -> decode/parse -> luck-event normalization -> probability/scoring -> verdict/key moments -> UI/JSON output.
+1. An evidence-qualified team comparison, with abstention when analysis is insufficient.
+2. Correctly attributed block, armor, injury, dodge, ball-handling, movement, and supported special-action outcomes.
+3. Cumulative contextual impact with category/action contributions that reconcile with the headline score.
+4. A real timeline and plain-language explanations linking dice, pre-roll state, immediate consequences, and uncertainty.
+5. Safe, bounded, ephemeral processing with shared domain logic across web/API/CLI.
 
-3. Legacy stack still present:
-- Coaching analysis pipeline under `src/domain/analysis/*`, `src/domain/coaching/*`, `src/server/services/analyzeReplay.ts`, and `/api/replay`.
-- These components remain for backward compatibility and historical tests.
+## Current State and Trust Limits
 
-4. Validation baseline currently passing:
-- `pnpm lint`
-- `pnpm typecheck`
-- `pnpm test`
-- `pnpm build`
-- `pnpm test:e2e`
+Baseline reviewed commit: `b06d50e9fa2b42b821f4f8b30ef3894c10f588ca`. The remediation candidate is being committed and pushed on `master` at the user’s request on 2026-11-09; pre-existing planning edits were preserved. See the publication record in the implementation log and Git history.
 
-## Conversion Status Matrix
-Status taxonomy: `converted`, `partial`, `legacy-kept`, `pending`, `blocked`.
+- Ingestion now preserves XML document order, rejects malformed replay envelopes/messages, and bounds transfer, decompression, XML/message work and events. Primary API, legacy opt-in and CLI use terminating workers.
+- Dependencies moved to supported Next.js 15.5.29 / React 19, parser 5.12.0 and Zod 4.6.7, with a refreshed lockfile and zero production advisories at validation. CI uses Node 22, frozen installs and a production audit.
+- The legacy endpoint defaults to disabled; enabled compatibility shares safe input controls.
+- Reports are schema `2.0`, model `dice-only-2`. Zero evidence returns `insufficient_evidence`; usable numeric dice evidence returns `partial_analysis`. Whole-match comparisons abstain. Unknown odds/results are null. Provisional dice contributions are additive and retain precision.
+- Real block pools, injury/casualty records, unknown families and unresolved ownership are observable and reduce coverage. Disputed block/damage/referee contributions are excluded; this is a mitigation, not completed semantic support. No board-state or contextual consequence model is implemented.
+- Reroll linkage uses actor/step/target/roll evidence across sequences; the original question dice are retained. Turn-6 cross-attribution is fixed, but full skill policies/resource accounting and duplicate semantics remain open.
+- UI/CLI derive types from the same runtime Zod report schema; it rejects inconsistent totals/coverage, unsupported versions and fabricated comparative verdicts. Missing scored evidence displays “Not scored.” UI/CLI share copy. UI filters all evidence before paging, shows source segment locators, resets filters, and handles non-JSON errors. Actual half/team-turn/activation labels await reconstruction.
+- Current clean-install verification passes 191 unit tests in 33 files, the production build and four Chromium browser flows, including a real sanitized `.bbr`, malformed reports, cancellation and hosting errors. This does not verify game-rule mappings, production-wide quotas, or Vercel deployment behavior. See [REPORT_CONTRACT.md](REPORT_CONTRACT.md).
 
-| Subsystem | Status | Notes | Source of Truth |
-| --- | --- | --- | --- |
-| Replay parsing core (`decodeReplay`, `parseXml`, `extractStructuredTurns`) | `converted` | Handles XML + BBR with structured turn extraction and attribution. | `src/domain/replay/*` |
-| Luck normalization | `partial` | Roll-based mapping works for MVP categories; deeper event semantics still need expansion for edge cases. | `src/domain/nufflizer/analyzeLuck.ts` |
-| Probability/scoring engine | `partial` | Refactored to deterministic scored-vs-excluded contract with context-aware roll classification; unsupported/ambiguous contexts are now excluded from luck totals instead of fallback-scored. | `src/domain/nufflizer/probability.ts`, `src/domain/nufflizer/classifyRollContext.ts`, `src/domain/nufflizer/analyzeLuck.ts` |
-| API: `/api/nufflizier/analyze` | `converted` | Main one-shot Nufflizier endpoint active. | `src/app/api/nufflizier/analyze/route.ts` |
-| API: `/api/replay` | `legacy-kept` | Coaching endpoint retained with deprecation headers and env-based gate (`NUFFLIZIER_LEGACY_REPLAY_API_MODE`). Not primary product surface. | `src/app/api/replay/route.ts` |
-| UI routes (`/nufflizier`, `/upload`) | `converted` | Upload + verdict + team cards + key moments + filters + JSON export. | `src/app/nufflizier/*`, `src/app/upload/page.tsx` |
-| CLI entrypoint | `converted` | Text and JSON modes using shared report contract. | `src/cli/nufflizier.ts`, `bin/nufflizier` |
-| Automated tests | `partial` | Nufflizier unit/api/e2e coverage now includes explicit-vs-fallback coverage, normalization metadata assertions, CLI/API parity checks, argue-variant gate tests, and conversion residue inventory checks; legacy coaching tests still exist and are now split with dedicated scripts for targeted execution and include legacy API gate coverage. | `tests/unit/*`, `tests/e2e/smoke.spec.ts`, `package.json` |
-| Documentation system | `partial` | README is updated; handoff docs and blueprint/agent alignment introduced in this pass. | `README.md`, `docs/*`, `AGENTS.md` |
+See [INGESTION_SAFETY.md](INGESTION_SAFETY.md), [the ledger](REMEDIATION_BACKLOG.md#ledger), and [the implementation record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation).
 
-## Prioritized Backlog
+## Subsystem Status
 
-### P0 - Probability Fidelity Hardening (Wave 3)
-- Why it matters: Verdict trust depends on realistic probabilities for replay-visible action context.
-- Concrete tasks:
-1. Expand deterministic scored-context mapping for additional roll families now excluded (special actions and unusual roll chains).
-2. Add fixtures for edge conditions (multi-die unusual types, reroll decisions, ambiguous outcomes).
-3. Document scored/excluded context matrix in `docs/REPLAY_INVESTIGATION.md` and conversion logs.
-- Acceptance criteria:
-1. Probability calculator behavior is deterministic and unit-tested for each explicitly supported roll family.
-2. No unsupported roll family is scored with generic fallback odds; unsupported contexts must be explicitly excluded with reason tags.
-3. Regression tests pass for all demo replays and sample fixture.
-- Dependencies:
-- Replay payload field consistency from `extractStructuredTurns`.
-- Availability of representative replay fixtures.
+| Subsystem | Status | Required work |
+| --- | --- | --- |
+| Replay decoding, parsing, attribution | partial | NUF-002–013; parsing is not production-validated |
+| Probability and actual-outcome contracts | partial | NUF-007, 009–013 |
+| Coverage and verdict reliability | partial | NUF-014–015 |
+| Board/state reconstruction and contextual impact | pending | NUF-016–019 |
+| API/UI/CLI surfaces | partial | NUF-003, 015, 020–024 |
+| Legacy coaching stack | legacy-kept | NUF-025; do not add primary features here |
+| Test infrastructure | partial | Existing checks run; NUF-001, 022, 026 add independent correctness evidence |
+| Security and deployment readiness | pending | NUF-004–006, 023–026 |
+| Documentation and handoff | partial | Backlog established; NUF-027 closes implementation/evidence reconciliation |
 
-Current decision note:
-1. `rollType=42` and `rollType=70` are now excluded from scoring with explicit reasons; they are shown in report transparency data but do not affect luck totals.
+## Execution Milestones
 
-### P1 - Legacy Surface Decision and Cleanup Plan
-- Why it matters: Keeping both Nufflizier and coaching pipelines increases maintenance burden and ambiguity for new agents.
-- Concrete tasks:
-1. Apply the decided `gate` policy consistently in docs, tests, and contributor guidance.
-2. Add explicit triggers/checklist for future removal re-evaluation.
-3. Prevent new feature work from landing in legacy coaching modules unless explicitly requested.
-- Acceptance criteria:
-1. `gate` policy is consistently documented in `docs/PROJECT_PLAN.md`, `docs/PROJECT_BLUEPRINT.md`, and logs.
-2. Legacy modules are tagged with re-evaluation criteria and rationale.
-3. No conflicting product messaging across docs/UI.
-- Dependencies:
-- Product owner decision when re-evaluating removal milestone.
+### A — Safe and truthful ingestion
 
-### P2 - Reporting Explainability and UX Calibration
-- Why it matters: Users can only trust a for-fun analyzer if the “why” is transparent and understandable without statistics training.
-- Concrete tasks:
-1. Add optional detail expansion per key moment (inputs used for probability calculation).
-2. Add confidence/coverage banner summarizing how much of replay was scored vs excluded.
-3. Add plain-language UI copy for weight effects and score interpretation.
-4. Add “How this was scored” helper text linking each verdict to underlying weighted deltas.
-- Acceptance criteria:
-1. Each key moment can show probability inputs without exposing raw parser internals.
-2. Coverage metric is visible in report and backed by tests. (Implemented; continue refining)
-3. A user unfamiliar with statistics can explain why a team was labeled luckier after reading the report page.
-4. e2e smoke test validates primary verdict + explainability elements.
-- Dependencies:
-- Stable metadata contract from `LuckEvent`.
+Start with NUF-001, 004–007, 026, 002–003, and 008. Capture regressions, fix dependency/entity handling, bound resources, validate input, and preserve ordered source evidence. Apply truthful partial/insufficient result handling as soon as prerequisites for NUF-014–015 are available; do not wait for contextual scoring to stop fabricated verdicts.
 
-## Next 3 Agent Tasks
-1. Collect additional replay evidence for remaining excluded roll families (`33`, `88`, `67`, plus one-offs), then promote deterministic contexts to scored.
-2. Continue test-suite rebalance by migrating more shared behavior checks to Nufflizier-named tests while keeping `test:legacy` safety coverage intact.
-3. Refine explainability wording for `movement_risk` and exclusion reasons for non-statistics users.
+### B — Correct dice and ownership
 
-## Risks/Dependencies
-1. Replay payload variability across BB3 versions may reduce mapping confidence for less common events.
-2. Some event families (e.g., argue-the-call style signals) may remain under-specified until more fixtures are available.
-3. Dual-pipeline maintenance risk persists while legacy coaching endpoints remain active.
-4. Any scoring-weight changes can alter verdict narratives and require baseline snapshot/test updates.
+Complete NUF-009–015: independently supported mappings, actual block and damage distributions, action-linked rerolls, beneficiary attribution, complete coverage accounting, and qualified verdicts. A mapping is not proven by stable payload shape, proximity, or a matching snapshot.
 
-## Definition of Done for Next Milestone
-Milestone: “Probability Fidelity Hardening - Wave 3”.
+### C — Consequence-sensitive analysis
 
-Done means all are true:
-1. Context-aware deterministic scoring is implemented for supported roll contexts and tested for high-frequency families.
-2. Excluded usage remains measurable and disclosed in report metadata and UI/CLI explainability views.
-3. Unit + integration + e2e checks pass in CI.
-4. `docs/CONVERSION_LOG.md` and `docs/IMPLEMENTATION_LOG.md` contain append-only entries for all changes and verification outcomes.
-5. Legacy `gate` policy is reflected consistently across plan/blueprint/handoff docs.
+Complete NUF-016–019: reconstruct state, compare valid counterfactual outcomes, account for causal chains without double counting, and aggregate additive impact. Separate dice luck, coaching choices, observed aftermath, and uncertainty. Heuristic value units must not be advertised as calibrated win probability.
+
+### D — Usable, deployable, verified reports
+
+Complete NUF-020–025, 027, and final gate NUF-028. Test real uploads, filters, explanations, errors, platform limits, abuse controls, and the legacy policy. Independent fixtures and focused tests accompany every earlier milestone; NUF-022 performs final corpus reconciliation.
+
+## Next Ready Work
+
+1. **NUF-009:** Continue reverse-engineering from raw replay facts, source-linked state transitions, cross-fixture positive/negative cases and independently derived rule arithmetic. The user confirmed there is no official enum source; this is not an external blocker. Controlled PC captures are useful corroboration when available, but independent engineering and empirical investigation continue without them. Mark inferred meanings and unresolved alternatives explicitly.
+2. **NUF-024 / NUF-023:** Configure and test a deployment-wide quota/concurrency mechanism and a Vercel deployment with near-limit upload/response/timeout/worker checks. No deployment configuration/access is present in the checkout. Local safeguards and packaging are ready for that validation.
+3. Continue the independently actionable engineering and empirical work in NUF-007–022 while strengthening semantic evidence: natural rules, roles/beneficiaries, block/damage distributions, reroll policies, complete coverage, board reconstruction, valid counterfactual values, causal accounting, calibrated comparisons and independent contextual goldens. Keep NUF-026/027/028 open for final CI and acceptance evidence.
+
+## Carried-Forward Commitments
+
+The previous plan's commitments remain owned work:
+
+- Remaining roll families (`33`, `88`, `67`, other rare families) and argue variants (`42`, `70`): NUF-009, 014, 022, 027. Resolve after correcting the core categories; do not promote on frequency alone.
+- Deterministic, framework-agnostic domain behavior, fixture coverage, and no generic fallback odds: NUF-007–019, 022.
+- Legacy gate policy and removal criteria: NUF-025, 027. Historical compatibility decisions remain context, not a reason to leave unsafe defaults indefinitely.
+- Per-moment calculations, coverage disclosure, novice-readable explanations, cross-surface parity, and test-suite rebalance: NUF-020–022, 027.
+- Append-only conversion/implementation logs and synchronized handoffs: required for every issue closure.
+
+## Definition of Done
+
+The remediation milestone is complete only when NUF-028 closes with evidence for every preceding issue. Required evidence includes independent semantic tests, contextual comparison cases, all original defect regressions, bounded security/resource tests, fresh-install quality checks, meaningful `.bbr` browser coverage, and appropriate deployment verification. Missing rule evidence, calibration, or platform access is a documented open requirement rather than a passed check.
+
+Keep stable issue IDs and acceptance criteria. Add new issues for additional defects found during implementation. Documentation-only completion of this backlog does not mark any runtime issue fixed.
+
+## Historical Implementation Updates
+
+The following entries are retained as history. Their confidence/support claims are subject to the November review and the new backlog.
 
 ## Status Update (2026-02-11)
 1. Goblin gap-closure pass is implemented for deterministic dice scoring:

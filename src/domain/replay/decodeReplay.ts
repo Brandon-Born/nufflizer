@@ -1,77 +1,57 @@
 import { inflateRawSync, inflateSync, gunzipSync } from "node:zlib";
-
 import { ReplayValidationError } from "@/lib/errors";
+import { REPLAY_LIMITS } from "./limits";
 
 export type ReplayInputFormat = "xml" | "bbr";
+export type DecodedReplay = { xml: string; format: ReplayInputFormat };
+export type DecodeReplayOptions = { maxDecodedChars?: number };
 
-export type DecodedReplay = {
-  xml: string;
-  format: ReplayInputFormat;
-};
-
-export type DecodeReplayOptions = {
-  maxDecodedChars?: number;
-};
-
-const XML_START_PATTERN = /^<\?xml|^<Replay|^<MatchReplay|^</;
-
-function decodeCompressedBase64(input: string): string | null {
-  let binary: Buffer;
-
-  try {
-    binary = Buffer.from(input, "base64");
-  } catch {
-    return null;
+export function decodeReplayInput(
+  input: string,
+  options: DecodeReplayOptions = {}
+): DecodedReplay {
+  if (
+    Buffer.byteLength(input, "utf8") >
+    (input.trimStart().startsWith("<")
+      ? REPLAY_LIMITS.decodedBytes
+      : REPLAY_LIMITS.inputBytes)
+  )
+    throw new ReplayValidationError("Replay input is too large.");
+  const raw = input.trim();
+  if (!raw) throw new ReplayValidationError("Replay input is empty.");
+  const maxBytes = Math.min(
+    options.maxDecodedChars ?? REPLAY_LIMITS.decodedBytes,
+    REPLAY_LIMITS.decodedBytes
+  );
+  if (!Number.isSafeInteger(maxBytes) || maxBytes < 1)
+    throw new ReplayValidationError("Invalid decode limit.");
+  if (raw.startsWith("<")) {
+    if (Buffer.byteLength(raw) > maxBytes)
+      throw new ReplayValidationError("Replay XML is too large after decode.");
+    return { xml: raw, format: "xml" };
   }
-
-  if (binary.length === 0) {
-    return null;
+  const base64 = raw.replace(/\s/g, "");
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(base64) || base64.length % 4 !== 0) {
+    throw new ReplayValidationError(
+      "Replay input is not valid XML or supported BB3 .bbr content."
+    );
   }
-
+  const binary = Buffer.from(base64, "base64");
   for (const decoder of [inflateSync, inflateRawSync, gunzipSync]) {
     try {
-      const decoded = decoder(binary).toString("utf8");
-      if (XML_START_PATTERN.test(decoded.trimStart())) {
-        return decoded;
+      const xml = decoder(binary, { maxOutputLength: maxBytes }).toString(
+        "utf8"
+      );
+      if (xml.trimStart().startsWith("<")) return { xml, format: "bbr" };
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ERR_BUFFER_TOO_LARGE") {
+        throw new ReplayValidationError(
+          "Replay XML is too large after decode."
+        );
       }
-    } catch {
-      // Continue trying other decompressors.
     }
   }
-
-  return null;
-}
-
-export function decodeReplayInput(input: string, options: DecodeReplayOptions = {}): DecodedReplay {
-  const raw = input.trim();
-
-  if (raw.length === 0) {
-    throw new ReplayValidationError("Replay input is empty.");
-  }
-
-  if (XML_START_PATTERN.test(raw)) {
-    if (options.maxDecodedChars && raw.length > options.maxDecodedChars) {
-      throw new ReplayValidationError(`Replay XML is too large after decode. Max size is ${options.maxDecodedChars} characters.`);
-    }
-
-    return {
-      xml: raw,
-      format: "xml"
-    };
-  }
-
-  const decodedXml = decodeCompressedBase64(raw);
-
-  if (!decodedXml) {
-    throw new ReplayValidationError("Replay input is not valid XML or supported BB3 .bbr content.");
-  }
-
-  if (options.maxDecodedChars && decodedXml.length > options.maxDecodedChars) {
-    throw new ReplayValidationError(`Replay XML is too large after decode. Max size is ${options.maxDecodedChars} characters.`);
-  }
-
-  return {
-    xml: decodedXml,
-    format: "bbr"
-  };
+  throw new ReplayValidationError(
+    "Replay input is not valid XML or supported BB3 .bbr content."
+  );
 }

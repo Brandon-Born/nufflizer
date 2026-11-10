@@ -10,10 +10,14 @@ export default function HomePage() {
           <p className="inline-flex rounded-full border border-amber-300/50 bg-amber-100/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-100">
             Blood Bowl 3 Luck Analyzer
           </p>
-          <h1 className="text-4xl font-black tracking-tight text-amber-100 md:text-5xl">Nufflizier</h1>
+          <h1 className="text-4xl font-black tracking-tight text-amber-100 md:text-5xl">
+            Nufflizier
+          </h1>
           <p className="max-w-3xl text-lg text-amber-50/90">
-            Nufflizier parses BB3 replays and scores luck swings across key moments like blocks, dodges, armor breaks, injuries, ball
-            handling, movement risk checks, and argue-the-call style events.
+            Nufflizier inspects BB3 replay dice and shows which outcomes can be
+            analyzed. Whole-match luck, block and damage semantics, and
+            contextual impact are still being validated; incomplete evidence
+            produces a partial report.
           </p>
         </div>
         <div className="mx-auto rounded-2xl border border-amber-300/40 bg-black/30 p-3 shadow-lg md:mx-0">
@@ -31,30 +35,42 @@ export default function HomePage() {
       <section className="grid gap-4 md:grid-cols-3">
         <div className="rounded-xl border border-amber-300/20 bg-black/30 p-5 shadow-sm">
           <h2 className="text-lg font-semibold text-amber-100">How it works</h2>
-          <p className="mt-2 text-sm text-amber-50/90">Upload one replay, get a luck scorecard, and review the top Nuffle swings.</p>
+          <p className="mt-2 text-sm text-amber-50/90">
+            Upload one replay, get a luck scorecard, and review the top Nuffle
+            swings.
+          </p>
         </div>
         <div className="rounded-xl border border-amber-300/20 bg-black/30 p-5 shadow-sm">
           <h2 className="text-lg font-semibold text-amber-100">Privacy</h2>
           <p className="mt-2 text-sm text-amber-50/90">
-            Replays are processed in one-shot mode. The app does not store replay files for long-term history.
+            Replays are processed in one-shot mode. The app does not store
+            replay files for long-term history.
           </p>
         </div>
         <div className="rounded-xl border border-amber-300/20 bg-black/30 p-5 shadow-sm">
-          <h2 className="text-lg font-semibold text-amber-100">Project Scope</h2>
+          <h2 className="text-lg font-semibold text-amber-100">
+            Project Scope
+          </h2>
           <p className="mt-2 text-sm text-amber-50/90">
-            This is a for-fun analysis tool, not an official competitive product. Probabilities are replay-driven and still evolving.
+            This is a for-fun analysis tool, not an official competitive
+            product. Probabilities are replay-driven and still evolving.
           </p>
         </div>
       </section>
 
       <div>
-        <Link href="/nufflizier" className="inline-flex rounded-lg bg-red-700 px-5 py-3 font-semibold text-white transition hover:bg-red-600">
+        <Link
+          href="/nufflizier"
+          className="inline-flex rounded-lg bg-red-700 px-5 py-3 font-semibold text-white transition hover:bg-red-600"
+        >
           Start Nufflizier Analysis
         </Link>
       </div>
 
       <section className="rounded-xl border border-amber-300/20 bg-black/30 p-5 shadow-sm">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-amber-100">Links</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-amber-100">
+          Links
+        </h2>
         <p className="mt-2 text-sm text-amber-50/90">
           Source code:{" "}
           <a
