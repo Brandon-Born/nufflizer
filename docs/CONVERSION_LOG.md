@@ -642,3 +642,7 @@ Dice-only-6 counts supported same-step Dodge, Catch and Sure Hands rerolls once,
 ## 2026-11-10 - Hosted real replay verification and conditional recovery
 
 The isolated Preview passed two representative large replay uploads after snapshot projection, and restored CI passed the exact deployed source. Redis stays scoped to Preview with temporary storage. Dice-only-7 separately scores verified post-casualty Regeneration from the injured player's perspective and preserves causal source links without treating removal as another roll. Ball and Bomb carrier observations no longer conflate their ownership or count as repeated turn-control evidence. No complete damage-state model or whole-match verdict is claimed.
+
+## 2026-11-10 - Apothecary dice and observed decisions
+
+Dice-only-8 inventories the original injury or casualty embedded in an Apothecary usage question and the fresh replacement in a casualty choice. Matching direct originals count once. Linked outcomes identify the injured roster and observed resource use. Injury and casualty distributions remain unscored.

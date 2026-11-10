@@ -105,6 +105,17 @@ export const LuckEventMetadataSchema = z.strictObject({
       perspective: z.literal("subject_team")
     })
     .optional(),
+  apothecary: z
+    .strictObject({
+      originalSourceId: text,
+      replacementSourceId: text.optional(),
+      gamerId: z.number().int().min(0).max(1),
+      resourceSpent: z.union([z.literal(0), z.literal(1)]),
+      appliedCasualty: z.number().int().min(0).max(10),
+      playerStatus: z.number().int().min(0).max(10),
+      applied: z.enum(["original", "replacement", "injury_treatment"])
+    })
+    .optional(),
   isRollCandidate: z.boolean().optional(),
   mergedBlockAnchorId: text.optional(),
   rollType: finite.optional(),
@@ -375,6 +386,37 @@ export const LuckReportSchema = z
             removal.metadata.actionId ===
               damage.chainActionId, "Regeneration requires linked casualty and removal evidence.");
         }
+      }
+      const apothecary = event.metadata.apothecary;
+      if (apothecary) {
+        const original = sources.get(apothecary.originalSourceId);
+        const replacement = apothecary.replacementSourceId
+          ? sources.get(apothecary.replacementSourceId)
+          : undefined;
+        require(event.metadata.sourceTag === "ResultApothecary" &&
+          event.type === "injury" &&
+          event.scoringStatus === "excluded" &&
+          event.metadata.isRollCandidate === false &&
+          original?.metadata.sourceTag === "QuestionApothecaryCasualtyUsage" &&
+          original.teamId === event.teamId &&
+          original.playerId === event.playerId &&
+          (!apothecary.replacementSourceId ||
+            (replacement?.metadata.sourceTag ===
+              "QuestionApothecaryCasualtyChoice" &&
+              replacement.teamId === event.teamId &&
+              replacement.playerId === event.playerId)) &&
+          (apothecary.applied === "injury_treatment"
+            ? original?.metadata.rollType === 11 &&
+              !replacement &&
+              apothecary.resourceSpent === 1 &&
+              apothecary.appliedCasualty === 0
+            : original?.metadata.rollType === 12 &&
+              (apothecary.resourceSpent === 1) === Boolean(replacement) &&
+              apothecary.appliedCasualty ===
+                (apothecary.applied === "original"
+                  ? original.metadata.outcomeCode
+                  : replacement?.metadata
+                      .outcomeCode)), "Apothecary decisions require linked damage rolls and consistent resource evidence.");
       }
       if (event.scoringStatus === "excluded") {
         require(event.probabilitySuccess === null &&

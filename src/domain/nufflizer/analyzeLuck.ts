@@ -12,6 +12,7 @@ import {
 } from "@/domain/replay/reconstructContext";
 import { verifyArmorCheck } from "./armorChecks";
 import { linkRegeneration, type RegenerationEvidence } from "./regeneration";
+import { linkApothecary, type ApothecaryRecord } from "./apothecary";
 import {
   BLOCK_FACES,
   enumerateBlockPool,
@@ -291,9 +292,11 @@ function buildNormalizedEvent(
   blockRecord: BlockRecord | undefined,
   contextBySource: ReadonlyMap<string, PreRollEvidence>,
   rerollLink: RerollLink | undefined,
-  regeneration: RegenerationEvidence | undefined
+  regeneration: RegenerationEvidence | undefined,
+  apothecary: ApothecaryRecord | undefined
 ): LuckEvent | null {
-  const payload = isRecord(event.payload) ? event.payload : undefined;
+  const payload =
+    apothecary?.roll ?? (isRecord(event.payload) ? event.payload : undefined);
   const preRoll = contextBySource.get(
     rerollLink?.originalId ?? rerollLink?.questionId ?? event.id ?? ""
   );
@@ -369,10 +372,11 @@ function buildNormalizedEvent(
     difficulty,
     diceCount: dice.length
   });
-  const isRollCandidate =
-    !rerollLink?.mergedIntoId &&
-    blockRecord?.kind !== "summary" &&
-    isRollCandidateEvent(event);
+  const isRollCandidate = apothecary
+    ? Boolean(apothecary.roll && !apothecary.repeatedOriginal)
+    : !rerollLink?.mergedIntoId &&
+      blockRecord?.kind !== "summary" &&
+      isRollCandidateEvent(event);
 
   const resolvedTeamId = resolveTeamId(replayTurn, event);
   const teamId =
@@ -466,7 +470,9 @@ function buildNormalizedEvent(
           : undefined
       }
     : undefined;
-  const eventType = defaultCategory(classification.eventType);
+  const eventType = apothecary
+    ? "injury"
+    : defaultCategory(classification.eventType);
   const target = block
     ? "Defender Stumbles or Defender Down under the raw symbol order"
     : armorScored
@@ -475,6 +481,21 @@ function buildNormalizedEvent(
         ? "Regeneration on 4+ after the recorded casualty"
         : targetLabel(requirement, difficulty);
   const contractExclusion =
+    (apothecary
+      ? apothecary.resolution
+        ? apothecary.resolution.applied === "injury_treatment"
+          ? "Apothecary used to treat the injury without a replacement roll"
+          : apothecary.resolution.resourceSpent === 0
+            ? "Apothecary declined and the original casualty kept"
+            : apothecary.resolution.applied === "original"
+              ? "Apothecary used and the original casualty kept"
+              : "Apothecary used and the replacement casualty applied"
+        : apothecary.repeatedOriginal
+          ? "original dice already reported in this damage step"
+          : apothecary.roll
+            ? "observed Apothecary injury or casualty dice have no verified odds"
+            : "Apothecary message without a verified roll or linked resolution"
+      : undefined) ??
     (armor?.kind === "excluded" ? armor.reason : undefined) ??
     (armorAccepted && !armorScored
       ? "armor subject has no verified roster owner"
@@ -585,6 +606,7 @@ function buildNormalizedEvent(
         sourceIndex: event.sourceIndex,
         locator: event.locator,
         preRoll,
+        apothecary: apothecary?.resolution,
         isRollCandidate,
         targetId: event.targetId,
         rollType,
@@ -861,8 +883,14 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       replayTurn.events,
       replay.replayVersion
     );
+    const apothecary = linkApothecary(
+      replayTurn.events,
+      replay.replayVersion,
+      playerToTeam
+    );
     for (const [eventIndex, event] of replayTurn.events.entries()) {
       if (
+        !apothecary.has(eventIndex) &&
         !isRollCandidateEvent(event) &&
         ![
           "ResultBlockOutcome",
@@ -882,7 +910,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         blockRecords.get(eventIndex),
         contextBySource,
         rerollLinks.get(eventIndex),
-        regeneration.get(eventIndex)
+        regeneration.get(eventIndex),
+        apothecary.get(eventIndex)
       );
       if (!normalized) {
         continue;
@@ -991,7 +1020,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       0
     ),
     denominatorDescription:
-      "Roll candidates include unknown families and randomizers. Linked checks are counted once; allEvents additionally includes retained evidence such as block selections and first dice. Neither percentage measures state reconstruction or whole-match confidence.",
+      "Roll candidates include unknown families and randomizers. Each linked check counts once. Reported events also include evidence such as block selections and Apothecary decisions. These percentages describe dice coverage only.",
     allEvents: {
       scoredCount: allScoredCount,
       excludedCount: allExcludedCount,

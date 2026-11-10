@@ -2,7 +2,7 @@
 
 Updated 2026-11-10. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.0` and model `dice-only-7`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.0` and model `dice-only-8`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -45,6 +45,12 @@ UI-002/028/094/097 show two fresh numeric dice separated by explicit Sure Hands,
 ## Model dice-only-7 Regeneration
 
 Regeneration contributes as a separate 4+ D6 check conditional on a recorded casualty and explicit skill use in the same damage step. UI-054 and UI-068 independently verify failure and success, respectively; demo UI-086 confirms success with a secondary casualty die. The affected player's roster receives `actual - 1/2` dice units before the category weight. The report links the casualty, initial removal and skill-use records; it makes no claim that the first removal determines final availability. Unsupported casualty, injury, recovery or apothecary distributions remain excluded and visible. An unlinked or stale recovery die does not contribute.
+
+## Model dice-only-8 Apothecary evidence
+
+A usage question can carry the original injury or casualty dice in `RollInfos`. A casualty choice carries the replacement dice in `NewRoll` and a copy of the original in `OriginalRoll`. UI-060 shows that the copied outcome can differ from the observed original, so the report keeps the usage outcome and counts the copy zero times. An exact direct original in the same damage step counts once. The replacement counts as an observed roll with unknown odds.
+
+The linked applied decision records the subject's roster team, the recorded gamer ID, the resource used and the source IDs of the observed rolls. Linkage requires matching subject, source, cell and contiguous damage steps, with the choice gamer and removal status checked where applicable. UI-065 retains the original casualty after using the resource, UI-066 applies the replacement, and UI-064 treats an injury without a replacement roll. The decision contributes no dice score. Full injury and casualty distributions, ambiguous choices and later player availability remain unresolved.
 
 ## Empty evidence versus measured zero
 
