@@ -676,7 +676,7 @@ export function parseReplayXml(
     );
   }
   const rootTag = roots[0]!;
-  let rootNode = parsed[rootTag] ?? parsed;
+  let rootNode: unknown = parsed[rootTag] ?? parsed;
   const replayVersion = resolveReplayVersion(rootNode);
   validateReplayVersion(replayVersion);
 
@@ -697,8 +697,7 @@ export function parseReplayXml(
       // the source steps. Give those paths their complete original tree.
       rootNode = parseValidatedXml(validatedXml)[rootTag];
     } else {
-      const { ReplayStep: _steps, ...envelope } = rootNode;
-      rootNode = envelope;
+      delete rootNode.ReplayStep;
     }
   }
   const teamsFromGameInfos = extractTeamsFromGameInfos(rootNode);
