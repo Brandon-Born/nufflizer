@@ -2,7 +2,7 @@
 
 Updated 2026-11-10. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.0` and model `dice-only-9`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.0` and model `dice-only-10`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -55,6 +55,12 @@ The linked applied decision records the subject's roster team, the recorded game
 ## Model dice-only-9 roll coverage and attribution
 
 `coverage.rollFamilies` groups roll candidates by team, source tag and optional roll type. Each candidate contributes once to scored, unscored with a known team, or unattributed. The schema checks every row against the underlying events. Conflicting declarations, roster disagreement, and overlapping roster player IDs are reported as unresolved. Turn-level inference alone cannot assign a roll to a roster. The reserved team ID `unresolved` cannot be supplied as an actual replay team.
+
+## Model dice-only-10 Loner evidence and pre-roll movement
+
+A matching team reroll spend, Loner skill use and fresh 4+ die in the same uniquely owned step records one team resource spent and the observed gate result. UI-007 and UI-020 independently establish success and failure. The gate remains unscored. Passing does not certify a replacement die, and failing can still consume the resource without adding a second pool.
+
+Context model mobility-possession-2 requires an intervening successful Rush or Dodge to agree with its recorded die and target, and a move's actor to match the enclosing step. Contradictions clear reconstructed board evidence until a later checkpoint. Context contribution arithmetic is unchanged.
 
 ## Empty evidence versus measured zero
 

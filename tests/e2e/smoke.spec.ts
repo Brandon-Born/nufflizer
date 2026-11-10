@@ -63,7 +63,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
   expect(report.schemaVersion).toBe("2.0");
-  expect(report.modelVersion).toBe("dice-only-9");
+  expect(report.modelVersion).toBe("dice-only-10");
   // Independent raw decode: sequence 6 step 4 offers Push/Stumbles; away
   // chooses Stumbles (7/0/0) and outcome 6 resolves at 9/0/1.
   const firstBlock = report.events.find(

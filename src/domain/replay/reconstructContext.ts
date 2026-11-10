@@ -59,6 +59,28 @@ function id(value: string | undefined): number | null {
   return value && /^\d{1,12}$/.test(value) ? Number(value) : null;
 }
 
+function verifiedMovementSuccess(event: ReplayEvent): boolean {
+  const p = event.payload;
+  const die = (
+    p?.Dice as { Die?: { Value?: unknown; DieType?: unknown } } | undefined
+  )?.Die;
+  const face = die?.Value;
+  const target = p?.Difficulty;
+  return (
+    p?.Outcome === 1 &&
+    p.NewRoll === 1 &&
+    p.Status === 1 &&
+    die?.DieType === 0 &&
+    typeof face === "number" &&
+    Number.isInteger(face) &&
+    typeof target === "number" &&
+    Number.isInteger(target) &&
+    target >= 2 &&
+    face <= 6 &&
+    face >= target
+  );
+}
+
 function changePlayer(
   board: ObservedBoard,
   playerId: number,
@@ -321,12 +343,19 @@ export function reconstructPreRollEvidence(
       const actor = id(event.stepActorId);
       const inStep =
         step?.actionId !== undefined && step.actionId === event.actionId;
+      const stepActorMatches =
+        actor !== null &&
+        event.playerId === event.stepActorId &&
+        !event.attributionConflict &&
+        (!event.teamId ||
+          !event.actorTeamId ||
+          event.teamId === event.actorTeamId);
       if (
         event.sourceTag === "ResultUseAction" &&
         inStep &&
         step?.sourceTag === "PlayerStep" &&
         step.stepType === 0 &&
-        actor !== null &&
+        stepActorMatches &&
         typeof event.actionCode === "number" &&
         event.actionCode >= 1 &&
         event.actionCode <= 6 &&
@@ -346,16 +375,16 @@ export function reconstructPreRollEvidence(
         inStep &&
         step?.stepType === 1 &&
         (event.rollType === 1 || event.rollType === 2) &&
-        p?.Outcome === 1 &&
-        p.NewRoll === 1 &&
-        p.Status === 1
+        stepActorMatches &&
+        verifiedMovementSuccess(event)
       )
         continue;
       if (
         event.sourceTag === "ResultDoMove" &&
         inStep &&
         step?.sourceTag === "PlayerStep" &&
-        step.stepType === 1
+        step.stepType === 1 &&
+        stepActorMatches
       ) {
         moveObserved = true;
         continue;
@@ -364,7 +393,7 @@ export function reconstructPreRollEvidence(
         event.sourceTag === "ResultMoveOutcome" &&
         moveObserved &&
         inStep &&
-        actor !== null &&
+        stepActorMatches &&
         p?.Moved === 1 &&
         (p.TentacleUsed === 0 || p.TentacleUsed === undefined) &&
         (p.FumbleRooskieUsed === 0 || p.FumbleRooskieUsed === undefined)

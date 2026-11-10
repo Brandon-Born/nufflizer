@@ -650,3 +650,7 @@ Dice-only-8 inventories the original injury or casualty embedded in an Apothecar
 ## 2026-11-10 - Roll family coverage and roster conflicts
 
 Dice-only-9 adds reconciled roll counts by roster and source family. Conflicting declarations and overlapping player IDs stay in the overall roll denominator under unresolved attribution.
+
+## 2026-11-10 - Loner resource evidence and movement consistency
+
+Dice-only-10 records a verified Loner gate and its team resource cost separately from replacement dice. Mobility-possession-2 clears board evidence after contradictory move dice or actor linkage and retains supported dice-only outcomes.

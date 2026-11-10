@@ -1,6 +1,6 @@
 import type { PreRollEvidence } from "@/domain/replay/reconstructContext";
 
-export const CONTEXT_MODEL_VERSION = "mobility-possession-1";
+export const CONTEXT_MODEL_VERSION = "mobility-possession-2";
 export type ContextPolicy = "declined_team_reroll" | "full_team_reroll";
 
 // Unit: one other standing teammate with a legal ordinary move. Possession

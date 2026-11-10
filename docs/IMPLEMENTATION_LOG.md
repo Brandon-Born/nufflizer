@@ -1277,3 +1277,11 @@ Local corepack pnpm verify passed lint, typecheck, 319 tests in 40 suites, real 
 NUF-013/014/021 advance. Roll candidates are grouped by roster, source tag and optional numeric family in the shared report. Conflicting explicit/roster evidence and overlapping roster IDs now appear in the unresolved bucket. The report validates each row against the underlying evidence, and the shared explanation identifies unattributed rolls. The replay parser reserves the existing unresolved sentinel. The 1+100+1 fixture has one scored roll, 100 unsupported rolls, and one unattributed roll. Tests also reject a tampered family count and prevent either roster from receiving an overlapping player's roll. Broader recruitment identity, causal and malformed-stage accounting remain open.
 
 Apothecary commit ed0a5c8 passed GitHub CI 42922147317. Local verification for the coverage checkpoint passed lint, types, 323 unit tests, the real Redis test, production build and five Chromium flows.
+
+## 2026-11-10 - Loner resource evidence and movement consistency
+
+NUF-012/014/016/018 advance. UI-007 and UI-020 establish that a 4+ Loner gate follows an explicit team spend and that failure can keep the same block pool. The report links the step, owner, choice and skill source to the fresh gate, retaining the observed pass/fail and a single resource cost. No replacement or gate contribution is inferred from the decision. Contradictory ownership leaves the roll visible without a resource claim.
+
+A successful movement claim can advance the board only when the recorded single D6 agrees with the target and the move actors match the enclosing step. A valid Dodge preceding the synthetic exposed pickup retains the original context estimate. A contradictory die and a move emitted for another actor both clear the board before the pickup, whose numeric dice result remains usable. Broader movement and turn legality, mixed reroll policies and calibrated context remain open.
+
+Local corepack pnpm verify passed lint, types, 328 unit tests, real Redis, the production build and all five browser flows. Coverage checkpoint 355474c passed GitHub CI 42922669261.

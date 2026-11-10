@@ -1,6 +1,7 @@
 import { VERDICT_SUMMARIES } from "./explainabilityCopy";
 import { formatDiceContribution, scoredEvidenceForTeam } from "./presentation";
 import {
+  linkLonerGates,
   linkObservedSkillRerolls,
   linkTeamRerolls,
   type RerollLink
@@ -328,6 +329,7 @@ function buildNormalizedEvent(
     rerollResource: rerollLink?.resource,
     teamRerollsSpent: rerollLink?.teamRerollsSpent,
     rerollSkill: rerollLink?.skill,
+    lonerGate: rerollLink?.lonerGate,
     rerollPolicy: rerollLink?.policy,
     mergedRerollAnchorId: rerollLink?.mergedIntoId
   };
@@ -896,6 +898,12 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   for (const replayTurn of replay.turns) {
     const rerollLinks = linkTeamRerolls(replayTurn.events);
     linkObservedSkillRerolls(
+      replayTurn.events,
+      replay.replayVersion,
+      playerToTeam,
+      rerollLinks
+    );
+    linkLonerGates(
       replayTurn.events,
       replay.replayVersion,
       playerToTeam,

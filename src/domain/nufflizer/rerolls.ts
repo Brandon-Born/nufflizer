@@ -15,6 +15,7 @@ export type RerollLink = {
   decisionId?: string;
   mergedIntoId?: string;
   policy?: string;
+  lonerGate?: { passed: boolean; gamerId: 0 | 1; skillSourceId: string };
 };
 function singleD6(roll: Record<string, unknown>): number | undefined {
   const dice = roll.Dice as
@@ -36,6 +37,88 @@ function isFailedSingleD6(roll: Record<string, unknown>): boolean {
     Number(roll.Difficulty) <= 6 &&
     face < Number(roll.Difficulty)
   );
+}
+
+// UI-007/020/050 distinguish the resource spend from the gate and from
+// any subsequent replacement dice. Attach the spend to this gate only.
+export function linkLonerGates(
+  events: readonly ReplayEvent[],
+  version: string | undefined,
+  owners: ReadonlyMap<string, string>,
+  links: Map<number, RerollLink>
+): void {
+  if (version !== "1-4-0-0") return;
+  const counts = new Map<string, number>();
+  for (const event of events) {
+    if (
+      event.sourceTag === "ResultRoll" &&
+      event.rollType === 71 &&
+      event.actionId
+    )
+      counts.set(event.actionId, (counts.get(event.actionId) ?? 0) + 1);
+  }
+  for (const [index, roll] of events.entries()) {
+    if (
+      roll.sourceTag !== "ResultRoll" ||
+      roll.rollType !== 71 ||
+      links.has(index) ||
+      !roll.actionId ||
+      counts.get(roll.actionId) !== 1 ||
+      !roll.stepActorId
+    )
+      continue;
+    const actor = roll.stepActorId;
+    const owner = owners.get(actor);
+    const choice = events[index - 2];
+    const skill = events[index - 1];
+    const gamerId = choice?.payload?.GamerId;
+    const p = roll.payload;
+    if (
+      !owner ||
+      !choice?.id ||
+      !skill?.id ||
+      choice.sourceTag !== "ResultTeamRerollUsage" ||
+      choice.payload?.Used !== 1 ||
+      (gamerId !== 0 && gamerId !== 1) ||
+      skill.sourceTag !== "ResultSkillUsage" ||
+      skill.payload?.Skill !== 44 ||
+      skill.payload.Used !== 1 ||
+      String(skill.payload.PlayerId) !== actor ||
+      p?.Status !== 1 ||
+      p.NewRoll !== 1 ||
+      p.Requirement !== 4 ||
+      p.Difficulty !== 4 ||
+      (p.Modifiers !== undefined && p.Modifiers !== "")
+    )
+      continue;
+    if (
+      [choice, skill, roll].some(
+        (event) =>
+          event.actionId !== roll.actionId ||
+          event.stepActorId !== actor ||
+          event.playerId !== actor ||
+          event.targetId !== roll.stepTargetId ||
+          event.actorTeamId !== owner ||
+          event.attributionConflict ||
+          (event.teamId !== undefined && event.teamId !== owner)
+      )
+    )
+      continue;
+    const die = singleD6(p);
+    if (die === undefined || p.Outcome !== Number(die >= 4)) continue;
+    const passed = die >= 4;
+    links.set(index, {
+      rerollAvailable: false,
+      rerollUsed: false,
+      resource: "team",
+      teamRerollsSpent: 1,
+      decisionId: choice.id,
+      lonerGate: { passed, gamerId, skillSourceId: skill.id },
+      exclusionReason: passed
+        ? "Loner passed after one team reroll was spent. The replacement requires its own dice evidence."
+        : "Loner failed after one team reroll was spent. The gate granted no replacement dice."
+    });
+  }
 }
 function sameRoll(
   a: Record<string, unknown>,

@@ -69,6 +69,26 @@ describe("bounded pre-roll context (NUF-016–019)", () => {
       );
     }
   );
+  it.each(["verified_roll", "contradictory_roll", "wrong_actor"] as const)(
+    "uses pre-roll pickup geometry only after reconciling the preceding move (%s)",
+    (movementEvidence) => {
+      const report = analyzeNufflizerInput(
+        contextReplayXml({ type: 4, exposed: true, movementEvidence })
+      );
+      const pickup = report.events.find(
+        (e) => e.type === "ball_handling" && e.scoringStatus === "scored"
+      )!;
+      expect(pickup.probabilitySuccess).toBeCloseTo(5 / 6, 12);
+      if (movementEvidence === "verified_roll") {
+        expect(pickup.contextualImpact!.contribution).toBeCloseTo(
+          -(5 / 6) * (35 / 8),
+          12
+        );
+      } else {
+        expect(pickup.contextualImpact).toBeUndefined();
+      }
+    }
+  );
   it("does not use future state, clock markup, or a duplicate kept result in context totals", () => {
     const base = analyzeNufflizerInput(contextReplayXml());
     const perturbed = analyzeNufflizerInput(

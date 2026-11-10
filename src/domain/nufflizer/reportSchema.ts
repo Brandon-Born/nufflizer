@@ -30,6 +30,13 @@ export const LuckEventMetadataSchema = z.strictObject({
   rerollResource: z.enum(["team", "skill"]).optional(),
   teamRerollsSpent: z.union([z.literal(0), z.literal(1)]).optional(),
   rerollSkill: z.enum(["Catch", "Dodge", "Sure Hands"]).optional(),
+  lonerGate: z
+    .strictObject({
+      passed: z.boolean(),
+      gamerId: z.union([z.literal(0), z.literal(1)]),
+      skillSourceId: text
+    })
+    .optional(),
   rerollPolicy: text.optional(),
   mergedRerollAnchorId: text.optional(),
   sourceTag: text,
@@ -342,6 +349,29 @@ export const LuckReportSchema = z
         ([reason, n]) => report.coverage.excludedByReason[reason] === n
       ), "Exclusion reasons must conserve excluded records.");
     for (const event of report.events) {
+      const gate = event.metadata.lonerGate;
+      if (gate) {
+        const {
+          rollType,
+          dice,
+          dieTypes,
+          outcomeCode,
+          rerollDecisionId,
+          teamRerollsSpent
+        } = event.metadata;
+        require(rollType === 71 &&
+          dice?.length === 1 &&
+          dieTypes?.[0] === 0 &&
+          Number.isInteger(dice[0]) &&
+          dice[0]! >= 1 &&
+          dice[0]! <= 6 &&
+          gate.passed === dice[0]! >= 4 &&
+          outcomeCode === Number(gate.passed) &&
+          Boolean(rerollDecisionId) &&
+          teamRerollsSpent === 1 &&
+          event.scoringStatus ===
+            "excluded", "A reported Loner gate requires one verified die and a team reroll spend.");
+      }
       require(event.teamId === "unresolved" ||
         teamIds.has(
           event.teamId

@@ -67,9 +67,47 @@ describe("block pools and actual resolutions (NUF-010/013/014)", () => {
       metadata: { block: { pool: { faces: [0, 0] }, finalOutcome: 0 } }
     });
     expect(pools[0]!.probabilitySuccess).toBeCloseTo(5 / 9, 12);
+    expect(r.events.find((e) => e.metadata.rollType === 71)).toMatchObject({
+      scoringStatus: "excluded",
+      probabilitySuccess: null,
+      metadata: {
+        lonerGate: { passed: false, gamerId: 1 },
+        teamRerollsSpent: 1
+      }
+    });
+  });
+  it("records a successful Loner gate without assigning its chance to the replacement", () => {
+    const r = report("001", "UI-007", [], [37, 46]);
+    const gate = r.events.find((e) => e.metadata.rollType === 71)!;
+    expect(gate).toMatchObject({
+      teamId: "1",
+      scoringStatus: "excluded",
+      probabilitySuccess: null,
+      metadata: {
+        lonerGate: { passed: true, gamerId: 1 },
+        teamRerollsSpent: 1,
+        rerollAvailable: false,
+        rerollUsed: false
+      }
+    });
     expect(
-      r.events.find((e) => e.metadata.rollType === 71)!.scoringStatus
-    ).toBe("excluded");
+      r.events.find((e) => e.metadata.rollType === 34)?.probabilitySuccess
+    ).toBeNull();
+  });
+  it("withholds Loner resource claims when skill ownership disagrees", () => {
+    const replay = playbackFragment("001", "UI-007", [], [37, 46]);
+    const skill = replay.turns
+      .flatMap((t) => t.events)
+      .find(
+        (e) => e.sourceTag === "ResultSkillUsage" && e.payload?.Skill === 44
+      )!;
+    skill.payload!.PlayerId = 46;
+    const gate = analyzeReplayLuck(replay).events.find(
+      (e) => e.metadata.rollType === 71
+    )!;
+    expect(gate.metadata.lonerGate).toBeUndefined();
+    expect(gate.metadata.teamRerollsSpent).toBeUndefined();
+    expect(gate.metadata.isRollCandidate).toBe(true);
   });
   it("conditions Brawler's replacement odds on the unrolled Both Down", () => {
     const r = report("007", "UI-071", [7], [38]);

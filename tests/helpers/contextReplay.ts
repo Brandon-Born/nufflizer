@@ -1,4 +1,4 @@
-import { encodedMessage, envelope } from "./replay";
+import { encodedMessage, envelope, rollXml } from "./replay";
 
 export function contextReplayXml(
   options: {
@@ -10,6 +10,7 @@ export function contextReplayXml(
     futureCheckpoint?: boolean;
     duplicateSummary?: boolean;
     insertClock?: boolean;
+    movementEvidence?: "verified_roll" | "contradictory_roll" | "wrong_actor";
   } = {}
 ): string {
   const type = options.type ?? 2;
@@ -88,7 +89,19 @@ export function contextReplayXml(
       seq([
         ...(type === 4
           ? [
-              "<ResultDoMove/>",
+              ...(options.movementEvidence === "verified_roll"
+                ? [rollXml(2, 6, 2)]
+                : options.movementEvidence === "contradictory_roll"
+                  ? [
+                      rollXml(2, 1, 2).replace(
+                        "<Outcome>0</Outcome>",
+                        "<Outcome>1</Outcome>"
+                      )
+                    ]
+                  : []),
+              options.movementEvidence === "wrong_actor"
+                ? "<ResultDoMove><PlayerId>11</PlayerId></ResultDoMove>"
+                : "<ResultDoMove/>",
               "<ResultMoveOutcome><Moved>1</Moved></ResultMoveOutcome>"
             ]
           : []),
