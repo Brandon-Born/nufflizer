@@ -1313,3 +1313,9 @@ The ordered-source checkpoint 57c3a5c passed GitHub CI 42924518688. Local corepa
 Runtime commit 53f3b335c44d1dc6c0980a1c2f29afbff18c40e6 passed GitHub CI 42925054539. Its isolated deployment dpl_4zpZcyCKF2DDDxw4waLyJwWNCfwb returned 200 for demo1 and demo9 (1,138,628 and 1,030,122 response bytes). Demo1 retained the unscored neutral referee die. Demo9's source-linked Regeneration step reconciled one scored roll, three unscored rolls and one context record to +0.75 dice units. Both hosted reports abstained from the whole-match verdict. All 12 local demos passed with 47 direct question/result records and 36 scored unmodified KO checks.
 
 The independent stdlib inventory and hash-keyed public-demo fixture now retain per-file direct question/result counts separately from encoded step counts. The fixture preserves all previous raw counts. The suite compares the direct and KO record counts with all 12 schema-validated reports. Broader contextual and held-out cases remain open.
+
+## 2026-11-10 - Direct KO recovery with Kegs
+
+NUF-009/011 advance. The installed NetGameplay modifier enum identifies numeric code 20 as Kegs. Independent stdlib decoding found 18 modified direct KO checks in the 12 demos. Each recorded base 4+, effective 3+ and exactly one code-20 +1 modifier, and all 18 dice and outcomes agree with 3+. Fourteen also meet the explicit unique roster requirements. Demo1 at ReplayStep 654 child 4 has a successful 3 and at 370 child 6 a failed 2. Both now score under the 4/6 chance, verified through the production service. An unexplained target change or different modifier stays unscored. Other recovery modifiers, resource and lineup effects, and broader injury/casualty distributions remain open.
+
+Local corepack pnpm verify passed lint, types, 342 unit tests in 41 suites, real Redis, production build and five Chromium flows. The all-demo inventory checkpoint a62fb12 passed GitHub CI 42925670679.

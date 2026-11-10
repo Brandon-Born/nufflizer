@@ -40,7 +40,7 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
     status: "known",
     scoringCategory: "injury",
     notes:
-      "UI-040 verifies direct unmodified 4+ recovery with a roster-owned subject. Modified or ambiguous checks remain unscored."
+      "UI-040 verifies unmodified 4+ recovery. Installed modifier code 20 and direct demo records corroborate the exact Kegs +1 variant at 3+."
   },
   {
     sourceTag: "QuestionBlockDice",

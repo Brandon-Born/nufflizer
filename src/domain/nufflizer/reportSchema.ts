@@ -104,7 +104,9 @@ export const LuckEventMetadataSchema = z.strictObject({
       subjectTeamId: text,
       sourceCode: finite.optional(),
       chainActionId: text.optional(),
-      koRecovery: z.literal(true).optional(),
+      koRecovery: z
+        .strictObject({ target: z.union([z.literal(3), z.literal(4)]) })
+        .optional(),
       regeneration: z
         .strictObject({
           casualtySourceId: text,
@@ -470,6 +472,7 @@ export const LuckReportSchema = z
               damage.chainActionId, "Regeneration requires linked casualty and removal evidence.");
         }
         if (damage.koRecovery) {
+          const { target } = damage.koRecovery;
           const {
             sourceTag,
             rollType,
@@ -483,17 +486,19 @@ export const LuckReportSchema = z
             rollType === 13 &&
             locator?.replayStep !== undefined &&
             locator.childIndex !== undefined &&
-            difficulty === 4 &&
+            difficulty === target &&
+            event.metadata.requirement === 4 &&
+            event.metadata.modifiersSum === 4 - target &&
             dice?.length === 1 &&
             Number.isInteger(dice[0]) &&
             dice[0]! >= 1 &&
             dice[0]! <= 6 &&
-            event.probabilitySuccess === 1 / 2 &&
-            event.actualSuccess === dice[0]! >= 4 &&
+            event.probabilitySuccess === (7 - target) / 6 &&
+            event.actualSuccess === dice[0]! >= target &&
             outcomeCode ===
               (event.actualSuccess
                 ? 1
-                : undefined), "KO recovery must match its direct source and verified 4+ outcome.");
+                : undefined), "KO recovery must match its direct source and verified target.");
         }
       }
       const apothecary = event.metadata.apothecary;

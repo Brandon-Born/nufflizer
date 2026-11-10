@@ -670,3 +670,7 @@ Dice-only-13 exports ordered evidence and a reconciled subtotal per damage step 
 ## 2026-11-10 - Direct evidence corpus check
 
 The independent inventory now counts direct questions and results separately from encoded steps. The test suite checks all 12 sanitized demo reports against those per-source counts.
+
+## 2026-11-10 - Direct KO recovery with Kegs
+
+Dice-only-14 accepts a single independently corroborated Kegs +1 modifier on a direct KO check and uses its recorded 3+ target. Other modifier policies remain open.

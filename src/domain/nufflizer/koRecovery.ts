@@ -4,6 +4,27 @@ function recoveryKey(event: ReplayEvent) {
   return JSON.stringify([event.locator?.replayStep, event.playerId]);
 }
 
+function effectiveTarget(p: Record<string, unknown>): 3 | 4 | undefined {
+  if (p.Requirement !== "4") return;
+  if (p.Difficulty === "4" && (p.Modifiers === undefined || p.Modifiers === ""))
+    return 4;
+  const modifiers = p.Modifiers as
+    { Modifier?: Record<string, unknown> } | undefined;
+  const modifier = modifiers?.Modifier;
+  // The installed NetGameplay modifier enum names 20 Kegs. The 18
+  // observed records with this exact +1 have a recorded 3+ threshold.
+  if (
+    p.Difficulty === "3" &&
+    modifiers &&
+    Object.keys(modifiers).length === 1 &&
+    modifier &&
+    Object.keys(modifier).length === 2 &&
+    modifier.ModifierType === "20" &&
+    modifier.Value === "1"
+  )
+    return 3;
+}
+
 // A repeated subject in the same recovery window cannot establish how many
 // checks were actually rolled. Preserve those records without scoring them.
 export function countKoRecoveryChecks(
@@ -28,7 +49,7 @@ export function verifyKoRecovery(
   checks: ReadonlyMap<string, number>,
   owner: string | undefined,
   resolvedTeam: string
-): { subject: string; success: boolean } | undefined {
+): { subject: string; success: boolean; target: 3 | 4 } | undefined {
   const p = event.payload;
   if (
     version !== "1-4-0-0" ||
@@ -43,12 +64,11 @@ export function verifyKoRecovery(
     resolvedTeam !== owner ||
     event.teamId !== owner ||
     p?.PlayerId !== event.playerId ||
-    p.TeamId !== owner ||
-    p.Requirement !== "4" ||
-    p.Difficulty !== "4" ||
-    (p.Modifiers !== undefined && p.Modifiers !== "")
+    p.TeamId !== owner
   )
     return;
+  const target = effectiveTarget(p);
+  if (target === undefined) return;
   const die = (
     p.Dice as { Die?: { Value?: unknown; DieType?: unknown } } | undefined
   )?.Die;
@@ -58,7 +78,7 @@ export function verifyKoRecovery(
     die.DieType !== undefined
   )
     return;
-  const success = Number(die.Value) >= 4;
+  const success = Number(die.Value) >= target;
   if (p.Outcome !== (success ? "1" : undefined)) return;
-  return { subject: event.playerId, success };
+  return { subject: event.playerId, success, target };
 }

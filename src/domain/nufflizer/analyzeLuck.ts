@@ -440,6 +440,7 @@ function buildNormalizedEvent(
       ? regeneration
       : undefined;
   const recoverySuccess = recovery?.success ?? koRecovery?.success;
+  const recoveryTarget = koRecovery?.target ?? 4;
   const recoveryName = recovery ? "Regeneration" : "KO recovery";
   const blockEvidence =
     blockRecord?.kind === "pool" ? blockRecord.evidence : undefined;
@@ -512,7 +513,7 @@ function buildNormalizedEvent(
         sourceCode: event.damageSource,
         perspective: "subject_team" as const,
         chainActionId: event.actionId,
-        koRecovery: koRecovery ? (true as const) : undefined,
+        koRecovery: koRecovery ? { target: koRecovery.target } : undefined,
         regeneration: recovery
           ? {
               casualtySourceId: recovery.casualtySourceId,
@@ -531,7 +532,7 @@ function buildNormalizedEvent(
     : armorScored
       ? `Armor holds below ${difficulty}`
       : recoverySuccess !== undefined
-        ? `${recoveryName} on 4+`
+        ? `${recoveryName} on ${recoveryTarget}+${koRecovery?.target === 3 ? " with Kegs" : ""}`
         : targetLabel(requirement, difficulty);
   const contractExclusion =
     (apothecary
@@ -557,7 +558,7 @@ function buildNormalizedEvent(
       ? "Regeneration requires an unambiguous casualty, removal and skill-use chain"
       : undefined) ??
     (isKoRecovery && !koRecovery
-      ? "KO recovery requires an unmodified 4+ direct roll with matching outcome and roster evidence"
+      ? "KO recovery requires a direct roll with a verified target, outcome and roster"
       : undefined) ??
     (event.sourceTag === "ResultRoll" && isDirectResultOrQuestion(event)
       ? "direct replay roll has no verified scoring contract in this source format"
@@ -579,7 +580,7 @@ function buildNormalizedEvent(
       ? {
           actualSuccess: recoverySuccess,
           deterministic: true,
-          reason: `${recoveryName} die versus 4+ from the affected player's perspective`
+          reason: `${recoveryName} die versus ${recoveryTarget}+ from the affected player's perspective`
         }
       : blockOdds
         ? {
@@ -689,7 +690,9 @@ function buildNormalizedEvent(
   try {
     const scopedOdds =
       armorScored?.probability ??
-      (recoverySuccess !== undefined ? 1 / 2 : blockOdds?.chance);
+      (recoverySuccess !== undefined
+        ? (7 - recoveryTarget) / 6
+        : blockOdds?.chance);
     probability =
       scopedOdds !== undefined
         ? {
@@ -701,7 +704,7 @@ function buildNormalizedEvent(
               : recovery
                 ? "3 of 6 faces succeed, conditional on a recorded casualty"
                 : koRecovery
-                  ? "3 of 6 faces succeed on the recorded KO recovery check"
+                  ? `${7 - recoveryTarget} of 6 faces succeed on the recorded KO recovery check`
                   : "six-sided block dice with two Push faces"
           }
         : computeProbabilityForEvent({
