@@ -88,6 +88,45 @@ function synthetic(overrides: Record<string, unknown> = {}) {
 }
 
 describe("NUF-016 ordered, explicitly observed board checkpoints", () => {
+  it("does not mistake Bomb markers or repeated snapshots for possession changes and clears Ball carrier -1", () => {
+    const held = xml({
+      BoardState: { ...synthetic(), Bomb: { Carrier: 40 } }
+    });
+    const loose = xml({
+      BoardState: {
+        ...synthetic({
+          Ball: { Cell: { X: 4, Y: 9 }, Carrier: -1, IsHeld: 0 }
+        }),
+        Bomb: { Carrier: 40 }
+      }
+    });
+    const replay = parseReplayXml(
+      envelope(
+        `<ReplayStep>${held}</ReplayStep><ReplayStep>${held}<EventEndTurn><Reason>2</Reason></EventEndTurn></ReplayStep><ReplayStep>${loose}</ReplayStep>`
+      ),
+      { omitRawReplaySteps: true }
+    );
+    expect(replay.turns.map((turn) => turn.ballCarrierPlayerId)).toEqual([
+      "5",
+      undefined
+    ]);
+    expect(
+      replay.boardCheckpoints?.map((step) => step.board?.ball.possession)
+    ).toEqual(["held", "held", "not_held"]);
+    const carriers = replay.turns
+      .flatMap((turn) => turn.events)
+      .filter((event) => event.sourceTag === "Carrier");
+    expect(
+      carriers.map((event) => [event.carrierObject, event.playerId])
+    ).toEqual([
+      ["ball", "5"],
+      ["bomb", "40"],
+      ["ball", "5"],
+      ["bomb", "40"],
+      ["ball", undefined],
+      ["bomb", "40"]
+    ]);
+  });
   it("prunes only unused snapshot fields without changing carrier order or message locators", () => {
     const board = xml({ BoardState: synthetic() }).replace(
       "</BoardState>",

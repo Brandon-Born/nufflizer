@@ -28,6 +28,8 @@ export type ReplayEvent = {
   stepActorId?: string;
   stepTargetId?: string;
   damageSource?: number;
+  carrierObject?: "ball" | "bomb";
+  checkpointCarrier?: boolean;
   locator?: {
     replayStep?: number;
     childIndex?: number;

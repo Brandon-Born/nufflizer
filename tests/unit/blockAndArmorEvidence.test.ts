@@ -195,3 +195,93 @@ describe("armor perspective and fixed modifiers (NUF-011/013)", () => {
     );
   });
 });
+describe("post-casualty recovery evidence", () => {
+  it.each([
+    ["001", "UI-068", [6], [37], 6, true],
+    ["027", "UI-054", [], [37], 2, false]
+  ] as const)(
+    "%s %s scores Regeneration for the injured roster and keeps the other stages distinct",
+    (source, id, home, away, die, success) => {
+      const report = LuckReportSchema.parse(
+        analyzeReplayLuck(playbackFragment(source, id, [...home], [...away]))
+      );
+      const recovery = report.events.find(
+        (event) => event.metadata.rollType === 46
+      )!;
+      const armor = report.events.find(
+        (event) =>
+          event.metadata.rollType === 10 &&
+          event.metadata.actionId === recovery.metadata.actionId
+      )!;
+      const casualty = report.events.find(
+        (event) => event.metadata.sourceTag === "ResultCasualtyRoll"
+      )!;
+      const removal = report.events.find(
+        (event) =>
+          event.metadata.sourceTag === "ResultPlayerRemoval" &&
+          event.metadata.actionId === recovery.metadata.actionId
+      )!;
+      expect(recovery).toMatchObject({
+        type: "injury",
+        scoringStatus: "scored",
+        teamId: "1",
+        playerId: "37",
+        probabilitySuccess: 1 / 2,
+        actualSuccess: success,
+        delta: success ? 1 / 2 : -1 / 2,
+        metadata: {
+          dice: [die],
+          damage: {
+            subjectTeamId: "1",
+            subjectId: "37",
+            perspective: "subject_team",
+            chainActionId: armor.metadata.actionId,
+            regeneration: {
+              casualtySourceId: casualty.metadata.sourceId,
+              initialRemovalSourceId: removal.metadata.sourceId
+            }
+          }
+        }
+      });
+      expect(armor.scoringStatus).toBe("scored");
+      expect(armor.actualSuccess).toBe(false);
+      expect(casualty.scoringStatus).toBe("excluded");
+      expect(removal.metadata.isRollCandidate).toBe(false);
+      expect(report.coverage.scoredByType.injury).toBe(1);
+    }
+  );
+
+  it.each([
+    "other skill",
+    "stale die",
+    "duplicate die",
+    "different damage step",
+    "contradictory outcome"
+  ])(
+    "keeps an unsupported recovery visible without awarding luck: %s",
+    (variant) => {
+      const replay = playbackFragment("001", "UI-068", [6], [37]);
+      const turn = replay.turns.find((t) =>
+        t.events.some((e) => e.rollType === 46)
+      )!;
+      const index = turn.events.findIndex((event) => event.rollType === 46);
+      const die = turn.events[index]!;
+      if (variant === "other skill")
+        turn.events[index - 1]!.payload!.Skill = 13;
+      if (variant === "stale die") die.payload!.NewRoll = 0;
+      if (variant === "duplicate die") turn.events.splice(index, 0, { ...die });
+      if (variant === "different damage step") die.actionId += "-other";
+      if (variant === "contradictory outcome") die.payload!.Outcome = 0;
+      const report = analyzeReplayLuck(replay);
+      const recovery = report.events.find(
+        (event) => event.metadata.rollType === 46
+      )!;
+      expect(recovery).toMatchObject({
+        scoringStatus: "excluded",
+        probabilitySuccess: null,
+        metadata: { isRollCandidate: true }
+      });
+      expect(report.coverage.scoredByType.injury).toBe(0);
+    }
+  );
+});

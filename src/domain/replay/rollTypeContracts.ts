@@ -323,11 +323,12 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
     sourceTag: "ResultRoll",
     rollType: 46,
     label: "regeneration",
-    kind: "excluded_deterministic",
+    kind: "scored_deterministic",
     confidence: "high",
     status: "known",
+    scoringCategory: "injury",
     notes:
-      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+      "Only the linked post-casualty 4+ check with verified removal, skill use and subject ownership is scored."
   },
   {
     sourceTag: "ResultRoll",

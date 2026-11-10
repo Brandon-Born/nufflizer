@@ -11,6 +11,7 @@ import {
   type PreRollEvidence
 } from "@/domain/replay/reconstructContext";
 import { verifyArmorCheck } from "./armorChecks";
+import { linkRegeneration, type RegenerationEvidence } from "./regeneration";
 import {
   BLOCK_FACES,
   enumerateBlockPool,
@@ -289,7 +290,8 @@ function buildNormalizedEvent(
   playerToTeam: ReadonlyMap<string, string>,
   blockRecord: BlockRecord | undefined,
   contextBySource: ReadonlyMap<string, PreRollEvidence>,
-  rerollLink?: RerollLink
+  rerollLink: RerollLink | undefined,
+  regeneration: RegenerationEvidence | undefined
 ): LuckEvent | null {
   const payload = isRecord(event.payload) ? event.payload : undefined;
   const preRoll = contextBySource.get(
@@ -381,6 +383,10 @@ function buildNormalizedEvent(
   const armor = verifyArmorCheck(replayVersion, event, dice, dieTypes);
   const armorAccepted = armor?.kind === "verified" ? armor : undefined;
   const armorOwner = armorAccepted && playerToTeam.get(armorAccepted.subject);
+  const recovery =
+    regeneration && playerToTeam.get(regeneration.subject) === teamId
+      ? regeneration
+      : undefined;
   const blockEvidence =
     blockRecord?.kind === "pool" ? blockRecord.evidence : undefined;
   const attackerTeam =
@@ -422,6 +428,13 @@ function buildNormalizedEvent(
       rollCandidate: true,
       reason: "verified 2D6 armor check"
     };
+  if (recovery)
+    classification = {
+      eventType: "injury",
+      scored: true,
+      rollCandidate: true,
+      reason: "verified post-casualty Regeneration check"
+    };
   const armorScored =
     armorAccepted && armorOwner === teamId ? armorAccepted : undefined;
   const block =
@@ -436,25 +449,38 @@ function buildNormalizedEvent(
           rankedSymbol: blockOdds.favoredSymbol
         }
       : undefined;
-  const damage =
-    armorAccepted && armorOwner === teamId
-      ? {
-          subjectId: armorAccepted.subject,
-          subjectTeamId: teamId,
-          sourceCode: event.damageSource,
-          perspective: "subject_team" as const
-        }
-      : undefined;
+  const damageSubject = armorScored?.subject ?? recovery?.subject;
+  const damage = damageSubject
+    ? {
+        subjectId: damageSubject,
+        subjectTeamId: teamId,
+        sourceCode: event.damageSource,
+        perspective: "subject_team" as const,
+        chainActionId: event.actionId,
+        regeneration: recovery
+          ? {
+              casualtySourceId: recovery.casualtySourceId,
+              initialRemovalSourceId: recovery.initialRemovalSourceId,
+              skillUseSourceId: recovery.skillUseSourceId
+            }
+          : undefined
+      }
+    : undefined;
   const eventType = defaultCategory(classification.eventType);
   const target = block
     ? "Defender Stumbles or Defender Down under the raw symbol order"
     : armorScored
       ? `Armor holds below ${difficulty}`
-      : targetLabel(requirement, difficulty);
+      : recovery
+        ? "Regeneration on 4+ after the recorded casualty"
+        : targetLabel(requirement, difficulty);
   const contractExclusion =
     (armor?.kind === "excluded" ? armor.reason : undefined) ??
     (armorAccepted && !armorScored
       ? "armor subject has no verified roster owner"
+      : undefined) ??
+    (event.sourceTag === "ResultRoll" && rollType === 46 && !recovery
+      ? "Regeneration requires an unambiguous casualty, removal and skill-use chain"
       : undefined) ??
     rerollLink?.exclusionReason ??
     numericCheckExclusion(
@@ -469,24 +495,32 @@ function buildNormalizedEvent(
         deterministic: true,
         reason: "armor hold from the subject team's perspective"
       }
-    : blockOdds
+    : recovery
       ? {
-          actualSuccess: blockOdds.favoredSymbol >= 3,
+          actualSuccess: recovery.success,
           deterministic: true,
           reason:
-            "raw symbol opportunity, independent of coach choice and applied skills"
+            "Regeneration die versus 4+ from the affected player's perspective"
         }
-      : resolveActualSuccess(
-          outcomeCode,
-          dice,
-          difficulty ?? requirement,
-          eventType
-        );
+      : blockOdds
+        ? {
+            actualSuccess: blockOdds.favoredSymbol >= 3,
+            deterministic: true,
+            reason:
+              "raw symbol opportunity, independent of coach choice and applied skills"
+          }
+        : resolveActualSuccess(
+            outcomeCode,
+            dice,
+            difficulty ?? requirement,
+            eventType
+          );
 
   // Disputed category/beneficiary mappings cannot contribute favorable luck.
   const semanticsUnverified =
     classification.scored &&
     !armorScored &&
+    !recovery &&
     !block &&
     ["block", "armor_break", "injury", "argue_call"].includes(eventType);
   const attributionUnresolved =
@@ -576,7 +610,8 @@ function buildNormalizedEvent(
 
   let probability;
   try {
-    const scopedOdds = armorScored?.probability ?? blockOdds?.chance;
+    const scopedOdds =
+      armorScored?.probability ?? (recovery ? 1 / 2 : blockOdds?.chance);
     probability =
       scopedOdds !== undefined
         ? {
@@ -585,7 +620,9 @@ function buildNormalizedEvent(
             rerollAdjustedOdds: scopedOdds,
             reason: armorScored
               ? "2D6 against the effective armor target"
-              : "six-sided block dice with two Push faces"
+              : recovery
+                ? "3 of 6 faces succeed, conditional on a recorded casualty"
+                : "six-sided block dice with two Push faces"
           }
         : computeProbabilityForEvent({
             eventType,
@@ -674,14 +711,18 @@ function buildNormalizedEvent(
       ? actualSuccess
         ? "Armor held"
         : "Armor broke"
-      : block
-        ? `Block pool: ${BLOCK_FACES[block.rankedSymbol]} opportunity`
-        : buildMomentLabel(
-            eventType,
-            actualSuccess,
-            probabilitySuccess,
-            difficulty ?? requirement
-          ),
+      : recovery
+        ? actualSuccess
+          ? "Regeneration succeeded"
+          : "Regeneration failed"
+        : block
+          ? `Block pool: ${BLOCK_FACES[block.rankedSymbol]} opportunity`
+          : buildMomentLabel(
+              eventType,
+              actualSuccess,
+              probabilitySuccess,
+              difficulty ?? requirement
+            ),
     tags,
     scoringStatus: "scored",
     statusReason: `${classification.reason}; ${probability.reason}; ${resolvedActual.reason}${rerollLink?.policy ? `; ${rerollLink.policy}` : ""}`,
@@ -816,6 +857,10 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       replayTurn.events,
       replay.replayVersion
     );
+    const regeneration = linkRegeneration(
+      replayTurn.events,
+      replay.replayVersion
+    );
     for (const [eventIndex, event] of replayTurn.events.entries()) {
       if (
         !isRollCandidateEvent(event) &&
@@ -836,7 +881,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         playerToTeam,
         blockRecords.get(eventIndex),
         contextBySource,
-        rerollLinks.get(eventIndex)
+        rerollLinks.get(eventIndex),
+        regeneration.get(eventIndex)
       );
       if (!normalized) {
         continue;

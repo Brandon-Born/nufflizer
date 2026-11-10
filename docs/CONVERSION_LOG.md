@@ -638,3 +638,7 @@ NUF-024 closes on independent Redis integration and isolated Vercel Preview quot
 ## 2026-11-10 - Recorded skill rerolls and board parse projection
 
 Dice-only-6 counts supported same-step Dodge, Catch and Sure Hands rerolls once, with original dice, choice and result provenance and explicit team cost. Conditional/mixed skills and broader action accounting stay open. Primary parsing skips unused snapshot fields without changing the ordered evidence or the legacy raw tree. Restored frozen CI passed on d669cd5; the previous Preview passed exact upload size boundaries but still timed out on larger real replays. See the implementation record for deployment and corpus evidence.
+
+## 2026-11-10 - Hosted real replay verification and conditional recovery
+
+The isolated Preview passed two representative large replay uploads after snapshot projection, and restored CI passed the exact deployed source. Redis stays scoped to Preview with temporary storage. Dice-only-7 separately scores verified post-casualty Regeneration from the injured player's perspective and preserves causal source links without treating removal as another roll. Ball and Bomb carrier observations no longer conflate their ownership or count as repeated turn-control evidence. No complete damage-state model or whole-match verdict is claimed.

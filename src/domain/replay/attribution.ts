@@ -199,6 +199,9 @@ export function inferTurnOwnership(
   addScore(scores, turn.teamId, 3);
 
   for (const event of turn.events) {
+    // A snapshot can repeat a holder from either side many times. It does
+    // not establish a fresh activation or a change in turn control.
+    if (event.sourceTag === "Carrier") continue;
     const inferred = inferEventTeamId(event, ownershipIndex);
     addScore(scores, inferred.teamId, eventWeight(event));
   }

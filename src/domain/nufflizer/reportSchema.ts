@@ -94,6 +94,14 @@ export const LuckEventMetadataSchema = z.strictObject({
       subjectId: text,
       subjectTeamId: text,
       sourceCode: finite.optional(),
+      chainActionId: text.optional(),
+      regeneration: z
+        .strictObject({
+          casualtySourceId: text,
+          initialRemovalSourceId: text,
+          skillUseSourceId: text
+        })
+        .optional(),
       perspective: z.literal("subject_team")
     })
     .optional(),
@@ -234,6 +242,13 @@ export const LuckReportSchema = z
         report.verdict.status
       ], "Headline must state the declared model limitations.");
     const ids = new Map(report.events.map((event) => [event.id, event]));
+    const sources = new Map(
+      report.events.flatMap((event) =>
+        event.metadata.sourceId
+          ? [[event.metadata.sourceId, event] as const]
+          : []
+      )
+    );
     require(ids.size === report.events.length, "Event IDs must be unique.");
     const teamIds = new Set(report.teams.map((team) => team.teamId));
     require(teamIds.size === 2, "Report requires two distinct teams.");
@@ -340,11 +355,27 @@ export const LuckReportSchema = z
               block.rankedSymbol >=
                 3, "Block chance and outcome must agree with the raw symbol contract.");
       }
-      if (damage)
-        require(event.type === "armor_break" &&
+      if (damage) {
+        require(event.type ===
+          (damage.regeneration ? "injury" : "armor_break") &&
           damage.subjectId === event.playerId &&
           damage.subjectTeamId ===
-            event.teamId, "Armor uses the affected player's perspective.");
+            event.teamId, "Damage checks use the affected player's perspective.");
+        if (damage.regeneration) {
+          const casualty = sources.get(damage.regeneration.casualtySourceId);
+          const removal = sources.get(
+            damage.regeneration.initialRemovalSourceId
+          );
+          require(event.metadata.rollType === 46 &&
+            event.probabilitySuccess === 1 / 2 &&
+            damage.chainActionId === event.metadata.actionId &&
+            casualty?.metadata.sourceTag === "ResultCasualtyRoll" &&
+            casualty.metadata.actionId === damage.chainActionId &&
+            removal?.metadata.sourceTag === "ResultPlayerRemoval" &&
+            removal.metadata.actionId ===
+              damage.chainActionId, "Regeneration requires linked casualty and removal evidence.");
+        }
+      }
       if (event.scoringStatus === "excluded") {
         require(event.probabilitySuccess === null &&
           event.delta === 0 &&

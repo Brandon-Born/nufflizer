@@ -380,6 +380,23 @@ export function extractStructuredTurnsFromReplayXml(
     turns.push(turn);
     turn = newTurn();
   }
+  function retainCarrier(
+    nodes: OrderedNode[],
+    carrierObject?: ReplayEvent["carrierObject"],
+    checkpointCarrier = false
+  ) {
+    const carrier = textOf(nodes);
+    const playerId = /^\d+$/.test(carrier) ? carrier : undefined;
+    if (carrierObject === "ball") turn.ballCarrierPlayerId = playerId;
+    push({
+      type: "ball_state",
+      sourceTag: "Carrier",
+      playerId,
+      carrierObject,
+      checkpointCarrier,
+      payload: { Carrier: carrier }
+    });
+  }
   function walk(
     nodes: OrderedNode[],
     directReplayStep?: number,
@@ -420,12 +437,18 @@ export function extractStructuredTurnsFromReplayXml(
         );
         // Retain the ordered legacy carrier markers without traversing the
         // entire roster, statistics and appearance data at every snapshot.
+        // A new snapshot with no Ball/Carrier no longer establishes a holder.
+        turn.ballCarrierPlayerId = undefined;
         for (const ballNode of inner) {
           const ballTag = tagOf(ballNode);
           if (ballTag === "Ball" || ballTag === "Bomb")
-            walk(
-              children(ballNode, ballTag).filter((n) => tagOf(n) === "Carrier")
-            );
+            for (const node of children(ballNode, ballTag))
+              if (tagOf(node) === "Carrier")
+                retainCarrier(
+                  children(node, "Carrier"),
+                  ballTag === "Ball" ? "ball" : "bomb",
+                  true
+                );
         }
         continue;
       }
@@ -449,15 +472,7 @@ export function extractStructuredTurnsFromReplayXml(
         continue;
       }
       if (tag === "Carrier") {
-        const carrier = textOf(inner);
-        turn.ballCarrierPlayerId =
-          carrier && carrier !== "-1" ? carrier : undefined;
-        push({
-          type: "ball_state",
-          sourceTag: tag,
-          playerId: turn.ballCarrierPlayerId,
-          payload: { Carrier: carrier }
-        });
+        retainCarrier(inner);
         continue;
       }
       if (tag === "EventEndTurn") {

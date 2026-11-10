@@ -315,11 +315,9 @@ export function reconstructPreRollEvidence(
         (event.sourceTag === "ResultTeamRerollUsage" && p?.Used === 0)
       )
         continue;
-      if (
-        event.sourceTag === "Carrier" &&
-        String(board.ball.carrierId) === p?.Carrier
-      )
-        continue;
+      // The snapshot already describes both the known holder and absence of
+      // one. Its repeated markers are evidence, not another transition.
+      if (event.sourceTag === "Carrier" && event.checkpointCarrier) continue;
       const actor = id(event.stepActorId);
       const inStep =
         step?.actionId !== undefined && step.actionId === event.actionId;

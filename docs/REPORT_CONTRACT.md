@@ -2,7 +2,7 @@
 
 Updated 2026-11-10. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.0` and model `dice-only-6`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.0` and model `dice-only-7`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -41,6 +41,10 @@ Context model mobility-possession-1 only estimates a non-carrier Dodge or open-s
 ## Model dice-only-6 recorded skill rerolls
 
 UI-002/028/094/097 show two fresh numeric dice separated by explicit Sure Hands, Dodge or Catch usage in the same player step. A uniquely owned actor, same step/family/target/modifiers, failed initial D6 and a valid replacement are required. The original remains visible as linked evidence and the completed check contributes once under `1-(1-p)^2`. A failed replacement without a verified ending stays unsupported; UI-002's immediate recorded bounce supplies the terminal failure for Pickup. The report records the two dice, both roll locators, the skill-use locator, and zero team rerolls spent on that check. A verified full team reroll records one spent, while declining records zero. Unsupported mixtures of skill and team choices, Pro, Loner, Pass and turn-wide resource reconciliation remain open. The existing tactical model still only covers its verified team policies.
+
+## Model dice-only-7 Regeneration
+
+Regeneration contributes as a separate 4+ D6 check conditional on a recorded casualty and explicit skill use in the same damage step. UI-054 and UI-068 independently verify failure and success, respectively; demo UI-086 confirms success with a secondary casualty die. The affected player's roster receives `actual - 1/2` dice units before the category weight. The report links the casualty, initial removal and skill-use records; it makes no claim that the first removal determines final availability. Unsupported casualty, injury, recovery or apothecary distributions remain excluded and visible. An unlinked or stale recovery die does not contribute.
 
 ## Empty evidence versus measured zero
 

@@ -43,6 +43,36 @@ describe("replay attribution", () => {
     expect(index.ambiguousPlayerIds.has("9")).toBe(true);
   });
 
+  it("does not allow repeated opponent carrier snapshots to take control of a turn", () => {
+    const index = buildPlayerOwnershipIndex({
+      playerOwnershipKeys: ["0:3", "1:50"]
+    });
+    const action = {
+      type: "dodge",
+      sourceTag: "ResultRoll",
+      playerId: "3"
+    } as const;
+    const snapshots = Array.from(
+      { length: 12 },
+      () =>
+        ({
+          type: "ball_state",
+          sourceTag: "Carrier",
+          playerId: "50",
+          carrierObject: "ball",
+          checkpointCarrier: true
+        }) as const
+    );
+    const withSnapshots = inferTurnOwnership(
+      buildTurn({ events: [action, ...snapshots] }),
+      index
+    );
+    expect(withSnapshots).toEqual(
+      inferTurnOwnership(buildTurn({ events: [action] }), index)
+    );
+    expect(withSnapshots.teamId).toBe("0");
+  });
+
   it("infers team ownership when turn.teamId is missing", () => {
     const index = buildPlayerOwnershipIndex({
       playerNamesByTeamAndId: {
