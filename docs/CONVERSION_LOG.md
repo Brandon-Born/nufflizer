@@ -662,3 +662,7 @@ Dice-only-11 scores the directly recorded unmodified KO recovery check for the a
 ## 2026-11-10 - Direct questions, results and ordered movement
 
 Dice-only-12 retains direct questions and results alongside encoded action messages. Direct referee rolls add evidence coverage with unknown odds, and decision/removal records keep their order without adding dice. NUF-008 closes on ordered-source acceptance. Full state reconstruction remains NUF-016.
+
+## 2026-11-10 - Damage step contribution accounting
+
+Dice-only-13 exports ordered evidence and a reconciled subtotal per damage step when verified armor or Regeneration anchors it. A repeated removal summary supplies context and does not change the score. Ambiguous repeated armor dice remain unscored.

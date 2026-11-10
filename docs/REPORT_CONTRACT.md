@@ -2,7 +2,7 @@
 
 Updated 2026-11-10. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.0` and model `dice-only-12`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.0` and model `dice-only-13`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -69,6 +69,12 @@ UI-040 verifies direct `ReplayStep/EventRoll` type 13 before second-half setup. 
 ## Model dice-only-12 direct questions and results
 
 Direct `ReplayStep` questions and results appear with their original child locators. The encoded message location is absent because these are not contained in an action step. Direct referee dice stay in the roll denominator with unknown odds. Bribe questions, sent-off notices and player removals remain visible as separate records without adding a roll. This retention does not assign a referee die to the nearest player or infer a state transition.
+
+## Model dice-only-13 damage steps
+
+`damageSteps` lists the reported events in a single damage step when verified armor or Regeneration anchors it. Each group preserves ordered event IDs for one affected roster subject. It separates scored rolls, unscored rolls, and context records. Its subtotal reconciles with the original dice contributions and is included once in the team total.
+
+Multiple fresh-looking armor rolls in the same damage step leave that stage unscored because freshness is ambiguous. Repeated identical removal summaries remain context records and preserve the original Regeneration linkage. The subtotal describes recorded dice in that damage step. It does not infer the preceding block, dodge or other action that caused the damage, or claim an effect on match value.
 
 ## Empty evidence versus measured zero
 

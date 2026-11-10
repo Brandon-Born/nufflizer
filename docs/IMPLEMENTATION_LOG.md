@@ -1301,3 +1301,9 @@ UI-002 confirms a declaration and two separate zero-risk moves before the pickup
 The previous runtime commit 060bbf8 passed GitHub CI 42923810791. Its isolated Preview dpl_CCHTFLEXJYgAAdZDVQroAHxALKQ5 returned HTTP 200 for demo1 and demo10 (1,121,018 and 971,589 response bytes). Demo10 exported nine verified KO checks, including the independently matched die 2 failure at ReplayStep 106. Both hosted reports reconciled roll families and abstained from a whole-match verdict. A separate stdlib corpus pass matched the runtime's 36 accepted direct KO checks.
 
 Local corepack pnpm verify passed lint, types, 336 unit tests, real Redis integration, production build and five Chromium flows.
+
+## 2026-11-10 - Damage step contribution accounting
+
+NUF-011/014/018/019 advance. The shared report groups verified armor and Regeneration with the same subject's observed damage-step records. Groups reference the original events and sum their existing dice contributions once. Independent UI-068 source sequence 259 step 1 gives 30 of 36 possible armor holds at 10+, a break on 6+6 and a successful 4+ recovery on 6. Its subtotal is -30/36 + 0.5 × 1.5 = -1/12. Injury and casualty remain visible unscored and the removal adds no dice. Duplicating the removal preserves the total and the first removal reference. A second fresh-looking armor record with no independently distinguishable attempt leaves both armor records unscored. Independent decoding found 690 damage steps with exactly one armor check and 45 without one across the 12 demos. The report rejects tampered subtotals. Cross-step causal linkage and contextual consequences remain open.
+
+The ordered-source checkpoint 57c3a5c passed GitHub CI 42924518688. Local corepack pnpm verify passed lint, types, 339 unit tests in 41 suites, real Redis integration, production build and five Chromium flows for this damage-step checkpoint.

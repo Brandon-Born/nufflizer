@@ -60,12 +60,25 @@ export function linkRegeneration(
     if (!isD(die, 0, 6) || roll.Outcome !== Number(Number(die?.Value) >= 4))
       continue;
 
-    const casualty = events[index - 3];
     const removal = events[index - 2];
     const skill = events[index - 1];
+    let removalIndex = index - 2;
+    if (removal?.sourceTag === "ResultPlayerRemoval") {
+      const removalPayload = JSON.stringify(removal.payload);
+      // Repeated identical summaries are evidence of one removal.
+      while (
+        events[removalIndex - 1]?.sourceTag === "ResultPlayerRemoval" &&
+        events[removalIndex - 1]?.actionId === removal.actionId &&
+        JSON.stringify(events[removalIndex - 1]?.payload) === removalPayload
+      )
+        removalIndex--;
+    }
+    const casualty = events[removalIndex - 1];
+    const initialRemoval = events[removalIndex];
     if (
       !casualty?.id ||
       !removal?.id ||
+      !initialRemoval?.id ||
       !skill?.id ||
       casualty.sourceTag !== "ResultCasualtyRoll" ||
       casualty.rollType !== 12 ||
@@ -98,7 +111,7 @@ export function linkRegeneration(
     )
       continue;
     if (
-      [casualty, removal, skill, event].some(
+      [casualty, initialRemoval, removal, skill, event].some(
         (item) =>
           item.actionId !== event.actionId ||
           item.stepTag !== "DamageStep" ||
@@ -120,7 +133,7 @@ export function linkRegeneration(
       subject,
       success: roll.Outcome === 1,
       casualtySourceId: casualty.id,
-      initialRemovalSourceId: removal.id,
+      initialRemovalSourceId: initialRemoval.id,
       skillUseSourceId: skill.id
     });
   }

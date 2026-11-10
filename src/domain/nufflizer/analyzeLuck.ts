@@ -12,6 +12,7 @@ import {
   type PreRollEvidence
 } from "@/domain/replay/reconstructContext";
 import { verifyArmorCheck } from "./armorChecks";
+import { summarizeDamageSteps } from "./damageSteps";
 import { linkRegeneration, type RegenerationEvidence } from "./regeneration";
 import { countKoRecoveryChecks, verifyKoRecovery } from "./koRecovery";
 import { linkApothecary, type ApothecaryRecord } from "./apothecary";
@@ -299,7 +300,8 @@ function buildNormalizedEvent(
   rerollLink: RerollLink | undefined,
   regeneration: RegenerationEvidence | undefined,
   apothecary: ApothecaryRecord | undefined,
-  koRecoveryChecks: ReadonlyMap<string, number>
+  koRecoveryChecks: ReadonlyMap<string, number>,
+  armorCountInStep: number | undefined
 ): LuckEvent | null {
   const payload =
     apothecary?.roll ?? (isRecord(event.payload) ? event.payload : undefined);
@@ -424,7 +426,13 @@ function buildNormalizedEvent(
       blockRecord?.kind !== "summary" &&
       isRollCandidateEvent(event);
 
-  const armor = verifyArmorCheck(replayVersion, event, dice, dieTypes);
+  const armor = verifyArmorCheck(
+    replayVersion,
+    event,
+    dice,
+    dieTypes,
+    armorCountInStep
+  );
   const armorAccepted = armor?.kind === "verified" ? armor : undefined;
   const armorOwner = armorAccepted && playerToTeam.get(armorAccepted.subject);
   const recovery =
@@ -927,6 +935,18 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   const koRecoveryChecks = countKoRecoveryChecks(replay.turns);
 
   for (const replayTurn of replay.turns) {
+    const armorCounts = new Map<string, number>();
+    for (const event of replayTurn.events) {
+      if (
+        event.sourceTag === "ResultRoll" &&
+        event.rollType === 10 &&
+        event.actionId
+      )
+        armorCounts.set(
+          event.actionId,
+          (armorCounts.get(event.actionId) ?? 0) + 1
+        );
+    }
     const rerollLinks = linkTeamRerolls(replayTurn.events);
     linkObservedSkillRerolls(
       replayTurn.events,
@@ -978,7 +998,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         rerollLinks.get(eventIndex),
         regeneration.get(eventIndex),
         apothecary.get(eventIndex),
-        koRecoveryChecks
+        koRecoveryChecks,
+        event.actionId ? armorCounts.get(event.actionId) : undefined
       );
       if (!normalized) {
         continue;
@@ -1129,6 +1150,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     },
     verdict,
     coverage,
+    damageSteps: summarizeDamageSteps(events),
     weightTable: { ...LUCK_CATEGORY_WEIGHTS },
     howScoredSummary: buildHowScoredSummary(
       verdict.summary,

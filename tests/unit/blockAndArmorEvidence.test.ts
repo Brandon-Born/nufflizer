@@ -3,6 +3,68 @@ import { analyzeReplayLuck } from "@/domain/nufflizer/analyzeLuck";
 import { LuckReportSchema } from "@/domain/nufflizer/reportSchema";
 import { playbackFragment } from "../helpers/playback";
 
+describe("damage step accounting (NUF-018/019)", () => {
+  it("reconciles the observed UI-068 armor, injury, casualty, removal and recovery", () => {
+    const r = report("001", "UI-068", [6], [37]);
+    expect(r.damageSteps).toHaveLength(1);
+    const step = r.damageSteps[0]!;
+    expect(step).toMatchObject({
+      teamId: "1",
+      playerId: "37",
+      scoredRolls: 2,
+      unscoredRolls: 2,
+      contextRecords: 1
+    });
+    expect(
+      step.eventIds.map(
+        (id) => r.events.find((e) => e.id === id)?.metadata.sourceTag
+      )
+    ).toEqual([
+      "ResultRoll",
+      "ResultInjuryRoll",
+      "ResultCasualtyRoll",
+      "ResultPlayerRemoval",
+      "ResultRoll"
+    ]);
+    // 30 of 36 sums hold armor at 10+. Recovery succeeds at 4+ with weight 1.5.
+    expect(step.diceContribution).toBeCloseTo(-30 / 36 + (1 - 1 / 2) * 1.5, 12);
+    expect(r.teams[1].luckScore).toBeCloseTo(step.diceContribution, 12);
+    step.diceContribution++;
+    expect(LuckReportSchema.safeParse(r).success).toBe(false);
+  });
+
+  it.each(["ResultPlayerRemoval", "armor"] as const)(
+    "does not award another contribution from a repeated %s record",
+    (duplicate) => {
+      const replay = playbackFragment("001", "UI-068", [6], [37]);
+      const turn = replay.turns.find((t) =>
+        t.events.some((e) => e.rollType === 46)
+      )!;
+      const index = turn.events.findIndex((e) =>
+        duplicate === "armor" ? e.rollType === 10 : e.sourceTag === duplicate
+      );
+      turn.events.splice(index + 1, 0, {
+        ...turn.events[index]!,
+        id: "repeated-damage-record"
+      });
+      turn.eventCount++;
+      const r = LuckReportSchema.parse(analyzeReplayLuck(replay));
+      const step = r.damageSteps[0]!;
+      if (duplicate === "armor") {
+        expect(
+          r.events
+            .filter((e) => e.metadata.rollType === 10)
+            .every((e) => e.scoringStatus === "excluded")
+        ).toBe(true);
+        expect(step.diceContribution).toBe(0.75);
+      } else {
+        expect(step.contextRecords).toBe(2);
+        expect(step.diceContribution).toBeCloseTo(-1 / 12, 12);
+      }
+    }
+  );
+});
+
 function report(source: string, id: string, home: number[], away: number[]) {
   return LuckReportSchema.parse(
     analyzeReplayLuck(playbackFragment(source, id, home, away))

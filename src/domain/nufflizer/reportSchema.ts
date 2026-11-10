@@ -4,6 +4,7 @@ import { CONTEXT_MODEL_VERSION } from "./contextImpact";
 import { DICE_MODEL_VERSION, LUCK_CATEGORY_WEIGHTS } from "./constants";
 import { REPLAY_LIMITS } from "@/domain/replay/limits";
 import { summarizeRollFamilies } from "./rollCoverage";
+import { summarizeDamageSteps } from "./damageSteps";
 
 export const LuckEventTypeSchema = z.enum([
   "block",
@@ -260,6 +261,20 @@ export const LuckReportSchema = z
       excludedByReason: z.record(text, count)
     }),
     weightTable: z.record(LuckEventTypeSchema, finite.min(0)),
+    damageSteps: z
+      .array(
+        z.strictObject({
+          actionId: text,
+          teamId: text,
+          playerId: text,
+          eventIds: z.array(text).min(1).max(REPLAY_LIMITS.events),
+          scoredRolls: count,
+          unscoredRolls: count,
+          contextRecords: count,
+          diceContribution: finite
+        })
+      )
+      .max(REPLAY_LIMITS.events),
     howScoredSummary: z.array(text).max(REPLAY_LIMITS.events),
     teams: z.tuple([LuckTeamAggregateSchema, LuckTeamAggregateSchema]),
     keyMoments: z.array(LuckEventSchema).max(REPLAY_LIMITS.events),
@@ -296,6 +311,10 @@ export const LuckReportSchema = z
     const candidates = report.events.filter(
       (event) => event.metadata.isRollCandidate
     );
+    require(JSON.stringify(report.damageSteps) ===
+      JSON.stringify(
+        summarizeDamageSteps(report.events)
+      ), "Damage-step totals must reconcile with their original evidence.");
     const families = summarizeRollFamilies(candidates);
     require(families.length === report.coverage.rollFamilies.length &&
       families.every((expected, index) => {
@@ -433,6 +452,7 @@ export const LuckReportSchema = z
             ? "injury"
             : "armor_break") &&
           damage.subjectId === event.playerId &&
+          damage.chainActionId === event.metadata.actionId &&
           damage.subjectTeamId ===
             event.teamId, "Damage checks use the affected player's perspective.");
         if (damage.regeneration) {

@@ -42,7 +42,8 @@ export function verifyArmorCheck(
   version: string | undefined,
   event: ReplayEvent,
   dice: readonly number[],
-  dieTypes: readonly number[]
+  dieTypes: readonly number[],
+  countInStep: number | undefined
 ): ArmorContract | undefined {
   if (event.sourceTag !== "ResultRoll" || event.rollType !== 10) return;
   const p = event.payload;
@@ -50,6 +51,7 @@ export function verifyArmorCheck(
   if (
     version !== "1-4-0-0" ||
     event.stepTag !== "DamageStep" ||
+    !event.actionId ||
     event.stepType !== 2 ||
     !subject ||
     subject !== event.stepTargetId ||
@@ -60,6 +62,11 @@ export function verifyArmorCheck(
       kind: "excluded",
       reason: "armor subject or replay version is unverified"
     } as const;
+  if (countInStep !== 1)
+    return {
+      kind: "excluded",
+      reason: "armor has more than one possible roll in this damage step"
+    };
   if (
     p?.Status !== 1 ||
     p.NewRoll !== 1 ||
