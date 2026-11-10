@@ -9,7 +9,7 @@ export type AnalyzeNufflizerOptions = {
 };
 
 export function analyzeNufflizerXml(xml: string): LuckReport {
-  const replay = parseReplayXml(xml);
+  const replay = parseReplayXml(xml, { omitRawReplaySteps: true });
   const report = LuckReportSchema.safeParse(analyzeReplayLuck(replay));
   if (!report.success)
     throw new Error("Generated report failed contract validation.");

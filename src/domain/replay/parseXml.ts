@@ -278,7 +278,7 @@ function collectCandidates(
   return dedupeUnknown([...pathValues, ...walkValues]);
 }
 
-function collectTeamCandidates(rootNode: unknown): unknown[] {
+function findEnvelopeTeams(rootNode: unknown): unknown {
   // Alternate representations are checkpoints, not extra teams. Validate duplicates inside
   // the chosen envelope representation rather than merging roster/board copies together.
   for (const path of [
@@ -288,8 +288,13 @@ function collectTeamCandidates(rootNode: unknown): unknown[] {
     ["TeamStates", "TeamState"]
   ]) {
     const value = valueAtPath(rootNode, path);
-    if (value !== undefined) return toArray(value);
+    if (value !== undefined) return value;
   }
+}
+
+function collectTeamCandidates(rootNode: unknown): unknown[] {
+  const envelopeTeams = findEnvelopeTeams(rootNode);
+  if (envelopeTeams !== undefined) return toArray(envelopeTeams);
 
   const joinedNode = valueAtPath(rootNode, ["NotificationGameJoined"]);
   if (joinedNode) {
@@ -648,12 +653,15 @@ function buildParserDiagnostics(
   };
 }
 
-export function parseReplayXml(xml: string): ReplayModel {
+export function parseReplayXml(
+  xml: string,
+  options: { omitRawReplaySteps?: boolean } = {}
+): ReplayModel {
   const result = ReplayXmlSchema.safeParse(xml);
   if (!result.success)
     throw new ReplayValidationError("Replay XML cannot be empty.");
   const validatedXml = validateSafeXml(result.data);
-  const parsed = parseValidatedXml(validatedXml);
+  const parsed = parseValidatedXml(validatedXml, options.omitRawReplaySteps);
 
   if (!isRecord(parsed)) {
     throw new ReplayValidationError(
@@ -668,7 +676,7 @@ export function parseReplayXml(xml: string): ReplayModel {
     );
   }
   const rootTag = roots[0]!;
-  const rootNode = parsed[rootTag] ?? parsed;
+  let rootNode = parsed[rootTag] ?? parsed;
   const replayVersion = resolveReplayVersion(rootNode);
   validateReplayVersion(replayVersion);
 
@@ -676,6 +684,23 @@ export function parseReplayXml(xml: string): ReplayModel {
     validatedXml,
     replayVersion
   );
+  if (
+    options.omitRawReplaySteps &&
+    isRecord(rootNode) &&
+    rootNode.ReplayStep !== undefined
+  ) {
+    if (
+      structured.turns.length === 0 ||
+      findEnvelopeTeams(rootNode) === undefined
+    ) {
+      // Compatibility paths may discover teams or legacy turn nodes inside
+      // the source steps. Give those paths their complete original tree.
+      rootNode = parseValidatedXml(validatedXml)[rootTag];
+    } else {
+      const { ReplayStep: _steps, ...envelope } = rootNode;
+      rootNode = envelope;
+    }
+  }
   const teamsFromGameInfos = extractTeamsFromGameInfos(rootNode);
   const rawTeamCandidates = collectTeamCandidates(rootNode);
   const candidateIds = rawTeamCandidates.map(

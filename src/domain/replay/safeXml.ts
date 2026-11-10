@@ -91,6 +91,16 @@ export function parseSafeXml(
   return parseValidatedXml(validateSafeXml(xml, maxBytes));
 }
 
-export function parseValidatedXml(xml: ValidatedXml): Record<string, unknown> {
-  return new XMLParser(SAFE_XML_OPTIONS).parse(xml) as Record<string, unknown>;
+export function parseValidatedXml(
+  xml: ValidatedXml,
+  envelopeOnly = false
+): Record<string, unknown> {
+  return new XMLParser({
+    ...SAFE_XML_OPTIONS,
+    // The ordered parser owns these steps. The envelope parse needs only
+    // top-level metadata; it need not allocate a second tree of the match.
+    ...(envelopeOnly
+      ? { stopNodes: ["Replay.ReplayStep", "MatchReplay.ReplayStep"] }
+      : {})
+  }).parse(xml) as Record<string, unknown>;
 }

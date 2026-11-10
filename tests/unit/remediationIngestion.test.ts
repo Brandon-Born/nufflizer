@@ -34,6 +34,29 @@ describe("NUF-002/003/004/005 ingestion regressions", () => {
       original
     );
   });
+  it.each(["Replay", "MatchReplay"])(
+    "uses the ordered %s steps even when the metadata parse skips them",
+    (root) => {
+      const events = `<ReplayStep><Clock>1</Clock>${sequence([rollXml()])}</ReplayStep>`;
+      const wrapped = envelope(events).replaceAll("Replay>", `${root}>`);
+      const report = semantic(wrapped);
+      expect(report.teams).toEqual(semantic(valid).teams);
+      expect(report.events).toHaveLength(1);
+      expect(report.events[0]).toMatchObject({
+        probabilitySuccess: 5 / 6,
+        actualSuccess: false,
+        metadata: { locator: { replayStep: 1, childIndex: 1, messageIndex: 0 } }
+      });
+      const teams = wrapped.match(/<Teams>.*?<\/Teams>/)![0];
+      const nested = wrapped
+        .replace(teams, "")
+        .replace("</ReplayStep>", `${teams}</ReplayStep>`);
+      expect(semantic(nested)).toEqual(report);
+      expect(() =>
+        semantic(wrapped.replace("<Clock>1</Clock>", "<Clock>1</Clocks>"))
+      ).toThrow(/parse failed/);
+    }
+  );
   it.each([
     "<hello>world</hello>",
     "<Replay/>",

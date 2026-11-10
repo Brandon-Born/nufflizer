@@ -630,3 +630,7 @@ The user requested committing and pushing the verified dice-only-4 retained-orig
 Dice-only-5 adds linked raw block symbol distributions and 2D6 armor from the affected player's perspective; injury/recovery and referee probabilities remain unscored. Mobility-possession-1 reports separate, bounded context estimates for verified non-carrier Dodge and open Pickup. The report still abstains from whole-match verdicts. Raw names and namespaces now match the installed evidence, including Land42, Throw a Rock70, Bribe21 and Argue30.
 
 NUF-007 closes bounded arithmetic acceptance; the block/damage/action/state and final product gates stay open. The upload boundary now supports one atomic Redis gate across instances. The user restored CI and selected an isolated Vercel preview. See the implementation log for evidence and hosted verification status. No user replay storage or production deployment was added.
+
+## 2026-11-10 - Hosted shared quota and primary parser cost
+
+NUF-024 closes on independent Redis integration and isolated Vercel Preview quota/lease evidence. The shared gate fails closed when its temporary free Preview store expires. NUF-023 remains open after successful app/platform size checks and a real replay timeout. Primary analysis avoids allocating a second source-step tree when top-level metadata is available; 12 demo replay models agree with the full parse, and legacy fallback keeps the full tree. Execution/size limits and score contracts stay unchanged. See the implementation record for hosted measurements and the Linux reproduction.
