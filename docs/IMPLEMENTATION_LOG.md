@@ -1285,3 +1285,9 @@ NUF-012/014/016/018 advance. UI-007 and UI-020 establish that a 4+ Loner gate fo
 A successful movement claim can advance the board only when the recorded single D6 agrees with the target and the move actors match the enclosing step. A valid Dodge preceding the synthetic exposed pickup retains the original context estimate. A contradictory die and a move emitted for another actor both clear the board before the pickup, whose numeric dice result remains usable. Broader movement and turn legality, mixed reroll policies and calibrated context remain open.
 
 Local corepack pnpm verify passed lint, types, 328 unit tests, real Redis, the production build and all five browser flows. Coverage checkpoint 355474c passed GitHub CI 42922669261.
+
+## 2026-11-10 - Direct KO recovery
+
+NUF-009/011/013/014 advance. The exact UI-040 direct source records at ReplayStep 287 children 3 and 4 independently give away player 37's failed 3 and player 40's successful 5 at 4+. This path scores -0.5 and +0.5 before injury weight. It uses the direct source shape, uniquely resolved subject, explicit matching team and one unmodified check per subject and replay step. Missing die type is part of the verified direct shape. Omitted Outcome is accepted only with a failing face. Tests retain modified, contradictory, duplicate, indirect and overlapping-roster cases with unknown odds. This does not establish modified recovery rules or subsequent lineup availability.
+
+Local corepack pnpm verify passed lint, types, 334 unit tests, real Redis integration, the production build and five Chromium flows. All 12 demos analyzed successfully and retained all 77 direct type-13 records, with 36 matching the unmodified ownership and outcome contract.

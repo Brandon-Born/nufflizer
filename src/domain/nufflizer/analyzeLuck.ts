@@ -13,6 +13,7 @@ import {
 } from "@/domain/replay/reconstructContext";
 import { verifyArmorCheck } from "./armorChecks";
 import { linkRegeneration, type RegenerationEvidence } from "./regeneration";
+import { countKoRecoveryChecks, verifyKoRecovery } from "./koRecovery";
 import { linkApothecary, type ApothecaryRecord } from "./apothecary";
 import {
   BLOCK_FACES,
@@ -288,7 +289,8 @@ function buildNormalizedEvent(
   contextBySource: ReadonlyMap<string, PreRollEvidence>,
   rerollLink: RerollLink | undefined,
   regeneration: RegenerationEvidence | undefined,
-  apothecary: ApothecaryRecord | undefined
+  apothecary: ApothecaryRecord | undefined,
+  koRecoveryChecks: ReadonlyMap<string, number>
 ): LuckEvent | null {
   const payload =
     apothecary?.roll ?? (isRecord(event.payload) ? event.payload : undefined);
@@ -372,7 +374,22 @@ function buildNormalizedEvent(
     normalizationNotes.push("difficulty and requirement were both missing");
   }
 
-  if (dice.length > 0 && dieTypes.some((dieType) => dieType === -1)) {
+  const teamId =
+    resolvedTeamId &&
+    teamNameById.has(resolvedTeamId) &&
+    !normalizationFlags.includes("ambiguous_team_attribution")
+      ? resolvedTeamId
+      : "unresolved";
+  const isKoRecovery = event.sourceTag === "EventRoll" && rollType === 13;
+  const koRecovery = isKoRecovery
+    ? verifyKoRecovery(event, replayVersion, koRecoveryChecks, owner, teamId)
+    : undefined;
+
+  if (
+    !koRecovery &&
+    dice.length > 0 &&
+    dieTypes.some((dieType) => dieType === -1)
+  ) {
     normalizationFlags.push("insufficient_dice_metadata");
     normalizationNotes.push(
       "one or more dice were missing die type; probability will not be inferred"
@@ -398,13 +415,6 @@ function buildNormalizedEvent(
       blockRecord?.kind !== "summary" &&
       isRollCandidateEvent(event);
 
-  const teamId =
-    resolvedTeamId &&
-    teamNameById.has(resolvedTeamId) &&
-    !normalizationFlags.includes("ambiguous_team_attribution")
-      ? resolvedTeamId
-      : "unresolved";
-
   const armor = verifyArmorCheck(replayVersion, event, dice, dieTypes);
   const armorAccepted = armor?.kind === "verified" ? armor : undefined;
   const armorOwner = armorAccepted && playerToTeam.get(armorAccepted.subject);
@@ -412,6 +422,8 @@ function buildNormalizedEvent(
     regeneration && playerToTeam.get(regeneration.subject) === teamId
       ? regeneration
       : undefined;
+  const recoverySuccess = recovery?.success ?? koRecovery?.success;
+  const recoveryName = recovery ? "Regeneration" : "KO recovery";
   const blockEvidence =
     blockRecord?.kind === "pool" ? blockRecord.evidence : undefined;
   const attackerTeam =
@@ -453,12 +465,12 @@ function buildNormalizedEvent(
       rollCandidate: true,
       reason: "verified 2D6 armor check"
     };
-  if (recovery)
+  if (recoverySuccess !== undefined)
     classification = {
       eventType: "injury",
       scored: true,
       rollCandidate: true,
-      reason: "verified post-casualty Regeneration check"
+      reason: `verified ${recoveryName} check`
     };
   const armorScored =
     armorAccepted && armorOwner === teamId ? armorAccepted : undefined;
@@ -474,7 +486,8 @@ function buildNormalizedEvent(
           rankedSymbol: blockOdds.favoredSymbol
         }
       : undefined;
-  const damageSubject = armorScored?.subject ?? recovery?.subject;
+  const damageSubject =
+    armorScored?.subject ?? recovery?.subject ?? koRecovery?.subject;
   const damage = damageSubject
     ? {
         subjectId: damageSubject,
@@ -482,6 +495,7 @@ function buildNormalizedEvent(
         sourceCode: event.damageSource,
         perspective: "subject_team" as const,
         chainActionId: event.actionId,
+        koRecovery: koRecovery ? (true as const) : undefined,
         regeneration: recovery
           ? {
               casualtySourceId: recovery.casualtySourceId,
@@ -491,15 +505,16 @@ function buildNormalizedEvent(
           : undefined
       }
     : undefined;
-  const eventType = apothecary
-    ? "injury"
-    : defaultCategory(classification.eventType);
+  const eventType =
+    apothecary || isKoRecovery
+      ? "injury"
+      : defaultCategory(classification.eventType);
   const target = block
     ? "Defender Stumbles or Defender Down under the raw symbol order"
     : armorScored
       ? `Armor holds below ${difficulty}`
-      : recovery
-        ? "Regeneration on 4+ after the recorded casualty"
+      : recoverySuccess !== undefined
+        ? `${recoveryName} on 4+`
         : targetLabel(requirement, difficulty);
   const contractExclusion =
     (apothecary
@@ -524,6 +539,9 @@ function buildNormalizedEvent(
     (event.sourceTag === "ResultRoll" && rollType === 46 && !recovery
       ? "Regeneration requires an unambiguous casualty, removal and skill-use chain"
       : undefined) ??
+    (isKoRecovery && !koRecovery
+      ? "KO recovery requires an unmodified 4+ direct roll with matching outcome and roster evidence"
+      : undefined) ??
     rerollLink?.exclusionReason ??
     numericCheckExclusion(
       replayVersion,
@@ -537,12 +555,11 @@ function buildNormalizedEvent(
         deterministic: true,
         reason: "armor hold from the subject team's perspective"
       }
-    : recovery
+    : recoverySuccess !== undefined
       ? {
-          actualSuccess: recovery.success,
+          actualSuccess: recoverySuccess,
           deterministic: true,
-          reason:
-            "Regeneration die versus 4+ from the affected player's perspective"
+          reason: `${recoveryName} die versus 4+ from the affected player's perspective`
         }
       : blockOdds
         ? {
@@ -562,7 +579,7 @@ function buildNormalizedEvent(
   const semanticsUnverified =
     classification.scored &&
     !armorScored &&
-    !recovery &&
+    recoverySuccess === undefined &&
     !block &&
     ["block", "armor_break", "injury", "argue_call"].includes(eventType);
   const attributionUnresolved = teamId === "unresolved";
@@ -651,7 +668,8 @@ function buildNormalizedEvent(
   let probability;
   try {
     const scopedOdds =
-      armorScored?.probability ?? (recovery ? 1 / 2 : blockOdds?.chance);
+      armorScored?.probability ??
+      (recoverySuccess !== undefined ? 1 / 2 : blockOdds?.chance);
     probability =
       scopedOdds !== undefined
         ? {
@@ -662,7 +680,9 @@ function buildNormalizedEvent(
               ? "2D6 against the effective armor target"
               : recovery
                 ? "3 of 6 faces succeed, conditional on a recorded casualty"
-                : "six-sided block dice with two Push faces"
+                : koRecovery
+                  ? "3 of 6 faces succeed on the recorded KO recovery check"
+                  : "six-sided block dice with two Push faces"
           }
         : computeProbabilityForEvent({
             eventType,
@@ -751,10 +771,8 @@ function buildNormalizedEvent(
       ? actualSuccess
         ? "Armor held"
         : "Armor broke"
-      : recovery
-        ? actualSuccess
-          ? "Regeneration succeeded"
-          : "Regeneration failed"
+      : recoverySuccess !== undefined
+        ? `${recoveryName} ${actualSuccess ? "succeeded" : "failed"}`
         : block
           ? `Block pool: ${BLOCK_FACES[block.rankedSymbol]} opportunity`
           : buildMomentLabel(
@@ -894,6 +912,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   const ownership = buildPlayerOwnershipIndex(replay);
   const { playerToTeam } = ownership;
   const contextBySource = reconstructPreRollEvidence(replay);
+  const koRecoveryChecks = countKoRecoveryChecks(replay.turns);
 
   for (const replayTurn of replay.turns) {
     const rerollLinks = linkTeamRerolls(replayTurn.events);
@@ -945,7 +964,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         contextBySource,
         rerollLinks.get(eventIndex),
         regeneration.get(eventIndex),
-        apothecary.get(eventIndex)
+        apothecary.get(eventIndex),
+        koRecoveryChecks
       );
       if (!normalized) {
         continue;

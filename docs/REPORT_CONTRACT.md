@@ -2,7 +2,7 @@
 
 Updated 2026-11-10. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.0` and model `dice-only-10`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.0` and model `dice-only-11`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -61,6 +61,10 @@ The linked applied decision records the subject's roster team, the recorded game
 A matching team reroll spend, Loner skill use and fresh 4+ die in the same uniquely owned step records one team resource spent and the observed gate result. UI-007 and UI-020 independently establish success and failure. The gate remains unscored. Passing does not certify a replacement die, and failing can still consume the resource without adding a second pool.
 
 Context model mobility-possession-2 requires an intervening successful Rush or Dodge to agree with its recorded die and target, and a move's actor to match the enclosing step. Contradictions clear reconstructed board evidence until a later checkpoint. Context contribution arithmetic is unchanged.
+
+## Model dice-only-11 direct KO recovery
+
+UI-040 verifies direct `ReplayStep/EventRoll` type 13 before second-half setup. A single 4+ recovery die contributes `actual - 1/2` before the injury-category weight. The accepted record requires an explicit team matching unique roster ownership, one subject check per replay step, and no modifiers. The direct shape omits die type and records `Outcome=1` for success. A face below four with omitted outcome is the verified failure shape in this family. Modified checks, unresolved ownership, duplicates and contradictory outcomes retain unknown odds. The check supplies dice luck only. Subsequent lineup availability requires separate evidence.
 
 ## Empty evidence versus measured zero
 

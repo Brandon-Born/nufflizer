@@ -2,7 +2,7 @@
 
 ## Current direct-event evidence
 
-Independent 12-demo raw inventory: `EventRoll|13`. These are visible excluded outcomes; omitted die type/Outcome and unverified modifier or recovery rules do not receive odds. See [raw counts](../tests/fixtures/evidence/bb3-demo-raw-roll-inventory.json). Historical tables below do not control runtime labels or scores.
+Independent 12-demo raw inventory: `EventRoll|13`. UI-040 verifies a scoped direct unmodified 4+ KO recovery contract, including the omitted outcome on failure. Modified and ambiguous recovery records remain visible with unknown odds. See [raw counts](../tests/fixtures/evidence/bb3-demo-raw-roll-inventory.json). Historical tables below do not control runtime labels or scores.
 
 ## 2026-11-10 scoped semantic update
 

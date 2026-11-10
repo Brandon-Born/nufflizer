@@ -32,6 +32,17 @@ function contractKey(sourceTag: string, rollType: number): string {
 // must still pass their versioned runtime contracts.
 const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
   {
+    sourceTag: "EventRoll",
+    rollType: 13,
+    label: "ko_recovery",
+    kind: "scored_deterministic",
+    confidence: "high",
+    status: "known",
+    scoringCategory: "injury",
+    notes:
+      "UI-040 verifies direct unmodified 4+ recovery with a roster-owned subject. Modified or ambiguous checks remain unscored."
+  },
+  {
     sourceTag: "QuestionBlockDice",
     rollType: 3,
     label: "block_pool",

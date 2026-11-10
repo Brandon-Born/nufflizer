@@ -28,7 +28,8 @@ export function playbackFragment(
   source: string,
   id: string,
   home: number[],
-  away: number[]
+  away: number[],
+  includeDirect = false
 ) {
   const evidence = JSON.parse(
     readFileSync(
@@ -45,7 +46,23 @@ export function playbackFragment(
         `<StepResult><Step><MessageData>${encodedMessage(xml(r.step))}</MessageData></Step><Results>${r.messages.map((m) => `<StringMessage><MessageData>${encodedMessage(xml(m))}</MessageData></StringMessage>`).join("")}</Results></StepResult>`
     )
     .join("");
+  const direct: string[][] = [];
+  if (includeDirect) {
+    for (const record of observation.eventRecords as {
+      replayStep: number;
+      eventIndex: number;
+      projection: Projection;
+    }[]) {
+      const step = (direct[record.replayStep - 1] ??= []);
+      step[record.eventIndex] = xml(record.projection);
+    }
+  }
+  const directXml = Array.from(
+    direct,
+    (step) =>
+      `<ReplayStep>${step ? Array.from(step, (child) => child ?? "<Clock/>").join("") : ""}</ReplayStep>`
+  ).join("");
   return parseReplayXml(
-    `<Replay><ReplayVersion>${evidence.source.replayVersion}</ReplayVersion><Teams><Team><id>0</id><name>Home</name></Team><Team><id>1</id><name>Away</name></Team></Teams><NotificationGameJoined><InitialBoardState><ListTeams>${roster(0, home)}${roster(1, away)}</ListTeams></InitialBoardState></NotificationGameJoined><EventExecuteSequence><Sequence>${steps}</Sequence></EventExecuteSequence></Replay>`
+    `<Replay><ReplayVersion>${evidence.source.replayVersion}</ReplayVersion><Teams><Team><id>0</id><name>Home</name></Team><Team><id>1</id><name>Away</name></Team></Teams><NotificationGameJoined><InitialBoardState><ListTeams>${roster(0, home)}${roster(1, away)}</ListTeams></InitialBoardState></NotificationGameJoined><EventExecuteSequence><Sequence>${steps}</Sequence></EventExecuteSequence>${directXml}</Replay>`
   );
 }

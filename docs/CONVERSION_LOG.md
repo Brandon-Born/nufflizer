@@ -654,3 +654,7 @@ Dice-only-9 adds reconciled roll counts by roster and source family. Conflicting
 ## 2026-11-10 - Loner resource evidence and movement consistency
 
 Dice-only-10 records a verified Loner gate and its team resource cost separately from replacement dice. Mobility-possession-2 clears board evidence after contradictory move dice or actor linkage and retains supported dice-only outcomes.
+
+## 2026-11-10 - Direct KO recovery
+
+Dice-only-11 scores the directly recorded unmodified KO recovery check for the affected player's verified roster. The direct failure shape omits Outcome. The contract keeps that omission and scores it only when the single die is below the recorded 4+ target.
