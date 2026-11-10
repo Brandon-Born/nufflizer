@@ -718,6 +718,9 @@ export function parseReplayXml(
       "Replay must identify exactly two distinct teams."
     );
   }
+  if (teams.some((team) => team.id === "unresolved")) {
+    throw new ReplayValidationError("Replay uses a reserved team identifier.");
+  }
   const playerNames = extractPlayerNames(rootNode);
 
   const baseTurns =

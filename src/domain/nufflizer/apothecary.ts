@@ -111,7 +111,8 @@ function subjectOf(event: ReplayEvent) {
     subject === event.stepTargetId &&
     subject === event.playerId &&
     subject === event.targetId &&
-    !event.attributionConflict
+    !event.attributionConflict &&
+    (!event.teamId || !event.actorTeamId || event.teamId === event.actorTeamId)
     ? subject
     : undefined;
 }

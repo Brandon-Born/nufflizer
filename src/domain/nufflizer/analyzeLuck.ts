@@ -19,7 +19,11 @@ import {
   linkBlockPools,
   type BlockRecord
 } from "./blockPools";
-import { buildPlayerOwnershipIndex } from "@/domain/replay/attribution";
+import {
+  buildPlayerOwnershipIndex,
+  type PlayerOwnershipIndex
+} from "@/domain/replay/attribution";
+import { summarizeRollFamilies } from "./rollCoverage";
 import { numericCheckExclusion } from "./numericCheckContract";
 import { labelForRollType } from "@/domain/replay/rollTypeContracts";
 import { createHash } from "node:crypto";
@@ -157,16 +161,6 @@ function extractModifiers(payload: RecordLike | undefined): {
   };
 }
 
-function resolveTeamId(
-  turn: ReplayTurn,
-  event: ReplayEvent
-): string | undefined {
-  void turn;
-  return event.actorTeamSource === "turn_inferred"
-    ? undefined
-    : (event.actorTeamId ?? event.teamId);
-}
-
 function buildMomentLabel(
   type: LuckEventType,
   actualSuccess: boolean,
@@ -288,7 +282,7 @@ function buildNormalizedEvent(
   event: ReplayEvent,
   eventIndex: number,
   teamNameById: Map<string, string>,
-  playerToTeam: ReadonlyMap<string, string>,
+  ownership: PlayerOwnershipIndex,
   blockRecord: BlockRecord | undefined,
   contextBySource: ReadonlyMap<string, PreRollEvidence>,
   rerollLink: RerollLink | undefined,
@@ -340,11 +334,35 @@ function buildNormalizedEvent(
   const normalizationFlags: string[] = [];
   const normalizationNotes: string[] = [];
 
-  if (event.actorTeamId && event.teamId && event.actorTeamId !== event.teamId) {
+  const { playerToTeam, ambiguousPlayerIds } = ownership;
+  const owner =
+    event.playerId === undefined ? undefined : playerToTeam.get(event.playerId);
+  const resolvedTeamId =
+    event.actorTeamSource === "turn_inferred"
+      ? undefined
+      : (event.actorTeamId ?? event.teamId);
+  const declaredConflict =
+    event.actorTeamId && event.teamId && event.actorTeamId !== event.teamId;
+  const rosterConflict = owner && resolvedTeamId && owner !== resolvedTeamId;
+  const ambiguousPlayer =
+    event.playerId !== undefined && ambiguousPlayerIds.has(event.playerId);
+  if (
+    declaredConflict ||
+    rosterConflict ||
+    ambiguousPlayer ||
+    event.attributionConflict
+  ) {
     normalizationFlags.push("ambiguous_team_attribution");
-    normalizationNotes.push(
-      `actorTeamId ${event.actorTeamId} differs from teamId ${event.teamId}`
-    );
+    if (declaredConflict)
+      normalizationNotes.push(
+        `Actor team ${event.actorTeamId} conflicts with declared team ${event.teamId}.`
+      );
+    if (rosterConflict)
+      normalizationNotes.push(
+        `Declared team ${resolvedTeamId} conflicts with roster team ${owner}.`
+      );
+    if (ambiguousPlayer)
+      normalizationNotes.push("Both rosters list this player ID.");
   }
 
   if (difficulty === undefined && requirement === undefined) {
@@ -378,9 +396,10 @@ function buildNormalizedEvent(
       blockRecord?.kind !== "summary" &&
       isRollCandidateEvent(event);
 
-  const resolvedTeamId = resolveTeamId(replayTurn, event);
   const teamId =
-    resolvedTeamId && teamNameById.has(resolvedTeamId)
+    resolvedTeamId &&
+    teamNameById.has(resolvedTeamId) &&
+    !normalizationFlags.includes("ambiguous_team_attribution")
       ? resolvedTeamId
       : "unresolved";
 
@@ -544,10 +563,7 @@ function buildNormalizedEvent(
     !recovery &&
     !block &&
     ["block", "armor_break", "injury", "argue_call"].includes(eventType);
-  const attributionUnresolved =
-    !teamNameById.has(teamId) ||
-    event.attributionConflict === true ||
-    normalizationFlags.includes("ambiguous_team_attribution");
+  const attributionUnresolved = teamId === "unresolved";
   if (
     contractExclusion ||
     !classification.scored ||
@@ -841,6 +857,10 @@ function buildHowScoredSummary(
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
     .map(([reason, count]) => `${count} ${reason}`);
+  const unattributed = coverage.rollFamilies.reduce(
+    (total, family) => total + family.unattributedCount,
+    0
+  );
 
   return [
     "Dice totals add supported outcomes under the stated rules. Context estimates are separate and require verified pre-roll state. Neither is a win probability.",
@@ -850,6 +870,11 @@ function buildHowScoredSummary(
     `All-event visibility: ${coverage.allEvents.scoredCount} scored and ${coverage.allEvents.excludedCount} excluded (${(
       coverage.allEvents.scoredRate * 100
     ).toFixed(1)}% scored).`,
+    ...(unattributed
+      ? [
+          `Rolls without a verified team: ${unattributed}. These count toward overall coverage.`
+        ]
+      : []),
     excludedTopReasons.length > 0
       ? `Top exclusions: ${excludedTopReasons.join("; ")}.`
       : "Top exclusions: none.",
@@ -864,7 +889,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   );
 
   const events: LuckEvent[] = [];
-  const { playerToTeam } = buildPlayerOwnershipIndex(replay);
+  const ownership = buildPlayerOwnershipIndex(replay);
+  const { playerToTeam } = ownership;
   const contextBySource = reconstructPreRollEvidence(replay);
 
   for (const replayTurn of replay.turns) {
@@ -906,7 +932,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         event,
         eventIndex,
         teamNameById,
-        playerToTeam,
+        ownership,
         blockRecords.get(eventIndex),
         contextBySource,
         rerollLinks.get(eventIndex),
@@ -1035,6 +1061,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
           ? rollCandidateScoredCount / rollCandidateTotalCount
           : 0
     },
+    rollFamilies: summarizeRollFamilies(events),
     scoredByType,
     excludedByType,
     excludedByReason: Object.fromEntries(

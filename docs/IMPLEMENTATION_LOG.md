@@ -1271,3 +1271,9 @@ The report records the usage question's original and the choice question's fresh
 The existing preview uses the temporary free Redis REST store, expiring November 13. For a durable preview, the account owner needs to provide or attach an authorized Redis REST store supporting Lua EVAL, set its HTTPS endpoint and token in the separate nufflizer-preview project's Preview-scoped server variables NUFFLIZIER_QUOTA_REDIS_REST_URL and NUFFLIZIER_QUOTA_REDIS_REST_TOKEN, and redeploy a Preview candidate to retest 429 and backend failure. Keep credentials in Vercel's secret configuration.
 
 Local corepack pnpm verify passed lint, typecheck, 319 tests in 40 suites, real Redis integration, production build and five browser flows. The full application service accounted for 17 embedded rolls across all 12 sanitized demos, matching the independent source count, with no whole-match verdict.
+
+## 2026-11-10 - Roll family coverage and roster conflicts
+
+NUF-013/014/021 advance. Roll candidates are grouped by roster, source tag and optional numeric family in the shared report. Conflicting explicit/roster evidence and overlapping roster IDs now appear in the unresolved bucket. The report validates each row against the underlying evidence, and the shared explanation identifies unattributed rolls. The replay parser reserves the existing unresolved sentinel. The 1+100+1 fixture has one scored roll, 100 unsupported rolls, and one unattributed roll. Tests also reject a tampered family count and prevent either roster from receiving an overlapping player's roll. Broader recruitment identity, causal and malformed-stage accounting remain open.
+
+Apothecary commit ed0a5c8 passed GitHub CI 42922147317. Local verification for the coverage checkpoint passed lint, types, 323 unit tests, the real Redis test, production build and five Chromium flows.

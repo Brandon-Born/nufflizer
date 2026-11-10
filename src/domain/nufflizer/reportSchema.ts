@@ -3,6 +3,7 @@ import { VERDICT_SUMMARIES } from "./explainabilityCopy";
 import { CONTEXT_MODEL_VERSION } from "./contextImpact";
 import { DICE_MODEL_VERSION, LUCK_CATEGORY_WEIGHTS } from "./constants";
 import { REPLAY_LIMITS } from "@/domain/replay/limits";
+import { summarizeRollFamilies } from "./rollCoverage";
 
 export const LuckEventTypeSchema = z.enum([
   "block",
@@ -234,6 +235,18 @@ export const LuckReportSchema = z
       denominatorDescription: text.min(1),
       allEvents: coverageBucket,
       rollCandidates: coverageBucket,
+      rollFamilies: z
+        .array(
+          z.strictObject({
+            teamId: text,
+            sourceTag: text,
+            rollType: finite.optional(),
+            scoredCount: count,
+            unscoredCount: count,
+            unattributedCount: count
+          })
+        )
+        .max(REPLAY_LIMITS.events),
       scoredByType: categoryCounts,
       excludedByType: categoryCounts,
       excludedByReason: z.record(text, count)
@@ -275,6 +288,19 @@ export const LuckReportSchema = z
     const candidates = report.events.filter(
       (event) => event.metadata.isRollCandidate
     );
+    const families = summarizeRollFamilies(candidates);
+    require(families.length === report.coverage.rollFamilies.length &&
+      families.every((expected, index) => {
+        const row = report.coverage.rollFamilies[index];
+        return (
+          row?.teamId === expected.teamId &&
+          row.sourceTag === expected.sourceTag &&
+          row.rollType === expected.rollType &&
+          row.scoredCount === expected.scoredCount &&
+          row.unscoredCount === expected.unscoredCount &&
+          row.unattributedCount === expected.unattributedCount
+        );
+      }), "Roll-family coverage must match the reported candidate evidence.");
     require(report.coverage.sourceRecordCount >=
       report.events.length, "Reported evidence cannot exceed source records.");
     for (const [bucket, events] of [
@@ -316,6 +342,10 @@ export const LuckReportSchema = z
         ([reason, n]) => report.coverage.excludedByReason[reason] === n
       ), "Exclusion reasons must conserve excluded records.");
     for (const event of report.events) {
+      require(event.teamId === "unresolved" ||
+        teamIds.has(
+          event.teamId
+        ), "Reported evidence must have a known or unresolved team.");
       const context = event.metadata.preRoll;
       if (context && event.metadata.sourceIndex !== undefined)
         require(context.checkpointAfter <

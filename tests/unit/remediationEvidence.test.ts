@@ -90,10 +90,66 @@ describe("NUF-007/012/013/014/015/019 evidence regressions", () => {
     expect(report.coverage.rollCandidates.excludedCount).toBe(101);
     expect(report.events).toHaveLength(102);
     expect(report.events.some((e) => e.teamId === "unresolved")).toBe(true);
+    expect(report.coverage.rollFamilies).toEqual([
+      {
+        teamId: "0",
+        sourceTag: "ResultRoll",
+        rollType: 7,
+        scoredCount: 1,
+        unscoredCount: 0,
+        unattributedCount: 0
+      },
+      {
+        teamId: "0",
+        sourceTag: "ResultRoll",
+        rollType: 999,
+        scoredCount: 0,
+        unscoredCount: 100,
+        unattributedCount: 0
+      },
+      {
+        teamId: "unresolved",
+        sourceTag: "ResultRoll",
+        rollType: 7,
+        scoredCount: 0,
+        unscoredCount: 0,
+        unattributedCount: 1
+      }
+    ]);
     expect(report.verdict).toMatchObject({
       status: "partial_analysis",
       luckierTeam: "unknown"
     });
+  });
+  it.each([["1:42"], ["0:42", "1:42"]])(
+    "counts a conflicting or overlapping player ID as unattributed (%s)",
+    (...ownership) => {
+      const replay = model([rollEvent()]);
+      replay.playerOwnershipKeys = ownership;
+      const report = analyzeReplayLuck(replay);
+      expect(report.events[0]).toMatchObject({
+        teamId: "unresolved",
+        scoringStatus: "excluded",
+        probabilitySuccess: null,
+        metadata: { normalizationFlags: ["ambiguous_team_attribution"] }
+      });
+      expect(report.coverage.rollFamilies).toMatchObject([
+        {
+          teamId: "unresolved",
+          scoredCount: 0,
+          unscoredCount: 0,
+          unattributedCount: 1
+        }
+      ]);
+      expect(report.verdict.status).toBe("insufficient_evidence");
+    }
+  );
+  it("rejects a replay team ID that collides with the unresolved evidence bucket", () => {
+    expect(() =>
+      analyzeNufflizerInput(
+        envelope().replace("<id>0</id>", "<id>unresolved</id>")
+      )
+    ).toThrow(/reserved team identifier/);
   });
   it("abstains when there is no scored evidence", () =>
     expect(analyzeNufflizerInput(envelope()).verdict).toMatchObject({

@@ -646,3 +646,7 @@ The isolated Preview passed two representative large replay uploads after snapsh
 ## 2026-11-10 - Apothecary dice and observed decisions
 
 Dice-only-8 inventories the original injury or casualty embedded in an Apothecary usage question and the fresh replacement in a casualty choice. Matching direct originals count once. Linked outcomes identify the injured roster and observed resource use. Injury and casualty distributions remain unscored.
+
+## 2026-11-10 - Roll family coverage and roster conflicts
+
+Dice-only-9 adds reconciled roll counts by roster and source family. Conflicting declarations and overlapping player IDs stay in the overall roll denominator under unresolved attribution.

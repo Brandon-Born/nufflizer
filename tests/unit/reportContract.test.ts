@@ -83,6 +83,9 @@ describe("NUF-021 versioned report contract", () => {
       r.coverage.rollCandidates.scoredRate = 1;
     },
     (r: ReturnType<typeof report>) => {
+      r.coverage.rollFamilies[0]!.scoredCount++;
+    },
+    (r: ReturnType<typeof report>) => {
       r.coverage.sourceRecordCount = 0;
     },
     (r: ReturnType<typeof report>) => {
