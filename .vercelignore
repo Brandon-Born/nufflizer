@@ -6,3 +6,5 @@ docs/
 .generated/
 test-results/
 playwright-report/
+scripts/*.ts
+scripts/*.py

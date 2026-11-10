@@ -1,4 +1,4 @@
-import { parseSafeXml } from "./safeXml";
+import { parseValidatedXml, validateSafeXml } from "./safeXml";
 import { z } from "zod";
 
 import {
@@ -652,8 +652,8 @@ export function parseReplayXml(xml: string): ReplayModel {
   const result = ReplayXmlSchema.safeParse(xml);
   if (!result.success)
     throw new ReplayValidationError("Replay XML cannot be empty.");
-  const validatedXml = result.data;
-  const parsed = parseSafeXml(validatedXml);
+  const validatedXml = validateSafeXml(result.data);
+  const parsed = parseValidatedXml(validatedXml);
 
   if (!isRecord(parsed)) {
     throw new ReplayValidationError(

@@ -38,11 +38,14 @@ export const SAFE_XML_OPTIONS = {
   attributeValueProcessor: (_tag: string, value: string) => decodeText(value)
 } as const;
 
+declare const checkedXml: unique symbol;
+export type ValidatedXml = string & { readonly [checkedXml]: true };
+
 // Run before either XML parser allocates a tree. Comments/CDATA are skipped as whole tokens.
 export function validateSafeXml(
   xml: string,
   maxBytes: number = REPLAY_LIMITS.decodedBytes
-): void {
+): ValidatedXml {
   if (Buffer.byteLength(xml, "utf8") > maxBytes)
     throw new ReplayValidationError("Replay XML is too large.");
   let depth = 0;
@@ -78,12 +81,16 @@ export function validateSafeXml(
     throw new ReplayValidationError(
       `Replay XML parse failed: ${valid.err.msg}`
     );
+  return xml as ValidatedXml;
 }
 
 export function parseSafeXml(
   xml: string,
   maxBytes?: number
 ): Record<string, unknown> {
-  validateSafeXml(xml, maxBytes);
+  return parseValidatedXml(validateSafeXml(xml, maxBytes));
+}
+
+export function parseValidatedXml(xml: ValidatedXml): Record<string, unknown> {
   return new XMLParser(SAFE_XML_OPTIONS).parse(xml) as Record<string, unknown>;
 }

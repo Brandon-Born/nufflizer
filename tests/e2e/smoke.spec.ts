@@ -18,7 +18,20 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
     page.getByRole("heading", { name: "Blessed by Nuffle Analyzer" })
   ).toBeVisible();
   await page.setInputFiles('input[name="replay"]', DEMO);
+  const uploaded = page.waitForResponse(
+    (response) =>
+      new URL(response.url()).pathname === "/api/nufflizier/analyze" &&
+      response.request().method() === "POST"
+  );
   await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
+  const uploadResponse = await uploaded;
+  const errorCode = uploadResponse.ok()
+    ? "none"
+    : ((await uploadResponse.json().catch(() => ({}))).code ?? "non-JSON");
+  expect(
+    uploadResponse.status(),
+    `Real replay upload returned ${errorCode}`
+  ).toBe(200);
   await expect(
     page.getByRole("heading", { name: "Nuffle Match Report" })
   ).toBeVisible();

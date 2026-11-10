@@ -13,7 +13,7 @@ import {
 } from "./mappings";
 import { labelForRollType } from "./rollTypeContracts";
 import type { ReplayEvent, ReplayTurn, ReplayUnknownCode } from "./types";
-import { SAFE_XML_OPTIONS, parseSafeXml, validateSafeXml } from "./safeXml";
+import { SAFE_XML_OPTIONS, parseSafeXml, type ValidatedXml } from "./safeXml";
 import { REPLAY_LIMITS } from "./limits";
 import { ReplayValidationError } from "@/lib/errors";
 
@@ -88,15 +88,50 @@ function field(nodes: OrderedNode[], tag: string): string {
   const node = find(nodes, tag)[0];
   return node ? textOf(children(node, tag)) : "";
 }
-function asObject(nodes: OrderedNode[]): RecordLike {
+type Projection = { readonly [field: string]: true | Projection };
+const cellProjection = { X: true, Y: true } as const;
+const boardProjection = {
+  Period: true,
+  CurrentPhase: true,
+  TurnsPerPeriod: true,
+  IsStable: true,
+  ActiveTeam: true,
+  ActiveGamer: true,
+  ActivePlayer: true,
+  ListTeams: {
+    TeamState: {
+      Data: { TeamId: true },
+      GameTurn: true,
+      Touchdown: true,
+      RerollNumber: true,
+      ListPitchPlayers: {
+        PlayerState: {
+          Id: true,
+          Cell: cellProjection,
+          CanAct: true,
+          TackleZone: true,
+          Status: true,
+          Situation: true,
+          MovePoint: true
+        }
+      }
+    }
+  },
+  Ball: { Cell: cellProjection, Carrier: true, IsHeld: true }
+} as const satisfies Projection;
+
+function asObject(nodes: OrderedNode[], projection?: Projection): RecordLike {
   const out: RecordLike = Object.create(null) as RecordLike;
   for (const node of nodes) {
     const tag = tagOf(node);
     if (!tag || tag === "#text" || tag === "#comment") continue;
+    if (projection && !Object.hasOwn(projection, tag)) continue;
     const inner = children(node, tag);
-    const value = inner.some((n) => !tagOf(n).startsWith("#"))
-      ? asObject(inner)
-      : textOf(inner);
+    const fieldProjection = projection?.[tag];
+    const value =
+      fieldProjection !== true && inner.some((n) => !tagOf(n).startsWith("#"))
+        ? asObject(inner, fieldProjection)
+        : textOf(inner);
     const previous = out[tag];
     if (Array.isArray(previous)) previous.push(value);
     else if (tag in out) out[tag] = [previous, value];
@@ -106,14 +141,13 @@ function asObject(nodes: OrderedNode[]): RecordLike {
 }
 
 export function extractStructuredTurnsFromReplayXml(
-  xml: string,
+  xml: ValidatedXml,
   replayVersion?: string
 ): {
   turns: ReplayTurn[];
   unknownCodes: ReplayUnknownCode[];
   boardCheckpoints: ReplayBoardCheckpoint[];
 } {
-  validateSafeXml(xml);
   const tree = new XMLParser({
     ...SAFE_XML_OPTIONS,
     preserveOrder: true
@@ -361,15 +395,27 @@ export function extractStructuredTurnsFromReplayXml(
             "Replay exceeds the board checkpoint limit."
           );
         boardCheckpoints.push(
-          observeBoardCheckpoint(asObject(inner), replayVersion, {
-            kind: tag === "InitialBoardState" ? "initial" : "board",
-            afterSourceIndex: eventCount,
-            replayStep: directReplayStep ?? null,
-            childIndex: directReplayStep === undefined ? null : childIndex
-          })
+          observeBoardCheckpoint(
+            asObject(inner, boardProjection),
+            replayVersion,
+            {
+              kind: tag === "InitialBoardState" ? "initial" : "board",
+              afterSourceIndex: eventCount,
+              replayStep: directReplayStep ?? null,
+              childIndex: directReplayStep === undefined ? null : childIndex
+            }
+          )
         );
-        // Keep legacy Carrier emissions/counts while observing the complete
-        // snapshot once. A checkpoint is not another random event.
+        // Retain the ordered legacy carrier markers without traversing the
+        // entire roster, statistics and appearance data at every snapshot.
+        for (const ballNode of inner) {
+          const ballTag = tagOf(ballNode);
+          if (ballTag === "Ball" || ballTag === "Bomb")
+            walk(
+              children(ballNode, ballTag).filter((n) => tagOf(n) === "Carrier")
+            );
+        }
+        continue;
       }
       if (tag === "EventExecuteSequence") {
         sequenceEvents(inner, directReplayStep, childIndex);
