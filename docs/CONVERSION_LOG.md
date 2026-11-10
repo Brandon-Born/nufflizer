@@ -666,3 +666,7 @@ Dice-only-12 retains direct questions and results alongside encoded action messa
 ## 2026-11-10 - Damage step contribution accounting
 
 Dice-only-13 exports ordered evidence and a reconciled subtotal per damage step when verified armor or Regeneration anchors it. A repeated removal summary supplies context and does not change the score. Ambiguous repeated armor dice remain unscored.
+
+## 2026-11-10 - Direct evidence corpus check
+
+The independent inventory now counts direct questions and results separately from encoded steps. The test suite checks all 12 sanitized demo reports against those per-source counts.

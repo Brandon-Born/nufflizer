@@ -96,6 +96,9 @@ def inventory(directories, max_xml=MAX_XML):
                 # Keep this namespace separate from the historical step-roll counts.
                 for replay_step, outer in enumerate(root.findall("ReplayStep"), 1):
                     for event_index, top_event in enumerate(outer):
+                        if top_event.tag.startswith(("Question", "Result")):
+                            key = f"{top_event.tag}|{top_event.findtext('RollType', '?')}"
+                            file_counters["direct_results"][key] += 1
                         if top_event.tag not in ("EventRoll", "EventWeatherRoll", "EventKickOffTable", "EventFanFactor"):
                             continue
                         key = f"{top_event.tag}|{top_event.findtext('RollType', '?')}"
@@ -155,7 +158,12 @@ def inventory(directories, max_xml=MAX_XML):
                                     "numericContext": [{m.tag: numeric_projection(m)} for m in messages],
                                 })
                             own[key] += 1
-                files.append({"sha256": digest, "decodedBytes": len(xml), "counts": dict(own)})
+                files.append({
+                    "sha256": digest,
+                    "decodedBytes": len(xml),
+                    "counts": dict(own),
+                    "directResultCounts": dict(sorted(file_counters["direct_results"].items())),
+                })
                 for key, value in file_counters.items():
                     counters[key].update(value)
                 for key, value in file_examples.items():

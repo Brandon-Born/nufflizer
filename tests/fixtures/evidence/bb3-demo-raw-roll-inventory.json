@@ -30,6 +30,13 @@
         "ResultRoll|45": 2,
         "ResultRoll|7": 2,
         "ResultRoll|8": 1
+      },
+      "directResultCounts": {
+        "QuestionBribeUsage|?": 2,
+        "ResultPlayerRemoval|?": 2,
+        "ResultPlayerSentOff|?": 2,
+        "ResultRoll|30": 3,
+        "ResultTeamSpecialRuleUsage|?": 1
       }
     },
     {
@@ -61,6 +68,12 @@
         "ResultRoll|71": 1,
         "ResultRoll|41": 1,
         "ResultCasualtyRoll|12": 1
+      },
+      "directResultCounts": {
+        "QuestionBribeUsage|?": 1,
+        "ResultPlayerRemoval|?": 1,
+        "ResultPlayerSentOff|?": 1,
+        "ResultRoll|30": 1
       }
     },
     {
@@ -89,7 +102,8 @@
         "ResultRoll|9": 4,
         "ResultRoll|5": 1,
         "ResultRoll|8": 1
-      }
+      },
+      "directResultCounts": {}
     },
     {
       "sha256": "8d50653050cf2d25608e6c06ed4fed7b4aa5ebefb1bf1f0b5524d9d63c6525f9",
@@ -119,6 +133,12 @@
         "ResultRoll|71": 1,
         "ResultRoll|15": 1,
         "ResultRoll|45": 1
+      },
+      "directResultCounts": {
+        "QuestionBribeUsage|?": 1,
+        "ResultPlayerRemoval|?": 1,
+        "ResultPlayerSentOff|?": 1,
+        "ResultRoll|30": 1
       }
     },
     {
@@ -151,6 +171,14 @@
         "ResultRoll|6": 1,
         "ResultRoll|71": 1,
         "ResultRoll|45": 1
+      },
+      "directResultCounts": {
+        "QuestionBribeUsage|?": 4,
+        "ResultPlayerRemoval|?": 1,
+        "ResultPlayerSentOff|?": 1,
+        "ResultRoll|21": 2,
+        "ResultRoll|30": 3,
+        "ResultTeamSpecialRuleUsage|?": 1
       }
     },
     {
@@ -177,7 +205,8 @@
         "ResultRoll|37": 2,
         "ResultRoll|45": 1,
         "ResultCasualtyRoll|12": 2
-      }
+      },
+      "directResultCounts": {}
     },
     {
       "sha256": "f30c868e4d5fcb8435270716234ba3d880df37096c5f89531f7cc8a6b1939819",
@@ -205,7 +234,8 @@
         "ResultRoll|6": 1,
         "ResultRoll|71": 1,
         "ResultRoll|9": 2
-      }
+      },
+      "directResultCounts": {}
     },
     {
       "sha256": "e55514b2b7c24fe5a41a8955119e194d25197ad284230b9d25faca0827a457e0",
@@ -230,7 +260,8 @@
         "ResultRoll|7": 6,
         "ResultRoll|71": 2,
         "ResultCasualtyRoll|12": 6
-      }
+      },
+      "directResultCounts": {}
     },
     {
       "sha256": "e42180aa79c226ce003b5453a16c9cef30e1dd7d49039e7d50e24347434d3ff9",
@@ -263,6 +294,13 @@
         "ResultRoll|87": 3,
         "ResultRoll|67": 1,
         "ResultRoll|21": 1
+      },
+      "directResultCounts": {
+        "QuestionBribeUsage|?": 2,
+        "ResultNoContest|?": 1,
+        "ResultPlayerRemoval|?": 1,
+        "ResultPlayerSentOff|?": 1,
+        "ResultRoll|30": 1
       }
     },
     {
@@ -295,6 +333,14 @@
         "ResultRoll|5": 1,
         "ResultRoll|8": 2,
         "ResultRoll|6": 1
+      },
+      "directResultCounts": {
+        "QuestionBribeUsage|?": 2,
+        "ResultPlayerRemoval|?": 3,
+        "ResultPlayerSentOff|?": 2,
+        "ResultRoll|21": 1,
+        "ResultRoll|30": 2,
+        "ResultTeamSpecialRuleUsage|?": 1
       }
     },
     {
@@ -318,7 +364,8 @@
         "ResultCasualtyRoll|12": 1,
         "ResultRoll|5": 1,
         "ResultRoll|8": 1
-      }
+      },
+      "directResultCounts": {}
     },
     {
       "sha256": "7bef0a74bff43ae56da5edf6abed7d8cb182da85a4da591acb78943afebcbcaf",
@@ -344,7 +391,8 @@
         "ResultRoll|46": 3,
         "ResultRoll|4": 3,
         "ResultRoll|71": 1
-      }
+      },
+      "directResultCounts": {}
     }
   ]
 }

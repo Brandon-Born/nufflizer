@@ -1,4 +1,7 @@
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { LuckReportSchema } from "@/domain/nufflizer/reportSchema";
 import { demoCorpus } from "../helpers/corpus";
 
 // The old shape/adjacency promotion gates are historical artifacts, not independent rule proof.
@@ -41,3 +44,47 @@ describe("rollType 1 raw evidence (NUF-009 semantic mapping remains open)", () =
     expect(total).toBe(216);
   }, 60000);
 });
+
+it("preserves the independently inventoried direct results in all 12 demo reports", () => {
+  const baseline = JSON.parse(
+    readFileSync(
+      "tests/fixtures/evidence/bb3-demo-raw-roll-inventory.json",
+      "utf8"
+    )
+  ) as {
+    files: {
+      sha256: string;
+      counts: Record<string, number>;
+      directResultCounts: Record<string, number>;
+    }[];
+  };
+  const expected = new Map(baseline.files.map((file) => [file.sha256, file]));
+  const corpus = demoCorpus();
+  expect(corpus).toHaveLength(expected.size);
+  for (const { file, report } of corpus) {
+    const hash = createHash("sha256")
+      .update(readFileSync(`demo-replays/${file}`))
+      .digest("hex");
+    const reference = expected.get(hash);
+    expect(reference, file).toBeDefined();
+    const direct: Record<string, number> = {};
+    for (const { metadata } of report.events) {
+      const locator = metadata.locator;
+      const tag = metadata.sourceTag;
+      if (
+        !locator?.replayStep ||
+        locator.stepIndex !== undefined ||
+        !(tag.startsWith("Question") || tag.startsWith("Result"))
+      )
+        continue;
+      const key = `${tag}|${metadata.rollType ?? "?"}`;
+      direct[key] = (direct[key] ?? 0) + 1;
+    }
+    expect(direct, file).toEqual(reference!.directResultCounts);
+    const recovery = report.events.filter(
+      (e) => e.metadata.sourceTag === "EventRoll" && e.metadata.rollType === 13
+    );
+    expect(recovery, file).toHaveLength(reference!.counts["EventRoll|13"] ?? 0);
+    expect(LuckReportSchema.safeParse(report).success, file).toBe(true);
+  }
+}, 60_000);
