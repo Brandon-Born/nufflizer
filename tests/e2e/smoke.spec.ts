@@ -33,14 +33,16 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page
     .getByLabel("Category", { exact: true })
     .selectOption("ball_handling");
-  // Independent raw audit: eight fresh Status-1 Pickup/Catch records plus
-  // the linked team-reroll Pickup at 336/0/1; stale/skill replacements excluded.
-  await expect(page.getByRole("status")).toContainText("9 matching events");
+  // Independent raw audit: eight fresh Status-1 Pickup/Catch records, the
+  // team-rerolled Pickup at 336/0/1, and two retained originals from questions
+  // at 60/0/3 (Pickup4+, die3) and 61/2/0 (Catch5+, die3), kept at 61/0/1
+  // and 62/0/1 after Used0. Other stale/skill replacements remain excluded.
+  await expect(page.getByRole("status")).toContainText("11 matching events");
   await expect(
     page
       .locator("tbody tr")
       .filter({ hasText: /Ball handling (?:failed|succeeded)/ })
-  ).toHaveCount(9);
+  ).toHaveCount(11);
   await page.locator("summary").first().click();
   await expect(page.getByText(/Source: source-/).first()).toBeVisible();
   const downloadPromise = page.waitForEvent("download");
@@ -48,8 +50,38 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
   expect(report.schemaVersion).toBe("2.0");
-  expect(report.modelVersion).toBe("dice-only-3");
-  expect(report.coverage.scoredByType.ball_handling).toBe(9);
+  expect(report.modelVersion).toBe("dice-only-4");
+  expect(report.coverage.scoredByType.ball_handling).toBe(11);
+  const retained = report.events.filter(
+    (event: { metadata: { rerollPolicy?: string } }) =>
+      event.metadata.rerollPolicy?.startsWith("Retained original")
+  );
+  expect(retained).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        playerId: "11",
+        probabilitySuccess: 1 / 2,
+        actualSuccess: false,
+        metadata: expect.objectContaining({
+          rollType: 4,
+          rerollAvailable: false,
+          rerollUsed: false,
+          originalDice: { Die: { DieType: 0, Value: 3 } }
+        })
+      }),
+      expect.objectContaining({
+        playerId: "1",
+        probabilitySuccess: 1 / 3,
+        actualSuccess: false,
+        metadata: expect.objectContaining({
+          rollType: 7,
+          rerollAvailable: false,
+          rerollUsed: false,
+          originalDice: { Die: { DieType: 0, Value: 3 } }
+        })
+      })
+    ])
+  );
   expect(report.verdict.status).toBe("partial_analysis");
   await page.getByLabel("Category", { exact: true }).selectOption("block");
   await page.getByLabel("Scoring status").selectOption("excluded");

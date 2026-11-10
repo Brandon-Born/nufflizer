@@ -6,7 +6,8 @@ import type { ReplayEvent } from "@/domain/replay/types";
 export function numericCheckExclusion(
   replayVersion: string | undefined,
   event: ReplayEvent,
-  verifiedTeamReroll: boolean
+  verifiedTeamReroll: boolean,
+  retainedOriginal = false
 ): string | undefined {
   if (
     event.sourceTag !== "ResultRoll" ||
@@ -16,7 +17,7 @@ export function numericCheckExclusion(
   if (replayVersion !== "1-4-0-0")
     return "unsupported replay version for verified numeric checks";
   const payload = event.payload;
-  if (payload?.NewRoll !== 1)
+  if (!payload || (payload.NewRoll !== 1 && !retainedOriginal))
     return "roll freshness is missing or is a repeated summary";
   if (payload.Status !== 1 && !(payload.Status === 2 && verifiedTeamReroll))
     return "replacement or unknown roll status requires a verified reroll policy";

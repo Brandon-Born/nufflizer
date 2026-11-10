@@ -131,6 +131,23 @@ describe("UI-backed numeric check contracts, replay 1-4-0-0", () => {
       Die: { DieType: 0, Value: 1 }
     });
   });
+  it("scores UI-022's kept Pickup once from the original question, without reroll odds", () => {
+    const report = analyzeReplayLuck(fragment("002", "UI-022", [], [43]));
+    const pickups = report.events.filter((e) => e.metadata.rollType === 4);
+    expect(pickups).toHaveLength(1);
+    expect(pickups[0]).toMatchObject({
+      playerId: "43",
+      teamId: "1",
+      actualSuccess: false,
+      scoringStatus: "scored",
+      metadata: { rerollAvailable: false, rerollUsed: false }
+    });
+    expect(pickups[0]!.probabilitySuccess).toBeCloseTo(2 / 3, 12);
+    expect(pickups[0]!.metadata.originalDice).toEqual({
+      Die: { DieType: 0, Value: 2 }
+    });
+    expect(pickups[0]!.metadata.rerollPolicy).toMatch(/retained original/i);
+  });
   it("retains UI-097's natural-one Catch failure despite Diving Catch +1", () => {
     const report = analyzeReplayLuck(fragment("025", "UI-097", [], [40, 49]));
     const catches = report.events.filter((e) => e.metadata.rollType === 7);

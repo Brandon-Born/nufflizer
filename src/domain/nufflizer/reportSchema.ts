@@ -120,7 +120,7 @@ function near(a: number, b: number): boolean {
 export const LuckReportSchema = z
   .strictObject({
     schemaVersion: z.literal("2.0"),
-    modelVersion: z.literal("dice-only-3"),
+    modelVersion: z.literal("dice-only-4"),
     limitations: z.array(text).min(1).max(REPLAY_LIMITS.events),
     id: text.min(1),
     generatedAt: z.iso.datetime(),

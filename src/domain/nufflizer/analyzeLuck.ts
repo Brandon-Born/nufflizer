@@ -329,11 +329,14 @@ function buildNormalizedEvent(
 
   const eventType = defaultCategory(classification.eventType);
   const target = targetLabel(requirement, difficulty);
-  const contractExclusion = numericCheckExclusion(
-    replayVersion,
-    { ...event, rollType },
-    rerollAvailable
-  );
+  const contractExclusion =
+    rerollLink?.exclusionReason ??
+    numericCheckExclusion(
+      replayVersion,
+      { ...event, rollType },
+      rerollAvailable,
+      rerollLink?.retainedOriginal
+    );
   const resolvedActual = resolveActualSuccess(
     outcomeCode,
     dice,
@@ -422,6 +425,9 @@ function buildNormalizedEvent(
         modifiersSum: modifiers.reduce((sum, value) => sum + value, 0),
         rerollAvailable,
         rerollUsed,
+        originalDice: rerollLink?.originalDice,
+        rerollQuestionId: rerollLink?.questionId,
+        rerollPolicy: rerollLink?.policy,
         skillsUsed,
         normalizationFlags,
         normalizationNotes
@@ -773,7 +779,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
 
   return {
     schemaVersion: "2.0",
-    modelVersion: "dice-only-3",
+    modelVersion: "dice-only-4",
     limitations: [
       "Category mappings remain provisional pending NUF-009 independent game evidence.",
       "Block and damage outcomes are retained but excluded pending verified semantics and beneficiary attribution.",

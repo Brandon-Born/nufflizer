@@ -161,6 +161,7 @@ describe("NUF-007/012/013/014/015/019 evidence regressions", () => {
           ...base,
           sourceTag: "QuestionTeamRerollUsage",
           payload: {
+            GamerId: 0,
             CanUseTeamReroll: 1,
             RollInfos: {
               Status: 1,
@@ -175,11 +176,15 @@ describe("NUF-007/012/013/014/015/019 evidence regressions", () => {
         rollEvent({
           ...base,
           sourceTag: "ResultTeamRerollUsage",
-          payload: { Used: used }
+          payload: { GamerId: 0, Used: used }
         }),
         rollEvent({
           ...base,
-          payload: { ...rollEvent().payload, Status: used ? 2 : 1 }
+          payload: {
+            ...rollEvent().payload,
+            Status: used ? 2 : 1,
+            NewRoll: used ? 1 : 0
+          }
         })
       ];
       const links = linkTeamRerolls(events);
