@@ -1,6 +1,6 @@
 import { bounceDestination } from "@/domain/replay/pickupSuccessors";
 import { continuationOptionBounds } from "@/domain/replay/activeMoveContinuation";
-import { estimateDodgeImpactBounds, estimateNumericImpact, estimatePickupPossessionBounds } from "./contextImpact";
+import { estimateDodgeImpactBounds, estimateNumericImpact, estimatePickupPossessionBounds, estimateFreshCatchPossession } from "./contextImpact";
 import { blockOutcomeName, consistentBlockResolution, knockedDownSubjects, summarizeBlockConsequence } from "./blockConsequences";
 import { enumerateBlockPool } from "./blockPools";
 import { z } from "zod";
@@ -80,6 +80,7 @@ const activationEnd = z.strictObject({
     .optional()
 });
 export const LuckEventMetadataSchema = z.strictObject({
+  bounceCatchReaction:z.strictObject({pickupSourceId:text,bounceSourceId:text,declarationSourceId:text,moveOutcomeSourceId:text,checkpointAfter:count}).optional(),
   pickupResolution:z.strictObject({declarationSourceId:text,moveOutcomeSourceId:text,cell:pitchCell,movementRemaining:z.number().int().min(0).max(16).nullable(),checkpointAfter:count}).optional(),
   dodgeMovement: z.strictObject({declarationSourceId:text,doMoveSourceId:text,outcomeSourceId:text,
     from:pitchCell,to:pitchCell,movementBefore:z.number().int().min(1).max(16).nullable(),
@@ -321,6 +322,7 @@ export const LuckEventSchema = z.strictObject({
   actualSuccess: z.boolean().nullable(),
   delta: finite,
   weightedDelta: finite,
+  catchPossessionBounds:z.strictObject({policy:z.literal("fresh_catch_failure_envelope"),successChance:probability,minimumDifference:z.literal(0),maximumDifference:z.literal(2),lower:z.literal(0),upper:finite}).optional(),
   possessionBounds:z.strictObject({policy:z.literal("sure_hands_reroll"),successChance:probability,minimumDifference:finite.min(0).max(3),maximumDifference:finite.min(0).max(3),lower:finite,upper:finite}).optional(),
   contextualBounds:z.strictObject({policy:z.literal("dodge_skill_reroll"),minimumMoves:count,maximumMoves:count,successChance:probability,activeContinuation:z.strictObject({minimum:z.union([z.literal(0),z.literal(1)]),maximum:z.union([z.literal(0),z.literal(1)])}).optional(),lower:finite,upper:finite}).optional(),
   contextualImpact: z
@@ -881,6 +883,27 @@ export const LuckReportSchema = z
             context.actorStandUpSourceIndex < event.metadata.sourceIndex,
           "Stand-up evidence must be between the checkpoint and roll of the same activation."
         );
+      }
+      const reaction=event.metadata.bounceCatchReaction,catchBound=event.catchPossessionBounds;
+      if(reaction || catchBound) {
+        const pickup=sources.get(reaction?.pickupSourceId ?? ""),bounce=sources.get(reaction?.bounceSourceId ?? "");
+        const declaration=sources.get(reaction?.declarationSourceId ?? ""),move=sources.get(reaction?.moveOutcomeSourceId ?? "");
+        const cell=event.metadata.ballCatchCell,travel=bounce?.metadata.ballTravel,target=event.metadata.difficulty;
+        const expectedCatch=estimateFreshCatchPossession(catchBound?.successChance ?? 0);
+        require(!!reaction && !!catchBound && event.scoringStatus === "scored" && event.actualSuccess === true && event.metadata.rollType === 7 && event.metadata.stepType === 4 && !event.metadata.rerollUsed &&
+          !event.contextualImpact && !event.contextualBounds && !event.possessionBounds &&
+          pickup?.scoringStatus === "scored" && pickup.actualSuccess === false && pickup.metadata.rollType === 4 && !pickup.metadata.rerollUsed &&
+          pickup.metadata.pickupBallChain?.bounceSourceIds[0] === reaction.bounceSourceId && pickup.metadata.pickupBallChain.catchEventIds[0] === event.id &&
+          bounce?.metadata.rollType === 25 && bounce.scoringStatus === "excluded" && !!cell && !!travel && travel.to.x === cell.x && travel.to.y === cell.y &&
+          declaration?.metadata.sourceTag === "ResultUseAction" && declaration.metadata.actionCode === 1 && declaration.metadata.stepType === 0 && declaration.playerId === pickup.playerId && declaration.teamId === pickup.teamId &&
+          move?.metadata.sourceTag === "ResultMoveOutcome" && move.metadata.stepType === 1 && move.scoringStatus === "excluded" && move.playerId === pickup.playerId && move.teamId === pickup.teamId && move.metadata.actionId === pickup.metadata.actionId &&
+          event.metadata.sequenceId === pickup.metadata.sequenceId && bounce.metadata.sequenceId === event.metadata.sequenceId &&
+          event.metadata.sourceIndex !== undefined && pickup.metadata.sourceIndex === event.metadata.sourceIndex-4 && bounce.metadata.sourceIndex === event.metadata.sourceIndex-2 &&
+          move.metadata.sourceIndex === event.metadata.sourceIndex-5 && reaction.checkpointAfter === pickup.metadata.preRoll?.checkpointAfter && pickup.metadata.preRoll.activationId === reaction.declarationSourceId &&
+          pickup.metadata.preRoll.actorCell?.x === travel.from.x && pickup.metadata.preRoll.actorCell.y === travel.from.y &&
+          reaction.checkpointAfter<(declaration.metadata.sourceIndex??-1) && (declaration.metadata.sourceIndex??Infinity)<move.metadata.sourceIndex! &&
+          Number.isInteger(target) && target!>=2 && target!<=6 && event.probabilitySuccess !== null && near(event.probabilitySuccess,(7-target!)/6) && near(catchBound.successChance,event.probabilitySuccess) && near(catchBound.upper,expectedCatch.upper),
+          "A fresh catch envelope needs its verified occupied first bounce, failed pickup and ordinary-move prefix, with conditional odds and no point contribution.");
       }
       const successors=context?.pickupSuccessors;
       const possession=event.possessionBounds;

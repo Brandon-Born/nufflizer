@@ -124,7 +124,10 @@ describe("POST /api/nufflizier/analyze", () => {
       99, 306
     ]);
     expect(ranges[0]!.possessionBounds!.upper).toBeCloseTo(7 / 8, 12);
-    expect(ranges[0]!.metadata.pickupResolution).toMatchObject({cell:{x:11,y:10},movementRemaining:4});
+    expect(ranges[0]!.metadata.pickupResolution).toMatchObject({
+      cell: { x: 11, y: 10 },
+      movementRemaining: 4
+    });
     expect(ranges[1]!.metadata.pickupResolution).toBeUndefined();
     expect(ranges[1]!.possessionBounds!.lower).toBeCloseTo(-4 / 3, 12);
     expect(
@@ -136,5 +139,27 @@ describe("POST /api/nufflizier/analyze", () => {
     ).toBe(true);
     expect(report.coverage.contextEvidence.boundedCount).toBe(3);
     expect(report.teams.every((t) => t.impactCount === 0)).toBe(true);
+  }, 20000);
+  it("exports a source-backed fresh catch envelope through the production worker", async () => {
+    const data = new FormData();
+    data.append(
+      "replay",
+      new File([readFileSync("demo-replays/demo3.bbr")], "source.bbr")
+    );
+    const response = await POST(
+      new Request("http://localhost/api/nufflizier/analyze", {
+        method: "POST",
+        body: data
+      })
+    );
+    const payload = await response.json();
+    expect(response.status, JSON.stringify(payload).slice(0, 200)).toBe(200);
+    const r = LuckReportSchema.parse(payload),
+      caught = r.events.find((e) => e.catchPossessionBounds)!;
+    expect(caught.metadata.locator?.replayStep).toBe(531);
+    expect(caught.playerId).toBe("45");
+    expect(caught.catchPossessionBounds!.upper).toBeCloseTo(5 / 3, 12);
+    expect(caught.metadata.preRoll).toBeUndefined();
+    expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
   }, 20000);
 });

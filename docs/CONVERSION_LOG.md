@@ -777,3 +777,8 @@ Tightened schema2.19 pickup admission to reject conflicts between the two replay
 ## 2026-11-11 - Reproducible ephemeral CI tooling
 
 Replaced CI's Ubuntu apt Redis acquisition after a confirmed mirror DNS failure with checksum-pinned Redis7.4.12 built in runner temporary storage. Chromium installation also avoids apt and still must launch/pass every production browser flow. Real Redis quota checks, Node22, frozen dependencies, runtime limits and report behavior are unchanged. This provisions no hosted service and claims no new hosted acceptance.
+
+
+## 2026-11-11 - Fresh Catch continuation envelope
+
+Schema2.20/context mobility-possession-15 adds a source-qualified first-bounce fresh successful Catch component. Its unknown failed-catch continuation remains an envelope instead of an invented reroll policy; the prior pickup/D8 and later dice stay separate. Demo3 contributes0–5/3 provisional units, outside point totals. Current missing traits/holder/clock remain unknown and no full board is restored. All12 demos now expose thirteen ranges and zero point-valued estimates; all17 broad issues remain open. API/UI/CLI share the explanation and filtering; the unknown-side stand-up/turn-end opportunity work remains independently actionable.

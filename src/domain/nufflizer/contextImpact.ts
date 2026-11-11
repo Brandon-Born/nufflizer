@@ -1,6 +1,6 @@
 import type { PreRollEvidence } from "@/domain/replay/reconstructContext";
 
-export const CONTEXT_MODEL_VERSION = "mobility-possession-14";
+export const CONTEXT_MODEL_VERSION = "mobility-possession-15";
 export type ContextPolicy =
   | "declined_team_reroll"
   | "full_team_reroll"
@@ -160,4 +160,10 @@ export function estimatePickupPossessionBounds(
     lower: Math.min(...endpoints) || 0,
     upper: Math.max(...endpoints) || 0
   };
+}
+
+// Fresh successful catch only. Failure may continue through choices/rebounds;
+// bound its own-possession continuation rather than inventing a fixed policy.
+export function estimateFreshCatchPossession(successChance:number) {
+  return {policy:"fresh_catch_failure_envelope",successChance,minimumDifference:0,maximumDifference:2,lower:0,upper:POSSESSION_VALUE*(1-successChance)} as const;
 }

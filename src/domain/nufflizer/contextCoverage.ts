@@ -22,8 +22,8 @@ export function summarizeContextEvidence(events: readonly LuckEvent[]) {
     if (!event.metadata.isRollCandidate) continue;
     rollCount++;
     const preRoll = event.metadata.preRoll;
-    if (preRoll?.actorCell) positionCount++;
-    if (preRoll && preRoll.actorCarriesBall !== null) possessionCount++;
+    if (preRoll?.actorCell || event.metadata.bounceCatchReaction) positionCount++;
+    if ((preRoll && preRoll.actorCarriesBall !== null) || event.metadata.bounceCatchReaction) possessionCount++;
     if (
       preRoll?.period &&
       (preRoll.teamTurn !== null || preRoll.scoringAttempt?.teamTurn != null)
@@ -31,12 +31,13 @@ export function summarizeContextEvidence(events: readonly LuckEvent[]) {
       clockCount++;
     if (preRoll?.activationId) activationCount++;
     if (event.contextualImpact !== undefined) quantifiedCount++;
-    if (event.contextualBounds !== undefined || event.possessionBounds !== undefined) boundedCount++;
+    if (event.contextualBounds !== undefined || event.possessionBounds !== undefined || event.catchPossessionBounds !== undefined) boundedCount++;
     if (
       event.metadata.blockResolution ||
       event.metadata.movementFall ||
       event.metadata.dodgeMovement ||
       event.metadata.pickupResolution ||
+      event.metadata.bounceCatchReaction ||
       event.metadata.movementTouchdown ||
       event.metadata.pickupBallChain ||
       event.metadata.activationLoss ||

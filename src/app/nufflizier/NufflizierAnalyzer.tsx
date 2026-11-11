@@ -117,7 +117,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
         if (teamFilter !== "all" && event.teamId !== teamFilter) return false;
         if (
           scoringFilter === "bounded"
-            ? !event.contextualBounds && !event.possessionBounds
+            ? !event.contextualBounds && !event.possessionBounds && !event.catchPossessionBounds
             : scoringFilter !== "all" && event.scoringStatus !== scoringFilter
         )
           return false;
@@ -832,7 +832,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                                 {explainActivationLoss(moment)}
                               </p>
                             ) : null}
-                            {moment.contextualBounds || moment.possessionBounds ? (
+                            {moment.contextualBounds || moment.possessionBounds || moment.catchPossessionBounds ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainContextBounds(moment)}
                               </p>

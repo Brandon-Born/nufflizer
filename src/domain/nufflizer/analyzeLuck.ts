@@ -1,3 +1,4 @@
+import { findBounceCatchReactions, attachBounceCatchReactions } from "./catchPossession";
 import {
   findBlockConsequences,
   summarizeBlockConsequence,
@@ -1068,6 +1069,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     dodgeMovements,
     pickupResolutions
   } = reconstructReplayContext(replay, activationLosses);
+  const bounceCatchReactions=findBounceCatchReactions(replay,contextBySource);
+  for(const proof of bounceCatchReactions.values()) for(const source of [proof.declarationSourceId,proof.moveOutcomeSourceId]) activationEvidenceSources.add(source);
   for (const move of dodgeMovements.values())
     for (const source of [move.declarationSourceId, move.doMoveSourceId, move.outcomeSourceId])
       activationEvidenceSources.add(source);
@@ -1298,6 +1301,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   );
   for (const turn of replay.turns)
     linkPickupBallConsequences(turn, ballSources);
+  attachBounceCatchReactions(bounceCatchReactions,ballSources);
   for (const event of events)
     if (
       (event.metadata.rerollSkill === "Dodge" || event.metadata.rerollSkill === "Sure Hands") &&

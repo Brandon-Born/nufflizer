@@ -476,7 +476,7 @@ describe("valid pickup failure successors and conditional possession bounds", ()
       possession += r.events.filter((e) => e.possessionBounds).length;
       moves += r.events.filter((e) => e.contextualBounds).length;
       expect(r.coverage.contextEvidence.boundedCount).toBe(
-        r.events.filter((e) => e.contextualBounds || e.possessionBounds).length
+        r.events.filter((e) => e.contextualBounds || e.possessionBounds || e.catchPossessionBounds).length
       );
       expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
       expect(r.verdict.luckierTeam).toBe("unknown");

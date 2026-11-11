@@ -150,3 +150,8 @@ The new pickup paths additionally qualify current roster roles against the two k
 
 
 Validation setup follow-up: the finalized state model still has the same756 local unit/API regressions and14 browser flows. CI's Redis tool acquisition is now pinned to the locally verified7.4.12 source/checksum rather than an apt mirror; this changes neither reconstruction nor hosted state. Exact-candidate CI remains a separate required check.
+
+
+## Occupied first-bounce Catch reaction
+
+Schema2.20/context mobility-possession-15 qualifies a compact actual reaction prefix from the existing pre-pickup geometry, not a resumed whole board. Adjacent terminal fresh pickup failure, ball D8 and fresh successful Catch at the known occupied first landing establish current reaction position/ball role. Only fixed unskilled scatter/opposing-zone modifiers are accepted; interrupted, moved-recipient, known blocker, replacement and later-bounce cases stay unsupported. Ending-turn CanAct/clock data is never copied into a new availability claim. A fresh success has own-possession component0–2(1−p) over unknown failed-catch continuation[0,2], outside point totals and outside the prior pickup/D8 stage. The scope includes demo3 receiver45 and excludes demo11 until its stand-up/current-roster prefix is separately qualified. Return die roles and general catch reaction eligibility remain open.

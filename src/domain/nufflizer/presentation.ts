@@ -206,6 +206,8 @@ export function explainContextImpact(
 export function explainContextBounds(
   event: LuckReport["events"][number]
 ): string | null {
+  const catchBound=event.catchPossessionBounds;
+  if(catchBound) return `The first bounce reached this recorded catcher after a failed pickup. At this fresh catch die, the recorded modifiers gave ${(catchBound.successChance*100).toFixed(1)}% raw success. A successful ordinary ball catch secures 2 provisional own-possession units here. Failed-catch rerolls, reactions and later bounces are unresolved, so their continuation value stays between 0 and 2. This successful die's possession component is therefore 0 to ${catchBound.upper.toFixed(2)} context units. The earlier pickup and bounce are outside this stage; later dice are not charged again. This is a possible-value envelope, not calibrated match impact. No midpoint or endpoint enters point totals, and no unchosen catch eligibility or failed-roll policy is certified.`;
   const possession=event.possessionBounds,successors=event.metadata.preRoll?.pickupSuccessors;
   if(possession && successors) {
     const empty=successors.branches.filter(b=>b.kind === "empty").length;

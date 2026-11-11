@@ -101,7 +101,7 @@ function formatTeamSummary(
         explainBlockResolution(event, report.teams, sourcesById)!
       ),
     ...report.events
-      .filter((event) => event.contextualBounds || event.possessionBounds)
+      .filter((event) => event.contextualBounds || event.possessionBounds || event.catchPossessionBounds)
       .slice(0, 20)
       .map(
         (event) =>
