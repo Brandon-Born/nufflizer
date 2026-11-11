@@ -1,3 +1,8 @@
+import {
+  findBlockConsequences,
+  summarizeBlockConsequence,
+  type ObservedBlockConsequence
+} from "./blockConsequences";
 import { findDriveEffectExpiries } from "@/domain/replay/driveEffects";
 import { VERDICT_SUMMARIES } from "./explainabilityCopy";
 import { formatDiceContribution, scoredEvidenceForTeam } from "./presentation";
@@ -1005,6 +1010,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   const events: LuckEvent[] = [];
   const lonerSkills = new Map<string, 44 | 1008>();
   const lonerChoices = new Map<string, 0 | 1>();
+  const blockConsequences: ObservedBlockConsequence[] = [];
   const movementFalls: NonNullable<ReturnType<typeof findMovementFall>>[] = [];
   const ownership = buildPlayerOwnershipIndex(replay);
   const { playerToTeam } = ownership;
@@ -1107,6 +1113,15 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       replay.replayVersion,
       rerollLinks
     );
+    const consequences = findBlockConsequences(
+      replayTurn.events,
+      blockRecords,
+      playerToTeam
+    );
+    blockConsequences.push(...consequences);
+    for (const consequence of consequences)
+      for (const skill of consequence.skills)
+        activationEvidenceSources.add(skill.sourceId);
     const regeneration = linkRegeneration(
       replayTurn.events,
       replay.replayVersion
@@ -1232,6 +1247,28 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   );
   for (const turn of replay.turns)
     linkPickupBallConsequences(turn, ballSources);
+  const blockDamage = new Map(damageSteps.map((step) => [step.actionId, step]));
+  for (const consequence of blockConsequences) {
+    const pool = ballSources.get(consequence.poolSourceId);
+    if (!pool?.metadata.block || pool.teamId === "unresolved") continue;
+    const selected = ballSources.get(consequence.selectedSourceId);
+    if (selected)
+      selected.metadata.blockSelection = { face: consequence.selectedFace };
+    const linkedDamage = consequence.damageActionIds.flatMap((id) =>
+      blockDamage.has(id) ? [blockDamage.get(id)!] : []
+    );
+    pool.metadata.blockResolution = {
+      outcome: consequence.outcome,
+      skillSourceIds: consequence.skills.map((skill) => skill.sourceId),
+      damageActionIds: linkedDamage.map((step) => step.actionId),
+      ...summarizeBlockConsequence(pool, linkedDamage)
+    };
+    for (const skill of consequence.skills) {
+      const event = ballSources.get(skill.sourceId);
+      if (event)
+        event.metadata.skillUsage = { skillId: skill.skillId, used: true };
+    }
+  }
   for (const loss of activationLosses) {
     const roll = ballSources.get(loss.rollSourceId),
       skill = ballSources.get(loss.skillSourceId);

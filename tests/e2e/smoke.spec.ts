@@ -334,7 +334,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.13");
+  expect(report.schemaVersion).toBe("2.14");
   expect(report.modelVersion).toBe("dice-only-19");
   expect(
     report.events.some(
@@ -701,4 +701,82 @@ test("cancelling an upload returns to an idle form without a fabricated report",
   await expect(
     page.getByRole("heading", { name: "Nuffle Match Report" })
   ).toHaveCount(0);
+});
+
+test("block skills explain Wrestle and subject-specific damage without double counting", async ({
+  page
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+  await page.goto("/nufflizier");
+  await expect(page).toHaveTitle("Nufflizier");
+  await expect(page).toHaveURL("http://127.0.0.1:3000/nufflizier");
+  const cases = [
+    {
+      source: "012",
+      id: "UI-074",
+      home: [11],
+      away: [42],
+      copy: "went prone through Wrestle",
+      skill: "Wrestle by player 42"
+    },
+    {
+      source: "014",
+      id: "UI-076",
+      home: [3],
+      away: [39],
+      copy: "defender 39 was knocked down",
+      skill: "Block by player 3"
+    }
+  ];
+  for (const [index, example] of cases.entries()) {
+    if (index)
+      await page.getByRole("button", { name: "Upload Another Replay" }).click();
+    const xml = playbackFragmentXml(
+        example.source,
+        example.id,
+        example.home,
+        example.away
+      ),
+      report = analyzeNufflizerInput(xml);
+    await page.route("**/api/nufflizier/analyze", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(report)
+      })
+    );
+    await page.setInputFiles('input[name="replay"]', {
+      name: "source-block.xml",
+      mimeType: "application/xml",
+      buffer: Buffer.from(xml)
+    });
+    await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Nuffle Match Report" })
+    ).toBeVisible();
+    const row = page.locator("tbody tr").filter({ hasText: "Block pool:" });
+    await row.locator("summary").click();
+    await expect(row).toContainText(example.copy);
+    await expect(row).toContainText("Raw target missed");
+    await expect(row).toContainText(example.skill);
+    await expect(row).toContainText("existing dice contributions once");
+    if (index) {
+      await expect(row).toContainText("1 immediately linked damage step");
+      await expect(row).toContainText("2 damage rolls have unknown odds");
+    } else
+      await expect(row).toContainText(
+        "Wrestle does not add a knockdown armor check"
+      );
+    if (index)
+      await page.screenshot({
+        path: "/tmp/nufflizier-block-consequences-desktop.png",
+        fullPage: true
+      });
+    await page.unroute("**/api/nufflizier/analyze");
+  }
+  expect(errors).toEqual([]);
 });

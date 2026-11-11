@@ -31,6 +31,7 @@ export function summarizeContextEvidence(events: readonly LuckEvent[]) {
     if (preRoll?.activationId) activationCount++;
     if (event.contextualImpact !== undefined) quantifiedCount++;
     if (
+      event.metadata.blockResolution ||
       event.metadata.movementFall ||
       event.metadata.movementTouchdown ||
       event.metadata.pickupBallChain ||

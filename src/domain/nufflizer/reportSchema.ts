@@ -1,3 +1,4 @@
+import { blockOutcomeName, consistentBlockResolution, knockedDownSubjects, summarizeBlockConsequence } from "./blockConsequences";
 import { enumerateBlockPool } from "./blockPools";
 import { z } from "zod";
 import { VERDICT_SUMMARIES } from "./explainabilityCopy";
@@ -63,6 +64,12 @@ const activationEnd = z.strictObject({
     .optional()
 });
 export const LuckEventMetadataSchema = z.strictObject({
+  blockSelection:z.strictObject({face:z.number().int().min(0).max(4)}).optional(),
+  blockResolution: z.strictObject({
+    outcome:z.enum(["attacker_down","both_down","wrestled_prone","both_stay_up","push","defender_down","defender_pushed_down"]),
+    skillSourceIds:z.array(text).max(4),damageActionIds:z.array(text).max(2),
+    diceByTeam:z.record(text,finite),unscoredDamageRolls:count
+  }).optional(),
   setupPhase: z.strictObject({code:z.literal(3)}).optional(),
   driveEffectExpiry: z.strictObject({playerId:text,teamId:text,providerSkillId:z.union([z.literal(31),z.literal(51)]),phaseSourceId:text,
     beforeCheckpointAfter:count,afterCheckpointAfter:count,afterReplayStep:z.number().int().positive(),afterChildIndex:z.number().int().nonnegative(),
@@ -497,6 +504,7 @@ export const LuckReportSchema = z
         damageSteps
       ), "Damage-step totals must reconcile with their original evidence.");
     const damageByAction = new Map(damageSteps.map((step) => [step.actionId, step]));
+    const linkedBlockFinals = new Set<string>();
     const linkedDamageActions = new Set<string>();
     const linkedBallCatches = new Set<string>();
     const families = summarizeRollFamilies(candidates);
@@ -947,6 +955,55 @@ export const LuckReportSchema = z
             touchdown.sourceIndex <= report.coverage.sourceRecordCount,
           "Touchdown evidence requires the same carrier's successful move to the end zone."
         );
+      }
+      if (event.metadata.blockSelection) require(event.metadata.sourceTag === "ResultBlockRoll" && !event.metadata.isRollCandidate && event.scoringStatus === "excluded", "An observed selected block face is a deterministic summary of a linked pool.");
+      const blockAftermath = event.metadata.blockResolution;
+      if (blockAftermath) {
+        const block = event.metadata.block;
+        const selection = block?.selectedSourceId ? sources.get(block.selectedSourceId) : undefined;
+        const final = block?.finalSourceId ? sources.get(block.finalSourceId) : undefined;
+        const skills = blockAftermath.skillSourceIds.flatMap(id => {
+          const use = sources.get(id);
+          return use?.playerId && use.metadata.skillUsage ? [{sourceId:id,playerId:use.playerId,skillId:use.metadata.skillUsage.skillId}] : [];
+        });
+        require(!linkedBlockFinals.has(block?.finalSourceId ?? "") && block !== undefined && block.pool.faces.includes(block.selectedFace!) && event.teamId !== "unresolved" && block.selectedFace !== undefined && block.finalOutcome !== undefined &&
+          blockOutcomeName(block.finalOutcome) === blockAftermath.outcome && block.selectedOutcome === block.finalOutcome &&
+          selection?.metadata.sourceTag === "ResultBlockRoll" && selection.playerId === block.attackerId && selection.metadata.targetId === block.defenderId && selection.metadata.blockSelection?.face === block.selectedFace && selection.metadata.outcomeCode === block.finalOutcome && final?.metadata.sourceTag === "ResultBlockOutcome" &&
+          final.metadata.outcomeCode === block.finalOutcome && final.playerId === block.attackerId && final.metadata.targetId === block.defenderId &&
+          (event.metadata.sourceIndex ?? Infinity) < (selection?.metadata.sourceIndex ?? -1) &&
+          (selection?.metadata.sourceIndex ?? Infinity) < (final?.metadata.sourceIndex ?? -1) &&
+          skills.length === blockAftermath.skillSourceIds.length && new Set(blockAftermath.skillSourceIds).size === skills.length &&
+          skills.every(skill => {
+            const use = sources.get(skill.sourceId)!;
+            return use.metadata.sourceTag === "ResultSkillUsage" && use.metadata.skillUsage?.used && teamIds.has(use.teamId) &&
+              (skill.playerId === block.attackerId ? use.teamId === event.teamId : skill.playerId === block.defenderId && use.teamId !== event.teamId) &&
+              use.metadata.stepType === 6 && use.metadata.actionId === selection?.metadata.actionId &&
+              (event.metadata.sourceIndex ?? Infinity) < (use.metadata.sourceIndex ?? -1) && (use.metadata.sourceIndex ?? Infinity) < (selection?.metadata.sourceIndex ?? -1);
+          }) && consistentBlockResolution(block.selectedFace, block.finalOutcome, block.attackerId, block.defenderId, skills),
+          "Block consequences require their own ordered selected face, participant skill uses and applied outcome.");
+        if (block && final) {
+          linkedBlockFinals.add(block.finalSourceId!);
+          const subjects = knockedDownSubjects(blockAftermath.outcome,block.attackerId,block.defenderId);
+          const linked = blockAftermath.damageActionIds.flatMap(id => damageByAction.has(id) ? [damageByAction.get(id)!] : []);
+          require(linked.length === blockAftermath.damageActionIds.length && new Set(blockAftermath.damageActionIds).size === linked.length &&
+            new Set(linked.map(step=>step.playerId)).size === linked.length && linked.every(step =>
+              !linkedDamageActions.has(step.actionId) && subjects.includes(step.playerId) &&
+              (step.playerId === block.attackerId ? step.teamId === event.teamId : step.teamId !== event.teamId && teamIds.has(step.teamId)) &&
+              step.eventIds.some(id=>ids.get(id)?.metadata.damage?.sourceCode === 1) && step.eventIds.every(id=> {
+                const damage = ids.get(id)!;
+                return damage.metadata.sequenceId === final.metadata.sequenceId &&
+                  damage.metadata.locator?.replayStep === final.metadata.locator?.replayStep &&
+                  damage.metadata.locator?.stepIndex !== undefined && final.metadata.locator?.stepIndex !== undefined &&
+                  damage.metadata.locator.stepIndex > final.metadata.locator.stepIndex && damage.metadata.locator.stepIndex <= final.metadata.locator.stepIndex + 2 &&
+                  (damage.metadata.sourceIndex ?? -1) > (final.metadata.sourceIndex ?? Infinity);
+              })), "Block damage must retain the knocked-down subject, adjacent block-source damage step and original team perspective.");
+          for (const step of linked) linkedDamageActions.add(step.actionId);
+          const expected = summarizeBlockConsequence(event,linked);
+          require(blockAftermath.unscoredDamageRolls === expected.unscoredDamageRolls &&
+            Object.keys(blockAftermath.diceByTeam).length === Object.keys(expected.diceByTeam).length &&
+            Object.entries(expected.diceByTeam).every(([team,total])=>near(blockAftermath.diceByTeam[team] ?? NaN,total)),
+            "Block subtotals reference the terminal pool and existing damage contributions once per team.");
+        }
       }
       const fall = event.metadata.movementFall;
       if (fall) {

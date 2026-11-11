@@ -1,6 +1,15 @@
 import type { LuckEventType, LuckReport } from "./types";
 import { LuckEventTypeSchema } from "./reportSchema";
 
+export function formatActualOutcome(
+  event: LuckReport["events"][number]
+): string {
+  if (event.actualSuccess === null) return "Unknown";
+  if (event.metadata.block)
+    return event.actualSuccess ? "Raw target met" : "Raw target missed";
+  return event.actualSuccess ? "Success" : "Fail";
+}
+
 export function scoredEvidenceForTeam(
   report: Pick<LuckReport, "events">,
   teamId: string
@@ -194,6 +203,62 @@ export function explainMovementOutcome(
     ? ` Damage rolls without verified odds: ${fall.unscoredDamageRolls}.`
     : "";
   return `${aftermath} Dice subtotal for the movement check and scored damage: ${fall.diceContribution.toFixed(2)}.${unknown}`;
+}
+
+export function explainBlockResolution(
+  event: LuckReport["events"][number],
+  teams: LuckReport["teams"],
+  sources: ReadonlyMap<string, LuckReport["events"][number]>
+): string | null {
+  const resolution = event.metadata.blockResolution,
+    block = event.metadata.block;
+  if (!resolution || !block) return null;
+  const outcome = {
+    attacker_down: `attacker ${block.attackerId} was knocked down`,
+    both_down: `attacker ${block.attackerId} and defender ${block.defenderId} were knocked down`,
+    wrestled_prone: `attacker ${block.attackerId} and defender ${block.defenderId} went prone through Wrestle`,
+    both_stay_up: "neither participant was knocked down by Both Down",
+    push: `defender ${block.defenderId} was pushed`,
+    defender_down: `defender ${block.defenderId} was knocked down`,
+    defender_pushed_down: `defender ${block.defenderId} was pushed and knocked down`
+  }[resolution.outcome];
+  const names = new Map([
+    [7, "Dodge"],
+    [30, "Block"],
+    [57, "Tackle"],
+    [68, "Wrestle"]
+  ]);
+  const skills = resolution.skillSourceIds
+    .map((id) => sources.get(id))
+    .filter((e) => e !== undefined)
+    .map(
+      (e) =>
+        `${names.get(e.metadata.skillUsage!.skillId)} by player ${e.playerId}`
+    );
+  const totals = teams.flatMap((team) =>
+    Object.hasOwn(resolution.diceByTeam, team.teamId)
+      ? [
+          `${team.teamName}: ${resolution.diceByTeam[team.teamId]!.toFixed(2)} dice units`
+        ]
+      : []
+  );
+  return [
+    `Recorded block resolution: ${outcome}.`,
+    skills.length ? `Applied skills: ${skills.join(", ")}.` : null,
+    resolution.outcome === "wrestled_prone"
+      ? "Wrestle does not add a knockdown armor check; a separate ball consequence can still matter."
+      : null,
+    resolution.damageActionIds.length
+      ? `${resolution.damageActionIds.length} immediately linked damage step${resolution.damageActionIds.length === 1 ? "" : "s"} retain each victim's team perspective.`
+      : "No damage step is linked by this bounded contract.",
+    `Terminal-pool and linked-damage subtotal: ${totals.join("; ")}. Earlier replaced pools remain separate.`,
+    resolution.unscoredDamageRolls
+      ? `${resolution.unscoredDamageRolls} damage roll${resolution.unscoredDamageRolls === 1 ? " has" : "s have"} unknown odds.`
+      : null,
+    "This references existing dice contributions once. Tactical value and turnover consequences remain unquantified."
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 export function explainDriveEffectExpiry(

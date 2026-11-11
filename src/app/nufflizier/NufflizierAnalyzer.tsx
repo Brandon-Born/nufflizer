@@ -20,6 +20,8 @@ import {
   explainActivationLoss,
   explainProGate,
   explainLonerGate,
+  explainBlockResolution,
+  formatActualOutcome,
   explainDriveEffectExpiry,
   explainContextCoverage,
   explainRecruitmentEvidence
@@ -62,6 +64,17 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<LuckReport | null>(null);
+  const sourcesById = useMemo(
+    () =>
+      new Map(
+        report?.events.flatMap((event) =>
+          event.metadata.sourceId
+            ? [[event.metadata.sourceId, event] as const]
+            : []
+        ) ?? []
+      ),
+    [report]
+  );
   const eventsById = useMemo(
     () => new Map((report?.events ?? []).map((event) => [event.id, event])),
     [report]
@@ -811,6 +824,15 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                                 {explainActivationLoss(moment)}
                               </p>
                             ) : null}
+                            {moment.metadata.blockResolution ? (
+                              <p className="mt-1 text-xs text-amber-100/80">
+                                {explainBlockResolution(
+                                  moment,
+                                  report.teams,
+                                  sourcesById
+                                )}
+                              </p>
+                            ) : null}
                             {moment.metadata.driveEffectExpiry ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainDriveEffectExpiry(moment)}
@@ -844,11 +866,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                             : `${(moment.probabilitySuccess * 100).toFixed(1)}%`}
                         </td>
                         <td className="px-2 py-3">
-                          {moment.actualSuccess === null
-                            ? "Unknown"
-                            : moment.actualSuccess
-                              ? "Success"
-                              : "Fail"}
+                          {formatActualOutcome(moment)}
                         </td>
                         <td className="px-2 py-3">
                           {moment.weightedDelta.toFixed(3)}

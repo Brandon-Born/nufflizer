@@ -79,5 +79,10 @@ describe("POST /api/nufflizier/analyze", () => {
       report.events.some((e) => e.metadata.block?.reroll === "loner")
     ).toBe(true);
     expect(report.events.some((e) => e.metadata.driveEffectExpiry)).toBe(true);
+    expect(
+      report.events.some(
+        (e) => e.metadata.blockResolution?.damageActionIds.length
+      )
+    ).toBe(true);
   }, 20000);
 });

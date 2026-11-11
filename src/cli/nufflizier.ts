@@ -21,6 +21,8 @@ import {
   explainActivationLoss,
   explainProGate,
   explainLonerGate,
+  explainBlockResolution,
+  formatActualOutcome,
   explainDriveEffectExpiry,
   explainContextCoverage,
   explainRecruitmentEvidence
@@ -63,6 +65,11 @@ function formatTeamSummary(
     (event) => event.metadata.activationLoss || event.metadata.activationEnd
   );
   const eventsById = new Map(report.events.map((event) => [event.id, event]));
+  const sourcesById = new Map(
+    report.events.flatMap((event) =>
+      event.metadata.sourceId ? [[event.metadata.sourceId, event] as const] : []
+    )
+  );
   const scoredByType = Object.entries(report.coverage.scoredByType).map(
     ([type, count]) => {
       return `- ${type}: ${count} scored`;
@@ -86,6 +93,12 @@ function formatTeamSummary(
     `Roll-candidate coverage: ${(report.coverage.rollCandidates.scoredRate * 100).toFixed(1)}% scored (${report.coverage.rollCandidates.scoredCount} scored, ${report.coverage.rollCandidates.excludedCount} excluded)`,
     `All-event coverage: ${(report.coverage.allEvents.scoredRate * 100).toFixed(1)}% scored (${report.coverage.allEvents.scoredCount} scored, ${report.coverage.allEvents.excludedCount} excluded)`,
     explainContextCoverage(report.coverage.contextEvidence),
+    ...report.events
+      .filter((event) => event.metadata.blockResolution)
+      .slice(0, 20)
+      .map((event) =>
+        explainBlockResolution(event, report.teams, sourcesById)!
+      ),
     ...report.events
       .filter((event) => event.metadata.lonerGate)
       .slice(0, 20)
@@ -145,6 +158,7 @@ function formatTeamSummary(
         moment.teamName,
         formatPlayerObservation(moment),
         moment.label,
+        formatActualOutcome(moment),
         `weighted delta ${moment.weightedDelta.toFixed(3)}`,
         `${moment.scoringStatus} (${moment.statusReason})`,
         moment.explainability.formulaSummary ?? "no formula",
@@ -153,7 +167,8 @@ function formatTeamSummary(
         explainContextImpact(moment),
         explainMovementOutcome(moment.metadata),
         explainPickupBallChain(moment, report.teams, eventsById),
-        explainProGate(moment.metadata.proGate)
+        explainProGate(moment.metadata.proGate),
+        explainBlockResolution(moment, report.teams, sourcesById)
       ]
         .filter(Boolean)
         .join(" | ")
