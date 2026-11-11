@@ -6,6 +6,7 @@ import { REPLAY_LIMITS } from "@/domain/replay/limits";
 import { summarizeRollFamilies } from "./rollCoverage";
 import { summarizeDamageSteps } from "./damageSteps";
 import { summarizeContextEvidence } from "./contextCoverage";
+import { observedBounceDirection } from "./ballConsequences";
 import { summarizeMovementFall } from "./movementConsequences";
 
 export const LuckEventTypeSchema = z.enum([
@@ -30,6 +31,14 @@ const pitchCell = z.strictObject({
   y: z.number().int().min(0).max(14)
 });
 export const LuckEventMetadataSchema = z.strictObject({
+  ballTravel: z.strictObject({ from: pitchCell, to: pitchCell }).optional(),
+  ballCatchCell: pitchCell.optional(),
+  pickupBallChain: z.strictObject({
+    bounceSourceIds: z.array(text).min(1).max(16),
+    catchEventIds: z.array(text).max(16),
+    diceByTeam: z.record(text, finite),
+    endingCell: pitchCell
+  }).optional(),
   initialRosterName: z.string().max(320).optional(),
   embeddedDamageOriginalId: text.optional(),
   originalDice: z.unknown().optional(),
@@ -378,6 +387,7 @@ export const LuckReportSchema = z
       ), "Damage-step totals must reconcile with their original evidence.");
     const damageByAction = new Map(damageSteps.map((step) => [step.actionId, step]));
     const linkedDamageActions = new Set<string>();
+    const linkedBallCatches = new Set<string>();
     const families = summarizeRollFamilies(candidates);
     const contextEvidence = summarizeContextEvidence(report.events);
     require(Object.keys(contextEvidence).every(
@@ -780,6 +790,63 @@ export const LuckReportSchema = z
         }
       }
       const apothecary = event.metadata.apothecary;
+      if (event.metadata.ballTravel) {
+        const { from, to } = event.metadata.ballTravel;
+        require(event.metadata.sourceTag === "ResultRoll" &&
+          event.metadata.rollType === 25 && event.scoringStatus === "excluded" &&
+          event.metadata.dice?.length === 1 &&
+          event.metadata.dieTypes?.[0] === 1 &&
+          Number.isInteger(event.metadata.dice[0]) &&
+          event.metadata.dice[0]! >= 1 && event.metadata.dice[0]! <= 8 &&
+          observedBounceDirection(event.metadata.dice[0], from, to),
+          "Observed bounce travel requires the recorded D8 direction and adjacent cells.");
+      }
+      if (event.metadata.ballCatchCell)
+        require(event.scoringStatus === "scored" && event.metadata.rollType === 7 &&
+          event.metadata.sourceTag === "ResultRoll" && event.playerId !== undefined,
+          "A catch landing requires a verified recorded catch check.");
+      const ballChain = event.metadata.pickupBallChain;
+      if (ballChain) {
+        const bounces = ballChain.bounceSourceIds.map((id) => sources.get(id));
+        const catches = ballChain.catchEventIds.map((id) => ids.get(id));
+        const contributions: Record<string, number> = { [event.teamId]: event.weightedDelta };
+        require(event.scoringStatus === "scored" && event.actualSuccess === false &&
+          event.metadata.rollType === 4 &&
+          bounces[0]?.metadata.sequenceId === event.metadata.sequenceId &&
+          bounces[0]?.metadata.locator?.stepIndex === (event.metadata.locator?.stepIndex ?? -2) + 1 &&
+          new Set(ballChain.bounceSourceIds).size === bounces.length &&
+          new Set(ballChain.catchEventIds).size === catches.length &&
+          catches.length <= bounces.length && bounces.length <= catches.length + 1 &&
+          bounces.every((bounce, index) => bounce?.metadata.ballTravel &&
+            bounce.metadata.sourceIndex !== undefined &&
+            bounce.metadata.sourceIndex > (index ? bounces[index - 1]?.metadata.sourceIndex ?? Infinity : event.metadata.sourceIndex ?? Infinity)),
+          "Pickup ball chains require ordered, unique observed bounces after the failed check.");
+        for (const [index, caught] of catches.entries()) {
+          const bounce = bounces[index];
+          const next = bounces[index + 1];
+          const landing = bounce?.metadata.ballTravel?.to;
+          const catchCell = caught?.metadata.ballCatchCell;
+          require(!!caught && !linkedBallCatches.has(caught.id) &&
+            caught.scoringStatus === "scored" && caught.metadata.rollType === 7 &&
+            caught.metadata.sourceIndex !== undefined &&
+            caught.metadata.sourceIndex > (bounce?.metadata.sourceIndex ?? Infinity) &&
+            (!next || (caught.actualSuccess === false &&
+              caught.metadata.sourceIndex < (next.metadata.sourceIndex ?? -1) &&
+              next.metadata.ballTravel?.from.x === landing?.x &&
+              next.metadata.ballTravel?.from.y === landing?.y)) &&
+            !!catchCell && !!landing && catchCell.x === landing.x && catchCell.y === landing.y,
+            "A linked catch must follow its landing, precede another bounce only on failure, and count once.");
+          if (caught) {
+            linkedBallCatches.add(caught.id);
+            contributions[caught.teamId] = (contributions[caught.teamId] ?? 0) + caught.weightedDelta;
+          }
+        }
+        const last = bounces.at(-1)?.metadata.ballTravel?.to;
+        require(!!last && last.x === ballChain.endingCell.x && last.y === ballChain.endingCell.y &&
+          Object.keys(contributions).length === Object.keys(ballChain.diceByTeam).length &&
+          Object.entries(contributions).every(([team, subtotal]) => near(subtotal, ballChain.diceByTeam[team] ?? NaN)),
+          "Pickup-chain subtotals must reference the existing contributions by team and final landing.");
+      }
       if (event.metadata.embeddedDamageOriginalId) {
         const original = sources.get(event.metadata.embeddedDamageOriginalId);
         require(

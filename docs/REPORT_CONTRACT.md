@@ -2,7 +2,7 @@
 
 Updated 2026-11-10. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.6` and model `dice-only-17`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.7` and model `dice-only-17`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -139,3 +139,13 @@ When an exact direct injury already appeared in the same uniquely owned DamageSt
 The optional initialRosterName is a bounded label from the uniquely owned initial team/player key. Conflicting or unresolved ownership omits it. UI and CLI explicitly say initial roster; the label does not assert current identity after recruitment or reuse of a player ID. It does not influence scoring. The dice and context model versions stay unchanged.
 
 The web timeline searches player IDs and available initial roster names over the full report before sorting and paging. Half and team-turn controls use observed pre-roll metadata, with a separate unknown-half option. An actor-roster scoring-attempt counter can supply the turn when the active-side counter is absent. A row can restrict the timeline to its recorded activation ID. Existing team/category/status/tag filters compose with these controls. Reset and a new upload clear every filter. Missing clocks and activations are not inferred from replay segment numbers.
+
+## Schema 2.7 pickup, bounce and catch branches
+
+A scored failed pickup can link its immediately following standard-ball BallStep3 and D8 ResultRoll25. Raw source and destination must be complete, adjacent and consistent with the recorded direction. Independent traversal of135 complete-coordinate records across12 demos corroborates all eight offsets. Off-pitch/partial coordinates, different balls, mismatched steps and intervening mutations withhold this branch.
+
+A stationary Catch step at that landing can link its verified scored result, including a retained original resolved by an independently linked team-reroll decision. On failure, the next immediately adjacent step can supply another bounce; at most16 are retained. A successful catch stops the branch. Ambiguous or unsupported catch outcomes remain separate report evidence. The branch references original bounce source IDs and catch event IDs, ending at the last recorded landing.
+
+Each per-team dice subtotal equals the existing failed-pickup contribution plus that team's linked catch contributions. The group adds no new contribution and does not combine opponents' luck under the pickup team's perspective. Catch-dependent opportunities retain their own conditional distributions. This observed chain is separate from a counterfactual possession or lost-turn value. The consequence coverage count now includes these linked pickup branches as well as movement falls and touchdowns. Dice-only-17 and mobility-possession-5 stay unchanged.
+
+Independent examples: demo11 sequence186 has Pickup3+ on2, bounce3 to[20,8], then player9 Catch4+ on4; its same-team subtotal is−11/60. Demo3 sequence415 has Pickup6+ on5, bounce2 to[15,10], then player45 Catch6+ on6; its subtotal is11/15. Demo1 sequence61 preserves Pickup4+ on3 after declining, bounce2 to[4,5], Catch5+ on3 retained at62/0 after declining, then bounce4 to[3,5]. Its subtotal is−11/12. These values describe recorded dice, not whether the resulting action helped the match.

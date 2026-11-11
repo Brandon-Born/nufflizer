@@ -35,6 +35,7 @@ import {
 } from "@/domain/replay/attribution";
 import { summarizeRollFamilies } from "./rollCoverage";
 import { summarizeContextEvidence } from "./contextCoverage";
+import { linkPickupBallConsequences } from "./ballConsequences";
 import {
   retainEmbeddedInjuries,
   type EmbeddedInjuryRecord
@@ -1133,6 +1134,10 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       };
     }
   }
+
+  const ballSources = new Map(events.flatMap((event) =>
+    event.metadata.sourceId ? [[event.metadata.sourceId, event] as const] : []));
+  for (const turn of replay.turns) linkPickupBallConsequences(turn, ballSources);
 
   const homeAggregate = initialAggregate(homeTeam.id, homeTeam.name);
   const awayAggregate = initialAggregate(awayTeam.id, awayTeam.name);

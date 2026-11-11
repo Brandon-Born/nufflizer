@@ -17,6 +17,7 @@ import {
   explainPreRollEvidence,
   explainContextImpact,
   explainMovementOutcome,
+  explainPickupBallChain,
   explainProGate,
   explainContextCoverage
 } from "@/domain/nufflizer/presentation";
@@ -54,6 +55,7 @@ function formatTeamSummary(
 ): string {
   const [home, away] = report.teams;
   const topMoments = report.keyMoments.slice(0, 5);
+  const eventsById = new Map(report.events.map((event) => [event.id, event]));
   const scoredByType = Object.entries(report.coverage.scoredByType).map(
     ([type, count]) => {
       return `- ${type}: ${count} scored`;
@@ -121,6 +123,7 @@ function formatTeamSummary(
         explainPreRollEvidence(moment.metadata.preRoll),
         explainContextImpact(moment),
         explainMovementOutcome(moment.metadata),
+        explainPickupBallChain(moment, report.teams, eventsById),
         explainProGate(moment.metadata.proGate)
       ]
         .filter(Boolean)

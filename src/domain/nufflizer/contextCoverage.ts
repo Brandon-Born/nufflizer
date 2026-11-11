@@ -23,7 +23,11 @@ export function summarizeContextEvidence(events: readonly LuckEvent[]) {
       clockCount++;
     if (preRoll?.activationId) activationCount++;
     if (event.contextualImpact !== undefined) quantifiedCount++;
-    if (event.metadata.movementFall || event.metadata.movementTouchdown)
+    if (
+      event.metadata.movementFall ||
+      event.metadata.movementTouchdown ||
+      event.metadata.pickupBallChain
+    )
       consequenceCount++;
   }
   return {

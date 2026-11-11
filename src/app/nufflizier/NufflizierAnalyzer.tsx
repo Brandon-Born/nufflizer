@@ -16,6 +16,7 @@ import {
   explainPreRollEvidence,
   explainContextImpact,
   explainMovementOutcome,
+  explainPickupBallChain,
   explainProGate,
   explainContextCoverage
 } from "@/domain/nufflizer/presentation";
@@ -57,6 +58,10 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<LuckReport | null>(null);
+  const eventsById = useMemo(
+    () => new Map((report?.events ?? []).map((event) => [event.id, event])),
+    [report]
+  );
   const [tagFilter, setTagFilter] =
     useState<(typeof TAG_OPTIONS)[number]["value"]>("all");
   const [typeFilter, setTypeFilter] =
@@ -784,6 +789,15 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                             moment.metadata.movementTouchdown ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainMovementOutcome(moment.metadata)}
+                              </p>
+                            ) : null}
+                            {moment.metadata.pickupBallChain ? (
+                              <p className="mt-1 text-xs text-amber-100/80">
+                                {explainPickupBallChain(
+                                  moment,
+                                  report.teams,
+                                  eventsById
+                                )}
                               </p>
                             ) : null}
                             {moment.metadata.proGate ? (

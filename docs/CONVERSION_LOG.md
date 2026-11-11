@@ -702,3 +702,7 @@ Schema2.5 and dice-only-17 expose original injury dice embedded in staff-choice 
 ## 2026-11-10 - Inspectable timeline identity and clock
 
 Schema2.6 preserves explicitly historical initial-roster names on uniquely attributed events. UI and CLI share their label. Web controls search players and filter observed half, team turn and activation before ranking/pagination. All controls reset for another upload. No dice/context calculation or current-identity inference changes.
+
+## 2026-11-10 - Pickup ball-chain evidence
+
+Schema2.7 links scoped failed pickups to recorded standard-ball bounces and verified catches. Exact directions, source ordering, landing cells and retained-original decisions are checked. The grouped dice subtotal references existing contributions by team and adds no tactical weight. Unknown successor policies and possession/turn value stay explicit.

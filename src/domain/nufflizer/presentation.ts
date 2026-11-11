@@ -28,7 +28,7 @@ export function formatDiceContribution(
 export function explainContextCoverage(
   evidence: LuckReport["coverage"]["contextEvidence"]
 ): string {
-  return `Contextual impact quantified for ${evidence.quantifiedCount} of ${evidence.rollCount} roll candidates. Pre-roll position observed for ${evidence.positionCount}, possession known for ${evidence.possessionCount}, and period with team turn known for ${evidence.clockCount}. Linked movement consequences observed for ${evidence.consequenceCount}.`;
+  return `Contextual impact quantified for ${evidence.quantifiedCount} of ${evidence.rollCount} roll candidates. Pre-roll position observed for ${evidence.positionCount}, possession known for ${evidence.possessionCount}, and period with team turn known for ${evidence.clockCount}. Linked roll consequences observed for ${evidence.consequenceCount}.`;
 }
 
 export function formatPlayerObservation(
@@ -159,4 +159,28 @@ export function explainProGate(
   return gate
     ? `Pro ${gate.passed ? "passed" : "failed"} its recorded 3+ test. Four of six faces pass this test.`
     : null;
+}
+
+export function explainPickupBallChain(
+  event: LuckReport["events"][number],
+  teams: Pick<LuckReport["teams"][number], "teamId" | "teamName">[] = [],
+  events: ReadonlyMap<string, LuckReport["events"][number]> = new Map()
+): string | null {
+  const chain = event.metadata.pickupBallChain;
+  if (!chain) return null;
+  const catches = chain.catchEventIds
+    .map((id) => events.get(id))
+    .filter((caught) => caught !== undefined)
+    .map(
+      (caught) =>
+        `${formatPlayerObservation(caught)} ${caught.actualSuccess ? "succeeded on" : "failed"} the recorded catch.`
+    )
+    .join(" ");
+  const totals = Object.entries(chain.diceByTeam)
+    .map(
+      ([id, value]) =>
+        `${teams.find((team) => team.teamId === id)?.teamName ?? `Team ${id}`}: ${value.toFixed(2)}`
+    )
+    .join(", ");
+  return `The failed pickup led to ${chain.bounceSourceIds.length} recorded bounce${chain.bounceSourceIds.length === 1 ? "" : "s"} and ${chain.catchEventIds.length} linked catch check${chain.catchEventIds.length === 1 ? "" : "s"}. ${catches ? catches + " " : ""}The last recorded landing was [${chain.endingCell.x}, ${chain.endingCell.y}]. Existing dice subtotals by team: ${totals}. These dice contributions are already included in the team totals. The cost of losing possession or the turn remains unquantified.`;
 }

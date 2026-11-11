@@ -181,7 +181,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.6");
+  expect(report.schemaVersion).toBe("2.7");
   expect(report.modelVersion).toBe("dice-only-17");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
@@ -215,6 +215,26 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   });
   expect(firstBlock.probabilitySuccess).toBeCloseTo(5 / 9, 12);
   expect(report.coverage.scoredByType.ball_handling).toBe(11);
+  const keptPickup = report.events.find(
+    (event: { metadata: { actionId?: string; rollType?: number } }) =>
+      event.metadata.actionId === "sequence-61-step-0" &&
+      event.metadata.rollType === 4
+  );
+  expect(keptPickup.metadata.pickupBallChain).toMatchObject({
+    endingCell: { x: 3, y: 5 }
+  });
+  const pickupRow = page.locator("tbody tr").filter({
+    hasText: `${keptPickup.metadata.sourceId}; action:`
+  });
+  if ((await pickupRow.locator("details").getAttribute("open")) === null)
+    await pickupRow.getByText("Why", { exact: true }).click();
+  await expect(pickupRow).toContainText(
+    "2 recorded bounces and 1 linked catch check"
+  );
+  await expect(pickupRow).toContainText("last recorded landing was [3, 5]");
+  await expect(pickupRow).toContainText(
+    "The cost of losing possession or the turn remains unquantified"
+  );
   // Independent raw decode at 86/1/messages 2–4: Pickup3+ die1, Sure Hands,
   // fresh die4. Retain both dice and score the single successful check.
   const pickup = report.events.find(
