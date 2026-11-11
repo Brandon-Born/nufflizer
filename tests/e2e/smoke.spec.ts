@@ -115,8 +115,25 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.3");
-  expect(report.modelVersion).toBe("dice-only-15");
+  expect(report.schemaVersion).toBe("2.4");
+  expect(report.modelVersion).toBe("dice-only-16");
+  const context = report.coverage.contextEvidence;
+  expect(context.rollCount).toBe(
+    report.coverage.rollCandidates.scoredCount +
+      report.coverage.rollCandidates.excludedCount
+  );
+  expect(context.quantifiedCount).toBe(
+    report.events.filter(
+      (event: { contextualImpact?: unknown }) =>
+        event.contextualImpact !== undefined
+    ).length
+  );
+  await expect(
+    page.getByText(
+      `Contextual impact quantified for ${context.quantifiedCount} of ${context.rollCount} roll candidates.`,
+      { exact: false }
+    )
+  ).toBeVisible();
   // Independent raw decode: sequence 6 step 4 offers Push/Stumbles; away
   // chooses Stumbles (7/0/0) and outcome 6 resolves at 9/0/1.
   const firstBlock = report.events.find(

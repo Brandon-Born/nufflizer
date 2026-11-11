@@ -690,3 +690,7 @@ Dice-only-15 links a verified failed Dodge-skill replacement to the matching sel
 ## 2026-11-10 - Final-turn scoring attempts and Pro observations
 
 Schema 2.3 and mobility-possession-5 expose the carrier's recorded team-turn counter and end-zone attempt under verified standard geometry and explicit roster Side. Partial direct touchdown coordinates remain nullable. Pro gates show source-linked 3+ pass/fail observations and zero team reroll spend. The existing dice model remains dice-only-15.
+
+## 2026-11-10 - Raw block and context-evidence contracts
+
+Schema2.4 and dice-only-16 retain independently observed block pools when selection or applied outcome is unavailable. A verified Pro pass can link one explicitly eligible replacement die and its conditional raw distribution. Deterministic no-roll records and exact same-action kept summaries add no random outcome. Reports preserve source home/away order and expose reconciled context-field, calculated-impact and movement-consequence counts across JSON, UI and CLI. Whole-match verdicts still abstain.

@@ -25,6 +25,7 @@ import { linkApothecary, type ApothecaryRecord } from "./apothecary";
 import {
   BLOCK_FACES,
   enumerateBlockPool,
+  explainBlockEvidence,
   linkBlockPools,
   type BlockRecord
 } from "./blockPools";
@@ -33,6 +34,7 @@ import {
   type PlayerOwnershipIndex
 } from "@/domain/replay/attribution";
 import { summarizeRollFamilies } from "./rollCoverage";
+import { summarizeContextEvidence } from "./contextCoverage";
 import { numericCheckExclusion } from "./numericCheckContract";
 import { labelForRollType } from "@/domain/replay/rollTypeContracts";
 import { createHash } from "node:crypto";
@@ -227,6 +229,7 @@ function isPlayableTeamName(name: string): boolean {
 function selectMatchTeams(
   replay: ReplayModel
 ): [ReplayModel["teams"][number], ReplayModel["teams"][number]] {
+  if (replay.teams.length === 2) return [replay.teams[0]!, replay.teams[1]!];
   const usage = new Map<string, number>();
   for (const turn of replay.turns) {
     const teamId = turn.teamId ?? turn.inferredTeamId;
@@ -268,6 +271,11 @@ function hashId(value: string): string {
 }
 
 function isRollCandidateEvent(event: ReplayEvent): boolean {
+  if (
+    event.sourceTag === "ResultNoRollSuccess" &&
+    event.payload?.Dice === undefined
+  )
+    return false;
   return (
     event.sourceTag === "ResultRoll" ||
     event.sourceTag === "ResultBlockRoll" ||
@@ -637,7 +645,8 @@ function buildNormalizedEvent(
       type: eventType,
       probabilitySuccess: null,
       actualSuccess:
-        rerollLink?.proGate?.passed ?? (!contractExclusion && resolvedActual.deterministic
+        rerollLink?.proGate?.passed ??
+        (!contractExclusion && resolvedActual.deterministic
           ? resolvedActual.actualSuccess
           : null),
       delta: 0,
@@ -645,11 +654,11 @@ function buildNormalizedEvent(
       label: rerollLink?.proGate
         ? `Pro test ${rerollLink.proGate.passed ? "passed" : "failed"}`
         : buildMomentLabel(
-        eventType,
-        resolvedActual.actualSuccess,
-        undefined,
-        difficulty ?? requirement
-      ),
+            eventType,
+            resolvedActual.actualSuccess,
+            undefined,
+            difficulty ?? requirement
+          ),
       tags: [],
       scoringStatus: "excluded",
       statusReason: exclusionReason,
@@ -659,12 +668,12 @@ function buildNormalizedEvent(
         inputsSummary: rerollLink?.proGate
           ? `Recorded Pro 3+ test with die ${dice[0]}.`
           : buildInputsSummary(
-          eventType,
-          target,
-          dice,
-          rerollAvailable,
-          "excluded"
-        )
+              eventType,
+              target,
+              dice,
+              rerollAvailable,
+              "excluded"
+            )
       },
       metadata: {
         sourceTag: event.sourceTag,
@@ -831,7 +840,7 @@ function buildNormalizedEvent(
         weightedDelta
       ),
       inputsSummary: block
-        ? `${block.pool.faces.map((f) => BLOCK_FACES[f]).join(", ")}. ${block.pool.attackerChooses ? "Attacker" : "Defender"} controls the choice. Selected ${BLOCK_FACES[block.selectedFace]}; applied outcome ${block.finalOutcome}. The score measures the raw symbols, before skills or the coach's choice.`
+        ? explainBlockEvidence(block)
         : buildInputsSummary(eventType, target, dice, rerollAvailable, "scored")
     },
     metadata: {
@@ -956,9 +965,10 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         ? findMovementFall(replayTurn)
         : undefined;
     if (fall) movementFalls.push(fall);
-    const touchdown = replay.replayVersion === "1-4-0-0"
-      ? findMovementTouchdown(replayTurn)
-      : undefined;
+    const touchdown =
+      replay.replayVersion === "1-4-0-0"
+        ? findMovementTouchdown(replayTurn)
+        : undefined;
     const armorCounts = new Map<string, number>();
     for (const event of replayTurn.events) {
       if (
@@ -985,10 +995,16 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       playerToTeam,
       rerollLinks
     );
-    linkProGates(replayTurn.events, replay.replayVersion, playerToTeam, rerollLinks);
+    linkProGates(
+      replayTurn.events,
+      replay.replayVersion,
+      playerToTeam,
+      rerollLinks
+    );
     const blockRecords = linkBlockPools(
       replayTurn.events,
-      replay.replayVersion
+      replay.replayVersion,
+      rerollLinks
     );
     const regeneration = linkRegeneration(
       replayTurn.events,
@@ -1007,7 +1023,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         ![
           "ResultBlockOutcome",
           "ResultPushBack",
-          "ResultPlayerRemoval"
+          "ResultPlayerRemoval",
+          "ResultNoRollSuccess"
         ].includes(event.sourceTag)
       )
         continue;
@@ -1045,10 +1062,19 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
 
   const damageSteps = summarizeDamageSteps(events);
   if (movementFalls.length > 0) {
-    const damageByAction = new Map(damageSteps.map((step) => [step.actionId, step]));
+    const damageByAction = new Map(
+      damageSteps.map((step) => [step.actionId, step])
+    );
     const eventsById = new Map(events.map((event) => [event.id, event]));
-    const eventsBySource = new Map(events.map((event) => [event.metadata.sourceId, event]));
-    for (const { rollSourceId, decisionSourceId, skillOriginalId, evidence } of movementFalls) {
+    const eventsBySource = new Map(
+      events.map((event) => [event.metadata.sourceId, event])
+    );
+    for (const {
+      rollSourceId,
+      decisionSourceId,
+      skillOriginalId,
+      evidence
+    } of movementFalls) {
       const roll = eventsBySource.get(rollSourceId);
       const damage = damageByAction.get(evidence.damageActionId);
       if (
@@ -1059,7 +1085,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         (skillOriginalId
           ? roll.metadata.rerollOriginalId !== skillOriginalId ||
             roll.metadata.rerollSkill !== "Dodge"
-          : decisionSourceId !== undefined && !roll.metadata.rerollQuestionId) ||
+          : decisionSourceId !== undefined &&
+            !roll.metadata.rerollQuestionId) ||
         !damage ||
         damage.playerId !== roll.playerId ||
         damage.teamId !== roll.teamId
@@ -1187,6 +1214,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
           : 0
     },
     rollFamilies: summarizeRollFamilies(events),
+    contextEvidence: summarizeContextEvidence(events),
     scoredByType,
     excludedByType,
     excludedByReason: Object.fromEntries(

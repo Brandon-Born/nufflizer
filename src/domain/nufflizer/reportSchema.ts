@@ -5,6 +5,7 @@ import { DICE_MODEL_VERSION, LUCK_CATEGORY_WEIGHTS, REPORT_SCHEMA_VERSION } from
 import { REPLAY_LIMITS } from "@/domain/replay/limits";
 import { summarizeRollFamilies } from "./rollCoverage";
 import { summarizeDamageSteps } from "./damageSteps";
+import { summarizeContextEvidence } from "./contextCoverage";
 import { summarizeMovementFall } from "./movementConsequences";
 
 export const LuckEventTypeSchema = z.enum([
@@ -102,18 +103,25 @@ export const LuckEventMetadataSchema = z.strictObject({
         rolledIndexes: z.array(z.number().int().min(0).max(2)).min(1).max(3),
         outcomes: z.array(z.number().int().min(0).max(6)).min(1).max(3),
         attackerChooses: z.boolean(),
-        sourceId: text.optional()
+        sourceId: text.optional(),
+        proEligibleIndexes: z
+          .array(z.number().int().min(0).max(2))
+          .max(3)
+          .optional()
       }),
       attackerId: text,
       defenderId: text,
       defenderTeamId: text,
       chooserTeamId: text,
       chooserGamerId: z.number().int().min(0).max(1).optional(),
-      selectedFace: z.number().int().min(0).max(4),
-      selectedOutcome: z.number().int().min(0).max(6),
-      finalOutcome: z.number().int().min(0).max(6),
+      selectedFace: z.number().int().min(0).max(4).optional(),
+      selectedOutcome: z.number().int().min(0).max(6).optional(),
+      selectedSourceId: text.optional(),
+      finalOutcome: z.number().int().min(0).max(6).optional(),
       finalSourceId: text.optional(),
-      reroll: z.enum(["initial", "team", "brawler"]),
+      reroll: z.enum(["initial", "team", "brawler", "pro"]),
+      proGateSourceId: text.optional(),
+      previousPoolSourceId: text.optional(),
       distribution: z.array(probability).length(5),
       rankedSymbol: z.number().int().min(0).max(4)
     })
@@ -297,6 +305,15 @@ export const LuckReportSchema = z
           })
         )
         .max(REPLAY_LIMITS.events),
+      contextEvidence: z.strictObject({
+        rollCount: count,
+        positionCount: count,
+        possessionCount: count,
+        clockCount: count,
+        activationCount: count,
+        quantifiedCount: count,
+        consequenceCount: count
+      }),
       scoredByType: categoryCounts,
       excludedByType: categoryCounts,
       excludedByReason: z.record(text, count)
@@ -360,6 +377,12 @@ export const LuckReportSchema = z
     const damageByAction = new Map(damageSteps.map((step) => [step.actionId, step]));
     const linkedDamageActions = new Set<string>();
     const families = summarizeRollFamilies(candidates);
+    const contextEvidence = summarizeContextEvidence(report.events);
+    require(Object.keys(contextEvidence).every(
+      (key) =>
+        contextEvidence[key as keyof typeof contextEvidence] ===
+        report.coverage.contextEvidence[key as keyof typeof contextEvidence]
+    ), "Context evidence counts must reconcile with the unique reported roll candidates.");
     require(families.length === report.coverage.rollFamilies.length &&
       families.every((expected, index) => {
         const row = report.coverage.rollFamilies[index];
@@ -645,6 +668,52 @@ export const LuckReportSchema = z
             block.distribution.reduce((sum, n) => sum + n, 0),
             1
           ), "Block probabilities and fresh indices must reconcile.");
+        require((block.selectedFace === undefined) ===
+          (block.selectedOutcome === undefined) &&
+          (block.finalOutcome === undefined) ===
+            (block.finalSourceId ===
+              undefined), "Selected and applied block outcomes require their corresponding evidence.");
+        if (block.selectedSourceId) {
+          const selected = sources.get(block.selectedSourceId);
+          require(selected?.metadata.sourceTag === "ResultBlockRoll" &&
+            selected.playerId === block.attackerId &&
+            selected.metadata.targetId === block.defenderId &&
+            selected.metadata.dice?.[0] === block.selectedFace &&
+            selected.metadata.outcomeCode ===
+              block.selectedOutcome, "Block selection must match its observed source.");
+        }
+        if (block.finalSourceId) {
+          const final = sources.get(block.finalSourceId);
+          require(final?.metadata.sourceTag === "ResultBlockOutcome" &&
+            final.playerId === block.attackerId &&
+            final.metadata.targetId === block.defenderId &&
+            final.metadata.outcomeCode ===
+              block.finalOutcome, "Applied block outcomes must match their observed source.");
+        }
+        if (block.reroll === "pro") {
+          const gate = block.proGateSourceId
+            ? sources.get(block.proGateSourceId)
+            : undefined;
+          const previous = block.previousPoolSourceId
+            ? sources.get(block.previousPoolSourceId)
+            : undefined;
+          const index = block.pool.rolledIndexes[0];
+          const prior = previous?.metadata.block;
+          require(!!gate &&
+            gate.metadata.proGate?.passed === true &&
+            gate.playerId === block.attackerId &&
+            gate.teamId === event.teamId &&
+            prior?.attackerId === block.attackerId &&
+            prior?.defenderId === block.defenderId &&
+            prior?.pool.attackerChooses === block.pool.attackerChooses &&
+            block.pool.rolledIndexes.length === 1 &&
+            index !== undefined &&
+            prior?.pool.proEligibleIndexes?.includes(index) === true &&
+            prior.pool.faces.length === block.pool.faces.length &&
+            block.pool.faces.every(
+              (face, i) => i === index || face === prior.pool.faces[i]
+            ), "Pro replacement odds require the passed gate and the unchanged kept dice.");
+        }
         if (event.scoringStatus === "scored")
           require(event.probabilitySuccess !== null &&
             near(

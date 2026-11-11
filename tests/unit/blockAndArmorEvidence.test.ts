@@ -222,12 +222,76 @@ describe("block pools and actual resolutions (NUF-010/013/014)", () => {
     });
     replay.turns[0]!.events = events;
     const r = analyzeReplayLuck(replay);
+    const pool = r.events.find((e) => e.metadata.block);
+    expect(pool?.scoringStatus).toBe("scored");
+    expect(pool?.metadata.block?.finalOutcome).toBeUndefined();
+    expect(pool?.metadata.block?.selectedFace).toBeUndefined();
     expect(
-      r.events.every(
-        (e) => e.type !== "block" || e.scoringStatus === "excluded"
-      )
+      r.events
+        .filter((e) => e.metadata.sourceTag === "ResultBlockRoll")
+        .every((e) => e.scoringStatus === "excluded")
     ).toBe(true);
   });
+
+  it("keeps UI-047's original and Pro replacement without inventing an applied result", () => {
+    const r = report("016", "UI-047", [12], [38]);
+    const pools = r.events.filter((e) => e.metadata.block);
+    expect(pools).toHaveLength(2);
+    expect(pools.map((e) => e.metadata.block!.pool.faces)).toEqual([[0], [2]]);
+    expect(pools.map((e) => e.probabilitySuccess)).toEqual([1 / 3, 1 / 3]);
+    expect(pools[1]!.metadata.block).toMatchObject({
+      reroll: "pro",
+      pool: { rolledIndexes: [0] },
+      previousPoolSourceId: pools[0]!.metadata.sourceId,
+      selectedFace: 2,
+      selectedOutcome: 4
+    });
+    const gate = r.events.find((e) => e.metadata.proGate)!;
+    expect(pools[1]!.metadata.block!.proGateSourceId).toBe(
+      gate.metadata.sourceId
+    );
+    expect(
+      pools.every((e) => e.metadata.block!.finalOutcome === undefined)
+    ).toBe(true);
+    expect(pools[1]!.explainability.inputsSummary).toContain(
+      "applied result is unknown"
+    );
+    expect(r.teams[1]!.luckScore).toBeCloseTo(-1 / 2, 12);
+    pools[1]!.metadata.block!.proGateSourceId = "missing-gate";
+    expect(LuckReportSchema.safeParse(r).success).toBe(false);
+  });
+
+  it.each(["gate", "eligibility", "duplicate_initial"] as const)(
+    "withholds the unsupported Pro history after %s is changed",
+    (change) => {
+      const replay = playbackFragment("016", "UI-047", [12], [38]);
+      const events = replay.turns[0]!.events;
+      const initial = events.findIndex(
+        (e) => e.sourceTag === "QuestionBlockDice"
+      );
+      if (change === "gate")
+        events.find((e) => e.rollType === 15)!.payload!.Dice = {
+          Die: { DieType: 0, Value: 1 }
+        };
+      if (change === "eligibility")
+        delete events[initial]!.payload!.ProDiceIndexes;
+      if (change === "duplicate_initial")
+        events.splice(initial + 1, 0, {
+          ...events[initial]!,
+          id: "duplicate-initial"
+        });
+      const r = LuckReportSchema.parse(analyzeReplayLuck(replay));
+      expect(r.events.some((e) => e.metadata.block?.reroll === "pro")).toBe(
+        false
+      );
+      if (change === "duplicate_initial")
+        expect(
+          r.events.filter(
+            (e) => e.type === "block" && e.scoringStatus === "scored"
+          )
+        ).toHaveLength(0);
+    }
+  );
 });
 
 describe("armor perspective and fixed modifiers (NUF-011/013)", () => {

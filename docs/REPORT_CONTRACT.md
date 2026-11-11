@@ -2,7 +2,7 @@
 
 Updated 2026-11-10. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.3` and model `dice-only-15`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.4` and model `dice-only-16`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -117,3 +117,13 @@ Mobility-possession-5 reads the observed actor roster's cumulative GameTurn for 
 A direct touchdown can match that same carrier's encoded move when its available coordinate fields agree. The report retains nullable recorded coordinates alongside the encoded destination. Omitted coordinates are preserved. Goal-threat observations and the observed touchdown add no numerical impact weight.
 
 The separate Pro gate contract uses GR-025 and UI-047/087. A recorded 3+ gate has four passing D6 faces. Fresh success requires the same actor's skill50 use immediately before the gate. The kept failed gate requires its original question, matching AccuracyStep continuation, declined team reroll, unchanged die, target and actor. The report displays the observed outcome and retains it outside additive luck contributions.
+
+## Schema 2.4 raw block evidence and context coverage
+
+Dice-only-16 scores a verified fresh raw block pool independently of a later selection or applied result. This supersedes the final-outcome requirement in the historical dice-only-5 section. An interrupted action retains its raw distribution while selected and applied fields stay absent. A source-linked selection can be known while the applied result remains unknown. Two ambiguous fresh initial questions for the same action remain unscored. Neither later skills nor an unavailable final result changes the definition of raw-symbol opportunity.
+
+UI-047 records an initial Skull, a successful Pro3+ gate and a one-die Push replacement, followed by a selected Push. The saved fragment contains no applied ResultBlockOutcome. The replacement requires the same attacker and defender, a certified passed gate, exactly one explicitly Pro-eligible fresh index, unchanged kept dice, and matching chooser. Its distribution enumerates that fresh die conditional on the recorded pass. Each one-die pool has a raw defender-down opportunity probability of 1/3. The gate remains outside additive scores. This does not establish full Pro policies or skill-conditioned knockdown odds.
+
+`coverage.contextEvidence` reconciles overlapping counts over reported roll candidates: actor position, known possession, period with team-turn clock, activation identity, quantified contextual impact, and linked movement consequences. Counts describe recorded fields and supported calculations, without claiming complete state, calibrated confidence or full causal coverage. UI and CLI display the same explanation, and exported JSON retains all counts.
+
+A known ResultNoRollSuccess without dice remains visible as deterministic evidence and adds no roll candidate. An exact contiguous non-fresh kept summary adds no second candidate only when it matches a supported linked numeric check in the same action. A different action, interrupted sequence, changed die or unsupported family is not deduplicated by this rule. Replay team order supplies the home/away labels when exactly two source teams exist; turn frequency cannot swap them.

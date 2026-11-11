@@ -16,7 +16,8 @@ import {
   explainPreRollEvidence,
   explainContextImpact,
   explainMovementOutcome,
-  explainProGate
+  explainProGate,
+  explainContextCoverage
 } from "@/domain/nufflizer/presentation";
 import { runAnalysis } from "@/server/runAnalysis";
 
@@ -74,6 +75,7 @@ function formatTeamSummary(
     `Verdict: ${report.verdict.summary} (dice contribution gap ${formatDiceContribution(report.verdict.scoreGap, report.coverage.allEvents.scoredCount, 1)})`,
     `Roll-candidate coverage: ${(report.coverage.rollCandidates.scoredRate * 100).toFixed(1)}% scored (${report.coverage.rollCandidates.scoredCount} scored, ${report.coverage.rollCandidates.excludedCount} excluded)`,
     `All-event coverage: ${(report.coverage.allEvents.scoredRate * 100).toFixed(1)}% scored (${report.coverage.allEvents.scoredCount} scored, ${report.coverage.allEvents.excludedCount} excluded)`,
+    explainContextCoverage(report.coverage.contextEvidence),
     ...report.teams.map(
       (team) =>
         "Context for " +

@@ -4,7 +4,7 @@ Last updated: 2026-11-10
 
 ## Start Here
 
-The authoritative work queue is [REMEDIATION_BACKLOG.md](REMEDIATION_BACKLOG.md). It contains permanent IDs **NUF-001 through NUF-028**, source locations, reproduction seeds, dependencies, acceptance criteria, and closure requirements. Its ledger is the status source of truth. Eleven issues (NUF-001–008 and NUF-024–026) have closure evidence. Seventeen remain incomplete. Shared quota, exact upload boundaries and two large real replays passed on the isolated Vercel Preview. NUF-023 awaits its NUF-021 report integration dependency. NUF-009 is active reverse-engineering work; official enum definitions are not a prerequisite.
+The authoritative work queue is [REMEDIATION_BACKLOG.md](REMEDIATION_BACKLOG.md). It contains permanent IDs **NUF-001 through NUF-028**, source locations, reproduction seeds, dependencies, acceptance criteria, and closure requirements. Its ledger is the status source of truth. Eleven issues (NUF-001–008 and NUF-024–026) have closure evidence. Seventeen remain incomplete. Shared quota, exact upload boundaries and two large real replays passed on the isolated Vercel Preview. NUF-023 awaits its NUF-021 report integration dependency and exact-candidate hosting verification under the zero-cost restriction. NUF-009 is active reverse-engineering work; official enum definitions are not a prerequisite.
 
 The November adversarial review supersedes the February rare-roll promotion priority. Correct supported replay semantics, upload safety, attribution, and evidence quality before expanding claims or tuning contextual weights. Historical updates below describe earlier implementation work, not current proof of correctness.
 
@@ -27,12 +27,13 @@ Baseline reviewed commit: `b06d50e9fa2b42b821f4f8b30ef3894c10f588ca`. The active
 - Ingestion now preserves XML document order, rejects malformed replay envelopes/messages, and bounds transfer, decompression, XML/message work and events. Primary API, legacy opt-in and CLI use terminating workers.
 - Dependencies moved to supported Next.js 15.5.29 / React 19, parser 5.12.0 and Zod 4.6.7, with a refreshed lockfile and zero production advisories at validation. CI uses Node 22, frozen installs and a production audit.
 - The legacy endpoint defaults to disabled; enabled compatibility shares safe input controls.
-- Reports use schema `2.3`, dice model `dice-only-15`, and context model `mobility-possession-5`. Zero evidence returns `insufficient_evidence`. Usable numeric dice evidence returns `partial_analysis`. Whole-match comparisons abstain. Unknown odds and results are null. Provisional dice contributions are additive and retain precision.
+- Reports use schema `2.4`, dice model `dice-only-16`, and context model `mobility-possession-5`. Zero evidence returns `insufficient_evidence`. Usable numeric dice evidence returns `partial_analysis`. Whole-match comparisons abstain. Unknown odds and results are null. Provisional dice contributions are additive and retain precision.
 - Replay `1-4-0-0` has scoped UI-backed Rush (1), Dodge (2), Pick up (4), and Catch (7) numeric contracts. Freshness/status, one explicit D6, effective target, binary outcome and ownership are required; contradictory thresholds and unmodeled replacements are excluded. Catch-specific natural-one/six edges have playback evidence. Block/Blitz action labels are corrected. `ResultUseAction.TeamId=0` is preserved as raw evidence but no longer assigns the acting side. See [REPORT_CONTRACT.md](REPORT_CONTRACT.md#model-dice-only-4-numeric-scope).
 - Linked raw block pools and verified 2D6 armor contribute dice units with explicit roles. Applied block skills and choices are separate evidence. Verified Regeneration and direct KO recovery have scoped odds, including one verified Kegs modifier. Apothecary chains retain original and replacement dice and link supported applied choices. Unverified injury and casualty distributions and referee outcomes stay visible with unknown odds. A conservative pre-roll reducer supports a limited Dodge/Pickup mobility and possession estimate in separate context units. See [STATE_RECONSTRUCTION.md](STATE_RECONSTRUCTION.md).
 - Reroll linkage uses actor/step/target/roll evidence across sequences; the original question dice are retained. Explicitly declined numeric rerolls now recover the original attempt from a matching kept-result summary at single-attempt odds; that summary does not create a second roll. Missing/mismatched gamer IDs and intervening unknown/state/skill events break the link. Turn-6 cross-attribution is fixed, but full skill policies/resource accounting and duplicate semantics remain open.
 - UI/CLI derive types from the same runtime Zod report schema; it rejects inconsistent totals/coverage, unsupported versions and fabricated comparative verdicts. Missing scored evidence displays “Not scored.” UI/CLI share copy. UI filters all evidence before paging, shows source segment locators, resets filters, and handles non-JSON errors. Verified half/turn labels are shown when observations support them; unverified source segments remain source locators.
 - The timeline explains a scoped recorded stand-up, a dodge entering or leaving adjacency to a teammate holding the ball, and linked fall, damage and turnover evidence. A grouped dice subtotal references existing contributions. The timeline also follows a verified pickup into later movement and links an immediately recorded touchdown to the same carrier’s successful move. The touchdown adds no dice score. See [STATE_RECONSTRUCTION.md](STATE_RECONSTRUCTION.md) and [REPORT_CONTRACT.md](REPORT_CONTRACT.md).
+- Context coverage separately counts observed positions, possession, clocks, activation identity, quantified impacts and linked movement consequences over roll candidates. Deterministic no-roll records and verified repeated kept summaries add no random outcome. Source home/away order is preserved.
 - All 12 sanitized demos return reports locally. The isolated Preview acceptance and the Node 22 checks are recorded by exact candidate in [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md).
 
 See [INGESTION_SAFETY.md](INGESTION_SAFETY.md), [the ledger](REMEDIATION_BACKLOG.md#ledger), and [the implementation record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation).
@@ -41,14 +42,14 @@ See [INGESTION_SAFETY.md](INGESTION_SAFETY.md), [the ledger](REMEDIATION_BACKLOG
 
 | Subsystem | Status | Required work |
 | --- | --- | --- |
-| Replay decoding, parsing, attribution | partial | NUF-002–013; parsing is not production-validated |
+| Replay decoding, parsing, attribution | partial | NUF-002–008 closed; remaining semantic and role contracts in NUF-009–013 |
 | Probability and actual-outcome contracts | partial | NUF-007, 009–013 |
 | Coverage and verdict reliability | partial | NUF-014–015 |
 | Board/state reconstruction and contextual impact | partial | NUF-016–019 |
 | API/UI/CLI surfaces | partial | NUF-003, 015, 020–024 |
-| Legacy coaching stack | legacy-kept | NUF-025; do not add primary features here |
+| Legacy coaching stack | legacy-kept, default disabled | NUF-025 closed; explicit opt-in shares safe ingestion |
 | Test infrastructure | partial | Existing checks run; NUF-001, 022, 026 add independent correctness evidence |
-| Security and deployment readiness | pending | NUF-004–006, 023–026 |
+| Security and deployment readiness | partial | NUF-004–006 and 024–026 closed; NUF-023 awaits report integration and new-candidate hosted acceptance |
 | Documentation and handoff | partial | Backlog established; NUF-027 closes implementation/evidence reconciliation |
 
 ## Execution Milestones

@@ -1,4 +1,5 @@
 import type { ReplayEvent } from "@/domain/replay/types";
+import type { RerollLink } from "./rerolls";
 
 export const BLOCK_FACES = [
   "Attacker Down",
@@ -14,17 +15,21 @@ export type BlockPool = {
   attackerChooses: boolean;
   outcomes: number[];
   sourceId?: string;
+  proEligibleIndexes?: number[];
 };
 export type BlockEvidence = {
   pool: BlockPool;
   attackerId: string;
   defenderId: string;
   chooserGamerId?: number;
-  selectedFace: number;
-  selectedOutcome: number;
-  finalOutcome: number;
+  selectedFace?: number;
+  selectedOutcome?: number;
+  selectedSourceId?: string;
+  finalOutcome?: number;
   finalSourceId?: string;
-  reroll: "initial" | "team" | "brawler";
+  reroll: "initial" | "team" | "brawler" | "pro";
+  proGateSourceId?: string;
+  previousPoolSourceId?: string;
 };
 export type BlockRecord =
   | { kind: "pool"; evidence?: BlockEvidence }
@@ -56,6 +61,10 @@ function parsePool(event: ReplayEvent): BlockPool | undefined {
   const faces = values(record(p?.Dice)?.Die).map(face);
   const indexes = values(record(p?.RolledDiceIndexes)?.RolledDiceIndexesItem);
   const outcomes = values(record(p?.DiceOutcomes)?.DiceOutcomesItem);
+  const proIndexes =
+    p?.ProDiceIndexes === undefined
+      ? undefined
+      : values(record(p.ProDiceIndexes)?.ProDiceIndexesItem);
   if (
     event.rollType !== 3 ||
     faces.length < 1 ||
@@ -65,6 +74,9 @@ function parsePool(event: ReplayEvent): BlockPool | undefined {
     new Set(indexes).size !== indexes.length ||
     outcomes.length !== faces.length ||
     !outcomes.every((o) => integer(o, 0, 6)) ||
+    (proIndexes !== undefined &&
+      (!proIndexes.every((i) => integer(i, 0, faces.length - 1)) ||
+        new Set(proIndexes).size !== proIndexes.length)) ||
     (p?.AttackerChoice !== 0 && p?.AttackerChoice !== 1)
   )
     return;
@@ -73,7 +85,8 @@ function parsePool(event: ReplayEvent): BlockPool | undefined {
     rolledIndexes: indexes as number[],
     outcomes: outcomes as number[],
     attackerChooses: p.AttackerChoice === 1,
-    sourceId: event.id
+    sourceId: event.id,
+    proEligibleIndexes: proIndexes as number[] | undefined
   };
 }
 
@@ -109,16 +122,54 @@ export function enumerateBlockPool(pool: BlockPool): {
   };
 }
 
+export function explainBlockEvidence(block: BlockEvidence): string {
+  return [
+    block.pool.faces.map((f) => BLOCK_FACES[f]).join(", ") + ".",
+    (block.pool.attackerChooses ? "Attacker" : "Defender") +
+      " controls the choice.",
+    block.selectedFace === undefined
+      ? "The selected die is unknown."
+      : "The linked action selected " + BLOCK_FACES[block.selectedFace] + ".",
+    block.finalOutcome === undefined
+      ? "The applied result is unknown."
+      : "Applied outcome " + block.finalOutcome + ".",
+    block.reroll === "pro"
+      ? "The replacement distribution is conditional on the recorded Pro pass."
+      : null,
+    "The score measures raw symbols before skills and the coach's choice."
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
 export function linkBlockPools(
   events: readonly ReplayEvent[],
-  version: string | undefined
+  version: string | undefined,
+  rerollLinks: ReadonlyMap<number, RerollLink> = new Map()
 ): Map<number, BlockRecord> {
   const records = new Map<number, BlockRecord>();
   if (version !== "1-4-0-0") return records;
+  const initialCounts = new Map<string, number>();
+  for (const event of events) {
+    if (
+      !event.actionId ||
+      event.sourceTag !== "QuestionBlockDice" ||
+      event.payload?.RollStatus !== 1
+    )
+      continue;
+    const pool = parsePool(event);
+    if (pool && pool.rolledIndexes.length === pool.faces.length)
+      initialCounts.set(
+        event.actionId,
+        (initialCounts.get(event.actionId) ?? 0) + 1
+      );
+  }
   type Anchor = {
     index: number;
     pool: BlockPool;
     reroll: BlockEvidence["reroll"];
+    proGateSourceId?: string;
+    previousPoolSourceId?: string;
   };
   let chain:
     | {
@@ -127,9 +178,11 @@ export function linkBlockPools(
         pools: Anchor[];
         gamer?: number;
         chooser?: number;
-        choice?: "team" | "brawler";
+        choice?: "team" | "brawler" | "pro";
+        proSkillSourceId?: string;
+        proGateSourceId?: string;
         gated: boolean;
-        selected?: { face: number; outcome: number };
+        selected?: { face: number; outcome: number; sourceId?: string };
       }
     | undefined;
   for (const [index, event] of events.entries()) {
@@ -161,7 +214,21 @@ export function linkBlockPools(
         defender !== "-1" &&
         gamer !== undefined
       ) {
-        records.set(index, { kind: "pool" });
+        if (event.actionId && initialCounts.get(event.actionId) !== 1) {
+          records.set(index, { kind: "pool" });
+          chain = undefined;
+          continue;
+        }
+        records.set(index, {
+          kind: "pool",
+          evidence: {
+            pool,
+            attackerId: attacker,
+            defenderId: defender,
+            chooserGamerId: p.CanChoseDie === 1 ? gamer : undefined,
+            reroll: "initial"
+          }
+        });
         chain = {
           attacker,
           defender,
@@ -212,12 +279,35 @@ export function linkBlockPools(
         ) &&
         (chain.choice === "team"
           ? pool.rolledIndexes.length === pool.faces.length
-          : pool.rolledIndexes.length === 1 &&
-            last.faces[pool.rolledIndexes[0]!] === 1)
+          : chain.choice === "brawler"
+            ? pool.rolledIndexes.length === 1 &&
+              last.faces[pool.rolledIndexes[0]!] === 1
+            : pool.rolledIndexes.length === 1 &&
+              last.proEligibleIndexes?.includes(pool.rolledIndexes[0]!))
       ) {
-        records.set(index, { kind: "pool" });
-        chain.pools.push({ index, pool, reroll: chain.choice });
+        const proGateSourceId =
+          chain.choice === "pro" ? chain.proGateSourceId : undefined;
+        records.set(index, {
+          kind: "pool",
+          evidence: {
+            pool,
+            attackerId: chain.attacker,
+            defenderId: chain.defender,
+            chooserGamerId: p.CanChoseDie === 1 ? gamer : undefined,
+            reroll: chain.choice,
+            proGateSourceId,
+            previousPoolSourceId: last.sourceId
+          }
+        });
+        chain.pools.push({
+          index,
+          pool,
+          reroll: chain.choice,
+          proGateSourceId,
+          previousPoolSourceId: last.sourceId
+        });
         chain.choice = undefined;
+        chain.proGateSourceId = undefined;
         if (p.CanChoseDie === 1 && gamer !== undefined) chain.chooser = gamer;
         continue;
       }
@@ -236,9 +326,25 @@ export function linkBlockPools(
     if (event.sourceTag === "ResultSkillUsage" && p?.Used === 1) {
       if (p.Skill === 96 && String(p.PlayerId) === chain.attacker)
         chain.choice = "brawler";
+      if (p.Skill === 50 && String(p.PlayerId) === chain.attacker)
+        chain.proSkillSourceId = event.id;
       // Skill 44 is Loner(4+); an actual type-71 result is handled below.
     }
-    if (event.sourceTag === "ResultRoll") chain.gated = true;
+    if (event.sourceTag === "ResultRoll") {
+      const gate = rerollLinks.get(index)?.proGate;
+      const allowed =
+        gate?.passed === true &&
+        event.id !== undefined &&
+        gate.skillSourceId === chain.proSkillSourceId;
+      chain.gated = !allowed;
+      if (allowed) {
+        chain.choice = "pro";
+        chain.proGateSourceId = event.id;
+      } else {
+        chain.choice = undefined;
+      }
+      chain.proSkillSourceId = undefined;
+    }
     if (event.sourceTag === "ResultBlockRoll") {
       const f = face(p?.Die);
       const last = chain.pools.at(-1)!.pool;
@@ -250,7 +356,18 @@ export function linkBlockPools(
         chain = undefined;
         continue;
       }
-      chain.selected = { face: f, outcome: p.Outcome };
+      chain.selected = { face: f, outcome: p.Outcome, sourceId: event.id };
+      for (const anchor of chain.pools) {
+        const observed = records.get(anchor.index);
+        if (observed?.kind === "pool" && observed.evidence)
+          observed.evidence = {
+            ...observed.evidence,
+            chooserGamerId: chain.chooser,
+            selectedFace: f,
+            selectedOutcome: p.Outcome,
+            selectedSourceId: event.id
+          };
+      }
       records.set(index, {
         kind: "summary",
         reason: "selected die from the linked block pool"
@@ -274,9 +391,12 @@ export function linkBlockPools(
               chooserGamerId: chain.chooser,
               selectedFace: chain.selected.face,
               selectedOutcome: chain.selected.outcome,
+              selectedSourceId: chain.selected.sourceId,
               finalOutcome: p.Outcome,
               finalSourceId: event.id,
-              reroll: anchor.reroll
+              reroll: anchor.reroll,
+              proGateSourceId: anchor.proGateSourceId,
+              previousPoolSourceId: anchor.previousPoolSourceId
             }
           });
       }

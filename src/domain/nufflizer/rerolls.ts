@@ -446,6 +446,38 @@ export function linkTeamRerolls(
     }
     pending = undefined;
   }
+  for (const [index, event] of events.entries()) {
+    const previous = events[index - 1];
+    const priorLink = links.get(index - 1);
+    const anchor =
+      priorLink?.mergedIntoId ??
+      (priorLink?.retainedOriginal ? previous?.id : undefined);
+    if (
+      !anchor ||
+      links.has(index) ||
+      event.sourceTag !== "ResultRoll" ||
+      previous?.sourceTag !== "ResultRoll" ||
+      !event.actionId ||
+      event.actionId !== previous.actionId ||
+      ![1, 2, 4, 7].includes(event.rollType ?? -1) ||
+      event.rollType !== previous.rollType ||
+      event.payload?.NewRoll !== 0 ||
+      event.payload.Status !== 1 ||
+      !previous.payload ||
+      event.payload.Outcome !== previous.payload.Outcome ||
+      !sameAction(previous, event) ||
+      !sameRoll(previous.payload, event.payload) ||
+      !sameDie(previous.payload, event.payload)
+    )
+      continue;
+    links.set(index, {
+      rerollAvailable: false,
+      rerollUsed: false,
+      mergedIntoId: anchor,
+      exclusionReason:
+        "kept result already reported; repeated summary is not another attempt"
+    });
+  }
   return links;
 }
 

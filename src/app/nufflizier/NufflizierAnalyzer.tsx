@@ -15,7 +15,8 @@ import {
   explainPreRollEvidence,
   explainContextImpact,
   explainMovementOutcome,
-  explainProGate
+  explainProGate,
+  explainContextCoverage
 } from "@/domain/nufflizer/presentation";
 import { readAnalysisResponse } from "@/lib/readAnalysisResponse";
 import { REPLAY_LIMITS } from "@/domain/replay/limits";
@@ -295,6 +296,9 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
               {(report.coverage.allEvents.scoredRate * 100).toFixed(1)}% scored
               ({report.coverage.allEvents.scoredCount} scored,{" "}
               {report.coverage.allEvents.excludedCount} excluded)
+            </p>
+            <p className="mt-2 text-xs">
+              {explainContextCoverage(report.coverage.contextEvidence)}
             </p>
             <p className="mt-2 text-xs">
               {report.coverage.denominatorDescription} Source records retained
@@ -650,15 +654,19 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                                 {explainContextImpact(moment)}
                               </p>
                             ) : null}
-                            {moment.metadata.preRoll?.actorStandUpSourceIndex !== undefined ||
+                            {moment.metadata.preRoll
+                              ?.actorStandUpSourceIndex !== undefined ||
                             moment.metadata.preRoll?.actorPickupSourceId ||
                             moment.metadata.preRoll?.scoringAttempt ||
                             moment.metadata.preRoll?.teammateCarrierMove ? (
                               <p className="mt-1 text-xs text-amber-100/80">
-                                {explainPreRollEvidence(moment.metadata.preRoll)}
+                                {explainPreRollEvidence(
+                                  moment.metadata.preRoll
+                                )}
                               </p>
                             ) : null}
-                            {moment.metadata.movementFall || moment.metadata.movementTouchdown ? (
+                            {moment.metadata.movementFall ||
+                            moment.metadata.movementTouchdown ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainMovementOutcome(moment.metadata)}
                               </p>

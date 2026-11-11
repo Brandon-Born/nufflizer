@@ -39,6 +39,18 @@ function final(events: ReplayEvent[]) {
 }
 
 describe("NUF-012 retained original numeric checks", () => {
+  it("deduplicates an exact contiguous kept summary only within the same action", () => {
+    const events = chain();
+    events.push({ ...events[2]!, id: "repeated" });
+    const repeated = analyzeReplayLuck(model(events));
+    expect(repeated.events.at(-1)!.metadata.isRollCandidate).toBe(false);
+    expect(repeated.coverage.rollCandidates.scoredCount).toBe(1);
+    events[3]!.actionId = "different-action";
+    const unrelated = analyzeReplayLuck(model(events));
+    expect(unrelated.events.at(-1)!.metadata.isRollCandidate).toBe(true);
+    expect(unrelated.events.at(-1)!.scoringStatus).toBe("excluded");
+  });
+
   it("scores one failed 2+ attempt at 5/6 despite available but declined reroll", () => {
     const event = final(chain());
     expect(event).toMatchObject({

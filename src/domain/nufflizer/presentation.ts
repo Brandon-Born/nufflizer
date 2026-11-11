@@ -25,6 +25,12 @@ export function formatDiceContribution(
   return scoredCount ? value.toFixed(digits) : "Not scored";
 }
 
+export function explainContextCoverage(
+  evidence: LuckReport["coverage"]["contextEvidence"]
+): string {
+  return `Contextual impact quantified for ${evidence.quantifiedCount} of ${evidence.rollCount} roll candidates. Pre-roll position observed for ${evidence.positionCount}, possession known for ${evidence.possessionCount}, and period with team turn known for ${evidence.clockCount}. Linked movement consequences observed for ${evidence.consequenceCount}.`;
+}
+
 export function formatPreRollPosition(
   context: LuckReport["events"][number]["metadata"]["preRoll"]
 ): string | null {
