@@ -54,7 +54,7 @@ export function foulAppearanceContextXml(
     y: number,
     available: boolean | null
   ) =>
-    `<PlayerState><Id>${id}</Id><Cell>${position(x, y)}</Cell>${available === null ? "" : `<CanAct>${Number(available)}</CanAct>`}<Status>0</Status><Situation>0</Situation><MovePoint>5</MovePoint></PlayerState>`;
+    `<PlayerState><Id>${id}</Id>${id !== 7 ? `<Data><Id>${id}</Id><InnateSkills/><AcquiredSkills/></Data><Effects/>` : ""}<Cell>${position(x, y)}</Cell>${available === null ? "" : `<CanAct>${Number(available)}</CanAct>`}<Status>0</Status><Situation>0</Situation><MovePoint>5</MovePoint></PlayerState>`;
   const board = (after: boolean) =>
     `<BoardState><IsStable>1</IsStable><CurrentPhase>5</CurrentPhase><ActiveTeam>0</ActiveTeam><Period>0</Period><TurnsPerPeriod>8</TurnsPerPeriod><Ball><IsHeld>0</IsHeld><Cell>${position(20, 10)}</Cell></Ball><ListTeams>` +
     `<TeamState><Data><TeamId>0</TeamId></Data><GameTurn>${after && options.nextTurn ? 2 : 1}</GameTurn><ListPitchPlayers>${player(42, 8, 7, after && !options.explicitAvailable ? null : true)}${player(43, 4, 4, true)}${player(44, 3, 4, true)}</ListPitchPlayers></TeamState>` +

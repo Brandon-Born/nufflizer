@@ -37,7 +37,7 @@ export function formatDiceContribution(
 export function explainContextCoverage(
   evidence: LuckReport["coverage"]["contextEvidence"]
 ): string {
-  return `Contextual impact quantified for ${evidence.quantifiedCount} of ${evidence.rollCount} roll candidates. Pre-roll position observed for ${evidence.positionCount}, possession known for ${evidence.possessionCount}, and period with team turn known for ${evidence.clockCount}. Linked roll consequences observed for ${evidence.consequenceCount}.`;
+  return `Contextual impact quantified for ${evidence.quantifiedCount} of ${evidence.rollCount} roll candidates. Pre-roll position observed for ${evidence.positionCount}, possession known for ${evidence.possessionCount}, and period with team turn known for ${evidence.clockCount}. Linked roll consequences observed for ${evidence.consequenceCount}.${evidence.boundedCount ? ` Separate ordinary-move ranges are available for ${evidence.boundedCount} ${evidence.boundedCount === 1 ? "check" : "checks"} with incomplete availability; these are excluded from point totals.` : ""}`;
 }
 
 export function explainRecruitmentEvidence(
@@ -174,8 +174,18 @@ export function explainContextImpact(
       .join("; ") +
     ". " +
     impact.contribution.toFixed(2) +
-    " context units under the recorded reroll policy."
+    (impact.policy === "dodge_skill_reroll"
+      ? " context units for the terminal die after the Dodge reroll was committed, holding recorded modifiers fixed. The earlier failure remains outside this context component."
+      : " context units under the recorded reroll policy.")
   );
+}
+
+export function explainContextBounds(
+  event: LuckReport["events"][number]
+): string | null {
+  const bound = event.contextualBounds;
+  if (!bound) return null;
+  return `After a successful Dodge, ${bound.minimumMoves} to ${bound.maximumMoves} other players could make an ordinary standing move; availability is incomplete for ${bound.maximumMoves - bound.minimumMoves} players. With the Dodge reroll already committed, the terminal die had ${(bound.successChance * 100).toFixed(1)}% success under the recorded modifiers. Its ordinary-move contribution ranges from ${bound.lower.toFixed(2)} to ${bound.upper.toFixed(2)} context units. This is a possible-value range, not a confidence interval or a whole-action value. No midpoint is added to point totals; the earlier failure and other tactical consequences remain outside this component.`;
 }
 
 export function explainMovementOutcome(

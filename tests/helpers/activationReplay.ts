@@ -50,7 +50,7 @@ export function activationContextXml(
     available: boolean,
     tz = true
   ) =>
-    `<PlayerState><Id>${id}</Id><Cell>${position(x, y)}</Cell>${available ? "<CanAct>1</CanAct>" : ""}<Status>0</Status><Situation>0</Situation><MovePoint>5</MovePoint>${tz ? "<TackleZone>1</TackleZone>" : ""}</PlayerState>`;
+    `<PlayerState><Id>${id}</Id>${id === 43 || id === 44 || (id === 42 && kind === "move") ? `<Data><Id>${id}</Id><InnateSkills/><AcquiredSkills/></Data><Effects/>` : ""}<Cell>${position(x, y)}</Cell>${available ? "<CanAct>1</CanAct>" : ""}<Status>0</Status><Situation>0</Situation><MovePoint>5</MovePoint>${tz ? "<TackleZone>1</TackleZone>" : ""}</PlayerState>`;
   const board = (after: boolean) =>
     `<BoardState><IsStable>1</IsStable><CurrentPhase>5</CurrentPhase><ActiveTeam>0</ActiveTeam><Period>0</Period><ListTeams><TeamState><Data><TeamId>0</TeamId></Data><GameTurn>1</GameTurn><ListPitchPlayers>${player(42, kind === "move" && after ? 9 : 8, 7, !after || kind === "move", !after || kind === "move")}${player(43, 4, 4, true)}${player(44, 3, 4, true)}</ListPitchPlayers></TeamState><TeamState><Data><TeamId>1</TeamId></Data><GameTurn>1</GameTurn><ListPitchPlayers>${player(7, kind === "move" ? 10 : 9, 7, true)}</ListPitchPlayers></TeamState></ListTeams><Ball><IsHeld>0</IsHeld><Cell>${position(20, 10)}</Cell></Ball></BoardState>`;
   const step = (

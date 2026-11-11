@@ -1,3 +1,4 @@
+import { estimateDodgeImpactBounds, estimateNumericImpact } from "./contextImpact";
 import { blockOutcomeName, consistentBlockResolution, knockedDownSubjects, summarizeBlockConsequence } from "./blockConsequences";
 import { enumerateBlockPool } from "./blockPools";
 import { z } from "zod";
@@ -146,6 +147,7 @@ export const LuckEventMetadataSchema = z.strictObject({
   preRoll: z
     .strictObject({
       checkpointAfter: count,
+      ordinaryMoveAvailability:z.strictObject({successDestination:pitchCell,knownAvailablePlayerIds:z.array(text).max(64),unknownPlayerIds:z.array(text).max(64)}).optional(),
       suppressedTackleZones: z.array(z.strictObject({ playerId: text, rosterIndex: z.number().int().min(0).max(1), teamId: text.nullable(), providerSkillId: z.union([z.literal(31),z.literal(51)]) })).max(128).optional(),
       actorMentalEffectEnd: z.strictObject({ sourceId: text, providerSkillId: z.union([z.literal(31),z.literal(51)]) }).optional(),
       endedActivationSourceIds: z.array(text).max(64).optional(),
@@ -295,15 +297,17 @@ export const LuckEventSchema = z.strictObject({
   actualSuccess: z.boolean().nullable(),
   delta: finite,
   weightedDelta: finite,
+  contextualBounds:z.strictObject({policy:z.literal("dodge_skill_reroll"),minimumMoves:count,maximumMoves:count,successChance:probability,lower:finite,upper:finite}).optional(),
   contextualImpact: z
     .strictObject({
-      policy: z.enum(["declined_team_reroll", "full_team_reroll"]),
+      policy: z.enum(["declined_team_reroll", "full_team_reroll", "dodge_skill_reroll"]),
       components: z.strictObject({
         availableMoves: finite.min(0),
         possession: finite.min(0),
         markedBounce: probability
       }),
       difference: finite.min(0),
+      deviation:finite,
       contribution: finite
     })
     .optional(),
@@ -399,6 +403,7 @@ export const LuckReportSchema = z
         clockCount: count,
         activationCount: count,
         quantifiedCount: count,
+        boundedCount: count,
         consequenceCount: count
       }),
       scoredByType: categoryCounts,
@@ -911,6 +916,43 @@ export const LuckReportSchema = z
           "Carrier proximity requires a verified move across the adjacency boundary."
         );
       }
+      const availability = context?.ordinaryMoveAvailability;
+      if (availability) {
+        const members=[...availability.knownAvailablePlayerIds,...availability.unknownPlayerIds];
+        require(context?.movementCheckLinked === true && event.metadata.rollType === 2 && context.actorCell !== null &&
+          context.activeTeamId === event.teamId && Math.max(Math.abs(context.actorCell!.x-availability.successDestination.x),Math.abs(context.actorCell!.y-availability.successDestination.y)) === 1 &&
+          members.length < 64 && new Set(members).size === members.length && !members.includes(event.playerId ?? "") &&
+          context.otherUsefulActivations === (availability.unknownPlayerIds.length ? null : availability.knownAvailablePlayerIds.length),
+          "Ordinary-move availability must describe the verified successful successor without duplicated or fabricated known counts.");
+      }
+      const bound=event.contextualBounds;
+      if (bound) {
+        const expected=estimateDodgeImpactBounds(context,bound.policy,Number(event.actualSuccess)-bound.successChance,bound.successChance);
+        require(event.scoringStatus === "scored" && event.metadata.rollType === 2 && context?.activeTeamId === event.teamId &&
+          event.contextualImpact === undefined && !!expected && bound.minimumMoves === expected.minimumMoves && bound.maximumMoves === expected.maximumMoves &&
+          near(bound.successChance,(7-(event.metadata.difficulty ?? 0))/6) && near(bound.lower,expected.lower) && near(bound.upper,expected.upper),
+          "Partial ordinary-move bounds must reconcile with missing availability, the fixed policy and dice deviation, without a point estimate.");
+      }
+      if (bound || event.contextualImpact?.policy === "dodge_skill_reroll") {
+        const original=event.metadata.rerollOriginalId ? sources.get(event.metadata.rerollOriginalId) : undefined;
+        const use=event.metadata.rerollDecisionId ? sources.get(event.metadata.rerollDecisionId) : undefined;
+        const target=event.metadata.difficulty;
+        require(event.metadata.rollType === 2 && event.metadata.rerollResource === "skill" && event.metadata.rerollSkill === "Dodge" && event.metadata.teamRerollsSpent === 0 &&
+          original?.metadata.sourceTag === "ResultRoll" && original.metadata.rollType === 2 && original.playerId === event.playerId && original.teamId === event.teamId &&
+          original.metadata.outcomeCode === 0 && original.metadata.mergedRerollAnchorId === event.metadata.sourceId &&
+          original.metadata.difficulty === target && original.metadata.requirement === event.metadata.requirement &&
+          JSON.stringify(original.metadata.modifiers) === JSON.stringify(event.metadata.modifiers) &&
+          original.metadata.dice?.length === 1 && original.metadata.dieTypes?.length === 1 && original.metadata.dieTypes[0] === 0 &&
+          Number.isInteger(original.metadata.dice[0]) && original.metadata.dice[0]!>=1 &&
+          event.metadata.dice?.length === 1 && event.metadata.dieTypes?.length === 1 && event.metadata.dieTypes[0] === 0 &&
+          Number.isInteger(event.metadata.dice[0]) && event.metadata.dice[0]!>=1 && event.metadata.dice[0]!<=6 && event.actualSuccess === (event.metadata.dice[0]!>=(target ?? 0)) &&
+          typeof target === "number" && Number.isInteger(target) && target>=2 && target<=6 && original.metadata.dice[0]!<target &&
+          use?.metadata.sourceTag === "ResultSkillUsage" && use.metadata.skillUsage?.skillId === 7 && use.metadata.skillUsage.used && use.playerId === event.playerId && use.teamId === event.teamId &&
+          use.metadata.actionId === event.metadata.actionId && original.metadata.actionId === event.metadata.actionId &&
+          (original.metadata.sourceIndex ?? Infinity)<(use.metadata.sourceIndex ?? -1) && (use.metadata.sourceIndex ?? Infinity)<(event.metadata.sourceIndex ?? -1) &&
+          event.probabilitySuccess !== null && near(event.probabilitySuccess,1-((target-1)/6)**2),
+          "A Dodge-skill context policy requires the owned committed reroll, original failed die and two-attempt odds.");
+      }
       const impact = event.contextualImpact;
       if (impact) {
         require(event.scoringStatus === "scored" &&
@@ -919,13 +961,17 @@ export const LuckReportSchema = z
           (event.type === "dodge" ||
             event.type ===
               "ball_handling"), "Context requires a scored roll and verified pre-roll ownership.");
+        const expectedDeviation=impact.policy === "dodge_skill_reroll" ? Number(event.actualSuccess)-(7-(event.metadata.difficulty ?? 0))/6 : event.delta;
+        require(near(impact.deviation,expectedDeviation), "Context deviation must use its stated whole-check or conditional terminal-die scope.");
+        const expected=estimateNumericImpact(context,event.metadata.rollType,impact.policy,expectedDeviation);
+        require(!!expected && near(impact.components.availableMoves,expected.components.availableMoves) && near(impact.components.possession,expected.components.possession) && near(impact.components.markedBounce,expected.components.markedBounce), "Point context requires complete supported successor components.");
         require(near(
           impact.difference,
           Object.values(impact.components).reduce((a, b) => a + b, 0)
         ) &&
           near(
             impact.contribution,
-            event.delta * impact.difference
+            impact.deviation * impact.difference
           ), "Contextual contribution must reconcile with its components.");
       }
       const block = event.metadata.block;

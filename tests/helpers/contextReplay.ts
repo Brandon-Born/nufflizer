@@ -29,6 +29,9 @@ export function contextReplayXml(
     id +
     "</Id>" +
     position(x, y) +
+    ([11, 12].includes(id)
+      ? `<Data><Id>${id}</Id><InnateSkills>${id === options.mentalEffectPlayer ? `<InnateSkillsItem>${options.mentalEffectProvider ?? 51}</InnateSkillsItem>` : ""}</InnateSkills><AcquiredSkills/></Data>${id === options.mentalEffectPlayer ? "" : "<Effects/>"}`
+      : "") +
     (available === null ? "" : "<CanAct>" + Number(available) + "</CanAct>") +
     "<MovePoint>5</MovePoint><Status>0</Status><Situation>0</Situation>" +
     (id === options.mentalEffectPlayer
@@ -58,7 +61,7 @@ export function contextReplayXml(
     team(1, 1, player(40, options.exposed ? 11 : 20, 7, true)) +
     "</ListTeams>";
   const move =
-    "<PlayerStep><PlayerId>10</PlayerId><TargetId>-1</TargetId><StepType>1</StepType><CellFrom><X>8</X><Y>7</Y></CellFrom><CellTo><X>9</X><Y>7</Y></CellTo></PlayerStep>";
+    "<PlayerStep><PlayerId>10</PlayerId><TargetId>-1</TargetId><StepType>1</StepType><IsEvaluation>0</IsEvaluation><Skill>0</Skill><CellFrom><X>8</X><Y>7</Y></CellFrom><CellTo><X>9</X><Y>7</Y></CellTo></PlayerStep>";
   const roll = (fresh: number) =>
     "<Status>1</Status><NewRoll>" +
     fresh +

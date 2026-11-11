@@ -8,10 +8,11 @@ type Row = {
   projection?: Projection;
   steps?: { step: Projection; messages: Projection[] }[];
 };
-export function lonerDriveXml(id: string) {
-  const evidence = JSON.parse(
-    readFileSync("tests/fixtures/evidence/bb3-loner-drive.json", "utf8")
-  );
+export function lonerDriveXml(
+  id: string,
+  evidencePath = "tests/fixtures/evidence/bb3-loner-drive.json"
+) {
+  const evidence = JSON.parse(readFileSync(evidencePath, "utf8"));
   const sample = evidence.cases.find((c: { id: string }) => c.id === id);
   const first = sample.records.find((r: Row) => r.projection?.BoardState)
     .projection.BoardState;

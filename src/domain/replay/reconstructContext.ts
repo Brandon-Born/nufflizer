@@ -1,3 +1,7 @@
+import {
+  ordinaryMovesAfterSuccess,
+  type OrdinaryMoveAvailability
+} from "./ordinaryMoveAvailability";
 import { checkpointClockEpochs } from "./boardState";
 import {
   applyObservedMentalEffects,
@@ -26,6 +30,7 @@ import {
 
 type Cell = { x: number; y: number };
 export type PreRollEvidence = {
+  ordinaryMoveAvailability?: OrdinaryMoveAvailability;
   suppressedTackleZones?: {
     playerId: string;
     rosterIndex: number;
@@ -156,6 +161,7 @@ function summarize(
   activationId: string | null,
   activationActionCode: number | undefined,
   standardPitch: boolean,
+  smallPitchObserved: boolean,
   standUpSourceIndex: number | undefined,
   pickupSourceId: string | undefined
 ): PreRollEvidence {
@@ -228,6 +234,7 @@ function summarize(
     )
   );
   const consistentGeometry =
+    !smallPitchObserved &&
     positionsKnown &&
     occupied.size ===
       allPlayers.filter((p) => p.pitchLocation === "on_pitch").length;
@@ -249,6 +256,7 @@ function summarize(
       // These count ordinary standing movement opportunities only. Unknown
       // posture/availability cannot be interpreted as a spent activation.
       if (
+        player.ordinaryMovePolicyKnown !== true ||
         player.canAct === null ||
         player.statusCode === null ||
         player.situationCode === null ||
@@ -314,6 +322,8 @@ function summarize(
     consistentGeometry &&
     step?.sourceTag === "PlayerStep" &&
     step.stepType === 1 &&
+    step.payload?.IsEvaluation === 0 &&
+    step.payload.Skill === 0 &&
     step.stepActorId === event.playerId &&
     step.actionId !== undefined &&
     step.actionId === event.actionId &&
@@ -325,6 +335,14 @@ function summarize(
       distance(actorCell, destination) === 1 &&
       !occupied.has(key(destination))
     );
+  const ordinaryMoveAvailability =
+    movementCheckLinked && destination && actorId !== null
+      ? ordinaryMovesAfterSuccess(board, actorId, destination)
+      : undefined;
+  if (ordinaryMoveAvailability)
+    otherUsefulActivations = ordinaryMoveAvailability.unknownPlayerIds.length
+      ? null
+      : ordinaryMoveAvailability.knownAvailablePlayerIds.length;
   const carrierCell = cell(board.ball.cell);
   let scoringAttempt: PreRollEvidence["scoringAttempt"];
   if (
@@ -422,6 +440,7 @@ function summarize(
     )
   );
   return {
+    ordinaryMoveAvailability,
     suppressedTackleZones: suppressedTackleZones.length
       ? suppressedTackleZones
       : undefined,
@@ -506,6 +525,7 @@ export function reconstructReplayContext(
   const epochs = checkpointClockEpochs(checkpoints);
   let activationEpoch: number | undefined;
   let standardPitch = false;
+  let smallPitchObserved = false;
   let cursor = 0;
   let checkpoint: ReplayBoardCheckpoint | undefined;
   let board: ObservedBoard | null = null;
@@ -553,7 +573,10 @@ export function reconstructReplayContext(
         const next = checkpoint.board;
         if (checkpoint.kind === "initial")
           standardPitch = next?.pitchLayout === "standard";
-        if (next?.pitchLayout === "small") standardPitch = false;
+        if (next?.pitchLayout === "small") {
+          standardPitch = false;
+          smallPitchObserved = true;
+        }
         if (
           !board ||
           !next ||
@@ -672,6 +695,7 @@ export function reconstructReplayContext(
             activationId,
             activationActionCode,
             standardPitch,
+            smallPitchObserved,
             standUpSourceIndex,
             pickupSourceId
           )

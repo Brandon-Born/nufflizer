@@ -15,6 +15,7 @@ import {
   formatPlayerObservation,
   explainPreRollEvidence,
   explainContextImpact,
+  explainContextBounds,
   explainMovementOutcome,
   explainPickupBallChain,
   explainActivationLoss,
@@ -114,7 +115,11 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
         if (activationFilter && context?.activationId !== activationFilter)
           return false;
         if (teamFilter !== "all" && event.teamId !== teamFilter) return false;
-        if (scoringFilter !== "all" && event.scoringStatus !== scoringFilter)
+        if (
+          scoringFilter === "bounded"
+            ? !event.contextualBounds
+            : scoringFilter !== "all" && event.scoringStatus !== scoringFilter
+        )
           return false;
         if (tagFilter !== "all" && !event.tags.includes(tagFilter)) {
           return false;
@@ -633,6 +638,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                   }}
                 >
                   <option value="scored">Scored</option>
+                  <option value="bounded">Context range</option>
                   <option value="excluded">Excluded</option>
                   <option value="all">All evidence</option>
                 </select>
@@ -822,6 +828,11 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                             moment.metadata.activationEnd ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainActivationLoss(moment)}
+                              </p>
+                            ) : null}
+                            {moment.contextualBounds ? (
+                              <p className="mt-1 text-xs text-amber-100/80">
+                                {explainContextBounds(moment)}
                               </p>
                             ) : null}
                             {moment.metadata.blockResolution ? (

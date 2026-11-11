@@ -2,10 +2,15 @@ import type { ReplayEvent } from "./types";
 import { observeMentalEffect, type MentalTraitEffect } from "./mentalEffects";
 // Observed checkpoints, not a simulator. Each snapshot replaces the previous
 // observation: omitted fields are unknown, never defaults or carry-forwards.
-import { observePlayerTraits, type ObservedPlayerTraits } from "./playerTraits";
+import {
+  ordinaryMovePolicyKnown,
+  observePlayerTraits,
+  type ObservedPlayerTraits
+} from "./playerTraits";
 type RecordLike = Record<string, unknown>;
 export type ObservedCell = { x: number | null; y: number | null };
 export type ObservedPlayer = {
+  ordinaryMovePolicyKnown?: boolean;
   mentalEffect: MentalTraitEffect | null;
   traits: ObservedPlayerTraits | null;
   id: number | null;
@@ -132,14 +137,20 @@ export function observeBoardCheckpoint(
                   const p = record(entry);
                   const position = cell(p.Cell);
                   const mentalEffect = observeMentalEffect(p.Effects);
+                  const traits = observePlayerTraits(
+                    p.Data,
+                    nonnegative(p.Id),
+                    nonnegative(record(team.Data).TeamId)
+                  );
                   if (mentalEffect && flag(p.TackleZone) === true)
                     issues.push("conflicting_tackle_zone_effect");
                   return {
                     mentalEffect,
-                    traits: observePlayerTraits(
-                      p.Data,
+                    traits,
+                    ordinaryMovePolicyKnown: ordinaryMovePolicyKnown(
+                      traits,
                       nonnegative(p.Id),
-                      nonnegative(record(team.Data).TeamId)
+                      p.Effects
                     ),
                     id: nonnegative(p.Id),
                     cell: position,

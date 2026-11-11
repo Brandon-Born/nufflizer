@@ -40,6 +40,7 @@ describe("context evidence coverage (NUF-014/015/019)", () => {
       clockCount: 0,
       activationCount: 0,
       quantifiedCount: 0,
+      boundedCount: 0,
       consequenceCount: 0
     });
     expect(r.coverage.rollCandidates.scoredCount).toBe(1);

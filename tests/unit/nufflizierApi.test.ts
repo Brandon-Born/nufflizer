@@ -79,6 +79,8 @@ describe("POST /api/nufflizier/analyze", () => {
       report.events.some((e) => e.metadata.block?.reroll === "loner")
     ).toBe(true);
     expect(report.events.some((e) => e.metadata.driveEffectExpiry)).toBe(true);
+    expect(report.events.filter((e) => e.contextualBounds)).toHaveLength(3);
+    expect(report.teams.every((team) => team.impactCount === 0)).toBe(true);
     expect(
       report.events.some(
         (e) => e.metadata.blockResolution?.damageActionIds.length

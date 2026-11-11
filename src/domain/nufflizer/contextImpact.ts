@@ -1,7 +1,8 @@
 import type { PreRollEvidence } from "@/domain/replay/reconstructContext";
 
-export const CONTEXT_MODEL_VERSION = "mobility-possession-9";
-export type ContextPolicy = "declined_team_reroll" | "full_team_reroll";
+export const CONTEXT_MODEL_VERSION = "mobility-possession-10";
+export type ContextPolicy =
+  "declined_team_reroll" | "full_team_reroll" | "dodge_skill_reroll";
 
 // Unit: one other standing teammate with a legal ordinary move. Possession
 // and the threat of a marked landing are explicit heuristic weights, not
@@ -31,6 +32,15 @@ export function estimateNumericImpact(
   if (rollType === 4 && preRoll.pickupBounceExposure === null) return;
   if (rollType !== 2 && rollType !== 4) return;
 
+  if (policy === "dodge_skill_reroll" && rollType !== 2) return;
+  if (
+    rollType === 2 &&
+    (!preRoll.ordinaryMoveAvailability ||
+      preRoll.ordinaryMoveAvailability.unknownPlayerIds.length ||
+      preRoll.ordinaryMoveAvailability.knownAvailablePlayerIds.length !==
+        preRoll.otherUsefulActivations)
+  )
+    return;
   const components = {
     availableMoves: preRoll.otherUsefulActivations,
     possession: rollType === 4 ? POSSESSION_VALUE : 0,
@@ -43,6 +53,39 @@ export function estimateNumericImpact(
     policy,
     components,
     difference,
+    deviation: diceDeviation,
     contribution: diceDeviation * difference
+  };
+}
+
+// Availability bounds are possible values of the existing ordinary-move
+// component, not confidence intervals. Never substitute a midpoint or put a
+// partial bound into the report's exact point totals.
+export function estimateDodgeImpactBounds(
+  preRoll: PreRollEvidence | undefined,
+  policy: ContextPolicy | undefined,
+  diceDeviation: number,
+  successChance: number
+) {
+  const availability = preRoll?.ordinaryMoveAvailability;
+  if (
+    policy !== "dodge_skill_reroll" ||
+    !preRoll?.actorCell ||
+    preRoll.teamTurn === null ||
+    preRoll.actorCarriesBall !== false ||
+    !preRoll.movementCheckLinked ||
+    !availability?.unknownPlayerIds.length
+  )
+    return;
+  const minimum = availability.knownAvailablePlayerIds.length,
+    maximum = minimum + availability.unknownPlayerIds.length;
+  const values = [diceDeviation * minimum, diceDeviation * maximum];
+  return {
+    policy,
+    successChance,
+    minimumMoves: minimum,
+    maximumMoves: maximum,
+    lower: Math.min(...values) === 0 ? 0 : Math.min(...values),
+    upper: Math.max(...values) === 0 ? 0 : Math.max(...values)
   };
 }

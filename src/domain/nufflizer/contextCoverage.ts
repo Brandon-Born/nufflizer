@@ -9,6 +9,7 @@ export function summarizeContextEvidence(events: readonly LuckEvent[]) {
   let clockCount = 0;
   let activationCount = 0;
   let quantifiedCount = 0;
+  let boundedCount = 0;
   let consequenceCount = 0;
   const terminalTraitSources = new Set(
     events.flatMap((event) =>
@@ -30,6 +31,7 @@ export function summarizeContextEvidence(events: readonly LuckEvent[]) {
       clockCount++;
     if (preRoll?.activationId) activationCount++;
     if (event.contextualImpact !== undefined) quantifiedCount++;
+    if (event.contextualBounds !== undefined) boundedCount++;
     if (
       event.metadata.blockResolution ||
       event.metadata.movementFall ||
@@ -47,6 +49,7 @@ export function summarizeContextEvidence(events: readonly LuckEvent[]) {
     clockCount,
     activationCount,
     quantifiedCount,
+    boundedCount,
     consequenceCount
   };
 }

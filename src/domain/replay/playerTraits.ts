@@ -68,3 +68,24 @@ export function observePlayerTraits(
     acquiredSkills: skills(data, "AcquiredSkills", "AcquiredSkillsItem")
   };
 }
+
+// A deliberately narrow fresh-snapshot eligibility contract. Other skill
+// families and temporary effects require their own activation policies;
+// missing Data or Effects cannot certify that those policies are absent.
+const ORDINARY_MOVE_SKILLS = new Set([7, 30, 57, 68, 63, 59]);
+export function ordinaryMovePolicyKnown(
+  traits: ObservedPlayerTraits | null,
+  playerId: number | null,
+  effects: unknown
+): boolean {
+  return (
+    playerId !== null &&
+    traits?.dataPlayerId === playerId &&
+    traits.innateSkills !== null &&
+    traits.acquiredSkills !== null &&
+    [...traits.innateSkills, ...traits.acquiredSkills].every((skill) =>
+      ORDINARY_MOVE_SKILLS.has(skill)
+    ) &&
+    effects === ""
+  );
+}

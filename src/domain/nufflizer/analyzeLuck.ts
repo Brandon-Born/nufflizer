@@ -13,7 +13,11 @@ import {
   linkTeamRerolls,
   type RerollLink
 } from "./rerolls";
-import { CONTEXT_MODEL_VERSION, estimateNumericImpact } from "./contextImpact";
+import {
+  CONTEXT_MODEL_VERSION,
+  estimateNumericImpact,
+  estimateDodgeImpactBounds
+} from "./contextImpact";
 import {
   reconstructReplayContext,
   type PreRollEvidence
@@ -832,17 +836,33 @@ function buildNormalizedEvent(
   const delta = (actualSuccess ? 1 : 0) - probabilitySuccess;
   const weight = LUCK_CATEGORY_WEIGHTS[eventType];
   const weightedDelta = delta * weight;
+  const contextPolicy = rerollLink?.retainedOriginal
+    ? "declined_team_reroll"
+    : rerollLink?.resource === "team"
+      ? "full_team_reroll"
+      : rerollLink?.resource === "skill" && rerollLink.skill === "Dodge"
+        ? "dodge_skill_reroll"
+        : undefined;
+  const contextDeviation =
+    contextPolicy === "dodge_skill_reroll"
+      ? Number(actualSuccess) - probability.baseOdds
+      : delta;
   const contextualImpact =
     preRoll?.activeTeamId === teamId
       ? estimateNumericImpact(
           preRoll,
           rollType,
-          rerollLink?.retainedOriginal
-            ? "declined_team_reroll"
-            : rerollLink?.resource === "team"
-              ? "full_team_reroll"
-              : undefined,
-          delta
+          contextPolicy,
+          contextDeviation
+        )
+      : undefined;
+  const contextualBounds =
+    preRoll?.activeTeamId === teamId && rollType === 2
+      ? estimateDodgeImpactBounds(
+          preRoll,
+          contextPolicy,
+          contextDeviation,
+          probability.baseOdds
         )
       : undefined;
 
@@ -866,6 +886,7 @@ function buildNormalizedEvent(
     delta,
     weightedDelta,
     contextualImpact,
+    contextualBounds,
     label: armorScored
       ? actualSuccess
         ? "Armor held"
@@ -1087,6 +1108,9 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       rerollLinks,
       fall?.skillOriginalId ? fall.rollSourceId : undefined
     );
+    for (const link of rerollLinks.values())
+      if (link.skill === "Dodge" && link.decisionId)
+        activationEvidenceSources.add(link.decisionId);
     linkLonerGates(
       replayTurn.events,
       replay.replayVersion,
@@ -1247,6 +1271,14 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   );
   for (const turn of replay.turns)
     linkPickupBallConsequences(turn, ballSources);
+  for (const event of events)
+    if (
+      event.metadata.rerollSkill === "Dodge" &&
+      event.metadata.rerollDecisionId
+    ) {
+      const skill = ballSources.get(event.metadata.rerollDecisionId);
+      if (skill) skill.metadata.skillUsage = { skillId: 7, used: true };
+    }
   const blockDamage = new Map(damageSteps.map((step) => [step.actionId, step]));
   for (const consequence of blockConsequences) {
     const pool = ballSources.get(consequence.poolSourceId);
