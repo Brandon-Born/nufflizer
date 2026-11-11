@@ -674,3 +674,7 @@ The independent inventory now counts direct questions and results separately fro
 ## 2026-11-10 - Direct KO recovery with Kegs
 
 Dice-only-14 accepts a single independently corroborated Kegs +1 modifier on a direct KO check and uses its recorded 3+ target. Other modifier policies remain open.
+
+## 2026-11-10 - Held-out movement context and fallout
+
+Schema 2.1 links scoped Rush and Dodge failures to the same player's observed fall, damage and turnover. The group sums existing dice contributions and retains unknown injury odds and observed removals. Mobility-possession-3 preserves the activation through a verified ordinary stand-up and explains a verified move toward or away from an explicitly held ball. These observations add no tactical weights.

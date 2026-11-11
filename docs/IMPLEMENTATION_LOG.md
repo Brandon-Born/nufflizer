@@ -1319,3 +1319,13 @@ The independent stdlib inventory and hash-keyed public-demo fixture now retain p
 NUF-009/011 advance. The installed NetGameplay modifier enum identifies numeric code 20 as Kegs. Independent stdlib decoding found 18 modified direct KO checks in the 12 demos. Each recorded base 4+, effective 3+ and exactly one code-20 +1 modifier, and all 18 dice and outcomes agree with 3+. Fourteen also meet the explicit unique roster requirements. Demo1 at ReplayStep 654 child 4 has a successful 3 and at 370 child 6 a failed 2. Both now score under the 4/6 chance, verified through the production service. An unexplained target change or different modifier stays unscored. Other recovery modifiers, resource and lineup effects, and broader injury/casualty distributions remain open.
 
 Local corepack pnpm verify passed lint, types, 342 unit tests in 41 suites, real Redis, production build and five Chromium flows. The all-demo inventory checkpoint a62fb12 passed GitHub CI 42925670679.
+
+## 2026-11-10 - Held-out movement context and fallout
+
+NUF-016/017/018/020/021/022 advance. Independent stdlib decoding of the public demo8 replay shows Rush2+ die1 at 463/1 step 6, applied self-damage at step 7 with armor9+ on [6,3], injury [6,6], casualty D16=5, player 44's removal, and failure turnover at 463/2. The linked subtotal is −5/6 − 26/36. Two damage dice outcomes have unknown odds and removal supplies context only. Demo1 at 342/1 steps 7–8 and 342/2 gives the counterpart with held armor and −5/12 dice units. The model rejects wrong-player, manual-end, contradictory summary, intervening action and ambiguous duplicate armor links.
+
+The pre-roll reducer advances player 38 through the independently checked demo1 ordinary stand-up at 144/1 step 1. Checkpoints 143/3 and 144/3 corroborate the stance change and the movement budget after one ordinary move. Demo6 412/3 and 413/1 steps 1–2 corroborate a Dodge destination next to the active team's ball carrier after a prior Dodge and move. Edits to future state have no effect on this explanation. Demo-goblins1 536/2 records a turn-16 winner with no dice in the preceding four ordinary moves. It adds no luck.
+
+Schema 2.1 and context model mobility-possession-3 expose these observations in JSON, the timeline and CLI explanations. Broader late scoring threats, complete useful activations, causal branches across rerolls and ball outcomes, and calibrated numeric context remain open. No issue closes at this checkpoint.
+
+Local corepack pnpm verify passed lint, typecheck, 351 unit tests in 42 suites, the real Redis integration, the production build and five Chromium flows. The real-upload browser flow opened the demo1 Rush explanation and checked the linked turnover, held armor and −0.42 displayed dice subtotal.

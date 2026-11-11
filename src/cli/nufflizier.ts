@@ -13,7 +13,9 @@ import {
   scoredEvidenceForTeam,
   formatDiceContribution,
   formatPreRollPosition,
-  explainContextImpact
+  explainPreRollEvidence,
+  explainContextImpact,
+  explainMovementFall
 } from "@/domain/nufflizer/presentation";
 import { runAnalysis } from "@/server/runAnalysis";
 
@@ -102,11 +104,21 @@ function formatTeamSummary(
     ...report.howScoredSummary.map((line) => `- ${line}`),
     "",
     "Top swings:",
-    ...topMoments.map(
-      (moment, index) =>
-        `${index + 1}. Replay segment ${moment.turn} | ${moment.teamName} | ${moment.label} | weighted delta ${moment.weightedDelta.toFixed(3)} | ${
-          moment.scoringStatus
-        } (${moment.statusReason}) | ${moment.explainability.formulaSummary ?? "no formula"}${formatPreRollPosition(moment.metadata.preRoll) ? " | " + formatPreRollPosition(moment.metadata.preRoll) : ""}${moment.contextualImpact ? " | " + explainContextImpact(moment) : ""}`
+    ...topMoments.map((moment, index) =>
+      [
+        `${index + 1}. Replay segment ${moment.turn}`,
+        moment.teamName,
+        moment.label,
+        `weighted delta ${moment.weightedDelta.toFixed(3)}`,
+        `${moment.scoringStatus} (${moment.statusReason})`,
+        moment.explainability.formulaSummary ?? "no formula",
+        formatPreRollPosition(moment.metadata.preRoll),
+        explainPreRollEvidence(moment.metadata.preRoll),
+        explainContextImpact(moment),
+        explainMovementFall(moment.metadata.movementFall)
+      ]
+        .filter(Boolean)
+        .join(" | ")
     )
   ].join("\n");
 }

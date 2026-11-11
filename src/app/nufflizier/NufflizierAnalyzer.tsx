@@ -12,7 +12,9 @@ import {
   scoredEvidenceForTeam,
   formatDiceContribution,
   formatPreRollPosition,
-  explainContextImpact
+  explainPreRollEvidence,
+  explainContextImpact,
+  explainMovementFall
 } from "@/domain/nufflizer/presentation";
 import { readAnalysisResponse } from "@/lib/readAnalysisResponse";
 import { REPLAY_LIMITS } from "@/domain/replay/limits";
@@ -645,6 +647,17 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                             {moment.contextualImpact ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainContextImpact(moment)}
+                              </p>
+                            ) : null}
+                            {moment.metadata.preRoll?.actorStandUpSourceIndex !== undefined ||
+                            moment.metadata.preRoll?.teammateCarrierMove ? (
+                              <p className="mt-1 text-xs text-amber-100/80">
+                                {explainPreRollEvidence(moment.metadata.preRoll)}
+                              </p>
+                            ) : null}
+                            {moment.metadata.movementFall ? (
+                              <p className="mt-1 text-xs text-amber-100/80">
+                                {explainMovementFall(moment.metadata.movementFall)}
                               </p>
                             ) : null}
                             {moment.explainability.formulaSummary ? (

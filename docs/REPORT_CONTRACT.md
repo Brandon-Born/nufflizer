@@ -2,7 +2,7 @@
 
 Updated 2026-11-10. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.0` and model `dice-only-14`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.1` and model `dice-only-14`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -97,3 +97,9 @@ HTTP callers request worker-side serialization with the same terminating deadlin
 `corepack pnpm verify` runs lint, typecheck, all unit suites, the real Redis quota integration, production build and browser flows sequentially. `test:e2e` prepares the worker and rebuilds the production application before starting Playwright; it cannot silently use a previous `.next` UI build. CI uses the same production build/browser command after its frozen install, audit and unit checks, without a duplicate production build.
 
 Independent checks include deliberately inconsistent schema/model versions, totals, coverage, weights, event ownership, key-moment references and fabricated verdicts; bounded body reads and cancellation; exact worker output-size boundaries; real-BBR upload/export/filter/reset; malformed-success responses; HTML 413/504 errors; and user cancellation. See the remediation ledger for hosted quota, build and CI evidence and remaining rule, context and deployment acceptance.
+
+## Schema 2.1 movement evidence
+
+A fresh scored Dodge or Rush can expose an observed fall when the same player's failed move summary is immediately followed by applied self-damage and a direct failure turnover in the same replay step. Dodge and Rush damage source codes are 0 and 9 respectively. The group points to the existing damage-step evidence, ordered move outcome and turnover. Its subtotal is the original movement contribution plus the existing damage dice subtotal. Injury and casualty with unknown odds remain unscored. A removal is reported as an observed consequence. A different actor, intervening action, ambiguous replacement or contradictory summary prevents linkage.
+
+Mobility-possession-3 retains a corroborated ordinary stand-up and its recorded movement budget before later rolls. It reports a verified Dodge that crosses the adjacency boundary to a teammate explicitly holding the ball. This pre-roll observation and the movement-fall aftermath appear separately from the existing heuristic context contribution.

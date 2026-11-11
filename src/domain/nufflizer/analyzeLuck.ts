@@ -13,6 +13,7 @@ import {
 } from "@/domain/replay/reconstructContext";
 import { verifyArmorCheck } from "./armorChecks";
 import { summarizeDamageSteps } from "./damageSteps";
+import { findMovementFall, summarizeMovementFall } from "./movementFall";
 import { linkRegeneration, type RegenerationEvidence } from "./regeneration";
 import { countKoRecoveryChecks, verifyKoRecovery } from "./koRecovery";
 import { linkApothecary, type ApothecaryRecord } from "./apothecary";
@@ -33,6 +34,7 @@ import { createHash } from "node:crypto";
 
 import {
   DICE_MODEL_VERSION,
+  REPORT_SCHEMA_VERSION,
   LUCK_CATEGORY_WEIGHTS
 } from "@/domain/nufflizer/constants";
 import { classifyRollContext } from "@/domain/nufflizer/classifyRollContext";
@@ -932,12 +934,18 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   );
 
   const events: LuckEvent[] = [];
+  const movementFalls: NonNullable<ReturnType<typeof findMovementFall>>[] = [];
   const ownership = buildPlayerOwnershipIndex(replay);
   const { playerToTeam } = ownership;
   const contextBySource = reconstructPreRollEvidence(replay);
   const koRecoveryChecks = countKoRecoveryChecks(replay.turns);
 
   for (const replayTurn of replay.turns) {
+    const fall =
+      replay.replayVersion === "1-4-0-0"
+        ? findMovementFall(replayTurn)
+        : undefined;
+    if (fall) movementFalls.push(fall);
     const armorCounts = new Map<string, number>();
     for (const event of replayTurn.events) {
       if (
@@ -1009,6 +1017,30 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       }
 
       events.push(normalized);
+    }
+  }
+
+  const damageSteps = summarizeDamageSteps(events);
+  if (movementFalls.length > 0) {
+    const damageByAction = new Map(damageSteps.map((step) => [step.actionId, step]));
+    const eventsById = new Map(events.map((event) => [event.id, event]));
+    const eventsBySource = new Map(events.map((event) => [event.metadata.sourceId, event]));
+    for (const { rollSourceId, evidence } of movementFalls) {
+      const roll = eventsBySource.get(rollSourceId);
+      const damage = damageByAction.get(evidence.damageActionId);
+      if (
+        !roll ||
+        roll.scoringStatus !== "scored" ||
+        roll.actualSuccess !== false ||
+        !damage ||
+        damage.playerId !== roll.playerId ||
+        damage.teamId !== roll.teamId
+      )
+        continue;
+      roll.metadata.movementFall = {
+        ...evidence,
+        ...summarizeMovementFall(roll, damage, eventsById)
+      };
     }
   }
 
@@ -1136,7 +1168,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   const idSeed = `${replay.matchId}:${JSON.stringify(events)}`;
 
   return {
-    schemaVersion: "2.0",
+    schemaVersion: REPORT_SCHEMA_VERSION,
     modelVersion: DICE_MODEL_VERSION,
     contextModelVersion: CONTEXT_MODEL_VERSION,
     limitations: [
@@ -1153,7 +1185,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     },
     verdict,
     coverage,
-    damageSteps: summarizeDamageSteps(events),
+    damageSteps,
     weightTable: { ...LUCK_CATEGORY_WEIGHTS },
     howScoredSummary: buildHowScoredSummary(
       verdict.summary,

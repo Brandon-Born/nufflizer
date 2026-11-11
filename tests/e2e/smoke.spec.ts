@@ -62,7 +62,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.0");
+  expect(report.schemaVersion).toBe("2.1");
   expect(report.modelVersion).toBe("dice-only-14");
   // Independent raw decode: sequence 6 step 4 offers Push/Stumbles; away
   // chooses Stumbles (7/0/0) and outcome 6 resolves at 9/0/1.
@@ -128,6 +128,19 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
     ])
   );
   expect(report.verdict.status).toBe("partial_analysis");
+  await page
+    .getByLabel("Category", { exact: true })
+    .selectOption("movement_risk");
+  const fallRow = page.locator("tbody tr").filter({ hasText: "source-2701" });
+  await fallRow.getByText("Why", { exact: true }).click();
+  await expect(fallRow).toContainText(
+    "The player fell and the turn ended. Armor held."
+  );
+  await expect(fallRow).toContainText(
+    "Dice subtotal for the movement check and scored damage: -0.42."
+  );
+  await fallRow.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: "/tmp/nufflizier-movement-fall.png" });
   await page.getByLabel("Category", { exact: true }).selectOption("block");
   await page.getByLabel("Scoring status").selectOption("excluded");
   await expect(page.getByRole("status")).toContainText("matching events");

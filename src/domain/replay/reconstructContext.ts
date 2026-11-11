@@ -17,6 +17,13 @@ export type PreRollEvidence = {
   turnsRemaining: number | null;
   activationId: string | null;
   actorCell: Cell | null;
+  actorStandUpSourceIndex?: number;
+  actorMovementRemaining?: number;
+  teammateCarrierMove?: {
+    carrierCell: Cell;
+    destination: Cell;
+    effect: "approach" | "leave";
+  };
   actorCarriesBall: boolean | null;
   movementCheckLinked: boolean;
   otherUsefulActivations: number | null;
@@ -25,6 +32,7 @@ export type PreRollEvidence = {
 
 const NORMAL_TURN = 5;
 const STANDING = 0;
+const PRONE = 1;
 function cell(value: ObservedCell | undefined): Cell | null {
   return value && value.x !== null && value.y !== null
     ? { x: value.x, y: value.y }
@@ -42,6 +50,9 @@ function neighbors(p: Cell): Cell[] {
       .filter((y) => x !== 0 || y !== 0)
       .map((y) => ({ x: p.x + x, y: p.y + y }))
   );
+}
+function distance(a: Cell, b: Cell): number {
+  return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 }
 function key(p: Cell): number {
   return p.x * 15 + p.y;
@@ -104,7 +115,8 @@ function summarize(
   checkpoint: ReplayBoardCheckpoint,
   event: ReplayEvent,
   step: ReplayEvent | undefined,
-  activationId: string | null
+  activationId: string | null,
+  standUpSourceIndex: number | undefined
 ): PreRollEvidence {
   const actorId = id(event.playerId);
   const active = board.teams.find(
@@ -238,6 +250,45 @@ function summarize(
         ).length / 8;
     }
   }
+  const destination = stepCell(step?.payload?.CellTo);
+  const movementCheckLinked =
+    rollType === 2 &&
+    normal &&
+    Boolean(owned) &&
+    consistentGeometry &&
+    step?.sourceTag === "PlayerStep" &&
+    step.stepType === 1 &&
+    step.stepActorId === event.playerId &&
+    step.actionId !== undefined &&
+    step.actionId === event.actionId &&
+    same(actorCell, stepCell(step.payload?.CellFrom)) &&
+    Boolean(
+      actorCell &&
+      destination &&
+      pitch(destination) &&
+      distance(actorCell, destination) === 1 &&
+      !occupied.has(key(destination))
+    );
+  const carrierCell = cell(board.ball.cell);
+  let teammateCarrierMove: PreRollEvidence["teammateCarrierMove"];
+  if (
+    movementCheckLinked &&
+    actorCell &&
+    destination &&
+    carrierCell &&
+    board.ball.possession === "held" &&
+    board.ball.holderRosterIndex === active?.rosterIndex &&
+    board.ball.carrierId !== actorId
+  ) {
+    const fromAdjacent = distance(actorCell, carrierCell) === 1;
+    const toAdjacent = distance(destination, carrierCell) === 1;
+    if (fromAdjacent !== toAdjacent)
+      teammateCarrierMove = {
+        carrierCell,
+        destination,
+        effect: toAdjacent ? "approach" : "leave"
+      };
+  }
   return {
     checkpointAfter: checkpoint.afterSourceIndex,
     checkpointReplayStep: checkpoint.replayStep ?? undefined,
@@ -248,27 +299,22 @@ function summarize(
     turnsRemaining,
     activationId,
     actorCell,
+    actorStandUpSourceIndex:
+      actorId !== null && board.activePlayerId === actorId
+        ? standUpSourceIndex
+        : undefined,
+    actorMovementRemaining:
+      standUpSourceIndex !== undefined &&
+      actorCell &&
+      board.activePlayerId === actorId
+        ? (actor?.movementRemaining ?? undefined)
+        : undefined,
+    teammateCarrierMove,
     actorCarriesBall:
       board.ball.possession === "unknown"
         ? null
         : board.ball.possession === "held" && board.ball.carrierId === actorId,
-    movementCheckLinked:
-      rollType === 2 &&
-      normal &&
-      Boolean(owned) &&
-      consistentGeometry &&
-      step?.sourceTag === "PlayerStep" &&
-      step.stepType === 1 &&
-      same(actorCell, stepCell(step.payload?.CellFrom)) &&
-      Boolean(
-        actorCell &&
-        neighbors(actorCell).some(
-          (p) =>
-            pitch(p) &&
-            !occupied.has(key(p)) &&
-            same(p, stepCell(step.payload?.CellTo))
-        )
-      ),
+    movementCheckLinked,
     otherUsefulActivations,
     pickupBounceExposure
   };
@@ -287,7 +333,10 @@ export function reconstructPreRollEvidence(
   let board: ObservedBoard | null = null;
   let step: ReplayEvent | undefined;
   let activationId: string | null = null;
+  let activationActionCode: number | undefined;
   let moveObserved = false;
+  let standUpPending = false;
+  let standUpSourceIndex: number | undefined;
   for (const turn of replay.turns)
     for (const event of turn.events) {
       if (event.sourceIndex === undefined) continue;
@@ -310,8 +359,16 @@ export function reconstructPreRollEvidence(
             ? next
             : null;
         moveObserved = false;
+        standUpPending = false;
+        standUpSourceIndex = undefined;
       }
       if (event.type === "step" || event.sourceTag === "BallStep") {
+        if (standUpPending) {
+          board = null;
+          activationId = null;
+        }
+        standUpPending =
+          event.sourceTag === "PlayerStep" && event.stepType === 7;
         step = event;
         moveObserved = false;
         continue;
@@ -326,7 +383,14 @@ export function reconstructPreRollEvidence(
       )
         result.set(
           event.id,
-          summarize(board, checkpoint, event, step, activationId)
+          summarize(
+            board,
+            checkpoint,
+            event,
+            step,
+            activationId,
+            standUpSourceIndex
+          )
         );
       if (
         [
@@ -368,6 +432,60 @@ export function reconstructPreRollEvidence(
       ) {
         board = { ...board, activePlayerId: actor };
         activationId = event.id ?? null;
+        activationActionCode = event.actionCode;
+        standUpSourceIndex = undefined;
+        continue;
+      }
+      if (
+        standUpPending &&
+        event.sourceTag === "ResultNoRollSuccess" &&
+        event.locator?.messageIndex === 0 &&
+        inStep &&
+        stepActorMatches &&
+        actor === board.activePlayerId &&
+        activationId &&
+        activationActionCode === 1 &&
+        board.phaseCode === NORMAL_TURN &&
+        board.stable === true &&
+        step?.payload?.IsEvaluation === 0 &&
+        step.payload.Skill === 0 &&
+        (step.stepTargetId === step.stepActorId || step.stepTargetId === "-1")
+      ) {
+        const active = board.teams.find(
+          (t) => t.rosterIndex === board!.activeTeamIndex
+        );
+        const player = active?.players.find((p) => p.id === actor);
+        if (
+          player?.pitchLocation === "on_pitch" &&
+          player.statusCode === PRONE &&
+          player.canAct === true &&
+          player.movementRemaining !== null &&
+          player.movementRemaining >= 1 &&
+          player.movementRemaining <= 16 &&
+          (player.situationCode === null || player.situationCode === 0) &&
+          same(cell(player.cell), stepCell(step.payload.CellFrom)) &&
+          same(cell(player.cell), stepCell(step.payload.CellTo)) &&
+          active?.explicitTeamId != null &&
+          event.actorTeamId === String(active.explicitTeamId) &&
+          event.actorTeamSource !== "turn_inferred" &&
+          board.ball.carrierId !== actor
+        ) {
+          // In this replay shape the checkpoint already reflects the stand-up
+          // movement cost. Adjacent real checkpoints retain the same budget.
+          board = changePlayer(board, actor, (p) => ({
+            ...p,
+            statusCode: STANDING,
+            tackleZone: null
+          }));
+          standUpPending = false;
+          standUpSourceIndex = event.sourceIndex;
+          continue;
+        }
+      }
+      if (standUpPending) {
+        board = null;
+        activationId = null;
+        standUpSourceIndex = undefined;
         continue;
       }
       if (
@@ -438,6 +556,7 @@ export function reconstructPreRollEvidence(
       // For unverified mutations do not fill the gap from a future snapshot.
       board = null;
       activationId = null;
+      standUpSourceIndex = undefined;
     }
   return result;
 }

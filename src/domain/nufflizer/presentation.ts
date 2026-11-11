@@ -40,6 +40,27 @@ export function formatPreRollPosition(
   return [period, "team turn " + context.teamTurn].filter(Boolean).join(", ");
 }
 
+export function explainPreRollEvidence(
+  context: LuckReport["events"][number]["metadata"]["preRoll"]
+): string | null {
+  const details: string[] = [];
+  if (context?.actorStandUpSourceIndex !== undefined) {
+    details.push(
+      context.actorMovementRemaining === undefined
+        ? "The player stood up earlier in this activation."
+        : `The player stood up earlier in this activation and had ${context.actorMovementRemaining} movement points at this roll.`
+    );
+  }
+  if (context?.teammateCarrierMove) {
+    details.push(
+      context.teammateCarrierMove.effect === "approach"
+        ? "This move would put the dodging player next to their ball carrier."
+        : "This move would take the dodging player away from their ball carrier."
+    );
+  }
+  return details.length > 0 ? details.join(" ") : null;
+}
+
 export function explainContextImpact(
   event: LuckReport["events"][number]
 ): string | null {
@@ -63,4 +84,25 @@ export function explainContextImpact(
     impact.contribution.toFixed(2) +
     " context units under the recorded reroll policy."
   );
+}
+
+export function explainMovementFall(
+  fall: LuckReport["events"][number]["metadata"]["movementFall"]
+): string | null {
+  if (!fall) return null;
+  const aftermath = [
+    "The player fell and the turn ended.",
+    fall.armorHeld === true
+      ? "Armor held."
+      : fall.armorHeld === false
+        ? "Armor broke."
+        : null,
+    fall.playerRemoved ? "The player was removed from the pitch." : null
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const unknown = fall.unscoredDamageRolls
+    ? ` Damage rolls without verified odds: ${fall.unscoredDamageRolls}.`
+    : "";
+  return `${aftermath} Dice subtotal for the movement check and scored damage: ${fall.diceContribution.toFixed(2)}.${unknown}`;
 }

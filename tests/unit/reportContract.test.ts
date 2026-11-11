@@ -29,7 +29,7 @@ describe("NUF-021 versioned report contract", () => {
       r.weightTable.ball_handling = 100;
     },
     (r: ReturnType<typeof report>) => {
-      r.schemaVersion = "1.0" as "2.0";
+      r.schemaVersion = "1.0" as typeof r.schemaVersion;
     },
     (r: ReturnType<typeof report>) => {
       r.modelVersion = "future" as typeof r.modelVersion;

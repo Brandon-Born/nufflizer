@@ -1,10 +1,11 @@
 import { z } from "zod";
 import { VERDICT_SUMMARIES } from "./explainabilityCopy";
 import { CONTEXT_MODEL_VERSION } from "./contextImpact";
-import { DICE_MODEL_VERSION, LUCK_CATEGORY_WEIGHTS } from "./constants";
+import { DICE_MODEL_VERSION, LUCK_CATEGORY_WEIGHTS, REPORT_SCHEMA_VERSION } from "./constants";
 import { REPLAY_LIMITS } from "@/domain/replay/limits";
 import { summarizeRollFamilies } from "./rollCoverage";
 import { summarizeDamageSteps } from "./damageSteps";
+import { summarizeMovementFall } from "./movementFall";
 
 export const LuckEventTypeSchema = z.enum([
   "block",
@@ -23,6 +24,10 @@ const count = z.number().int().min(0).max(REPLAY_LIMITS.events);
 const text = z.string().max(REPLAY_LIMITS.decodedBytes);
 const probability = finite.min(0).max(1);
 const numbers = z.array(finite).max(REPLAY_LIMITS.xmlNodes);
+const pitchCell = z.strictObject({
+  x: z.number().int().min(0).max(25),
+  y: z.number().int().min(0).max(14)
+});
 export const LuckEventMetadataSchema = z.strictObject({
   originalDice: z.unknown().optional(),
   rerollOriginalId: text.optional(),
@@ -63,12 +68,14 @@ export const LuckEventMetadataSchema = z.strictObject({
       teamTurn: z.number().int().positive().nullable(),
       turnsRemaining: count.nullable(),
       activationId: text.nullable(),
-      actorCell: z
-        .strictObject({
-          x: z.number().int().min(0).max(25),
-          y: z.number().int().min(0).max(14)
-        })
-        .nullable(),
+      actorCell: pitchCell.nullable(),
+      actorStandUpSourceIndex: count.optional(),
+      actorMovementRemaining: count.optional(),
+      teammateCarrierMove: z.strictObject({
+        carrierCell: pitchCell,
+        destination: pitchCell,
+        effect: z.enum(["approach", "leave"])
+      }).optional(),
       actorCarriesBall: z.boolean().nullable(),
       movementCheckLinked: z.boolean(),
       otherUsefulActivations: z.number().int().min(0).max(64).nullable(),
@@ -117,6 +124,16 @@ export const LuckEventMetadataSchema = z.strictObject({
       perspective: z.literal("subject_team")
     })
     .optional(),
+  movementFall: z.strictObject({
+    damageActionId: text,
+    moveOutcomeSourceIndex: count,
+    turnoverSourceIndex: count,
+    turnoverChildIndex: count,
+    diceContribution: finite,
+    unscoredDamageRolls: count,
+    armorHeld: z.boolean().nullable(),
+    playerRemoved: z.boolean()
+  }).optional(),
   apothecary: z
     .strictObject({
       originalSourceId: text,
@@ -233,7 +250,7 @@ function near(a: number, b: number): boolean {
 
 export const LuckReportSchema = z
   .strictObject({
-    schemaVersion: z.literal("2.0"),
+    schemaVersion: z.literal(REPORT_SCHEMA_VERSION),
     modelVersion: z.literal(DICE_MODEL_VERSION),
     contextModelVersion: z.literal(CONTEXT_MODEL_VERSION),
     limitations: z.array(text).min(1).max(REPLAY_LIMITS.events),
@@ -313,10 +330,13 @@ export const LuckReportSchema = z
     const candidates = report.events.filter(
       (event) => event.metadata.isRollCandidate
     );
+    const damageSteps = summarizeDamageSteps(report.events);
     require(JSON.stringify(report.damageSteps) ===
       JSON.stringify(
-        summarizeDamageSteps(report.events)
+        damageSteps
       ), "Damage-step totals must reconcile with their original evidence.");
+    const damageByAction = new Map(damageSteps.map((step) => [step.actionId, step]));
+    const linkedDamageActions = new Set<string>();
     const families = summarizeRollFamilies(candidates);
     require(families.length === report.coverage.rollFamilies.length &&
       families.every((expected, index) => {
@@ -403,6 +423,34 @@ export const LuckReportSchema = z
         require(context.checkpointAfter <
           event.metadata
             .sourceIndex, "Pre-roll evidence must precede its source.");
+      if (context?.actorStandUpSourceIndex !== undefined) {
+        require(
+          context.activationId !== null &&
+            context.actorCell !== null &&
+            event.metadata.sourceIndex !== undefined &&
+            context.actorStandUpSourceIndex > context.checkpointAfter &&
+            context.actorStandUpSourceIndex < event.metadata.sourceIndex,
+          "Stand-up evidence must be between the checkpoint and roll of the same activation."
+        );
+      }
+      const carrierMove = context?.teammateCarrierMove;
+      if (carrierMove) {
+        const { carrierCell, destination, effect } = carrierMove;
+        const distance = (a: typeof carrierCell, b: typeof carrierCell) =>
+          Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+        const from = context?.actorCell;
+        require(
+          event.metadata.rollType === 2 &&
+            context?.movementCheckLinked === true &&
+            context.activeTeamId === event.teamId &&
+            context.actorCarriesBall === false &&
+            !!from &&
+            distance(from, destination) === 1 &&
+            distance(from, carrierCell) === (effect === "approach" ? 2 : 1) &&
+            distance(destination, carrierCell) === (effect === "approach" ? 1 : 2),
+          "Carrier proximity requires a verified move across the adjacency boundary."
+        );
+      }
       const impact = event.contextualImpact;
       if (impact) {
         require(event.scoringStatus === "scored" &&
@@ -422,6 +470,55 @@ export const LuckReportSchema = z
       }
       const block = event.metadata.block;
       const damage = event.metadata.damage;
+      const fall = event.metadata.movementFall;
+      if (fall) {
+        const step = damageByAction.get(fall.damageActionId);
+        const { locator, rollType, sourceIndex } = event.metadata;
+        require(
+          !linkedDamageActions.has(fall.damageActionId) &&
+            event.scoringStatus === "scored" &&
+            event.actualSuccess === false &&
+            event.metadata.sourceTag === "ResultRoll" &&
+            (rollType === 1 || rollType === 2) &&
+            step?.playerId === event.playerId &&
+            step?.teamId === event.teamId &&
+            sourceIndex !== undefined &&
+            fall.moveOutcomeSourceIndex === sourceIndex + 2 &&
+            locator?.replayStep !== undefined &&
+            locator.childIndex !== undefined &&
+            locator.stepIndex !== undefined &&
+            fall.turnoverChildIndex === locator.childIndex + 1 &&
+            fall.turnoverSourceIndex <= report.coverage.sourceRecordCount,
+          "A movement fall requires one failed Rush or Dodge and a linked turnover."
+        );
+        linkedDamageActions.add(fall.damageActionId);
+        if (step) {
+          const expected = summarizeMovementFall(event, step, ids);
+          require(
+            near(fall.diceContribution, expected.diceContribution) &&
+              fall.armorHeld === expected.armorHeld &&
+              fall.unscoredDamageRolls === expected.unscoredDamageRolls &&
+              fall.playerRemoved === expected.playerRemoved &&
+              step.eventIds.every((id) => {
+                const e = ids.get(id)!;
+                const location = e.metadata.locator;
+                const index = e.metadata.sourceIndex;
+                return (
+                  e.turn === event.turn &&
+                  location?.replayStep === locator?.replayStep &&
+                  location?.childIndex === locator?.childIndex &&
+                  location?.stepIndex === (locator?.stepIndex ?? -1) + 1 &&
+                  index !== undefined &&
+                  index > fall.moveOutcomeSourceIndex &&
+                  index < fall.turnoverSourceIndex &&
+                  (!e.metadata.damage ||
+                    e.metadata.damage.sourceCode === (rollType === 1 ? 9 : 0))
+                );
+              }),
+            "Movement-fall evidence and subtotal must match the following damage step."
+          );
+        }
+      }
       if (block) {
         require(event.type === "block" &&
           teamIds.has(block.defenderTeamId) &&

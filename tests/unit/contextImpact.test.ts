@@ -1,7 +1,12 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
 import { estimateNumericImpact } from "@/domain/nufflizer/contextImpact";
 import { LuckReportSchema } from "@/domain/nufflizer/reportSchema";
+import { analyzeReplayLuck } from "@/domain/nufflizer/analyzeLuck";
+import { explainPreRollEvidence } from "@/domain/nufflizer/presentation";
+import { parseReplayXml } from "@/domain/replay/parseXml";
+import { decodeReplayInput } from "@/domain/replay/decodeReplay";
 import { contextReplayXml } from "../helpers/contextReplay";
 
 describe("bounded pre-roll context (NUF-016–019)", () => {
@@ -117,5 +122,136 @@ describe("bounded pre-roll context (NUF-016–019)", () => {
     expect(contributions.reduce((a, b) => a + b, 0)).toBeCloseTo(0, 12);
     r.teams[0].impactScore++;
     expect(LuckReportSchema.safeParse(r).success).toBe(false);
+  });
+});
+
+describe("held-out public replay context (NUF-016/017/022)", () => {
+  function demo(name: string) {
+    return parseReplayXml(
+      decodeReplayInput(readFileSync(`demo-replays/${name}`, "utf8")).xml
+    );
+  }
+
+  it("retains the declared activation and movement through a corroborated stand-up", () => {
+    // Independent stdlib decode: 143/3 player38 is prone at [13,5] with
+    // CanAct1 and 3 points. At 144/1 steps 0–2 he declares Move, stands,
+    // and dodges to [14,4]. The 144/3 checkpoint shows 2 points left.
+    const replay = demo("demo1.bbr");
+    const dodge = (report: ReturnType<typeof analyzeReplayLuck>) =>
+      report.events.find(
+        (event) =>
+          event.metadata.locator?.replayStep === 144 && event.type === "dodge"
+      )!;
+    const report = analyzeReplayLuck(replay);
+    const pre = dodge(report).metadata.preRoll;
+    expect(pre).toMatchObject({
+      checkpointReplayStep: 143,
+      teamTurn: 3,
+      activeTeamId: "1",
+      actorCell: { x: 13, y: 5 },
+      actorMovementRemaining: 3,
+      movementCheckLinked: true,
+      otherUsefulActivations: null
+    });
+    expect(explainPreRollEvidence(pre)).toContain(
+      "stood up earlier in this activation"
+    );
+    expect(dodge(report).contextualImpact).toBeUndefined();
+    const turn = replay.turns.find((turn) =>
+      turn.events.some(
+        (event) => event.sourceIndex === pre!.actorStandUpSourceIndex
+      )
+    )!;
+    const stand = turn.events.findIndex(
+      (event) => event.sourceIndex === pre!.actorStandUpSourceIndex
+    );
+    expect(turn.events[stand]).toMatchObject({
+      sourceTag: "ResultNoRollSuccess",
+      locator: { replayStep: 144, childIndex: 1, stepIndex: 1, messageIndex: 0 }
+    });
+    turn.events.splice(stand, 1);
+    expect(dodge(analyzeReplayLuck(replay)).metadata.preRoll).toBeUndefined();
+  });
+
+  it("explains movement toward a held ball using only the board before the dodge", () => {
+    // Independent stdlib decode: 412/3 is the active side's turn11 in
+    // period1 with player42 holding the ball at [15,6]. At 413/1 step1
+    // player45 moves to [13,6] on Dodge3+ die5. Step2 attempts [14,7].
+    const replay = demo("demo6.bbr");
+    const dodges = (report: ReturnType<typeof analyzeReplayLuck>) =>
+      report.events.filter(
+        (event) =>
+          event.metadata.locator?.replayStep === 413 && event.type === "dodge"
+      );
+    const report = analyzeReplayLuck(replay);
+    const [first, second] = dodges(report);
+    expect(first!.metadata.preRoll?.teammateCarrierMove).toBeUndefined();
+    const pre = second!.metadata.preRoll;
+    expect(pre).toMatchObject({
+      checkpointReplayStep: 412,
+      teamTurn: 11,
+      turnsRemaining: 5,
+      actorCell: { x: 13, y: 6 },
+      actorCarriesBall: false,
+      teammateCarrierMove: {
+        carrierCell: { x: 15, y: 6 },
+        destination: { x: 14, y: 7 },
+        effect: "approach"
+      }
+    });
+    expect(explainPreRollEvidence(pre)).toContain("next to their ball carrier");
+    expect(second!.contextualImpact).toBeUndefined();
+    expect(LuckReportSchema.safeParse(report).success).toBe(true);
+    const next = replay.boardCheckpoints!.find(
+      (checkpoint) => checkpoint.replayStep === 413
+    )!;
+    next.board!.ball.possession = "unknown";
+    expect(dodges(analyzeReplayLuck(replay))[1]!.metadata.preRoll).toEqual(pre);
+  });
+
+  it("keeps a winning turn-16 touchdown with no dice out of luck totals", () => {
+    // Independent stdlib decode: 535/3 is a 1–1 board with player12
+    // carrying at [21,13]. 536/1 contains four ordinary moves and no
+    // dice. 536/2 records the touchdown. 536/12 records the 2–1 board.
+    const replay = demo("demo-goblins1.bbr");
+    const before = replay.boardCheckpoints!.find((c) => c.replayStep === 535)!;
+    const after = replay.boardCheckpoints!.find((c) => c.replayStep === 536)!;
+    expect(
+      before.board?.teams.map((team) => [team.gameTurn, team.touchdowns])
+    ).toEqual([
+      [16, 1],
+      [15, 1]
+    ]);
+    expect(before.board?.ball).toMatchObject({
+      possession: "held",
+      carrierId: 12,
+      cell: { x: 21, y: 13 }
+    });
+    expect(after.board?.teams.map((team) => team.touchdowns)).toEqual([2, 1]);
+    expect(
+      replay.turns
+        .flatMap((turn) => turn.events)
+        .find(
+          (event) =>
+            event.sourceTag === "EventTouchdown" &&
+            event.locator?.replayStep === 536
+        )
+    ).toMatchObject({
+      locator: { childIndex: 2 },
+      payload: { PlayerId: "12" }
+    });
+    const sameStep = analyzeReplayLuck(replay).events.filter(
+      (event) => event.metadata.locator?.replayStep === 536
+    );
+    // The drive boundary subsequently emits two independent KO checks.
+    expect(
+      sameStep.map((event) => [
+        event.metadata.locator?.childIndex,
+        event.metadata.rollType
+      ])
+    ).toEqual([
+      [4, 13],
+      [5, 13]
+    ]);
   });
 });
