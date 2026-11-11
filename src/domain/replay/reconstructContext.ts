@@ -1,4 +1,5 @@
 import { unmodifiedD6Check } from "./numericCheck";
+import { observedActorRoster } from "./observedActorRoster";
 import {
   pickupBounceSuccessors,
   plainPickupMoveOutcome,
@@ -16,6 +17,8 @@ import {
 } from "./activeMoveContinuation";
 import {
   ordinaryMovesAfterSuccess,
+  ordinaryMovesAtPickup,
+  type OrdinaryMoveCandidates,
   type OrdinaryMoveAvailability
 } from "./ordinaryMoveAvailability";
 import { checkpointClockEpochs } from "./boardState";
@@ -47,6 +50,7 @@ import {
 type Cell = { x: number; y: number };
 export type PreRollEvidence = {
   pickupSuccessors?: PickupBounceSuccessors;
+  pickupMoveAvailability?: OrdinaryMoveCandidates;
   pickupSettlementKnown?: boolean;
   actorDodgeMoveSourceId?: string;
   activeMoveContinuation?: ActiveMoveContinuation;
@@ -516,6 +520,8 @@ function summarize(
   return {
     activeMoveContinuation,
     pickupSuccessors,
+    pickupMoveAvailability: pickupSuccessors && owned && actorId !== null
+      ? ordinaryMovesAtPickup(board, actorId) : undefined,
     pickupSettlementKnown:
       rollType === 4 && consistentGeometry
         ? plainBounceSettlementKnown(board)
@@ -643,6 +649,7 @@ export function reconstructReplayContext(
   let pickupGeometryTrusted = false;
   let standUpPending = false;
   let standUpSourceIndex: number | undefined;
+  let qualifiedMoveTeamId: string | undefined;
   let pickupSourceId: string | undefined;
   let blockDeclarationActionId: string | undefined;
   let foulAppearanceActionId: string | undefined;
@@ -1391,6 +1398,22 @@ export function reconstructReplayContext(
         activationEpoch = epochs.get(checkpoint);
         activationCheckpointAfter = checkpoint.afterSourceIndex;
         activationActionCode = event.actionCode;
+        const moveRoster = actor !== null && event.actorTeamId
+          ? observedActorRoster(board, actor, event.actorTeamId, replay.teams.map((t) => t.id))
+          : undefined;
+        const moveActor = moveRoster?.players.find((p) => p.id === actor);
+        qualifiedMoveTeamId =
+          event.actionCode === 1 &&
+          event.actorTeamId &&
+          event.actorTeamSource !== "turn_inferred" &&
+          p?.Action === 1 &&
+          (p.TeamId === undefined || String(p.TeamId) === event.actorTeamId) &&
+          Object.keys(p).every((k) => ["Action", "TeamId"].includes(k)) &&
+          step.payload?.Skill === 0 &&
+          step.payload.IsEvaluation === 0 &&
+          moveActor && same(cell(moveActor.cell), stepCell(step.payload.CellFrom))
+            ? event.actorTeamId
+            : undefined;
         actorDodgeMoveSourceId = undefined;
         blockDeclarationActionId =
           event.actionCode === 2 ? event.actionId : undefined;
@@ -1423,11 +1446,25 @@ export function reconstructReplayContext(
         step.payload.Skill === 0 &&
         (step.stepTargetId === step.stepActorId || step.stepTargetId === "-1")
       ) {
-        const active = board.teams.find(
-          (t) => t.rosterIndex === board!.activeTeamIndex
-        );
+        const active = event.actorTeamId && actor !== null
+          ? observedActorRoster(board, actor, event.actorTeamId, replay.teams.map((t) => t.id))
+          : undefined;
         const player = active?.players.find((p) => p.id === actor);
+        const budgetContinuityKnown =
+          board.activeTeamIndex !== null && active?.explicitTeamId != null;
+        const qualifiedUnknownSide =
+          !budgetContinuityKnown &&
+          qualifiedMoveTeamId === event.actorTeamId &&
+          activationCheckpointAfter === checkpoint.afterSourceIndex &&
+          step?.payload?.State === 3 &&
+          Object.keys(step.payload).every((k) => [
+            "Probability", "PlayerId", "TargetId", "IsEvaluation", "StepType",
+            "CellTo", "State", "CellFrom", "Skill"
+          ].includes(k)) &&
+          (!p || Object.keys(p).length === 0);
         if (
+          !board.issues.length &&
+          !player?.mentalEffect &&
           player?.pitchLocation === "on_pitch" &&
           player.statusCode === PRONE &&
           player.canAct === true &&
@@ -1437,17 +1474,18 @@ export function reconstructReplayContext(
           (player.situationCode === null || player.situationCode === 0) &&
           same(cell(player.cell), stepCell(step.payload.CellFrom)) &&
           same(cell(player.cell), stepCell(step.payload.CellTo)) &&
-          active?.explicitTeamId != null &&
-          event.actorTeamId === String(active.explicitTeamId) &&
+          (budgetContinuityKnown || qualifiedUnknownSide) &&
           event.actorTeamSource !== "turn_inferred" &&
           board.ball.carrierId !== actor
         ) {
-          // In this replay shape the checkpoint already reflects the stand-up
-          // movement cost. Adjacent real checkpoints retain the same budget.
+          // Known-side paired checkpoints already reflect this shape's cost.
+          // Missing-side evidence proves the actual stand-up, but cannot prove
+          // when its cost was charged. Never borrow the later turn-reset budget.
           board = changePlayer(board, actor, (p) => ({
             ...p,
             statusCode: STANDING,
-            tackleZone: null
+            tackleZone: null,
+            movementRemaining: budgetContinuityKnown ? p.movementRemaining : null
           }));
           standUpPending = false;
           standUpSourceIndex = event.sourceIndex;

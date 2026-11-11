@@ -1,9 +1,11 @@
 import type { ObservedBoard } from "./boardState";
 
-export type OrdinaryMoveAvailability = {
-  successDestination: { x: number; y: number };
+export type OrdinaryMoveCandidates = {
   knownAvailablePlayerIds: string[];
   unknownPlayerIds: string[];
+};
+export type OrdinaryMoveAvailability = OrdinaryMoveCandidates & {
+  successDestination: { x: number; y: number };
 };
 // One ordinary standing move per other player, after the checked mover has
 // occupied its destination and vacated its origin. This is a bounded subset
@@ -13,6 +15,26 @@ export function ordinaryMovesAfterSuccess(
   actorId: number,
   destination: { x: number; y: number }
 ): OrdinaryMoveAvailability | undefined {
+  const candidates = otherOrdinaryMoves(board, actorId, destination);
+  return candidates
+    ? { ...candidates, successDestination: destination }
+    : undefined;
+}
+
+// The pickup actor has already reached the ball. Count other ordinary move
+// attempts from that current occupancy, without moving it a second time.
+export function ordinaryMovesAtPickup(
+  board: ObservedBoard,
+  actorId: number
+): OrdinaryMoveCandidates | undefined {
+  return otherOrdinaryMoves(board, actorId);
+}
+
+function otherOrdinaryMoves(
+  board: ObservedBoard,
+  actorId: number,
+  destination?: { x: number; y: number }
+): OrdinaryMoveCandidates | undefined {
   const active = board.teams.find(
     (t) => t.rosterIndex === board.activeTeamIndex
   );
@@ -20,25 +42,31 @@ export function ordinaryMovesAfterSuccess(
   const actor = active?.players.find((p) => p.id === actorId);
   if (
     !active ||
+    board.issues.length > 0 ||
+    board.pitchLayout === "small" ||
     board.stable !== true ||
     board.phaseCode !== 5 ||
-    !Number.isInteger(destination.x) ||
-    !Number.isInteger(destination.y) ||
-    destination.x < 0 ||
-    destination.x > 25 ||
-    destination.y < 0 ||
-    destination.y > 14 ||
+    (destination &&
+      (!Number.isInteger(destination.x) ||
+        !Number.isInteger(destination.y) ||
+        destination.x < 0 ||
+        destination.x > 25 ||
+        destination.y < 0 ||
+        destination.y > 14)) ||
     !actor ||
-    Math.max(
-      Math.abs(actor.cell.x! - destination.x),
-      Math.abs(actor.cell.y! - destination.y)
-    ) !== 1 ||
+    (destination &&
+      Math.max(
+        Math.abs(actor.cell.x! - destination.x),
+        Math.abs(actor.cell.y! - destination.y)
+      ) !== 1) ||
     actor?.pitchLocation !== "on_pitch" ||
     all.some((p) => p.id === null || p.pitchLocation === "unknown")
   )
     return;
   const positions = all.filter((p) => p.pitchLocation === "on_pitch");
-  const cells = positions.map((p) => (p.id === actorId ? destination : p.cell));
+  const cells = positions.map((p) =>
+    p.id === actorId && destination ? destination : p.cell
+  );
   const key = (p: { x: number | null; y: number | null }) => `${p.x},${p.y}`;
   const occupied = new Set(cells.map(key));
   if (occupied.size !== positions.length) return;
@@ -81,7 +109,6 @@ export function ordinaryMovesAfterSuccess(
     else knownAvailablePlayerIds.push(String(player.id));
   }
   return {
-    successDestination: destination,
     knownAvailablePlayerIds,
     unknownPlayerIds
   };

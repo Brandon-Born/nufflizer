@@ -1,4 +1,5 @@
 import { findBounceCatchReactions, attachBounceCatchReactions } from "./catchPossession";
+import { findPickupTurnEnds, attachPickupTurnEnds } from "./pickupTurnEnd";
 import {
   findBlockConsequences,
   summarizeBlockConsequence,
@@ -359,6 +360,7 @@ function buildNormalizedEvent(
             : undefined
       }
     : undefined;
+  if (preRoll) delete preRoll.pickupMoveAvailability;
   const rollType = event.rollType ?? toNumber(payload?.RollType);
   const rollLabel =
     replayVersion === "1-4-0-0"
@@ -1070,6 +1072,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     pickupResolutions
   } = reconstructReplayContext(replay, activationLosses);
   const bounceCatchReactions=findBounceCatchReactions(replay,contextBySource);
+  const pickupTurnEnds=findPickupTurnEnds(replay,bounceCatchReactions,contextBySource);
+  for(const proof of pickupTurnEnds.values()) activationEvidenceSources.add(proof.endSourceId);
   for(const proof of bounceCatchReactions.values()) for(const source of [proof.declarationSourceId,proof.moveOutcomeSourceId]) activationEvidenceSources.add(source);
   for (const move of dodgeMovements.values())
     for (const source of [move.declarationSourceId, move.doMoveSourceId, move.outcomeSourceId])
@@ -1302,6 +1306,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   for (const turn of replay.turns)
     linkPickupBallConsequences(turn, ballSources);
   attachBounceCatchReactions(bounceCatchReactions,ballSources);
+  attachPickupTurnEnds(pickupTurnEnds,ballSources);
   for (const event of events)
     if (
       (event.metadata.rerollSkill === "Dodge" || event.metadata.rerollSkill === "Sure Hands") &&

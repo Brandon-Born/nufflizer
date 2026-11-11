@@ -4,7 +4,10 @@ import {
 } from "@/domain/replay/playerTraits";
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { ordinaryMovesAfterSuccess } from "@/domain/replay/ordinaryMoveAvailability";
+import {
+  ordinaryMovesAfterSuccess,
+  ordinaryMovesAtPickup
+} from "@/domain/replay/ordinaryMoveAvailability";
 import { observeBoardCheckpoint } from "@/domain/replay/boardState";
 import { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
 import { analyzeReplayLuck } from "@/domain/nufflizer/analyzeLuck";
@@ -62,6 +65,47 @@ function board(kind: "vacated" | "occupied") {
   ).board!;
 }
 describe("valid Dodge successor geometry and bounded ordinary-move context", () => {
+  it("counts pickup opportunities at the reached square, without vacating or occupying an extra square", () => {
+    const blocked = board("vacated"),
+      open = board("occupied"),
+      copy = structuredClone(open);
+    expect(ordinaryMovesAtPickup(blocked, 10)).toEqual({
+      knownAvailablePlayerIds: [],
+      unknownPlayerIds: []
+    });
+    expect(ordinaryMovesAtPickup(open, 10)).toEqual({
+      knownAvailablePlayerIds: ["11"],
+      unknownPlayerIds: []
+    });
+    expect(open).toEqual(copy);
+    open.teams[0]!.players[1]!.ordinaryMovePolicyKnown = false;
+    expect(ordinaryMovesAtPickup(open, 10)).toEqual({
+      knownAvailablePlayerIds: [],
+      unknownPlayerIds: ["11"]
+    });
+    open.teams[0]!.players[1]!.canAct = false;
+    expect(ordinaryMovesAtPickup(open, 10)).toEqual({
+      knownAvailablePlayerIds: [],
+      unknownPlayerIds: []
+    });
+  });
+  it.each(["side", "phase", "position", "budget", "posture"] as const)(
+    "pickup opportunities preserve %s uncertainty or restrictions",
+    (change) => {
+      const b = board("occupied"),
+        p = b.teams[0]!.players[1]!;
+      if (change === "side") b.activeTeamIndex = null;
+      if (change === "phase") b.phaseCode = 3;
+      if (change === "position") p.pitchLocation = "unknown";
+      if (change === "budget") p.movementRemaining = 0;
+      if (change === "posture") p.statusCode = 1;
+      expect(ordinaryMovesAtPickup(b, 10)).toEqual(
+        ["side", "phase", "position"].includes(change)
+          ? undefined
+          : { knownAvailablePlayerIds: [], unknownPlayerIds: [] }
+      );
+    }
+  );
   it("vacating the only blocked exit creates an ordinary teammate move after success", () => {
     const b = board("vacated"),
       copy = structuredClone(b);

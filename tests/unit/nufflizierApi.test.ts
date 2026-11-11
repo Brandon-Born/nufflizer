@@ -160,6 +160,28 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(caught.playerId).toBe("45");
     expect(caught.catchPossessionBounds!.upper).toBeCloseTo(5 / 3, 12);
     expect(caught.metadata.preRoll).toBeUndefined();
+    const pickup = r.events.find((e) => e.metadata.pickupTurnEnd)!;
+    expect(pickup.metadata.pickupTurnEnd!.ordinaryMoves).toEqual({
+      knownAvailablePlayerIds: [],
+      unknownPlayerIds: [
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "43",
+        "44",
+        "45",
+        "47",
+        "48"
+      ]
+    });
+    expect(
+      r.events.find(
+        (e) =>
+          e.metadata.sourceId === pickup.metadata.pickupTurnEnd!.endSourceId
+      )?.metadata.turnEndReason
+    ).toBe(2);
     expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
   }, 20000);
 });

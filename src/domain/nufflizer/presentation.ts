@@ -122,7 +122,7 @@ export function explainPreRollEvidence(
   if (context?.actorStandUpSourceIndex !== undefined) {
     details.push(
       context.actorMovementRemaining === undefined
-        ? "The player stood up earlier in this activation."
+        ? "The player stood up earlier in this activation. Remaining movement is unknown because the stand-up cost timing is unverified."
         : `The player stood up earlier in this activation and had ${context.actorMovementRemaining} movement points at this roll.`
     );
   }
@@ -372,5 +372,10 @@ export function explainPickupBallChain(
         `${teams.find((team) => team.teamId === id)?.teamName ?? `Team ${id}`}: ${value.toFixed(2)}`
     )
     .join(", ");
-  return `The failed pickup led to ${chain.bounceSourceIds.length} recorded bounce${chain.bounceSourceIds.length === 1 ? "" : "s"} and ${chain.catchEventIds.length} linked catch check${chain.catchEventIds.length === 1 ? "" : "s"}. ${catches ? catches + " " : ""}The last recorded landing was [${chain.endingCell.x}, ${chain.endingCell.y}]. Existing dice subtotals by team: ${totals}. These dice contributions are already included in the team totals. The full tactical cost of possession or the turn remains unquantified.`;
+  const end=event.metadata.pickupTurnEnd,moves=end?.ordinaryMoves;
+  const opportunities=moves
+    ? ` Before the pickup, ${moves.knownAvailablePlayerIds.length} to ${moves.knownAvailablePlayerIds.length+moves.unknownPlayerIds.length} other players had a possible ordinary move attempt; ${moves.unknownPlayerIds.length} have unresolved current eligibility. These are attempt opportunities, not guaranteed successes or a luck-value estimate.`
+    : " Current-side movement opportunities remain unknown.";
+  const aftermath=end ? ` The recorded team turn ended immediately after the successful catch.${opportunities} This observed ending does not establish a hypothetical failed-roll reroll policy.` : "";
+  return `The failed pickup led to ${chain.bounceSourceIds.length} recorded bounce${chain.bounceSourceIds.length === 1 ? "" : "s"} and ${chain.catchEventIds.length} linked catch check${chain.catchEventIds.length === 1 ? "" : "s"}. ${catches ? catches + " " : ""}The last recorded landing was [${chain.endingCell.x}, ${chain.endingCell.y}]. Existing dice subtotals by team: ${totals}. These dice contributions are already included in the team totals.${aftermath} The full tactical cost of possession or the turn remains unquantified.`;
 }

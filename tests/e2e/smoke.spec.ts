@@ -334,7 +334,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.20");
+  expect(report.schemaVersion).toBe("2.21");
   expect(report.modelVersion).toBe("dice-only-19");
   expect(
     report.events.some(
@@ -360,7 +360,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
     )
   ).toBe(true);
 
-  expect(report.contextModelVersion).toBe("mobility-possession-15");
+  expect(report.contextModelVersion).toBe("mobility-possession-16");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
     report.coverage.rollCandidates.scoredCount +
@@ -895,20 +895,36 @@ test("source-backed Sure Hands bounds preserve pending catch and reaction uncert
 });
 
 
-test("occupied-bounce catch explains a bounded continuation without a guessed policy",async({page})=>{
+test("occupied-bounce catches preserve turnover opportunities and unknown stand-up budget",async({page})=>{
   const errors:string[]=[];page.on("pageerror",e=>errors.push(e.message));page.on("console",m=>{if(m.type()==="error")errors.push(m.text());});
-  const xml=lonerDriveXml("pickup_bounce_catch","tests/fixtures/evidence/bb3-bounce-catch-reactions.json"),report=analyzeNufflizerInput(xml);
-  await page.route("**/api/nufflizier/analyze",route=>route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(report)}));
   await page.goto("/nufflizier");await expect(page).toHaveTitle("Nufflizier");
-  await page.setInputFiles('input[name="replay"]',{name:"source-catch.xml",mimeType:"application/xml",buffer:Buffer.from(xml)});
-  await page.getByRole("button",{name:"Analyze Nuffle Luck"}).click();await expect(page.getByRole("heading",{name:"Nuffle Match Report"})).toBeVisible();
-  await page.getByLabel("Scoring status").selectOption("bounded");
-  const row=page.getByRole("table").filter({has:page.getByRole("columnheader",{name:"Replay segment"})}).locator("tbody tr");
-  await expect(row).toHaveCount(1);await row.locator("summary").click();
-  await expect(row).toContainText("recorded catcher after a failed pickup");await expect(row).toContainText("16.7% raw success");
-  await expect(row).toContainText("0 to 1.67 context units");await expect(row).toContainText("Failed-catch rerolls, reactions and later bounces are unresolved");
-  await expect(row).toContainText("No midpoint or endpoint enters point totals");await expect(page.getByText("Context: Not scored")).toHaveCount(2);
-  await page.screenshot({path:"/tmp/nufflizier-catch-envelope-desktop.png",fullPage:true});
-  await page.getByRole("button",{name:"Reset filters",exact:true}).click();await expect(page.getByLabel("Scoring status")).toHaveValue("scored");
-  await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);expect(errors).toEqual([]);
+  for(const c of [
+    {id:"pickup_bounce_catch",chance:"16.7%",range:"0 to 1.67",opportunities:"0 to 10 other players",image:"turnend-opportunities"},
+    {id:"standup_pickup_bounce_catch",chance:"50.0%",range:"0 to 1.00",opportunities:"Current-side movement opportunities remain unknown",image:"standup-catch"}
+  ]) {
+    const xml=lonerDriveXml(c.id,"tests/fixtures/evidence/bb3-bounce-catch-reactions.json"),report=analyzeNufflizerInput(xml);
+    await page.route("**/api/nufflizier/analyze",route=>route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(report)}));
+    await page.setInputFiles('input[name="replay"]',{name:"source-catch.xml",mimeType:"application/xml",buffer:Buffer.from(xml)});
+    await page.getByRole("button",{name:"Analyze Nuffle Luck"}).click();await expect(page.getByRole("heading",{name:"Nuffle Match Report"})).toBeVisible();
+    const table=page.getByRole("table").filter({has:page.getByRole("columnheader",{name:"Replay segment"})});
+    const pickup=table.locator("tbody tr").filter({hasText:"The failed pickup led to"});
+    await expect(pickup).toHaveCount(1);await pickup.locator("summary").click();
+    await expect(pickup).toContainText("recorded team turn ended immediately after the successful catch");
+    await expect(pickup).toContainText(c.opportunities);await expect(pickup).toContainText("does not establish a hypothetical failed-roll reroll policy");
+    if(c.id === "standup_pickup_bounce_catch") {
+      await expect(pickup).toContainText("stood up earlier in this activation");
+      await expect(pickup).toContainText("stand-up cost timing is unverified");
+      await expect(pickup).not.toContainText("7 movement points");
+    }
+    await page.screenshot({path:`/tmp/nufflizier-${c.image}-desktop.png`,fullPage:true});
+    await page.getByLabel("Scoring status").selectOption("bounded");
+    const row=table.locator("tbody tr");await expect(row).toHaveCount(1);await row.locator("summary").click();
+    await expect(row).toContainText("recorded catcher after a failed pickup");await expect(row).toContainText(`${c.chance} raw success`);
+    await expect(row).toContainText(`${c.range} context units`);await expect(row).toContainText("Failed-catch rerolls, reactions and later bounces are unresolved");
+    await expect(row).toContainText("No midpoint or endpoint enters point totals");await expect(page.getByText("Context: Not scored")).toHaveCount(2);
+    await page.getByRole("button",{name:"Reset filters",exact:true}).click();await expect(page.getByLabel("Scoring status")).toHaveValue("scored");
+    await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);
+    await page.unroute("**/api/nufflizier/analyze");
+  }
+  expect(errors).toEqual([]);
 });

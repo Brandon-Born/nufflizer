@@ -14,7 +14,10 @@ import { analyzeReplayLuck } from "@/domain/nufflizer/analyzeLuck";
 import { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
 import { LuckReportSchema } from "@/domain/nufflizer/reportSchema";
 import { estimateFreshCatchPossession } from "@/domain/nufflizer/contextImpact";
-import { explainContextBounds } from "@/domain/nufflizer/presentation";
+import {
+  explainContextBounds,
+  explainPickupBallChain
+} from "@/domain/nufflizer/presentation";
 import { lonerDriveXml } from "../helpers/lonerDrive";
 const xml = (id = "pickup_bounce_catch") =>
   lonerDriveXml(id, "tests/fixtures/evidence/bb3-bounce-catch-reactions.json");
@@ -101,12 +104,160 @@ describe("occupied-bounce fresh catch possession envelope", () => {
       Cell: [{ X: ["15"], Y: ["10"] }]
     });
   });
-  it("keeps the unknown-side stand-up case outside the current geometry contract", () => {
-    const r = analyzeNufflizerInput(xml("standup_pickup_bounce_catch"));
-    expect(r.events.some((e) => e.catchPossessionBounds)).toBe(false);
-    expect(r.events.find((e) => e.metadata.rollType === 7)?.actualSuccess).toBe(
-      true
+  it("preserves the actual unknown-side stand-up but withholds its movement cost and clock", () => {
+    const evidence = JSON.parse(
+      readFileSync(
+        "tests/fixtures/evidence/bb3-bounce-catch-reactions.json",
+        "utf8"
+      )
     );
+    const records = evidence.cases.find(
+      (c: { id: string }) => c.id === "standup_pickup_bounce_catch"
+    ).records;
+    const boards = records
+      .filter(
+        (r: { projection?: { BoardState?: unknown } }) =>
+          r.projection?.BoardState
+      )
+      .map(
+        (r: { projection: { BoardState: Record<string, unknown> } }) =>
+          r.projection.BoardState
+      );
+    const picker = (b: (typeof boards)[number]) =>
+      b.ListTeams[0].TeamState[0].ListPitchPlayers[0].PlayerState.find(
+        (p: { Id: string[] }) => p.Id[0] === "6"
+      );
+    expect(boards[0].ActiveTeam).toBeUndefined();
+    expect(boards[0].Period).toBeUndefined();
+    expect(picker(boards[0])).toMatchObject({
+      Status: ["1"],
+      MovePoint: ["4"],
+      CanAct: ["1"]
+    });
+    expect(picker(boards[1]).MovePoint).toEqual(["7"]);
+    const r = analyzeNufflizerInput(xml("standup_pickup_bounce_catch"));
+    const e = check(r),
+      proof = e.metadata.bounceCatchReaction!;
+    expect(e).toMatchObject({
+      playerId: "9",
+      teamId: "0",
+      probabilitySuccess: 1 / 2,
+      actualSuccess: true,
+      catchPossessionBounds: { lower: 0, upper: 1 }
+    });
+    const pickup = r.events.find(
+      (e) => e.metadata.sourceId === proof.pickupSourceId
+    )!;
+    expect(pickup.metadata.preRoll).toMatchObject({
+      actorCell: { x: 19, y: 7 },
+      activeTeamId: null,
+      period: null,
+      teamTurn: null,
+      turnsRemaining: null
+    });
+    expect(pickup.metadata.preRoll!.actorStandUpSourceIndex).toBeTypeOf(
+      "number"
+    );
+    expect(pickup.metadata.preRoll!.actorMovementRemaining).toBeUndefined();
+    expect(e.metadata.preRoll).toBeUndefined();
+    expect(e.contextualImpact).toBeUndefined();
+  });
+  it.each([
+    "missing_teams",
+    "both_roster_ids_missing",
+    "opposite_roster_conflict",
+    "unknown_team",
+    "wrong_active",
+    "duplicate_actor",
+    "wrong_declaration_owner",
+    "inferred_declaration",
+    "declaration_payload",
+    "wrong_stand_owner",
+    "inferred_stand",
+    "stand_payload",
+    "step_payload",
+    "evaluation",
+    "wrong_cell",
+    "not_prone",
+    "spent",
+    "mental_effect",
+    "checkpoint_interrupt"
+  ] as const)("unknown-side stand-up rejects %s", (change) => {
+    const replay = parseReplayXml(xml("standup_pickup_bounce_catch"));
+    const events = replay.turns.flatMap((t) => t.events);
+    const stand = events.find(
+      (e) => e.sourceTag === "ResultNoRollSuccess" && e.stepType === 7
+    )!;
+    const step = events.find(
+      (e) => e.actionId === stand.actionId && e.type === "step"
+    )!;
+    const declaration = events.find(
+      (e) => e.sourceTag === "ResultUseAction" && e.playerId === "6"
+    )!;
+    const before = replay.boardCheckpoints!.find((c) =>
+      c.board?.teams.some((t) =>
+        t.players.some((p) => p.id === 6 && p.statusCode === 1)
+      )
+    )!;
+    const board = before.board!,
+      owner = board.teams.find((t) => t.players.some((p) => p.id === 6))!,
+      other = board.teams.find((t) => t !== owner)!;
+    const actor = owner.players.find((p) => p.id === 6)!;
+    if (change === "missing_teams") replay.teams.pop();
+    if (change === "both_roster_ids_missing") other.explicitTeamId = null;
+    if (change === "opposite_roster_conflict") other.explicitTeamId = 0;
+    if (change === "unknown_team") other.explicitTeamId = 99;
+    if (change === "wrong_active") board.activeTeamIndex = other.rosterIndex;
+    if (change === "duplicate_actor")
+      other.players.push(structuredClone(actor));
+    if (change === "wrong_declaration_owner") declaration.actorTeamId = "1";
+    if (change === "inferred_declaration")
+      declaration.actorTeamSource = "turn_inferred";
+    if (change === "declaration_payload") declaration.payload!.Unexpected = 1;
+    if (change === "wrong_stand_owner") stand.actorTeamId = "1";
+    if (change === "inferred_stand") stand.actorTeamSource = "turn_inferred";
+    if (change === "stand_payload") stand.payload = { Unexpected: 1 };
+    if (change === "step_payload") step.payload!.Unexpected = 1;
+    if (change === "evaluation") step.payload!.IsEvaluation = 1;
+    if (change === "wrong_cell") step.payload!.CellTo = { X: 18, Y: 8 };
+    if (change === "not_prone") actor.statusCode = 0;
+    if (change === "spent") actor.canAct = false;
+    if (change === "mental_effect")
+      actor.mentalEffect = { providerSkillId: 51 };
+    if (change === "checkpoint_interrupt") {
+      replay.boardCheckpoints!.push({
+        ...structuredClone(before),
+        afterSourceIndex: declaration.sourceIndex!
+      });
+      replay.boardCheckpoints!.sort(
+        (a, b) => a.afterSourceIndex - b.afterSourceIndex
+      );
+    }
+    expect(
+      analyzeReplayLuck(replay).events.some((e) => e.catchPossessionBounds)
+    ).toBe(false);
+  });
+  it("never recovers a pre-catch movement budget from the next-turn reset", () => {
+    const replay = parseReplayXml(xml("standup_pickup_bounce_catch"));
+    const before = check(analyzeReplayLuck(replay));
+    const caught = replay.turns
+      .flatMap((t) => t.events)
+      .find((e) => e.rollType === 7)!;
+    for (const c of replay.boardCheckpoints!)
+      if (c.afterSourceIndex > caught.sourceIndex!) {
+        for (const p of c.board?.teams.flatMap((t) => t.players) ?? [])
+          p.movementRemaining = 16;
+      }
+    const r = LuckReportSchema.parse(analyzeReplayLuck(replay));
+    expect(check(r).catchPossessionBounds).toEqual(
+      before.catchPossessionBounds
+    );
+    const pickup = r.events.find(
+      (e) =>
+        e.metadata.sourceId ===
+        before.metadata.bounceCatchReaction!.pickupSourceId
+    )!;
+    expect(pickup.metadata.preRoll!.actorMovementRemaining).toBeUndefined();
   });
   it("does not backfill a reaction if a matching checkpoint interrupts the prefix", () => {
     const r = raw(),
@@ -277,6 +428,10 @@ describe("occupied-bounce fresh catch possession envelope", () => {
       );
       expect(run.status).toBe(0);
       expect(run.stdout).toContain("fresh catch die");
+      expect(run.stdout).toContain(
+        "recorded team turn ended immediately after the successful catch"
+      );
+      expect(run.stdout).toContain("0 to 10 other players");
       expect(run.stdout).toContain("0 to 1.67 context units");
       expect(run.stdout).toContain(
         "No midpoint or endpoint enters point totals"
@@ -285,7 +440,7 @@ describe("occupied-bounce fresh catch possession envelope", () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
-  it("reconciles the twelve public demos with one new envelope and no fabricated point estimate", () => {
+  it("reconciles the twelve public demos with two catch envelopes and no fabricated point estimate", () => {
     let count = 0;
     for (const file of readdirSync("demo-replays").filter((f) =>
       f.endsWith(".bbr")
@@ -297,6 +452,120 @@ describe("occupied-bounce fresh catch possession envelope", () => {
       expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
       expect(r.verdict.luckierTeam).toBe("unknown");
     }
-    expect(count).toBe(1);
+    expect(count).toBe(2);
+  });
+  it("links the independently recorded turnover without counting an extra random outcome or trusting omitted eligibility", () => {
+    const r = report(),
+      caught = check(r),
+      pickup = r.events.find(
+        (e) =>
+          e.metadata.sourceId ===
+          caught.metadata.bounceCatchReaction!.pickupSourceId
+      )!;
+    expect(pickup.metadata.pickupTurnEnd!.ordinaryMoves).toEqual({
+      knownAvailablePlayerIds: [],
+      unknownPlayerIds: [
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "43",
+        "44",
+        "45",
+        "47",
+        "48"
+      ]
+    });
+    const end = r.events.find(
+      (e) => e.metadata.sourceId === pickup.metadata.pickupTurnEnd!.endSourceId
+    )!;
+    expect(end).toMatchObject({
+      scoringStatus: "excluded",
+      delta: 0,
+      weightedDelta: 0,
+      metadata: {
+        sourceTag: "EventEndTurn",
+        turnEndReason: 2,
+        isRollCandidate: false
+      }
+    });
+    expect(end.metadata.sourceIndex).toBe(caught.metadata.sourceIndex! + 1);
+    expect(r.coverage.contextEvidence.boundedCount).toBe(1);
+    expect(explainPickupBallChain(pickup)).toContain("0 to 10 other players");
+    const r2 = analyzeNufflizerInput(xml("standup_pickup_bounce_catch")),
+      p2 = r2.events.find((e) => e.metadata.pickupTurnEnd)!;
+    expect(p2.metadata.pickupTurnEnd!.ordinaryMoves).toBeUndefined();
+    expect(explainPickupBallChain(p2)).toContain(
+      "Current-side movement opportunities remain unknown"
+    );
+  });
+  it.each([
+    "reason",
+    "payload",
+    "interruption",
+    "nonadjacent",
+    "checkpoint"
+  ] as const)(
+    "withholds observed turn-end linkage after %s without erasing the earlier catch range",
+    (change) => {
+      const r = raw(),
+        events = r.replay.turns.find((t) =>
+          t.events.includes(r.caught)
+        )!.events;
+      const end = events[events.indexOf(r.caught) + 1]!;
+      if (change === "reason") {
+        end.reasonCode = 1;
+        end.payload!.Reason = "1";
+      }
+      if (change === "payload") end.payload!.Unexpected = 1;
+      if (change === "nonadjacent") end.locator!.childIndex!++;
+      if (change === "interruption")
+        events.splice(events.indexOf(end), 0, {
+          ...end,
+          id: "unknown-mutation",
+          sourceTag: "UnknownMutation"
+        });
+      if (change === "checkpoint")
+        r.replay.boardCheckpoints!.push({
+          ...structuredClone(r.replay.boardCheckpoints![0]!),
+          afterSourceIndex: r.caught.sourceIndex!
+        });
+      const report = LuckReportSchema.parse(analyzeReplayLuck(r.replay));
+      expect(report.events.some((e) => e.metadata.pickupTurnEnd)).toBe(false);
+      expect(check(report).catchPossessionBounds!.upper).toBeCloseTo(5 / 3, 12);
+    }
+  );
+  it.each([
+    "catch",
+    "end",
+    "reason",
+    "duplicate_candidates",
+    "actor_candidate",
+    "unknown_side_candidates"
+  ] as const)("shared reports reject forged turn-end %s", (change) => {
+    const r =
+      change === "unknown_side_candidates"
+        ? analyzeNufflizerInput(xml("standup_pickup_bounce_catch"))
+        : report();
+    const p = r.events.find((e) => e.metadata.pickupTurnEnd)!,
+      proof = p.metadata.pickupTurnEnd!;
+    if (change === "catch") proof.catchSourceId = proof.endSourceId;
+    if (change === "end") proof.endSourceId = proof.catchSourceId;
+    if (change === "reason")
+      delete r.events.find((e) => e.metadata.sourceId === proof.endSourceId)!
+        .metadata.turnEndReason;
+    if (change === "duplicate_candidates")
+      proof.ordinaryMoves!.knownAvailablePlayerIds.push(
+        proof.ordinaryMoves!.unknownPlayerIds[0]!
+      );
+    if (change === "actor_candidate")
+      proof.ordinaryMoves!.unknownPlayerIds.push(p.playerId!);
+    if (change === "unknown_side_candidates")
+      proof.ordinaryMoves = {
+        knownAvailablePlayerIds: [],
+        unknownPlayerIds: []
+      };
+    expect(LuckReportSchema.safeParse(r).success).toBe(false);
   });
 });

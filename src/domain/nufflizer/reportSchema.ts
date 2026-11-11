@@ -80,6 +80,8 @@ const activationEnd = z.strictObject({
     .optional()
 });
 export const LuckEventMetadataSchema = z.strictObject({
+  turnEndReason:z.literal(2).optional(),
+  pickupTurnEnd:z.strictObject({catchSourceId:text,endSourceId:text,ordinaryMoves:z.strictObject({knownAvailablePlayerIds:z.array(text).max(64),unknownPlayerIds:z.array(text).max(64)}).optional()}).optional(),
   bounceCatchReaction:z.strictObject({pickupSourceId:text,bounceSourceId:text,declarationSourceId:text,moveOutcomeSourceId:text,checkpointAfter:count}).optional(),
   pickupResolution:z.strictObject({declarationSourceId:text,moveOutcomeSourceId:text,cell:pitchCell,movementRemaining:z.number().int().min(0).max(16).nullable(),checkpointAfter:count}).optional(),
   dodgeMovement: z.strictObject({declarationSourceId:text,doMoveSourceId:text,outcomeSourceId:text,
@@ -483,6 +485,7 @@ export const LuckReportSchema = z
       )
     );
     require(ids.size === report.events.length, "Event IDs must be unique.");
+    const pickupTurnEndSources = new Set(report.events.flatMap((e) => e.metadata.pickupTurnEnd ? [e.metadata.pickupTurnEnd.endSourceId] : []));
     const teamIds = new Set(report.teams.map((team) => team.teamId));
     require(teamIds.size === 2, "Report requires two distinct teams.");
     require(new Set(report.recruitments.map(r => r.sourceId)).size === report.recruitments.length,
@@ -885,6 +888,24 @@ export const LuckReportSchema = z
         );
       }
       const reaction=event.metadata.bounceCatchReaction,catchBound=event.catchPossessionBounds;
+      const pickupEnd=event.metadata.pickupTurnEnd;
+      if(pickupEnd) {
+        const caught=sources.get(pickupEnd.catchSourceId),end=sources.get(pickupEnd.endSourceId);
+        const moves=pickupEnd.ordinaryMoves, known=moves?.knownAvailablePlayerIds ?? [],unknown=moves?.unknownPlayerIds ?? [];
+        require(event.scoringStatus === "scored" && event.actualSuccess === false && event.metadata.rollType === 4 &&
+          !!caught && caught.metadata.bounceCatchReaction?.pickupSourceId === event.metadata.sourceId && caught.actualSuccess === true &&
+          end?.metadata.sourceTag === "EventEndTurn" && end.metadata.turnEndReason === 2 && end.scoringStatus === "excluded" && end.metadata.isRollCandidate === false &&
+          caught.metadata.sourceIndex !== undefined && end.metadata.sourceIndex === caught.metadata.sourceIndex+1 &&
+          caught.metadata.locator?.replayStep !== undefined && end.metadata.locator?.replayStep === caught.metadata.locator.replayStep &&
+          end.metadata.locator?.childIndex === (caught.metadata.locator.childIndex ?? -2)+1 &&
+          (!moves || (context?.phaseCode === 5 && context.activeTeamId === event.teamId && context.actorCell !== null)) &&
+          new Set([...known,...unknown]).size === known.length+unknown.length && ![...known,...unknown].includes(event.playerId ?? ""),
+          "Pickup turn-end evidence needs the adjacent verified catch, deterministic reason-2 source and qualified, disjoint ordinary-move candidates.");
+      }
+      if(event.metadata.turnEndReason !== undefined)
+        require(event.metadata.sourceTag === "EventEndTurn" && event.scoringStatus === "excluded" && event.metadata.isRollCandidate === false &&
+          pickupTurnEndSources.has(event.metadata.sourceId ?? ""),
+          "A recorded turn-end reason needs a linked pickup aftermath, not another scored random outcome.");
       if(reaction || catchBound) {
         const pickup=sources.get(reaction?.pickupSourceId ?? ""),bounce=sources.get(reaction?.bounceSourceId ?? "");
         const declaration=sources.get(reaction?.declarationSourceId ?? ""),move=sources.get(reaction?.moveOutcomeSourceId ?? "");
