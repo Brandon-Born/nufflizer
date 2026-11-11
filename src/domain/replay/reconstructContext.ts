@@ -1,3 +1,9 @@
+import {
+  applyActivationEnds,
+  findMentalActivationEnds,
+  sameActivationClock,
+  type ActivationEnd
+} from "./activationEnds";
 import type {
   ObservedBoard,
   ObservedCell,
@@ -427,14 +433,16 @@ function summarize(
 
 // Replay only verified transitions from ordered snapshots. Store compact
 // evidence per roll, not a copy of the board at every source event.
-export function reconstructPreRollEvidence(
+export function reconstructReplayContext(
   replay: ReplayModel,
   confirmedLosses: readonly ConfirmedActivationLoss[] = findConfirmedActivationLosses(
     replay
   )
-): Map<string, PreRollEvidence> {
+) {
   const result = new Map<string, PreRollEvidence>();
-  if (replay.replayVersion !== "1-4-0-0") return result;
+  const activationEnds = new Map<string, ActivationEnd>();
+  if (replay.replayVersion !== "1-4-0-0")
+    return { preRollEvidence: result, activationEnds };
   const checkpoints = replay.boardCheckpoints ?? [];
   let standardPitch = false;
   let cursor = 0;
@@ -453,6 +461,11 @@ export function reconstructPreRollEvidence(
   const lossesByConfirmation = new Map(
     confirmedLosses.map((loss) => [loss.followingActivationSourceId, loss])
   );
+  const mentalEnds = new Map(
+    findMentalActivationEnds(replay).map((end) => [end.sourceId, end])
+  );
+  let activeEnds = new Map<string, ActivationEnd>();
+  let previousMove: { end: ActivationEnd; moved: boolean } | undefined;
   let activeLosses = new Map<string, ConfirmedActivationLoss>();
   for (const turn of replay.turns)
     for (const event of turn.events) {
@@ -497,17 +510,42 @@ export function reconstructPreRollEvidence(
         board = reduced.board;
         activeLosses = reduced.losses;
       }
-      if (frameChanged && !board) activeLosses.clear();
+      const mentalEnd = event.id ? mentalEnds.get(event.id) : undefined;
+      if (mentalEnd) {
+        activeEnds.set(mentalEnd.actorId, mentalEnd);
+        activationEnds.set(mentalEnd.sourceId, mentalEnd);
+      }
+      if (board && (frameChanged || mentalEnd)) {
+        const reduced = applyActivationEnds(board, activeEnds);
+        board = reduced.board;
+        activeEnds = reduced.ends;
+        if (previousMove && !sameActivationClock(board, previousMove.end))
+          previousMove = undefined;
+      }
+      if (frameChanged && !board) {
+        activeLosses.clear();
+        activeEnds.clear();
+        previousMove = undefined;
+      }
       if (event.type === "step" || event.sourceTag === "BallStep") {
         blockDeclarationActionId = undefined;
         foulAppearanceActionId = undefined;
         if (standUpPending) {
           board = null;
           activeLosses.clear();
+          activeEnds.clear();
+          previousMove = undefined;
           activationId = null;
         }
         standUpPending =
           event.sourceTag === "PlayerStep" && event.stepType === 7;
+        if (
+          previousMove &&
+          event.sourceTag === "PlayerStep" &&
+          event.stepType !== 0 &&
+          event.stepActorId !== previousMove.end.actorId
+        )
+          previousMove = undefined;
         step = event;
         moveObserved = false;
         moveOutcomeSourceIndex = undefined;
@@ -515,6 +553,8 @@ export function reconstructPreRollEvidence(
       }
       if (!board || !checkpoint) {
         activeLosses.clear();
+        activeEnds.clear();
+        previousMove = undefined;
         continue;
       }
       const p = event.payload;
@@ -550,6 +590,16 @@ export function reconstructPreRollEvidence(
               loss.followingSourceIndex <= event.sourceIndex!
           )
           .map((loss) => loss.rollSourceId);
+        ended.push(
+          ...[...activeEnds.values()]
+            .filter(
+              (end) =>
+                end.teamId === context.actorRosterTeamId &&
+                end.teamTurn === context.teamTurn &&
+                end.sourceIndex <= event.sourceIndex!
+            )
+            .map((end) => end.sourceId)
+        );
         if (ended.length) context.endedActivationSourceIds = ended;
       }
       if (
@@ -650,6 +700,96 @@ export function reconstructPreRollEvidence(
             t.players.some((p) => p.id === actor && p.canAct !== false)
         )
       ) {
+        const activeTeam = board.teams.find(
+          (t) => t.rosterIndex === board!.activeTeamIndex
+        );
+        const currentPlayer = activeTeam?.players.find((p) => p.id === actor);
+        const declarationOwned =
+          activeTeam?.explicitTeamId != null &&
+          !event.attributionConflict &&
+          (!event.teamId ||
+            event.teamId === String(activeTeam.explicitTeamId)) &&
+          (!event.actorTeamId ||
+            event.actorTeamSource === "turn_inferred" ||
+            event.actorTeamId === String(activeTeam.explicitTeamId));
+        if (activeEnds.has(String(actor))) {
+          board = null;
+          activeEnds.clear();
+          activeLosses.clear();
+          previousMove = undefined;
+          activationId = null;
+          continue;
+        }
+        if (
+          declarationOwned &&
+          previousMove?.moved &&
+          previousMove.end.actorId !== String(actor) &&
+          event.id &&
+          activeTeam &&
+          currentPlayer?.pitchLocation === "on_pitch" &&
+          currentPlayer.canAct === true &&
+          same(cell(currentPlayer.cell), stepCell(step.payload?.CellFrom)) &&
+          sameActivationClock(board, previousMove.end)
+        ) {
+          const oldPlayer = activeTeam.players.find(
+            (p) => String(p.id) === previousMove!.end.actorId
+          );
+          if (
+            oldPlayer?.pitchLocation === "on_pitch" &&
+            same(cell(oldPlayer.cell), previousMove.end.actorCell)
+          ) {
+            const end: ActivationEnd = {
+              ...previousMove.end,
+              actorCell: cell(oldPlayer.cell)!,
+              sourceId: event.id,
+              sourceIndex: event.sourceIndex,
+              followingPlayerId: String(actor),
+              checkpointAfter: checkpoint.afterSourceIndex
+            };
+            activeEnds.set(end.actorId, end);
+            activationEnds.set(end.sourceId, end);
+            board = applyActivationEnds(board, activeEnds).board;
+            // The declaration's pre-state can use this prefix-only confirmation.
+            const context = result.get(event.id);
+            if (context)
+              context.endedActivationSourceIds = [
+                ...(context.endedActivationSourceIds ?? []),
+                end.sourceId
+              ];
+          }
+        }
+        previousMove = undefined;
+        if (
+          declarationOwned &&
+          event.actionCode === 1 &&
+          event.id &&
+          activeTeam?.explicitTeamId != null &&
+          activeTeam.gameTurn != null &&
+          activeTeam.gameTurn > 0 &&
+          currentPlayer?.pitchLocation === "on_pitch" &&
+          currentPlayer.canAct === true &&
+          step.payload?.Skill === 0 &&
+          step.payload.IsEvaluation === 0 &&
+          same(cell(currentPlayer.cell), stepCell(step.payload.CellFrom))
+        ) {
+          previousMove = {
+            moved: false,
+            end: {
+              kind: "ordinary_move_completed",
+              sourceId: event.id,
+              sourceIndex: event.sourceIndex,
+              declarationSourceId: event.id,
+              actorId: String(actor),
+              teamId: String(activeTeam.explicitTeamId),
+              rosterIndex: activeTeam.rosterIndex,
+              teamTurn: activeTeam.gameTurn,
+              periodCode: board.periodCode,
+              actorCell: cell(currentPlayer.cell)!,
+              followingPlayerId: "",
+              checkpointAfter: checkpoint.afterSourceIndex
+            }
+          };
+        }
         board = { ...board, activePlayerId: actor };
         activationId = event.id ?? null;
         activationActionCode = event.actionCode;
@@ -707,6 +847,9 @@ export function reconstructPreRollEvidence(
       }
       if (standUpPending) {
         board = null;
+        activeEnds.clear();
+        activeLosses.clear();
+        previousMove = undefined;
         activationId = null;
         standUpSourceIndex = undefined;
         continue;
@@ -816,17 +959,36 @@ export function reconstructPreRollEvidence(
             board = { ...board, ball: { ...board.ball, cell: to } };
           moveObserved = false;
           moveOutcomeSourceIndex = event.sourceIndex;
+          if (
+            previousMove &&
+            previousMove.end.actorId === String(actor) &&
+            activationActionCode === 1 &&
+            event.id
+          ) {
+            previousMove.moved = true;
+            previousMove.end.moveSourceId = event.id;
+            previousMove.end.actorCell = to;
+          }
           continue;
         }
       }
       // For unverified mutations do not fill the gap from a future snapshot.
       board = null;
       activeLosses.clear();
+      activeEnds.clear();
+      previousMove = undefined;
       blockDeclarationActionId = undefined;
       foulAppearanceActionId = undefined;
       activationId = null;
       standUpSourceIndex = undefined;
       pickupSourceId = undefined;
     }
-  return result;
+  return { preRollEvidence: result, activationEnds };
+}
+
+export function reconstructPreRollEvidence(
+  replay: ReplayModel,
+  confirmedLosses?: readonly ConfirmedActivationLoss[]
+): Map<string, PreRollEvidence> {
+  return reconstructReplayContext(replay, confirmedLosses).preRollEvidence;
 }

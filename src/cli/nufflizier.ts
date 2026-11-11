@@ -58,7 +58,7 @@ function formatTeamSummary(
   const [home, away] = report.teams;
   const topMoments = report.keyMoments.slice(0, 5);
   const lostActivations = report.events.filter(
-    (event) => event.metadata.activationLoss
+    (event) => event.metadata.activationLoss || event.metadata.activationEnd
   );
   const eventsById = new Map(report.events.map((event) => [event.id, event]));
   const scoredByType = Object.entries(report.coverage.scoredByType).map(
@@ -86,7 +86,7 @@ function formatTeamSummary(
     explainContextCoverage(report.coverage.contextEvidence),
     ...(lostActivations.length
       ? [
-          `Observed player activation losses: ${lostActivations.length}`,
+          `Observed player activation endings: ${lostActivations.length}`,
           ...lostActivations
             .slice(0, 20)
             .map((event) => explainActivationLoss(event)!),

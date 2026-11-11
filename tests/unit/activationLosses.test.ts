@@ -77,7 +77,7 @@ describe("confirmed player activation losses (NUF-016/017/018/022)", () => {
         { encoding: "utf8", timeout: 10000 }
       );
       expect(result.status, result.stderr).toBe(0);
-      expect(result.stdout).toContain("Observed player activation losses: 2");
+      expect(result.stdout).toContain("Observed player activation endings: 2");
       expect(result.stdout).toContain(
         "Player 44 then acted in the same recorded team turn 8"
       );

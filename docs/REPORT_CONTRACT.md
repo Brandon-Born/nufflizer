@@ -1,8 +1,8 @@
 # Versioned report contract
 
-Updated 2026-11-10. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
+Updated 2026-11-11. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.10` and model `dice-only-18`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.11` and model `dice-only-18`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -175,3 +175,12 @@ The report links the original declaration, skill-use, failed-gate and following-
 Mobility-possession-6 applies the confirmed spent status only at or after the following declaration, never to the failed gate's pre-state. The current frame can then exclude that actor from later useful standing-move counts in the same recorded team turn. Explicit renewed availability, changed cell/clock/period/phase/active side, missing membership or unknown mutation clears the derived status. Snapshots remain immutable and their omitted flags remain null. Prefix-only skill/gate recognition does not depend on later confirmation.
 
 The exact UI-099 numeric records show away actors42 and44 failing separately, with home target10 owning the skill, followed by actors44 and43 in the same team turn8. Its source sequences254–257 and boards304–307 are replayed as a minimal ordered fragment with deliberately renumbered fragment locators; unrecorded moves are not invented. A separate synthetic complete-state continuation gives a later failed2+ Dodge one remaining useful teammate rather than two:−5/6 versus−5/3 context units. This tests availability arithmetic, not a calibrated estimate of the earlier lost Block's match value.
+
+
+## Schema 2.11 activation completion and mental aftermath
+
+Context model mobility-possession-7 adds activationEnd evidence on the confirming following declaration. It records the earlier actor/declaration, same-team clock, current cell and either the last verified Move outcome or the terminal trait skill/roll/effect and explicit reroll-policy sources. Source links are ordered and reconciled by the shared report schema. endedActivationSourceIds can reference these confirmations as well as the existing Foul Appearance loss evidence; a confirmation affects only its own prefix and later frames. No-roll declarations stay outside the roll denominator. Context consequence coverage counts a terminal trait's referenced roll once; ordinary completion adds no random outcome.
+
+The terminal policies are fresh_final, kept_original and team_loner_replacement. The last requires the separate passed4+ Loner gate and matching skill44 source; it does not equate the original and replacement dice or erase the resource spend. Other Loner thresholds/failures and alternative skill/choice chains stay unsupported. The mental trait's odds remain unknown and it contributes zero dice/context units. Known failed outcome and observed activation/tackle-zone loss are separate from that unknown expectation. UI/CLI share these explanations; JSON retains all linked context sources. Dice model dice-only-18 is unchanged.
+
+Ordinary Move completion overrides the known stale CanAct1 availability flag only after a different teammate starts acting following verified movement. It preserves position and tackle zone. The mental-trait branch derives unavailable/no-tackle-zone state only from a matched terminal policy, provider31/51 effect44 and corroborating ordered boards. These are bounded same-turn contracts; broad action completion, special reactivation and cross-turn effect expiry remain open. Public-demo numeric extracts and source hashes are reproducible, while the complete-state UI-007 continuation is explicitly synthetic.

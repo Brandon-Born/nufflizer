@@ -78,7 +78,7 @@ export function explainPreRollEvidence(
   const ended = context?.endedActivationSourceIds?.length ?? 0;
   if (ended)
     details.push(
-      `${ended} earlier player activation${ended === 1 ? " had" : "s had"} already ended after Foul Appearance in this team turn.`
+      `${ended} earlier player activation${ended === 1 ? " had" : "s had"} already ended in this team turn.`
     );
   const traitNames = new Map([
     [30, "Block"],
@@ -199,6 +199,11 @@ export function explainProGate(
 export function explainActivationLoss(
   event: LuckReport["events"][number]
 ): string | null {
+  const end = event.metadata.activationEnd;
+  if (end)
+    return end.kind === "ordinary_move_completed"
+      ? `Player ${end.actorId}'s ordinary Move activation ended when player ${end.followingPlayerId} started acting in recorded team turn ${end.teamTurn}. Its position and tackle zone are preserved.`
+      : `Player ${end.actorId} lost the declared activation and tackle zone after ${end.kind === "bone_head" ? "Bone Head" : "Really Stupid"} failed. Player ${end.followingPlayerId} then acted in recorded team turn ${end.teamTurn}. The lost activation's tactical value remains unquantified.`;
   const loss = event.metadata.activationLoss;
   return loss
     ? `Player ${loss.actorId} lost the declared Block activation after Foul Appearance failed. Player ${loss.followingPlayerId} then acted in the same recorded team turn ${loss.teamTurn}. The tactical cost of the lost activation remains unquantified.`

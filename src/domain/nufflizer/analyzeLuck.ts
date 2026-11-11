@@ -9,7 +9,7 @@ import {
 } from "./rerolls";
 import { CONTEXT_MODEL_VERSION, estimateNumericImpact } from "./contextImpact";
 import {
-  reconstructPreRollEvidence,
+  reconstructReplayContext,
   type PreRollEvidence
 } from "@/domain/replay/reconstructContext";
 import { verifyArmorCheck } from "./armorChecks";
@@ -1010,7 +1010,23 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       loss.followingActivationSourceId
     ])
   );
-  const contextBySource = reconstructPreRollEvidence(replay, activationLosses);
+  const { preRollEvidence: contextBySource, activationEnds } =
+    reconstructReplayContext(replay, activationLosses);
+  for (const end of activationEnds.values())
+    for (const source of [
+      end.sourceId,
+      end.declarationSourceId,
+      end.moveSourceId,
+      end.skillSourceId,
+      end.rollSourceId,
+      end.effectSourceId,
+      end.questionSourceId,
+      end.decisionSourceId,
+      end.lonerSourceId,
+      end.lonerSkillSourceId
+    ]) {
+      if (source) activationEvidenceSources.add(source);
+    }
   const koRecoveryChecks = countKoRecoveryChecks(replay.turns);
 
   for (const replayTurn of replay.turns) {
@@ -1208,6 +1224,54 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     roll.actualSuccess = false;
     roll.statusReason =
       "The failed Foul Appearance test ended this player's declared Block activation; a different teammate continued in the same recorded team turn.";
+  }
+
+  for (const end of activationEnds.values()) {
+    const confirmation = ballSources.get(end.sourceId);
+    if (!confirmation) continue;
+    confirmation.metadata.activationEnd = end;
+    confirmation.label = "Recorded teammate activation";
+    confirmation.statusReason =
+      "This declaration confirms the prior player's activation has ended in the same recorded team turn.";
+    if (end.kind !== "ordinary_move_completed") {
+      const name = end.kind === "bone_head" ? "Bone Head" : "Really Stupid";
+      const skill = end.skillSourceId
+        ? ballSources.get(end.skillSourceId)
+        : undefined;
+      if (skill) {
+        skill.metadata.skillUsage = {
+          skillId: end.kind === "bone_head" ? 31 : 51,
+          used: true
+        };
+        skill.label = `Recorded ${name} use`;
+      }
+      const lonerSkill = end.lonerSkillSourceId
+        ? ballSources.get(end.lonerSkillSourceId)
+        : undefined;
+      if (lonerSkill) {
+        lonerSkill.metadata.skillUsage = { skillId: 44, used: true };
+        lonerSkill.label = "Recorded Loner use";
+      }
+      const effect = end.effectSourceId
+        ? ballSources.get(end.effectSourceId)
+        : undefined;
+      if (effect) {
+        effect.metadata.recordedEffect = {
+          effectId: 44,
+          providerId: end.kind === "bone_head" ? 31 : 51,
+          providerType: 4,
+          durations: [6, 1]
+        };
+        effect.label = `Recorded ${name} effect`;
+      }
+      const roll = end.rollSourceId
+        ? ballSources.get(end.rollSourceId)
+        : undefined;
+      if (roll) {
+        roll.actualSuccess = false;
+        roll.label = `${name} failed; activation and tackle zone lost`;
+      }
+    }
   }
 
   const homeAggregate = initialAggregate(homeTeam.id, homeTeam.name);

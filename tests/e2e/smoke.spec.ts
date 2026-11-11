@@ -1,17 +1,15 @@
+import { activationContextXml } from "../helpers/activationReplay";
 import { test, expect } from "@playwright/test";
 import path from "node:path";
 import { readFileSync } from "node:fs";
 import { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
 import { contextReplayXml } from "../helpers/contextReplay";
 import { playbackFragmentXml } from "../helpers/playback";
-import {
-  foulAppearancePlaybackXml,
-  foulAppearanceContextXml
-} from "../helpers/foulAppearanceReplay";
+import { foulAppearancePlaybackXml } from "../helpers/foulAppearanceReplay";
 
 const DEMO = path.resolve("demo-replays/demo1.bbr");
 
-test("Foul Appearance losses preserve the team turn and reduce later available moves", async ({
+test("Foul Appearance and terminal mental failures retain distinct activation consequences", async ({
   page
 }) => {
   await page.goto("/nufflizier");
@@ -40,7 +38,7 @@ test("Foul Appearance losses preserve the team turn and reduce later available m
   await page.setInputFiles('input[name="replay"]', {
     name: "activation-context.xml",
     mimeType: "application/xml",
-    buffer: Buffer.from(foulAppearanceContextXml())
+    buffer: Buffer.from(activationContextXml("replacement"))
   });
   await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
   await expect(
@@ -49,9 +47,17 @@ test("Foul Appearance losses preserve the team turn and reduce later available m
   const later = page.locator("tbody tr").filter({ hasText: "Dodge failed" });
   await later.locator("summary").click();
   await expect(later).toContainText(
-    "1 earlier player activation had already ended after Foul Appearance"
+    "1 earlier player activation had already ended in this team turn"
   );
   await expect(later).toContainText("1 other standing teammate");
+  await page.getByLabel("Scoring status").selectOption("excluded");
+  const terminal = page
+    .locator("tbody tr")
+    .filter({ hasText: "Recorded teammate activation" });
+  await terminal.locator("summary").click();
+  await expect(terminal).toContainText(
+    "lost the declared activation and tackle zone after Really Stupid failed"
+  );
 });
 
 test("replacement purchases retain separate source-backed trait lists", async ({
@@ -267,9 +273,9 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.10");
+  expect(report.schemaVersion).toBe("2.11");
   expect(report.modelVersion).toBe("dice-only-18");
-  expect(report.contextModelVersion).toBe("mobility-possession-6");
+  expect(report.contextModelVersion).toBe("mobility-possession-7");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
     report.coverage.rollCandidates.scoredCount +

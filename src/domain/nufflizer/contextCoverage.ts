@@ -10,6 +10,13 @@ export function summarizeContextEvidence(events: readonly LuckEvent[]) {
   let activationCount = 0;
   let quantifiedCount = 0;
   let consequenceCount = 0;
+  const terminalTraitSources = new Set(
+    events.flatMap((event) =>
+      event.metadata.activationEnd?.rollSourceId
+        ? [event.metadata.activationEnd.rollSourceId]
+        : []
+    )
+  );
   for (const event of events) {
     if (!event.metadata.isRollCandidate) continue;
     rollCount++;
@@ -27,7 +34,8 @@ export function summarizeContextEvidence(events: readonly LuckEvent[]) {
       event.metadata.movementFall ||
       event.metadata.movementTouchdown ||
       event.metadata.pickupBallChain ||
-      event.metadata.activationLoss
+      event.metadata.activationLoss ||
+      terminalTraitSources.has(event.metadata.sourceId ?? "")
     )
       consequenceCount++;
   }

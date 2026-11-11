@@ -36,7 +36,42 @@ const playerTraits = z.strictObject({
   innateSkills: z.array(z.number().int().nonnegative()).max(64).nullable(),
   acquiredSkills: z.array(z.number().int().nonnegative()).max(64).nullable()
 });
+const activationEnd = z.strictObject({
+  kind: z.enum(["ordinary_move_completed", "bone_head", "really_stupid"]),
+  sourceId: text,
+  sourceIndex: count,
+  declarationSourceId: text,
+  actorId: text,
+  teamId: text,
+  rosterIndex: z.number().int().min(0).max(1),
+  teamTurn: z.number().int().positive(),
+  periodCode: z.number().int().nonnegative().nullable(),
+  actorCell: pitchCell,
+  followingPlayerId: text,
+  checkpointAfter: count,
+  moveSourceId: text.optional(),
+  skillSourceId: text.optional(),
+  rollSourceId: text.optional(),
+  effectSourceId: text.optional(),
+  questionSourceId: text.optional(),
+  decisionSourceId: text.optional(),
+  lonerSourceId: text.optional(),
+  lonerSkillSourceId: text.optional(),
+  policy: z
+    .enum(["fresh_final", "kept_original", "team_loner_replacement"])
+    .optional()
+});
 export const LuckEventMetadataSchema = z.strictObject({
+  activationEnd: activationEnd.optional(),
+  recordedEffect: z
+    .strictObject({
+      effectId: z.literal(44),
+      providerId: z.union([z.literal(31), z.literal(51)]),
+      providerType: z.literal(4),
+      durations: z.tuple([z.literal(6), z.literal(1)])
+    })
+    .optional(),
+
   skillUsage: z.strictObject({ skillId: z.number().int().nonnegative(), used: z.boolean() }).optional(),
   activationLoss: z.strictObject({
     rollSourceId: text, rollSourceIndex: count, declarationSourceId: text, skillSourceId: text,
@@ -561,11 +596,112 @@ export const LuckReportSchema = z
       const ended = context?.endedActivationSourceIds;
       if (ended) require(new Set(ended).size === ended.length && ended.every(id => {
         const loss = sources.get(id)?.metadata.activationLoss;
+        const end = sources.get(id)?.metadata.activationEnd;
+        if (end) return end.teamId === context.actorRosterTeamId && end.teamTurn === context.teamTurn &&
+          context.period === (end.periodCode === 0 ? "first_half" : end.periodCode === 1 ? "second_half" : end.periodCode === 2 ? "extra_time" : null) &&
+          end.sourceIndex <= (event.metadata.sourceIndex ?? -1);
         return loss && loss.teamId === context.actorRosterTeamId &&
           loss.teamTurn === context.teamTurn &&
           context.period === (loss.periodCode === 0 ? "first_half" : loss.periodCode === 1 ? "second_half" : loss.periodCode === 2 ? "extra_time" : null) &&
           loss.followingSourceIndex <= (event.metadata.sourceIndex ?? -1);
       }), "Known ended activations require earlier confirmed same-team, same-turn evidence.");
+      const end = event.metadata.activationEnd;
+      if (end) {
+        const declaration = sources.get(end.declarationSourceId);
+        const originIndex = declaration?.metadata.sourceIndex ?? Infinity;
+        const linked = (id: string | undefined, tag: string) => {
+          const e = id ? sources.get(id) : undefined;
+          return e?.metadata.sourceTag === tag &&
+            e.playerId === end.actorId &&
+            e.teamId === end.teamId &&
+            (e.metadata.sourceIndex ?? -1) > originIndex &&
+            (e.metadata.sourceIndex ?? Infinity) < end.sourceIndex
+            ? e
+            : undefined;
+        };
+        require(event.metadata.sourceTag === "ResultUseAction" &&
+          event.metadata.sourceId === end.sourceId &&
+          event.metadata.sourceIndex === end.sourceIndex &&
+          event.playerId === end.followingPlayerId &&
+          event.playerId !== end.actorId &&
+          event.teamId === end.teamId &&
+          (event.metadata.actionCode ?? 0) >= 1 &&
+          (event.metadata.actionCode ?? 0) <= 6 &&
+          declaration?.metadata.sourceTag === "ResultUseAction" &&
+          declaration.playerId === end.actorId &&
+          declaration.teamId === end.teamId &&
+          originIndex < end.sourceIndex &&
+          end.checkpointAfter <
+            end.sourceIndex, "An ended activation requires an earlier declaration and a different following teammate.");
+        if (end.kind === "ordinary_move_completed") {
+          require(declaration?.metadata.actionCode === 1 &&
+            !!linked(end.moveSourceId, "ResultMoveOutcome") &&
+            !end.policy &&
+            !end.rollSourceId &&
+            !end.effectSourceId &&
+            !end.skillSourceId &&
+            !end.questionSourceId &&
+            !end.decisionSourceId &&
+            !end.lonerSourceId &&
+            !end.lonerSkillSourceId, "Ordinary Move completion requires its recorded movement and no fabricated trait policy.");
+        } else {
+          const skillId = end.kind === "bone_head" ? 31 : 51;
+          const skill = linked(end.skillSourceId, "ResultSkillUsage"),
+            roll = linked(end.rollSourceId, "ResultRoll"),
+            effect = linked(end.effectSourceId, "ResultAddPlayerEffect");
+          require((declaration?.metadata.actionCode ?? 0) >= 1 &&
+            (declaration?.metadata.actionCode ?? 0) <= 6 &&
+            skill?.metadata.skillUsage?.skillId === skillId &&
+            skill.metadata.skillUsage.used &&
+            roll?.metadata.rollType === (skillId === 31 ? 33 : 34) &&
+            roll.actualSuccess === false &&
+            roll.scoringStatus === "excluded" &&
+            effect?.metadata.recordedEffect?.providerId === skillId &&
+            (skill?.metadata.sourceIndex ?? Infinity) <
+              (roll?.metadata.sourceIndex ?? -1) &&
+            (roll?.metadata.sourceIndex ?? Infinity) <
+              (effect?.metadata.sourceIndex ?? -1) &&
+            (effect?.metadata.sourceIndex ?? Infinity) <= end.checkpointAfter &&
+            !end.moveSourceId, "A terminal mental trait requires its own skill, failed roll, recorded effect and following board.");
+          if (end.policy === "fresh_final")
+            require(!end.questionSourceId &&
+              !end.decisionSourceId &&
+              !end.lonerSourceId &&
+              !end.lonerSkillSourceId, "A fresh final trait cannot claim a reroll policy.");
+          else {
+            const question = linked(
+                end.questionSourceId,
+                "QuestionTeamRerollUsage"
+              ),
+              decision = linked(end.decisionSourceId, "ResultTeamRerollUsage");
+            require(!!question &&
+              !!decision &&
+              (question?.metadata.sourceIndex ?? Infinity) <
+                (decision?.metadata.sourceIndex ?? -1) &&
+              (decision?.metadata.sourceIndex ?? Infinity) <
+                (roll?.metadata.sourceIndex ??
+                  -1), "A terminal reroll policy requires ordered question and decision evidence.");
+            if (end.policy === "team_loner_replacement") {
+              const loner = linked(end.lonerSourceId, "ResultRoll"),
+                lonerSkill = linked(end.lonerSkillSourceId, "ResultSkillUsage");
+              require(loner?.metadata.rollType === 71 &&
+                loner.metadata.lonerGate?.passed === true &&
+                lonerSkill?.metadata.skillUsage?.skillId === 44 &&
+                lonerSkill.metadata.skillUsage.used &&
+                loner.metadata.lonerGate.skillSourceId ===
+                  end.lonerSkillSourceId &&
+                (decision?.metadata.sourceIndex ?? Infinity) <
+                  (loner?.metadata.sourceIndex ?? -1) &&
+                (loner?.metadata.sourceIndex ?? Infinity) <
+                  (roll?.metadata.sourceIndex ??
+                    -1), "A replacement trait requires the passed Loner gate.");
+            } else
+              require(end.policy === "kept_original" &&
+                !end.lonerSourceId &&
+                !end.lonerSkillSourceId, "A kept trait cannot invent a replacement.");
+          }
+        }
+      }
       const activationLoss = event.metadata.activationLoss;
       if (activationLoss) {
         const declaration = sources.get(activationLoss.declarationSourceId);

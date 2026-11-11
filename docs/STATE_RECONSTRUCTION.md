@@ -1,6 +1,6 @@
 # Observed board checkpoints
 
-Updated 2026-11-10. NUF-008 is complete for ordered source evidence. NUF-013 and NUF-016 remain open for broader attribution and state reconstruction.
+Updated 2026-11-11. NUF-008 is complete for ordered source evidence. NUF-013 and NUF-016 remain open for broader attribution and state reconstruction.
 
 ## Implemented contract
 
@@ -69,3 +69,14 @@ Trait lists record data rather than complete eligibility, temporary effects or a
 Mobility-possession-6 recognizes the UI-099/GR-003 Foul Appearance branch for an ordinary Block declaration. A fresh2+ failure, opposing skill owner, unchanged actor cell, same active-roster turn and a following different teammate's declaration confirm that this player's activation ended while team play continued. Before/after checkpoint omissions alone do not supply this rule.
 
 The reducer applies the confirmed spent status only from that following declaration onward. It retains source IDs for the known ended activations used in later pre-roll availability counts. Unknown mutation, contradictory explicit CanAct, changed membership/clock/period/phase or active side clears the derived status. Prefix-invariance tests prove that removing later confirmation does not change the failure's pre-roll frame. The original observations are never mutated. Full legality, special/Blitz variants, temporary reactivation and a numerical value for the lost Block remain open.
+
+
+## Completed movement and terminal mental traits
+
+Mobility-possession-7 retains a prefix-only ordinary Move candidate after its verified adjacent movement. A different teammate's valid declaration in the same observed normal-phase roster/turn/period confirms completion. The recorded destination must still match the actor's current cell. The derived actor becomes unavailable even if CanAct1 remains in the snapshot: demo1 sequences68–69 (ReplaySteps92–93) independently show this distinction for player46 followed by37. The original snapshot, position and tackle zone remain unchanged. Unknown transitions, changed clock/side/phase, missing membership, inconsistent cells or conflicting declaration ownership withhold the derivation. Merely declaring a Move without a verified move is outside this slice.
+
+Bone Head and Really Stupid require a distinct terminal chain, not a failed question alone. Accepted paths are a fresh failed final die plus effect44, an explicitly declined matching original plus that effect, or a team spend followed by a same-actor successful Loner4+ gate and a fresh Status2 failed replacement plus that effect. The original declaration and trait use, failed effective threshold, effect provider31/51, provider type4 and durations[6,1] must agree. A stable following board and different teammate in the same observed turn confirm unchanged position, unavailable actor and no contradictory tackle zone. An ordinary declared Block must also have an adjacent opposing target. Only then are CanAct=false and TackleZone=false derived in a new frame. No missing field receives a global false default.
+
+Public numeric extracts in bb3-activation-aftermath.json are independently reproduced by scripts/extract-activation-evidence.py. Demo10 ReplaySteps231–233 corroborate fresh Bone Head failure by37, with teammate40 continuing; demo1 ReplaySteps92–95 corroborate player37's declined Really Stupid failure, with39 continuing. Demo9 also shows Bone Head aftermath, but its omitted active-side/team-zero fields are not repaired into a complete confirmation. The saved UI-007 chain independently establishes the successful Loner/replacement emission policy. Its complete-state continuation in tests is explicitly synthetic, with consistent renamed actor/controller IDs; no source001 board was captured for that case. A separate public Loner3+ failure remains unsupported by this 4+ replacement contract.
+
+Later same-turn useful-standing-move estimates can exclude the ended actor. Matched complete-state fixtures give a subsequent failed2+ Dodge one remaining useful teammate and−5/6 context units, without changing its5/6 success chance. The earlier lost action remains unpriced. Derived state expires on unsupported transitions, clock/phase/side/member/cell changes; contradictory renewed availability or tackle-zone evidence also expires a mental-trait derivation. No effect44 duration across turns, recovery, skill eligibility, reactivation or calibrated defensive value is established. Prefix truncation, source immutability, ownership and contradictory-policy regressions accompany the positive examples.

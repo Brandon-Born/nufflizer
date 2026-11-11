@@ -803,7 +803,8 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                                 )}
                               </p>
                             ) : null}
-                            {moment.metadata.activationLoss ? (
+                            {moment.metadata.activationLoss ||
+                            moment.metadata.activationEnd ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainActivationLoss(moment)}
                               </p>

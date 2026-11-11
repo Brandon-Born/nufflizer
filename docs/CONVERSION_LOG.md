@@ -718,3 +718,8 @@ Schema2.9 records selected mercenary data separately for each purchase, with str
 ## 2026-11-10 - Player activation loss in context state
 
 Schema2.10 and mobility-possession-6 distinguish a confirmed ordinary-Block Foul Appearance activation loss from a team turnover. Later same-turn availability can exclude the spent player using explicit source links, while snapshots and missing flags remain unchanged. Known position and tackle zone persist. The loss itself keeps unknown tactical value; later scoped mobility estimates account for the reduced useful-move set. UI and CLI expose these consequences, with all comparative verdicts still abstaining.
+
+
+## 2026-11-11 - Ordinary Move completion and terminal mental-trait state
+
+Schema2.11/context mobility-possession-7 distinguish completed ordinary movement from terminal Bone Head/Really Stupid failure. Source-linked same-turn availability excludes ended players from later useful-move estimates. Ordinary completion preserves tackle zones; a verified trait effect removes them. Fresh, kept-original and successful Loner4+/replacement paths remain distinct, with original/replacement sources retained and unknown trait odds. Public-demo extracts are independently reproducible; the UI-007 complete-state continuation is synthetic. Cross-turn effects, general completion/reactivation and calibrated lost-action values remain open. Dice-only-18 and comparative abstention are unchanged.
