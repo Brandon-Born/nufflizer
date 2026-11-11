@@ -79,7 +79,11 @@ const activationEnd = z.strictObject({
     .enum(["fresh_final", "kept_original", "team_loner_replacement", "failed_loner_kept_original"])
     .optional()
 });
+const rerollCounterObservation=z.strictObject({checkpointAfter:count,replayStep:z.number().int().positive(),childIndex:count,
+  teamId:text,teamTurn:z.number().int().positive(),periodCode:z.number().int().min(0).max(2).nullable(),count:z.number().int().min(0).max(16)});
 export const LuckEventMetadataSchema = z.strictObject({
+  rerollOffer:z.strictObject({gamerId:z.union([z.literal(0),z.literal(1)]),canUseTeamReroll:z.boolean()}).optional(),
+  teamRerollCounter:z.strictObject({questionSourceId:text,spent:z.union([z.literal(0),z.literal(1)]),before:rerollCounterObservation,after:rerollCounterObservation.optional(),reconciliation:z.enum(["matched","mismatch","after_unavailable"])}).optional(),
   turnEndReason:z.literal(2).optional(),
   pickupTurnEnd:z.strictObject({catchSourceId:text,endSourceId:text,ordinaryMoves:z.strictObject({knownAvailablePlayerIds:z.array(text).max(64),unknownPlayerIds:z.array(text).max(64)}).optional()}).optional(),
   bounceCatchReaction:z.strictObject({pickupSourceId:text,bounceSourceId:text,declarationSourceId:text,moveOutcomeSourceId:text,checkpointAfter:count}).optional(),
@@ -97,7 +101,7 @@ export const LuckEventMetadataSchema = z.strictObject({
   driveEffectExpiry: z.strictObject({playerId:text,teamId:text,providerSkillId:z.union([z.literal(31),z.literal(51)]),phaseSourceId:text,
     beforeCheckpointAfter:count,afterCheckpointAfter:count,afterReplayStep:z.number().int().positive(),afterChildIndex:z.number().int().nonnegative(),
     afterPitchLocation:z.enum(["on_pitch","off_pitch","unknown"]),afterRecordedCanAct:z.boolean().nullable(),afterRecordedTackleZone:z.boolean().nullable()}).optional(),
-  teamRerollDecision: z.strictObject({ gamerId: z.union([z.literal(0),z.literal(1)]), used: z.literal(true) }).optional(),
+  teamRerollDecision: z.strictObject({ gamerId: z.union([z.literal(0),z.literal(1)]), used: z.boolean() }).optional(),
   mentalTraitResolution: z.strictObject({ providerSkillId: z.union([z.literal(31), z.literal(51)]), effectEndSourceId: text, skillSourceId: text }).optional(),
   mentalEffectEnd: z.strictObject({ providerSkillId: z.union([z.literal(31),z.literal(51)]), declarationSourceId: text, playerId: text }).optional(),
   activationEnd: activationEnd.optional(),
@@ -486,6 +490,8 @@ export const LuckReportSchema = z
     );
     require(ids.size === report.events.length, "Event IDs must be unique.");
     const pickupTurnEndSources = new Set(report.events.flatMap((e) => e.metadata.pickupTurnEnd ? [e.metadata.pickupTurnEnd.endSourceId] : []));
+    const counterQuestions = new Set(report.events.flatMap((e) => e.metadata.teamRerollCounter ? [e.metadata.teamRerollCounter.questionSourceId] : []));
+    require(counterQuestions.size === report.events.filter((e) => e.metadata.teamRerollCounter).length,"Each counter offer can fund at most one recorded decision.");
     const teamIds = new Set(report.teams.map((team) => team.teamId));
     require(teamIds.size === 2, "Report requires two distinct teams.");
     require(new Set(report.recruitments.map(r => r.sourceId)).size === report.recruitments.length,
@@ -888,6 +894,24 @@ export const LuckReportSchema = z
         );
       }
       const reaction=event.metadata.bounceCatchReaction,catchBound=event.catchPossessionBounds;
+      const counter=event.metadata.teamRerollCounter;
+      if(counter) {
+        const question=sources.get(counter.questionSourceId),choice=event.metadata.teamRerollDecision,before=counter.before,after=counter.after;
+        require(event.metadata.sourceTag === "ResultTeamRerollUsage" && event.scoringStatus === "excluded" && event.metadata.isRollCandidate === false &&
+          question?.metadata.sourceTag === "QuestionTeamRerollUsage" && !!question.metadata.rerollOffer && !!choice &&
+          question.metadata.rerollOffer.gamerId === choice.gamerId && choice.used === (counter.spent === 1) &&
+          (counter.spent === 0 || question.metadata.rerollOffer.canUseTeamReroll) &&
+          event.teamId === before.teamId && question.teamId === event.teamId && !!event.playerId && question.playerId === event.playerId &&
+          event.metadata.stepType === question.metadata.stepType && event.metadata.targetId === question.metadata.targetId &&
+          before.checkpointAfter < (question.metadata.sourceIndex ?? -1) && (question.metadata.sourceIndex ?? Infinity)<(event.metadata.sourceIndex ?? -1) &&
+          (!after || (after.checkpointAfter >= event.metadata.sourceIndex! && after.teamId === before.teamId && after.teamTurn === before.teamTurn &&
+            before.periodCode !== null && after.periodCode === before.periodCode && after.replayStep === event.metadata.locator?.replayStep && after.childIndex>(event.metadata.locator?.childIndex ?? Infinity))) &&
+          counter.reconciliation === (!after ? "after_unavailable" : after.count === before.count-counter.spent ? "matched" : "mismatch"),
+          "Team reroll counter evidence needs one owned offer/decision, ordered checkpoint observations and exact reconciliation without phase/reset backfill.");
+      }
+      if(event.metadata.rerollOffer)
+        require(event.metadata.sourceTag === "QuestionTeamRerollUsage" && event.scoringStatus === "excluded" && event.metadata.isRollCandidate === false && counterQuestions.has(event.metadata.sourceId ?? ""),
+          "A counter offer must be linked to one observed decision and cannot add random outcome coverage.");
       const pickupEnd=event.metadata.pickupTurnEnd;
       if(pickupEnd) {
         const caught=sources.get(pickupEnd.catchSourceId),end=sources.get(pickupEnd.endSourceId);

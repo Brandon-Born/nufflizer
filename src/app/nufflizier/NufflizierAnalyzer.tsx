@@ -18,6 +18,7 @@ import {
   explainContextBounds,
   explainMovementOutcome,
   explainPickupBallChain,
+  explainRerollCounter,
   explainActivationLoss,
   explainProGate,
   explainLonerGate,
@@ -824,6 +825,11 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                                   report.teams,
                                   eventsById
                                 )}
+                              </p>
+                            ) : null}
+                            {explainRerollCounter(moment,sourcesById) ? (
+                              <p className="mt-1 text-xs text-amber-100/80">
+                                {explainRerollCounter(moment,sourcesById)}
                               </p>
                             ) : null}
                             {moment.metadata.activationLoss ||

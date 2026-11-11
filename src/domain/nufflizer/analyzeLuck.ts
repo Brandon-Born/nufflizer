@@ -1,5 +1,6 @@
 import { findBounceCatchReactions, attachBounceCatchReactions } from "./catchPossession";
 import { findPickupTurnEnds, attachPickupTurnEnds } from "./pickupTurnEnd";
+import { findRerollCounterEvidence, attachRerollCounterEvidence } from "./rerollCounters";
 import {
   findBlockConsequences,
   summarizeBlockConsequence,
@@ -349,7 +350,7 @@ function buildNormalizedEvent(
   const recordedPreRoll = contextBySource.get(
     rerollLink?.originalId ?? rerollLink?.questionId ?? event.id ?? ""
   );
-  const preRoll = recordedPreRoll
+  const preRoll = recordedPreRoll && event.sourceTag !== "QuestionTeamRerollUsage"
     ? {
         ...recordedPreRoll,
         pickupSuccessors: rerollLink?.skill === "Sure Hands" && payload?.Requirement === payload?.Difficulty &&
@@ -1062,6 +1063,11 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       loss.followingActivationSourceId
     ])
   );
+  const rerollCounters=findRerollCounterEvidence(replay);
+  for(const [source,proof] of rerollCounters) {
+    activationEvidenceSources.add(source);
+    activationEvidenceSources.add(proof.questionSourceId);
+  }
   const {
     preRollEvidence: contextBySource,
     activationEnds,
@@ -1307,6 +1313,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     linkPickupBallConsequences(turn, ballSources);
   attachBounceCatchReactions(bounceCatchReactions,ballSources);
   attachPickupTurnEnds(pickupTurnEnds,ballSources);
+  attachRerollCounterEvidence(rerollCounters,ballSources);
   for (const event of events)
     if (
       (event.metadata.rerollSkill === "Dodge" || event.metadata.rerollSkill === "Sure Hands") &&

@@ -334,7 +334,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.21");
+  expect(report.schemaVersion).toBe("2.22");
   expect(report.modelVersion).toBe("dice-only-19");
   expect(
     report.events.some(
@@ -360,7 +360,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
     )
   ).toBe(true);
 
-  expect(report.contextModelVersion).toBe("mobility-possession-16");
+  expect(report.contextModelVersion).toBe("mobility-possession-17");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
     report.coverage.rollCandidates.scoredCount +
@@ -922,6 +922,42 @@ test("occupied-bounce catches preserve turnover opportunities and unknown stand-
     await expect(row).toContainText("recorded catcher after a failed pickup");await expect(row).toContainText(`${c.chance} raw success`);
     await expect(row).toContainText(`${c.range} context units`);await expect(row).toContainText("Failed-catch rerolls, reactions and later bounces are unresolved");
     await expect(row).toContainText("No midpoint or endpoint enters point totals");await expect(page.getByText("Context: Not scored")).toHaveCount(2);
+    await page.getByRole("button",{name:"Reset filters",exact:true}).click();await expect(page.getByLabel("Scoring status")).toHaveValue("scored");
+    await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);
+    await page.unroute("**/api/nufflizier/analyze");
+  }
+  expect(errors).toEqual([]);
+});
+
+test("reroll counters separate resource observations from dice and unknown resets",async({page})=>{
+  const errors:string[]=[];page.on("pageerror",e=>errors.push(e.message));page.on("console",m=>{if(m.type()==="error")errors.push(m.text());});
+  await page.goto("/nufflizier");await expect(page).toHaveTitle("Nufflizier");
+  for(const c of [
+    {id:"numeric_rush_spent",change:"from 3 to 2 matches this decision",label:"Recorded team reroll used"},
+    {id:"numeric_dodge_declined",change:"from 5 to 5 matches this decision",label:"Recorded team reroll declined"},
+    {id:"loner4_spent_fail",change:"from 3 to 2 matches this decision",label:"Recorded team reroll spend"},
+    {id:"missing_zero_and_period",change:"next same-turn counter is unknown",label:"Recorded team reroll spend"}
+  ]) {
+    const xml=lonerDriveXml(c.id,"tests/fixtures/evidence/bb3-reroll-counters.json"),report=analyzeNufflizerInput(xml);
+    await page.route("**/api/nufflizier/analyze",route=>route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(report)}));
+    await page.setInputFiles('input[name="replay"]',{name:"source-resources.xml",mimeType:"application/xml",buffer:Buffer.from(xml)});
+    await page.getByRole("button",{name:"Analyze Nuffle Luck"}).click();await expect(page.getByRole("heading",{name:"Nuffle Match Report"})).toBeVisible();
+    const table=page.getByRole("table").filter({has:page.getByRole("columnheader",{name:"Replay segment"})});
+    if(c.id === "numeric_rush_spent") {
+      const roll=table.locator("tbody tr").filter({hasText:"97.2%"});await expect(roll).toHaveCount(1);await roll.locator("summary").click();
+      await expect(roll).toContainText(c.change);
+    }
+    await page.getByLabel("Scoring status").selectOption("excluded");
+    const row=table.locator("tbody tr").filter({hasText:c.label});await expect(row).toHaveCount(1);await row.locator("summary").click();
+    await expect(row).toContainText(c.change);await expect(row).toContainText("not included in luck points");
+    if(c.id === "numeric_dodge_declined") await expect(row).toContainText("no team reroll was spent on this decision");
+    if(c.id === "loner4_spent_fail") {
+      const gate=table.locator("tbody tr").filter({hasText:"Loner 4+ test failed"});await gate.locator("summary").click();
+      await expect(gate).toContainText(c.change);
+    }
+    if(c.id === "missing_zero_and_period") await expect(row).toContainText("missing counter is not treated as zero");
+    await expect(page.getByText("Context: Not scored")).toHaveCount(2);
+    await page.screenshot({path:`/tmp/nufflizier-reroll-counter-${c.id}.png`,fullPage:true});
     await page.getByRole("button",{name:"Reset filters",exact:true}).click();await expect(page.getByLabel("Scoring status")).toHaveValue("scored");
     await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);
     await page.unroute("**/api/nufflizier/analyze");

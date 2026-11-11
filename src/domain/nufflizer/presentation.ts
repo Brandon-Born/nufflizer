@@ -1,6 +1,20 @@
 import type { LuckEventType, LuckReport } from "./types";
 import { LuckEventTypeSchema } from "./reportSchema";
 
+export function explainRerollCounter(
+  event: LuckReport["events"][number],
+  sources: ReadonlyMap<string,LuckReport["events"][number]> = new Map()
+): string | null {
+  const counter=event.metadata.teamRerollCounter ?? sources.get(event.metadata.rerollDecisionId ?? "")?.metadata.teamRerollCounter;
+  if(!counter) return null;
+  const before=counter.before,after=counter.after;
+  const choice=counter.spent ? "The recorded decision used one team reroll." : "The recorded decision declined the reroll; no team reroll was spent on this decision.";
+  const follow=after
+    ? ` The next same-turn checkpoint records ${after.count}. The counter change from ${before.count} to ${after.count} ${counter.reconciliation === "matched" ? "matches this decision" : "does not match this single decision; resource consumption remains unreconciled"}.`
+    : " The next same-turn counter is unknown. A missing counter is not treated as zero, and a later turn cannot fill it.";
+  return `Last recorded team reroll counter before the offer: ${before.count} (ReplayStep ${before.replayStep}, child ${before.childIndex}). ${choice}${follow} These observations do not certify another reroll is legal. The cost of losing the reroll is not included in luck points.`;
+}
+
 export function formatActualOutcome(
   event: LuckReport["events"][number]
 ): string {

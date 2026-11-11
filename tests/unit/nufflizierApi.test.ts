@@ -138,6 +138,16 @@ describe("POST /api/nufflizier/analyze", () => {
       )
     ).toBe(true);
     expect(report.coverage.contextEvidence.boundedCount).toBe(3);
+    const decision = report.events.find(
+      (e) =>
+        e.metadata.locator?.replayStep === 345 && e.metadata.teamRerollCounter
+    )!;
+    expect(decision.metadata.teamRerollCounter).toMatchObject({
+      before: { count: 2, teamTurn: 9, periodCode: 1 },
+      after: { count: 1, teamTurn: 9, periodCode: 1 },
+      spent: 1,
+      reconciliation: "matched"
+    });
     expect(report.teams.every((t) => t.impactCount === 0)).toBe(true);
   }, 20000);
   it("exports a source-backed fresh catch envelope through the production worker", async () => {
