@@ -29,7 +29,7 @@ export function contextReplayXml(
     id +
     "</Id>" +
     position(x, y) +
-    ([11, 12].includes(id)
+    ([11, 12].includes(id) || type === 4
       ? `<Data><Id>${id}</Id><InnateSkills>${id === options.mentalEffectPlayer ? `<InnateSkillsItem>${options.mentalEffectProvider ?? 51}</InnateSkillsItem>` : ""}</InnateSkills><AcquiredSkills/></Data>${id === options.mentalEffectPlayer ? "" : "<Effects/>"}`
       : "") +
     (available === null ? "" : "<CanAct>" + Number(available) + "</CanAct>") +
@@ -111,7 +111,7 @@ export function contextReplayXml(
               options.movementEvidence === "wrong_actor"
                 ? "<ResultDoMove><PlayerId>11</PlayerId></ResultDoMove>"
                 : "<ResultDoMove/>",
-              "<ResultMoveOutcome><Moved>1</Moved></ResultMoveOutcome>"
+              "<ResultMoveOutcome><Moved>1</Moved><TentacleUsed>0</TentacleUsed><FumbleRooskieUsed>0</FumbleRooskieUsed></ResultMoveOutcome>"
             ]
           : []),
         question

@@ -4,6 +4,7 @@ import { observeMentalEffect, type MentalTraitEffect } from "./mentalEffects";
 // observation: omitted fields are unknown, never defaults or carry-forwards.
 import {
   ordinaryMovePolicyKnown,
+  plainBallPolicyKnown,
   observePlayerTraits,
   type ObservedPlayerTraits
 } from "./playerTraits";
@@ -11,6 +12,7 @@ type RecordLike = Record<string, unknown>;
 export type ObservedCell = { x: number | null; y: number | null };
 export type ObservedPlayer = {
   ordinaryMovePolicyKnown?: boolean;
+  plainBallPolicyKnown?: boolean;
   mentalEffect: MentalTraitEffect | null;
   traits: ObservedPlayerTraits | null;
   id: number | null;
@@ -147,6 +149,7 @@ export function observeBoardCheckpoint(
                   return {
                     mentalEffect,
                     traits,
+                    plainBallPolicyKnown:plainBallPolicyKnown(traits,nonnegative(p.Id),p.Effects),
                     ordinaryMovePolicyKnown: ordinaryMovePolicyKnown(
                       traits,
                       nonnegative(p.Id),

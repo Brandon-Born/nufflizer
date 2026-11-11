@@ -89,3 +89,24 @@ export function ordinaryMovePolicyKnown(
     effects === ""
   );
 }
+
+// A distinct narrow policy for settling an empty ordinary bounce. It accepts
+// only complete current passive skill lists and explicitly empty effects.
+// Unknown/reactive skills/effects need their own ball-reaction contract.
+const PLAIN_BALL_SKILLS = new Set([7, 30, 57, 68, 63, 59, 61, 6]);
+export function plainBallPolicyKnown(
+  traits: ObservedPlayerTraits | null,
+  playerId: number | null,
+  effects: unknown
+): boolean {
+  return (
+    playerId !== null &&
+    traits?.dataPlayerId === playerId &&
+    traits.innateSkills !== null &&
+    traits.acquiredSkills !== null &&
+    [...traits.innateSkills, ...traits.acquiredSkills].every((skill) =>
+      PLAIN_BALL_SKILLS.has(skill)
+    ) &&
+    effects === ""
+  );
+}

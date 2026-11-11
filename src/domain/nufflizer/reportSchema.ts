@@ -1,5 +1,6 @@
+import { bounceDestination } from "@/domain/replay/pickupSuccessors";
 import { continuationOptionBounds } from "@/domain/replay/activeMoveContinuation";
-import { estimateDodgeImpactBounds, estimateNumericImpact } from "./contextImpact";
+import { estimateDodgeImpactBounds, estimateNumericImpact, estimatePickupPossessionBounds } from "./contextImpact";
 import { blockOutcomeName, consistentBlockResolution, knockedDownSubjects, summarizeBlockConsequence } from "./blockConsequences";
 import { enumerateBlockPool } from "./blockPools";
 import { z } from "zod";
@@ -33,6 +34,15 @@ const numbers = z.array(finite).max(REPLAY_LIMITS.xmlNodes);
 const pitchCell = z.strictObject({
   x: z.number().int().min(0).max(25),
   y: z.number().int().min(0).max(14)
+});
+const bounceCell = z.strictObject({x:z.number().int().min(-1).max(26),y:z.number().int().min(-1).max(15)});
+const bounceBase={direction:z.number().int().min(1).max(8),destination:bounceCell};
+const pickupSuccessors = z.strictObject({declarationSourceId:text,moveOutcomeSourceId:text,origin:pitchCell,actorRosterIndex:z.number().int().min(0).max(1),
+  branches:z.array(z.discriminatedUnion("kind",[
+    z.strictObject({...bounceBase,kind:z.literal("empty"),marking:z.enum(["marked","unmarked","unknown"]),settlement:z.enum(["loose","reaction_unknown"])}),
+    z.strictObject({...bounceBase,kind:z.literal("occupied"),playerId:text,rosterIndex:z.number().int().min(0).max(1)}),
+    z.strictObject({...bounceBase,kind:z.literal("out_of_bounds")})
+  ])).length(8)
 });
 const activeMoveContinuation = z.strictObject({
   declarationSourceId:text,movementBefore:z.number().int().min(0).max(16).nullable(),movementAfterSuccess:z.number().int().min(0).max(15).nullable(),
@@ -157,6 +167,8 @@ export const LuckEventMetadataSchema = z.strictObject({
       checkpointAfter: count,
       activeMoveContinuation:activeMoveContinuation.optional(),
       actorDodgeMoveSourceId:text.optional(),
+      pickupSuccessors:pickupSuccessors.optional(),
+      pickupSettlementKnown:z.boolean().optional(),
       ordinaryMoveAvailability:z.strictObject({successDestination:pitchCell,knownAvailablePlayerIds:z.array(text).max(64),unknownPlayerIds:z.array(text).max(64)}).optional(),
       suppressedTackleZones: z.array(z.strictObject({ playerId: text, rosterIndex: z.number().int().min(0).max(1), teamId: text.nullable(), providerSkillId: z.union([z.literal(31),z.literal(51)]) })).max(128).optional(),
       actorMentalEffectEnd: z.strictObject({ sourceId: text, providerSkillId: z.union([z.literal(31),z.literal(51)]) }).optional(),
@@ -307,6 +319,7 @@ export const LuckEventSchema = z.strictObject({
   actualSuccess: z.boolean().nullable(),
   delta: finite,
   weightedDelta: finite,
+  possessionBounds:z.strictObject({policy:z.literal("sure_hands_reroll"),successChance:probability,minimumDifference:finite.min(0).max(3),maximumDifference:finite.min(0).max(3),lower:finite,upper:finite}).optional(),
   contextualBounds:z.strictObject({policy:z.literal("dodge_skill_reroll"),minimumMoves:count,maximumMoves:count,successChance:probability,activeContinuation:z.strictObject({minimum:z.union([z.literal(0),z.literal(1)]),maximum:z.union([z.literal(0),z.literal(1)])}).optional(),lower:finite,upper:finite}).optional(),
   contextualImpact: z
     .strictObject({
@@ -866,6 +879,49 @@ export const LuckReportSchema = z
             context.actorStandUpSourceIndex < event.metadata.sourceIndex,
           "Stand-up evidence must be between the checkpoint and roll of the same activation."
         );
+      }
+      const successors=context?.pickupSuccessors;
+      const possession=event.possessionBounds;
+      if(successors || possession) {
+        const original=sources.get(event.metadata.rerollOriginalId ?? ""),use=sources.get(event.metadata.rerollDecisionId ?? "");
+        const declaration=sources.get(successors?.declarationSourceId ?? ""),move=sources.get(successors?.moveOutcomeSourceId ?? "");
+        const target=event.metadata.difficulty;
+        const owns=(e:typeof event|undefined)=>e?.playerId === event.playerId && e?.teamId === event.teamId;
+        const sameStep=(e:typeof event|undefined)=>owns(e) && e?.metadata.actionId === event.metadata.actionId && e?.metadata.sequenceId === event.metadata.sequenceId;
+        require(!!successors && !!possession && event.scoringStatus === "scored" && event.metadata.rollType === 4 && event.metadata.stepType === 1 &&
+          event.metadata.rerollSkill === "Sure Hands" && event.metadata.rerollResource === "skill" && event.metadata.teamRerollsSpent === 0 &&
+          !event.contextualImpact && !event.contextualBounds && context?.phaseCode === 5 && (context.actorRosterTeamId === undefined || context.actorRosterTeamId === event.teamId) && context.actorCarriesBall !== true &&
+          context.activationId === successors.declarationSourceId && context.actorCell?.x === successors.origin.x && context.actorCell.y === successors.origin.y &&
+          declaration?.metadata.sourceTag === "ResultUseAction" && declaration.metadata.actionCode === 1 && declaration.metadata.stepType === 0 && owns(declaration) &&
+          move?.metadata.sourceTag === "ResultMoveOutcome" && sameStep(move) &&
+          original?.metadata.sourceTag === "ResultRoll" && sameStep(original) && original.metadata.rollType === 4 && original.metadata.outcomeCode === 0 &&
+          original.metadata.mergedRerollAnchorId === event.metadata.sourceId && original.metadata.difficulty === target && original.metadata.requirement === target &&
+          use?.metadata.sourceTag === "ResultSkillUsage" && sameStep(use) && use.metadata.skillUsage?.skillId === 61 && use.metadata.skillUsage.used &&
+          event.metadata.sourceIndex !== undefined && original.metadata.sourceIndex === event.metadata.sourceIndex-2 && use.metadata.sourceIndex === event.metadata.sourceIndex-1 &&
+          move?.metadata.sourceIndex === event.metadata.sourceIndex-3 && context.checkpointAfter < move.metadata.sourceIndex! &&
+          (declaration?.metadata.sourceIndex ?? Infinity) < (move.metadata.sourceIndex ?? -1) &&
+          typeof target === "number" && Number.isInteger(target) && target >= 2 && target <= 6 && event.metadata.requirement === target &&
+          original.metadata.modifiers?.length === 0 && event.metadata.modifiers?.length === 0 &&
+          original.metadata.dice?.length === 1 && original.metadata.dieTypes?.length === 1 && original.metadata.dieTypes[0] === 0 &&
+          Number.isInteger(original.metadata.dice[0]) && original.metadata.dice[0]! >= 1 && original.metadata.dice[0]! < target &&
+          event.metadata.dice?.length === 1 && event.metadata.dieTypes?.length === 1 && event.metadata.dieTypes[0] === 0 &&
+          Number.isInteger(event.metadata.dice[0]) && event.metadata.dice[0]!>=1 && event.metadata.dice[0]!<=6 && event.actualSuccess === (event.metadata.dice[0]!>=target) &&
+          event.probabilitySuccess !== null && near(event.probabilitySuccess,1-((target-1)/6)**2),
+          "Pickup possession bounds require an owned ordinary Move and committed original/Sure-Hands/replacement chain; missing checkpoint possession stays unknown.");
+        if(successors) {
+          require(new Set(successors.branches.map(b=>b.direction)).size === 8 && successors.branches.every(b=>{
+            const expected=bounceDestination(b.direction,successors.origin);
+            const onPitch=b.destination.x>=0 && b.destination.x<=25 && b.destination.y>=0 && b.destination.y<=14;
+            return expected?.x === b.destination.x && expected?.y === b.destination.y && (b.kind === "out_of_bounds" ? !onPitch : onPitch) &&
+              (b.kind !== "occupied" || (b.playerId !== event.playerId)) &&
+              (b.kind !== "empty" || (b.settlement === "loose") === (context?.pickupSettlementKnown === true));
+          }),"Pickup successors require all eight unique valid D8 directions, retaining occupied catch and off-pitch return uncertainty.");
+        }
+        const expected=possession ? estimatePickupPossessionBounds(context,possession.policy,Number(event.actualSuccess)-possession.successChance,possession.successChance) : undefined;
+        require(!!possession && !!expected && near(possession.successChance,(7-(target ?? 0))/6) &&
+          near(possession.minimumDifference,expected.minimumDifference) && near(possession.maximumDifference,expected.maximumDifference) &&
+          near(possession.lower,expected.lower) && near(possession.upper,expected.upper),
+          "Pickup possession endpoints must use the conditional terminal die and all eight successor bounds, outside point totals.");
       }
       const dodgeMove = event.metadata.dodgeMovement;
       if (dodgeMove) {

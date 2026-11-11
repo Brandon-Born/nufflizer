@@ -31,7 +31,7 @@ export function summarizeContextEvidence(events: readonly LuckEvent[]) {
       clockCount++;
     if (preRoll?.activationId) activationCount++;
     if (event.contextualImpact !== undefined) quantifiedCount++;
-    if (event.contextualBounds !== undefined) boundedCount++;
+    if (event.contextualBounds !== undefined || event.possessionBounds !== undefined) boundedCount++;
     if (
       event.metadata.blockResolution ||
       event.metadata.movementFall ||

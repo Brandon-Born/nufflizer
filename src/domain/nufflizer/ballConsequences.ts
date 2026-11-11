@@ -2,31 +2,10 @@ import type { ReplayEvent, ReplayTurn } from "@/domain/replay/types";
 import type { LuckEvent } from "./types";
 
 type Cell = { x: number; y: number };
-// Independent raw traversal of 135 complete BallStep/25 records across the
-// 12 demos yields these eight offsets. This does not price a landing.
-const OFFSETS = [
-  [-1, 1],
-  [0, 1],
-  [1, 1],
-  [-1, 0],
-  [1, 0],
-  [-1, -1],
-  [0, -1],
-  [1, -1]
-] as const;
-export function observedBounceDirection(
-  direction: number | undefined,
-  from: Cell,
-  to: Cell
-) {
-  const offset = Number.isInteger(direction)
-    ? OFFSETS[Number(direction) - 1]
-    : undefined;
-  return (
-    offset !== undefined &&
-    to.x - from.x === offset[0] &&
-    to.y - from.y === offset[1]
-  );
+import { bounceDestination } from "@/domain/replay/pickupSuccessors";
+export function observedBounceDirection(direction:number|undefined,from:Cell,to:Cell) {
+  const expected=bounceDestination(Number(direction),from);
+  return expected?.x === to.x && expected?.y === to.y;
 }
 function cell(value: unknown): Cell | undefined {
   const raw = value as { X?: unknown; Y?: unknown } | undefined;

@@ -16,7 +16,8 @@ import {
 import {
   CONTEXT_MODEL_VERSION,
   estimateNumericImpact,
-  estimateDodgeImpactBounds
+  estimateDodgeImpactBounds,
+  estimatePickupPossessionBounds
 } from "./contextImpact";
 import {
   reconstructReplayContext,
@@ -349,6 +350,8 @@ function buildNormalizedEvent(
   const preRoll = recordedPreRoll
     ? {
         ...recordedPreRoll,
+        pickupSuccessors: rerollLink?.skill === "Sure Hands" && payload?.Requirement === payload?.Difficulty &&
+          (payload?.Modifiers === undefined || payload?.Modifiers === "") ? recordedPreRoll.pickupSuccessors : undefined,
         activeMoveContinuation:
           rerollLink?.skill === "Dodge"
             ? recordedPreRoll.activeMoveContinuation
@@ -851,9 +854,9 @@ function buildNormalizedEvent(
       ? "full_team_reroll"
       : rerollLink?.resource === "skill" && rerollLink.skill === "Dodge"
         ? "dodge_skill_reroll"
-        : undefined;
+        : rerollLink?.resource === "skill" && rerollLink.skill === "Sure Hands" ? "sure_hands_reroll" : undefined;
   const contextDeviation =
-    contextPolicy === "dodge_skill_reroll"
+    (contextPolicy === "dodge_skill_reroll" || contextPolicy === "sure_hands_reroll")
       ? Number(actualSuccess) - probability.baseOdds
       : delta;
   const contextualImpact =
@@ -875,6 +878,8 @@ function buildNormalizedEvent(
         )
       : undefined;
 
+  const possessionBounds = preRoll?.pickupSuccessors && rollType === 4
+    ? estimatePickupPossessionBounds(preRoll,contextPolicy,contextDeviation,probability.baseOdds) : undefined;
   const tags: LuckEvent["tags"] = [];
   if (actualSuccess && probabilitySuccess <= 0.3) {
     tags.push("blessed");
@@ -896,6 +901,7 @@ function buildNormalizedEvent(
     weightedDelta,
     contextualImpact,
     contextualBounds,
+    possessionBounds,
     label: armorScored
       ? actualSuccess
         ? "Armor held"
@@ -1122,13 +1128,14 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       fall?.skillOriginalId ? fall.rollSourceId : undefined
     );
     for (const link of rerollLinks.values())
-      if (link.skill === "Dodge" && link.decisionId) {
+      if ((link.skill === "Dodge" || link.skill === "Sure Hands") && link.decisionId) {
         activationEvidenceSources.add(link.decisionId);
         const continuation = link.originalId
           ? contextBySource.get(link.originalId)?.activeMoveContinuation
           : undefined;
-        if (continuation)
-          activationEvidenceSources.add(continuation.declarationSourceId);
+        if (continuation) activationEvidenceSources.add(continuation.declarationSourceId);
+        const pickup=link.originalId ? contextBySource.get(link.originalId)?.pickupSuccessors : undefined;
+        if(pickup) {activationEvidenceSources.add(pickup.declarationSourceId);activationEvidenceSources.add(pickup.moveOutcomeSourceId);}
       }
     linkLonerGates(
       replayTurn.events,
@@ -1292,19 +1299,24 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     linkPickupBallConsequences(turn, ballSources);
   for (const event of events)
     if (
-      event.metadata.rerollSkill === "Dodge" &&
+      (event.metadata.rerollSkill === "Dodge" || event.metadata.rerollSkill === "Sure Hands") &&
       event.metadata.rerollDecisionId
     ) {
       const skill = ballSources.get(event.metadata.rerollDecisionId);
-      if (skill) skill.metadata.skillUsage = { skillId: 7, used: true };
+      if (skill) skill.metadata.skillUsage = { skillId: event.metadata.rerollSkill === "Dodge" ? 7 : 61, used: true };
     }
   for (const event of events) {
     const source =
-      event.metadata.preRoll?.activeMoveContinuation?.declarationSourceId;
+      event.metadata.preRoll?.activeMoveContinuation?.declarationSourceId ?? event.metadata.preRoll?.pickupSuccessors?.declarationSourceId;
     if (source) {
       const declaration = ballSources.get(source);
       if (declaration) declaration.label = "Recorded ordinary Move declaration";
     }
+  }
+  for (const event of events) {
+    const moveSource=event.metadata.preRoll?.pickupSuccessors?.moveOutcomeSourceId;
+    const move=moveSource ? ballSources.get(moveSource) : undefined;
+    if(move) {move.label="Recorded move to the pickup square";move.statusReason="The ordinary move reached the recorded ball square before the pickup attempt; no random outcome is added.";}
   }
   for (const [source, movement] of dodgeMovements) {
     const roll = ballSources.get(source);

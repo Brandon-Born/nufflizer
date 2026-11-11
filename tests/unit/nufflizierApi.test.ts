@@ -85,13 +85,52 @@ describe("POST /api/nufflizier/analyze", () => {
         (e) => e.metadata.locator?.replayStep === 94 && e.contextualBounds
       )?.contextualBounds?.activeContinuation
     ).toEqual({ minimum: 1, maximum: 1 });
-    expect(report.events.find(e=>e.metadata.locator?.replayStep === 94 && e.metadata.dodgeMovement)?.metadata.dodgeMovement)
-      .toMatchObject({movementBefore:6,movementAfter:5,from:{x:12,y:2},to:{x:13,y:3}});
+    expect(
+      report.events.find(
+        (e) => e.metadata.locator?.replayStep === 94 && e.metadata.dodgeMovement
+      )?.metadata.dodgeMovement
+    ).toMatchObject({
+      movementBefore: 6,
+      movementAfter: 5,
+      from: { x: 12, y: 2 },
+      to: { x: 13, y: 3 }
+    });
     expect(report.teams.every((team) => team.impactCount === 0)).toBe(true);
     expect(
       report.events.some(
         (e) => e.metadata.blockResolution?.damageActionIds.length
       )
     ).toBe(true);
+  }, 20000);
+  it("exports both source-backed Sure Hands possession ranges without invented clocks or point totals", async () => {
+    const data = new FormData();
+    data.append(
+      "replay",
+      new File([readFileSync("demo-replays/demo6.bbr")], "source.bbr")
+    );
+    const response = await POST(
+      new Request("http://localhost/api/nufflizier/analyze", {
+        method: "POST",
+        body: data
+      })
+    );
+    const payload = await response.json();
+    expect(response.status, JSON.stringify(payload).slice(0, 200)).toBe(200);
+    const report = LuckReportSchema.parse(payload),
+      ranges = report.events.filter((e) => e.possessionBounds);
+    expect(ranges.map((e) => e.metadata.locator?.replayStep)).toEqual([
+      99, 306
+    ]);
+    expect(ranges[0]!.possessionBounds!.upper).toBeCloseTo(7 / 8, 12);
+    expect(ranges[1]!.possessionBounds!.lower).toBeCloseTo(-4 / 3, 12);
+    expect(
+      ranges.every(
+        (e) =>
+          e.metadata.preRoll?.activeTeamId === null &&
+          e.metadata.preRoll.actorCarriesBall === null
+      )
+    ).toBe(true);
+    expect(report.coverage.contextEvidence.boundedCount).toBe(3);
+    expect(report.teams.every((t) => t.impactCount === 0)).toBe(true);
   }, 20000);
 });

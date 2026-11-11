@@ -1,8 +1,11 @@
 import type { PreRollEvidence } from "@/domain/replay/reconstructContext";
 
-export const CONTEXT_MODEL_VERSION = "mobility-possession-12";
+export const CONTEXT_MODEL_VERSION = "mobility-possession-13";
 export type ContextPolicy =
-  "declined_team_reroll" | "full_team_reroll" | "dodge_skill_reroll";
+  | "declined_team_reroll"
+  | "full_team_reroll"
+  | "dodge_skill_reroll"
+  | "sure_hands_reroll";
 
 // Unit: one other standing teammate with a legal ordinary move. Possession
 // and the threat of a marked landing are explicit heuristic weights, not
@@ -18,6 +21,7 @@ export function estimateNumericImpact(
 ) {
   if (
     !policy ||
+    policy === "sure_hands_reroll" ||
     !preRoll ||
     preRoll.teamTurn === null ||
     preRoll.otherUsefulActivations === null ||
@@ -29,7 +33,12 @@ export function estimateNumericImpact(
     (preRoll.actorCarriesBall !== false || !preRoll.movementCheckLinked)
   )
     return;
-  if (rollType === 4 && preRoll.pickupBounceExposure === null) return;
+  if (
+    rollType === 4 &&
+    (preRoll.pickupBounceExposure === null ||
+      preRoll.pickupSettlementKnown !== true)
+  )
+    return;
   if (rollType !== 2 && rollType !== 4) return;
 
   if (policy === "dodge_skill_reroll" && rollType !== 2) return;
@@ -112,5 +121,43 @@ export function estimateDodgeImpactBounds(
     maximumMoves: maximum,
     lower: Math.min(...values) === 0 ? 0 : Math.min(...values),
     upper: Math.max(...values) === 0 ? 0 : Math.max(...values)
+  };
+}
+
+// Only own possession and marked loose-ball exposure: no activation, carrier
+// continuation, opponent possession gain or scoring value is priced here.
+// Pending catches/throw-ins remain [0,3]; their future dice are not scored now.
+export function estimatePickupPossessionBounds(
+  preRoll: PreRollEvidence | undefined,
+  policy: ContextPolicy | undefined,
+  deviation: number,
+  successChance: number
+) {
+  if (policy !== "sure_hands_reroll" || !preRoll?.pickupSuccessors) return;
+  let minimum = 0,
+    maximum = 0;
+  for (const branch of preRoll.pickupSuccessors.branches) {
+    if (branch.kind !== "empty") {
+      maximum += POSSESSION_VALUE + MARKED_LANDING_VALUE;
+      continue;
+    }
+    if (branch.settlement === "loose")
+      minimum +=
+        POSSESSION_VALUE +
+        (branch.marking === "marked" ? MARKED_LANDING_VALUE : 0);
+    maximum +=
+      POSSESSION_VALUE +
+      (branch.marking !== "unmarked" ? MARKED_LANDING_VALUE : 0);
+  }
+  minimum /= 8;
+  maximum /= 8;
+  const endpoints = [deviation * minimum, deviation * maximum];
+  return {
+    policy,
+    successChance,
+    minimumDifference: minimum,
+    maximumDifference: maximum,
+    lower: Math.min(...endpoints) || 0,
+    upper: Math.max(...endpoints) || 0
   };
 }

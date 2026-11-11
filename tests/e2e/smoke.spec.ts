@@ -334,7 +334,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.17");
+  expect(report.schemaVersion).toBe("2.18");
   expect(report.modelVersion).toBe("dice-only-19");
   expect(
     report.events.some(
@@ -360,7 +360,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
     )
   ).toBe(true);
 
-  expect(report.contextModelVersion).toBe("mobility-possession-12");
+  expect(report.contextModelVersion).toBe("mobility-possession-13");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
     report.coverage.rollCandidates.scoredCount +
@@ -535,8 +535,8 @@ test("complete pre-roll evidence explains the cost of an exposed pickup", async 
     mimeType: "application/xml",
     buffer: Buffer.from(
       contextReplayXml({ type: 4, exposed: true }).replaceAll(
-        "<Id>10</Id>",
-        "<Id>10</Id><Data><Id>10</Id><Name>Initial Runner</Name><InnateSkills><InnateSkillsItem>30</InnateSkillsItem><InnateSkillsItem>63</InnateSkillsItem></InnateSkills><AcquiredSkills/></Data>"
+        "<Data><Id>10</Id><InnateSkills></InnateSkills><AcquiredSkills/></Data>",
+        "<Data><Id>10</Id><Name>Initial Runner</Name><InnateSkills><InnateSkillsItem>30</InnateSkillsItem><InnateSkillsItem>63</InnateSkillsItem></InnateSkills><AcquiredSkills/></Data>"
       )
     )
   });
@@ -593,8 +593,8 @@ test("complete pre-roll evidence explains the cost of an exposed pickup", async 
   });
   await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
   await expect(
-    page.getByText(/Context: -3\.33 context units across 1 estimate/)
-  ).toBeVisible();
+    page.getByText("Context: Not scored")
+  ).toHaveCount(2);
   const suppressedRow = page
     .locator("tbody tr")
     .filter({ hasText: "Ball handling failed" });
@@ -603,7 +603,7 @@ test("complete pre-roll evidence explains the cost of an exposed pickup", async 
     "Player 40 had no tackle zone under the recorded Really Stupid effect"
   );
   await expect(suppressedRow).toContainText(
-    "0% of eligible bounce squares are marked"
+    "Current skills or effects leave bounce reactions unresolved"
   );
 });
 test("invalid replay and hosting-generated text errors are understandable", async ({
@@ -827,7 +827,7 @@ test("real-source Dodge uncertainty and active continuation stay outside point t
       page.getByRole("heading", { name: "Nuffle Match Report" })
     ).toBeVisible();
     await expect(
-      page.getByText(/Separate ordinary-move ranges are available for 1 check/)
+      page.getByText(/Separate context ranges are available for 1 check/)
     ).toBeVisible();
     await page.getByLabel("Scoring status").selectOption("bounded");
     const row = page
@@ -857,6 +857,33 @@ test("real-source Dodge uncertainty and active continuation stay outside point t
     });
     await page.getByRole("button", { name: "Upload Another Replay" }).click();
     await expect(page.getByLabel("Scoring status")).toHaveCount(0);
+    await page.unroute("**/api/nufflizier/analyze");
+  }
+  expect(errors).toEqual([]);
+});
+
+
+test("source-backed Sure Hands bounds preserve pending catch and reaction uncertainty",async({page})=>{
+  const errors:string[]=[];page.on("pageerror",e=>errors.push(e.message));page.on("console",m=>{if(m.type() === "error")errors.push(m.text());});
+  await page.goto("/nufflizier");
+  await expect(page).toHaveTitle(/Nufflizier/);
+  for(const c of [{id:"pickup_terminal_success",branches:"3 empty, 5 occupied and 0 off-pitch",range:"0.00 to 0.88 context units"},{id:"pickup_terminal_failure",branches:"8 empty, 0 occupied and 0 off-pitch",range:"-1.33 to 0.00 context units"}]) {
+    const xml=lonerDriveXml(c.id,"tests/fixtures/evidence/bb3-pickup-successors.json"),report=analyzeNufflizerInput(xml);
+    await page.route("**/api/nufflizier/analyze",route=>route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(report)}));
+    await page.setInputFiles('input[name="replay"]',{name:"source-pickup.xml",mimeType:"application/xml",buffer:Buffer.from(xml)});
+    await page.getByRole("button",{name:"Analyze Nuffle Luck"}).click();
+    await expect(page.getByRole("heading",{name:"Nuffle Match Report"})).toBeVisible();
+    await page.getByLabel("Scoring status").selectOption("bounded");
+    const row=page.getByRole("table").filter({has:page.getByRole("columnheader",{name:"Replay segment"})}).locator("tbody tr");
+    await expect(row).toHaveCount(1);await row.locator("summary").click();
+    await expect(row).toContainText("Sure Hands already committed");await expect(row).toContainText("terminal die had 66.7% success");
+    await expect(row).toContainText(c.branches);await expect(row).toContainText(c.range);
+    await expect(row).toContainText("reaction skills or effects are incomplete");await expect(row).toContainText("later catch/return dice");
+    await expect(row).toContainText("No midpoint or range endpoint enters point totals");await expect(row).toContainText("88.9%");
+    await expect(page.getByText("Context: Not scored")).toHaveCount(2);
+    await page.screenshot({path:c.id.endsWith("success")?"/tmp/nufflizier-pickup-successors-desktop.png":"/tmp/nufflizier-pickup-failure-desktop.png",fullPage:true});
+    await page.getByRole("button",{name:"Reset filters",exact:true}).click();await expect(page.getByLabel("Scoring status")).toHaveValue("scored");
+    await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);
     await page.unroute("**/api/nufflizier/analyze");
   }
   expect(errors).toEqual([]);

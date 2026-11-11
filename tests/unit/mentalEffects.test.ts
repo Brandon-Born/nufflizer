@@ -136,7 +136,7 @@ describe("observed mental-trait effects and next activation", () => {
   });
 
   it.each([31, 51] as const)(
-    "uses observed provider%s suppression in the failed-pickup exposure successor",
+    "retains provider%s suppression while withholding unsupported ball-effect settlement",
     (provider) => {
       const regular = LuckReportSchema.parse(
         analyzeReplayLuck(
@@ -162,7 +162,8 @@ describe("observed mental-trait effects and next activation", () => {
       const a = pickup(regular),
         b = pickup(reduced);
       expect(a.metadata.preRoll?.pickupBounceExposure).toBe(3 / 8);
-      expect(b.metadata.preRoll?.pickupBounceExposure).toBe(0);
+      expect(b.metadata.preRoll?.pickupBounceExposure).toBeNull();
+      expect(b.metadata.preRoll?.pickupSettlementKnown).toBe(false);
       expect(b.metadata.preRoll?.suppressedTackleZones).toEqual([
         {
           playerId: "40",
@@ -171,10 +172,8 @@ describe("observed mental-trait effects and next activation", () => {
           providerSkillId: provider
         }
       ]);
-      expect(b.contextualImpact?.contribution).toBeCloseTo(-10 / 3, 12);
-      expect(
-        a.contextualImpact!.contribution - b.contextualImpact!.contribution
-      ).toBeCloseTo(-5 / 16, 12);
+      expect(b.contextualImpact).toBeUndefined();
+      expect(a.contextualImpact!.contribution).toBeCloseTo(-175 / 48,12);
       expect(b.probabilitySuccess).toBe(a.probabilitySuccess);
       const missing = contextReplayXml({
         type: 4,

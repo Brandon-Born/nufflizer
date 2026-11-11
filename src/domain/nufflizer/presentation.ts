@@ -37,7 +37,7 @@ export function formatDiceContribution(
 export function explainContextCoverage(
   evidence: LuckReport["coverage"]["contextEvidence"]
 ): string {
-  return `Contextual impact quantified for ${evidence.quantifiedCount} of ${evidence.rollCount} roll candidates. Pre-roll position observed for ${evidence.positionCount}, possession known for ${evidence.possessionCount}, and period with team turn known for ${evidence.clockCount}. Linked roll consequences observed for ${evidence.consequenceCount}.${evidence.boundedCount ? ` Separate ordinary-move ranges are available for ${evidence.boundedCount} ${evidence.boundedCount === 1 ? "check" : "checks"} with incomplete availability; these are excluded from point totals.` : ""}`;
+  return `Contextual impact quantified for ${evidence.quantifiedCount} of ${evidence.rollCount} roll candidates. Pre-roll position observed for ${evidence.positionCount}, possession known for ${evidence.possessionCount}, and period with team turn known for ${evidence.clockCount}. Linked roll consequences observed for ${evidence.consequenceCount}.${evidence.boundedCount ? ` Separate context ranges are available for ${evidence.boundedCount} ${evidence.boundedCount === 1 ? "check" : "checks"} for partial components; these are excluded from point totals.` : ""}`;
 }
 
 export function explainRecruitmentEvidence(
@@ -129,6 +129,7 @@ export function explainPreRollEvidence(
   if (context?.actorDodgeMoveSourceId) details.push(
     "An earlier successful Dodge skill reroll and its recorded move preserve this player's position and movement in the same activation."
   );
+  if(context?.pickupSettlementKnown === false) details.push("Current skills or effects leave bounce reactions unresolved; empty squares alone cannot establish settled possession loss.");
   if (context?.actorPickupSourceId) {
     details.push(
       "The player was carrying the ball they picked up earlier in this activation."
@@ -205,6 +206,13 @@ export function explainContextImpact(
 export function explainContextBounds(
   event: LuckReport["events"][number]
 ): string | null {
+  const possession=event.possessionBounds,successors=event.metadata.preRoll?.pickupSuccessors;
+  if(possession && successors) {
+    const empty=successors.branches.filter(b=>b.kind === "empty").length;
+    const occupied=successors.branches.filter(b=>b.kind === "occupied").length;
+    const outside=8-empty-occupied;
+    return `With Sure Hands already committed, the terminal die had ${(possession.successChance*100).toFixed(1)}% success. A successful pickup holds the ball here. The eight equally likely initial bounce alternatives after failure include ${empty} empty, ${occupied} occupied and ${outside} off-pitch squares. Occupied squares need a catch; off-pitch results need a return. Neither is treated as lost or recovered possession. Empty-square settlement also stays uncertain when current reaction skills or effects are incomplete. Unknown tackle zones stay uncertain. This component values only retaining own possession (2 provisional units) and marked loose-ball exposure (up to 1); its difference is ${possession.minimumDifference.toFixed(2)} to ${possession.maximumDifference.toFixed(2)} and its contribution is ${possession.lower.toFixed(2)} to ${possession.upper.toFixed(2)} context units. It excludes remaining activations, opponent possession gain, scoring value, the earlier failed die and later catch/return dice. No midpoint or range endpoint enters point totals; this is not calibrated match impact.`;
+  }
   const bound = event.contextualBounds;
   if (!bound) return null;
   return `After a successful Dodge, ${bound.minimumMoves} to ${bound.maximumMoves} other players could make an ordinary standing move; availability is incomplete for ${bound.maximumMoves - bound.minimumMoves} players. ${explainActiveContinuation(event)} With the Dodge reroll already committed, the terminal die had ${(bound.successChance * 100).toFixed(1)}% success under the recorded modifiers. Its ordinary-move contribution ranges from ${bound.lower.toFixed(2)} to ${bound.upper.toFixed(2)} context units. This is a possible-value range, not a confidence interval or a whole-action value. No midpoint is added to point totals; the earlier failure and other tactical consequences remain outside this component.`;

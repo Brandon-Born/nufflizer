@@ -1,4 +1,10 @@
 import {
+  pickupBounceSuccessors,
+  plainPickupMoveOutcome,
+  plainBounceSettlementKnown,
+  type PickupBounceSuccessors
+} from "./pickupSuccessors";
+import {
   unmodifiedDodgeDie,
   successfulDodgeMoveOutcome,
   type ObservedDodgeMovement
@@ -39,6 +45,8 @@ import {
 
 type Cell = { x: number; y: number };
 export type PreRollEvidence = {
+  pickupSuccessors?: PickupBounceSuccessors;
+  pickupSettlementKnown?: boolean;
   actorDodgeMoveSourceId?: string;
   activeMoveContinuation?: ActiveMoveContinuation;
   ordinaryMoveAvailability?: OrdinaryMoveAvailability;
@@ -175,7 +183,10 @@ function summarize(
   smallPitchObserved: boolean,
   standUpSourceIndex: number | undefined,
   pickupSourceId: string | undefined,
-  ordinaryMoveDeclaration: string | undefined
+  ordinaryMoveDeclaration: string | undefined,
+  pickupMoveDeclaration: string | undefined,
+  lastMoveSource: { id: string; index: number } | undefined,
+  pickupGeometryTrusted: boolean
 ): PreRollEvidence {
   const actorId = id(event.playerId);
   const active = board.teams.find(
@@ -296,6 +307,7 @@ function summarize(
     (event.payload?.RollInfos as { RollType?: unknown } | undefined)?.RollType;
   if (
     rollType === 4 &&
+    pickupGeometryTrusted &&
     normal &&
     owned &&
     consistentGeometry &&
@@ -310,6 +322,7 @@ function summarize(
       .flatMap((t) => t.players)
       .filter((p) => p.pitchLocation === "on_pitch");
     if (
+      plainBounceSettlementKnown(board) &&
       landings.every((p) => pitch(p) && !occupied.has(key(p))) &&
       opponents.every((p) => p.tackleZone !== null)
     ) {
@@ -326,6 +339,33 @@ function summarize(
         ).length / 8;
     }
   }
+  const pickupSuccessors =
+    rollType === 4 &&
+    pickupGeometryTrusted &&
+    actorId !== null &&
+    actorCell &&
+    pickupMoveDeclaration &&
+    lastMoveSource &&
+    lastMoveSource.index === event.sourceIndex! - 1 &&
+    !smallPitchObserved &&
+    event.actorTeamId !== undefined &&
+    event.actorTeamSource !== "turn_inferred" &&
+    !event.attributionConflict &&
+    step?.sourceTag === "PlayerStep" &&
+    step.stepType === 1 &&
+    step.stepActorId === event.playerId &&
+    step.actionId === event.actionId &&
+    step.payload?.Skill === 0 &&
+    step.payload.IsEvaluation === 0 &&
+    same(stepCell(step.payload.CellTo), actorCell)
+      ? pickupBounceSuccessors(
+          board,
+          actorId,
+          pickupMoveDeclaration,
+          lastMoveSource.id,
+          event.actorTeamId!
+        )
+      : undefined;
   const destination = stepCell(step?.payload?.CellTo);
   const movementCheckLinked =
     rollType === 2 &&
@@ -471,6 +511,11 @@ function summarize(
   );
   return {
     activeMoveContinuation,
+    pickupSuccessors,
+    pickupSettlementKnown:
+      rollType === 4 && consistentGeometry
+        ? plainBounceSettlementKnown(board)
+        : undefined,
     ordinaryMoveAvailability,
     suppressedTackleZones: suppressedTackleZones.length
       ? suppressedTackleZones
@@ -561,6 +606,7 @@ export function reconstructReplayContext(
   const checkpoints = replay.boardCheckpoints ?? [];
   const epochs = checkpointClockEpochs(checkpoints);
   let activationEpoch: number | undefined;
+  let activationCheckpointAfter: number | undefined;
   let standardPitch = false;
   let smallPitchObserved = false;
   let cursor = 0;
@@ -571,6 +617,9 @@ export function reconstructReplayContext(
   let activationActionCode: number | undefined;
   let moveObserved = false;
   let moveOutcomeSourceIndex: number | undefined;
+  let moveOutcomeSourceId: string | undefined;
+  let plainDoMoveSourceIndex: number | undefined;
+  let pickupGeometryTrusted = false;
   let standUpPending = false;
   let standUpSourceIndex: number | undefined;
   let pickupSourceId: string | undefined;
@@ -648,10 +697,13 @@ export function reconstructReplayContext(
           next && next.teams.length === 2 && next.issues.length === 0
             ? applyObservedMentalEffects(next)
             : null;
+        pickupGeometryTrusted = !!board;
         actorEffectEnd = undefined;
         mentalActivationPending = false;
         moveObserved = false;
         moveOutcomeSourceIndex = undefined;
+        moveOutcomeSourceId = undefined;
+        plainDoMoveSourceIndex = undefined;
         standUpPending = false;
         standUpSourceIndex = undefined;
         pickupSourceId = undefined;
@@ -771,6 +823,7 @@ export function reconstructReplayContext(
           }
           moveObserved = false;
           moveOutcomeSourceIndex = event.sourceIndex;
+          moveOutcomeSourceId = undefined;
           pendingDodge = undefined;
           continue;
         }
@@ -834,6 +887,8 @@ export function reconstructReplayContext(
         step = event;
         moveObserved = false;
         moveOutcomeSourceIndex = undefined;
+        moveOutcomeSourceId = undefined;
+        plainDoMoveSourceIndex = undefined;
         continue;
       }
       if (!board || !checkpoint) {
@@ -869,7 +924,14 @@ export function reconstructReplayContext(
               previousMove.end.actorId === event.playerId &&
               activationEpoch === epochs.get(checkpoint)
               ? previousMove.end.declarationSourceId
-              : undefined
+              : undefined,
+            activationActionCode === 1 && activationCheckpointAfter === checkpoint.afterSourceIndex
+              ? (activationId ?? undefined)
+              : undefined,
+            moveOutcomeSourceIndex !== undefined && moveOutcomeSourceId
+              ? { id: moveOutcomeSourceId, index: moveOutcomeSourceIndex }
+              : undefined,
+            pickupGeometryTrusted
           )
         );
         const context = result.get(event.id)!;
@@ -1214,6 +1276,7 @@ export function reconstructReplayContext(
         board = { ...board, activePlayerId: actor };
         activationId = event.id ?? null;
         activationEpoch = epochs.get(checkpoint);
+        activationCheckpointAfter = checkpoint.afterSourceIndex;
         activationActionCode = event.actionCode;
         actorDodgeMoveSourceId = undefined;
         blockDeclarationActionId =
@@ -1404,6 +1467,9 @@ export function reconstructReplayContext(
         stepActorMatches
       ) {
         moveObserved = true;
+        if (p && Object.keys(p).length > 0) pickupGeometryTrusted = false;
+        plainDoMoveSourceIndex =
+          !p || Object.keys(p).length === 0 ? event.sourceIndex : undefined;
         continue;
       }
       if (
@@ -1450,6 +1516,14 @@ export function reconstructReplayContext(
             board = { ...board, ball: { ...board.ball, cell: to } };
           moveObserved = false;
           moveOutcomeSourceIndex = event.sourceIndex;
+          if (!plainPickupMoveOutcome(event)) pickupGeometryTrusted = false;
+          moveOutcomeSourceId =
+            pickupGeometryTrusted &&
+            plainPickupMoveOutcome(event) &&
+            plainDoMoveSourceIndex === event.sourceIndex - 1
+              ? event.id
+              : undefined;
+          plainDoMoveSourceIndex = undefined;
           if (
             previousMove &&
             previousMove.end.actorId === String(actor) &&
@@ -1476,6 +1550,8 @@ export function reconstructReplayContext(
       activationId = null;
       standUpSourceIndex = undefined;
       pickupSourceId = undefined;
+      moveOutcomeSourceId = undefined;
+      plainDoMoveSourceIndex = undefined;
     }
   return {
     preRollEvidence: result,
