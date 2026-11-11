@@ -1,5 +1,9 @@
 import { buildPlayerOwnershipIndex } from "./attribution";
-import { lastBoardCheckpointBefore, type ObservedBoard } from "./boardState";
+import {
+  checkpointClockEpochs,
+  lastBoardCheckpointBefore,
+  type ObservedBoard
+} from "./boardState";
 import type { ReplayModel } from "./types";
 
 type Cell = { x: number; y: number };
@@ -51,6 +55,7 @@ export function findConfirmedActivationLosses(
   if (replay.replayVersion !== "1-4-0-0") return result;
   const owners = buildPlayerOwnershipIndex(replay).playerToTeam;
   const checkpoints = replay.boardCheckpoints ?? [];
+  const epochs = checkpointClockEpochs(checkpoints);
   for (const turn of replay.turns) {
     const events = turn.events;
     for (const [index, roll] of events.entries()) {
@@ -87,6 +92,7 @@ export function findConfirmedActivationLosses(
         declaration?.sourceTag !== "ResultUseAction" ||
         declaration.actionCode !== 2 ||
         !declaration.id ||
+        declaration.sourceIndex === undefined ||
         skill?.sourceTag !== "ResultSkillUsage" ||
         !skill.id ||
         skill.payload?.Skill !== 10 ||
@@ -132,7 +138,10 @@ export function findConfirmedActivationLosses(
         following.attributionConflict
       )
         continue;
-      const before = lastBoardCheckpointBefore(checkpoints, roll.sourceIndex);
+      const before = lastBoardCheckpointBefore(
+        checkpoints,
+        declaration.sourceIndex
+      );
       const after = lastBoardCheckpointBefore(
         checkpoints,
         following.sourceIndex
@@ -151,7 +160,8 @@ export function findConfirmedActivationLosses(
         a.phaseCode !== 5 ||
         b.phaseCode !== 5 ||
         after.afterSourceIndex < roll.sourceIndex ||
-        a.periodCode !== b.periodCode
+        a.periodCode !== b.periodCode ||
+        epochs.get(before) !== epochs.get(after)
       )
         continue;
       const own = a.teams.find((t) =>

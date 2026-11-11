@@ -225,3 +225,34 @@ export function lastBoardCheckpointBefore(
   }
   return low ? checkpoints[low - 1] : undefined;
 }
+
+// A matching final clock cannot repair an intervening changed/unknown clock.
+// Stable may be false while a recorded reroll decision is pending; it is not
+// itself a turn boundary. Build once, rather than scanning all boards per roll.
+export function checkpointClockEpochs(
+  checkpoints: readonly ReplayBoardCheckpoint[]
+): ReadonlyMap<ReplayBoardCheckpoint, number> {
+  const epochs = new Map<ReplayBoardCheckpoint, number>();
+  let previous: string | undefined;
+  let epoch = 0;
+  for (const checkpoint of checkpoints) {
+    const board = checkpoint.board;
+    const signature =
+      board && board.issues.length === 0
+        ? JSON.stringify([
+            board.phaseCode,
+            board.periodCode,
+            board.activeTeamIndex,
+            board.teams.map((team) => [
+              team.rosterIndex,
+              team.explicitTeamId,
+              team.gameTurn
+            ])
+          ])
+        : "unknown";
+    if (signature !== previous) epoch++;
+    previous = signature;
+    epochs.set(checkpoint, epoch);
+  }
+  return epochs;
+}

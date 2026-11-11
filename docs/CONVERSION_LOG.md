@@ -723,3 +723,7 @@ Schema2.10 and mobility-possession-6 distinguish a confirmed ordinary-Block Foul
 ## 2026-11-11 - Ordinary Move completion and terminal mental-trait state
 
 Schema2.11/context mobility-possession-7 distinguish completed ordinary movement from terminal Bone Head/Really Stupid failure. Source-linked same-turn availability excludes ended players from later useful-move estimates. Ordinary completion preserves tackle zones; a verified trait effect removes them. Fresh, kept-original and successful Loner4+/replacement paths remain distinct, with original/replacement sources retained and unknown trait odds. Public-demo extracts are independently reproducible; the UI-007 complete-state continuation is synthetic. Cross-turn effects, general completion/reactivation and calibrated lost-action values remain open. Dice-only-18 and comparative abstention are unchanged.
+
+## 2026-11-11 - Continuous activation-confirmation clocks
+
+Strengthened the new and existing activation-loss paths to reject an intermediate clock change even if a later board returns to the same values. The bounded checkpoint pass retains pending-reroll states while refusing unknown/changed clock epochs. Foul Appearance now anchors its before-state strictly before declaration. Schema/model versions and accepted positive policies remain unchanged.

@@ -1,4 +1,8 @@
-import { lastBoardCheckpointBefore, type ObservedBoard } from "./boardState";
+import {
+  checkpointClockEpochs,
+  lastBoardCheckpointBefore,
+  type ObservedBoard
+} from "./boardState";
 import { buildPlayerOwnershipIndex } from "./attribution";
 import type { ReplayEvent, ReplayModel } from "./types";
 
@@ -159,6 +163,7 @@ function sameStep(a: ReplayEvent, b: ReplayEvent) {
 export function findMentalActivationEnds(replay: ReplayModel): ActivationEnd[] {
   if (replay.replayVersion !== "1-4-0-0") return [];
   const result: ActivationEnd[] = [];
+  const epochs = checkpointClockEpochs(replay.boardCheckpoints ?? []);
   const owners = buildPlayerOwnershipIndex(replay).playerToTeam;
   for (const turn of replay.turns) {
     const events = turn.events.filter(
@@ -330,6 +335,7 @@ export function findMentalActivationEnds(replay: ReplayModel): ActivationEnd[] {
         a.phaseCode !== 5 ||
         b.phaseCode !== 5 ||
         a.periodCode !== b.periodCode ||
+        epochs.get(before!) !== epochs.get(after!) ||
         after!.afterSourceIndex < effect.sourceIndex
       )
         continue;

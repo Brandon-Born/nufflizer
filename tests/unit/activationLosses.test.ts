@@ -206,4 +206,25 @@ describe("confirmed player activation losses (NUF-016/017/018/022)", () => {
     replay.boardCheckpoints!.push(future);
     expect(dodge(analyzeReplayLuck(replay)).metadata.preRoll).toEqual(before);
   });
+
+  it("rejects an intermediate clock change even when the final clock matches again", () => {
+    const replay = parseReplayXml(foulAppearanceContextXml());
+    const failed = replay.turns
+      .flatMap((t) => t.events)
+      .find((e) => e.rollType === 37)!;
+    const before = structuredClone(
+      replay.boardCheckpoints!.find(
+        (c) => c.afterSourceIndex < failed.sourceIndex!
+      )!
+    );
+    const restored = structuredClone(before);
+    before.afterSourceIndex = failed.sourceIndex! - 2;
+    before.board!.periodCode = 1;
+    restored.afterSourceIndex = failed.sourceIndex! - 1;
+    replay.boardCheckpoints!.push(before, restored);
+    replay.boardCheckpoints!.sort(
+      (a, b) => a.afterSourceIndex - b.afterSourceIndex
+    );
+    expect(findConfirmedActivationLosses(replay)).toHaveLength(0);
+  });
 });

@@ -129,6 +129,7 @@ describe("terminal mental traits and ordinary Move completion", () => {
   it.each([
     "unknown",
     "turn",
+    "intermediate_clock",
     "period",
     "side",
     "same_actor",
@@ -161,6 +162,21 @@ describe("terminal mental traits and ordinary Move completion", () => {
           type: "unknown",
           sourceIndex: effect.sourceIndex
         });
+      }
+      if (change === "intermediate_clock") {
+        const middle = structuredClone(
+          replay.boardCheckpoints!.find(
+            (c) => c.afterSourceIndex >= effect.sourceIndex!
+          )!
+        );
+        middle.afterSourceIndex = events.find(
+          (e) => e.sourceTag === "QuestionTeamRerollUsage"
+        )!.sourceIndex!;
+        middle.board!.periodCode = 1;
+        replay.boardCheckpoints!.push(middle);
+        replay.boardCheckpoints!.sort(
+          (a, b) => a.afterSourceIndex - b.afterSourceIndex
+        );
       }
       if (change === "turn") after.teams[0]!.gameTurn = 2;
       if (change === "period") after.periodCode = 1;
