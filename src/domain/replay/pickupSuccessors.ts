@@ -46,13 +46,33 @@ export function pickupBounceSuccessors(
   actorId: number,
   declarationSourceId: string,
   moveOutcomeSourceId: string,
-  actingTeamId: string
+  actingTeamId: string,
+  knownTeamIds: readonly string[]
 ): PickupBounceSuccessors | undefined {
   const teams = board.teams.filter((t) =>
     t.players.some((p) => p.id === actorId)
   );
   const owner = teams[0],
     actor = owner?.players.find((p) => p.id === actorId);
+  const knownTeams = new Set(knownTeamIds);
+  const others = board.teams.filter((t) => t !== owner);
+  // Qualify ownership by the two replay teams and current roster identities.
+  // Never assign the omitted roster ID a default from its array position.
+  if (
+    knownTeams.size !== 2 ||
+    !knownTeams.has(actingTeamId) ||
+    others.length !== 1 ||
+    board.teams.some(
+      (t) =>
+        t.explicitTeamId !== null && !knownTeams.has(String(t.explicitTeamId))
+    ) ||
+    others.some(
+      (t) =>
+        t.explicitTeamId !== null && String(t.explicitTeamId) === actingTeamId
+    ) ||
+    (owner?.explicitTeamId === null && others[0]!.explicitTeamId === null)
+  )
+    return;
   const all = board.teams.flatMap((t) => t.players);
   if (
     !declarationSourceId ||

@@ -767,3 +767,8 @@ Schema2.18/context mobility-possession-13 preserves all initial bounce alternati
 ## 2026-11-11 - Actual secured possession after Sure Hands
 
 Schema2.19/context mobility-possession-14 resumes actual held-ball state only after a verified unmodified own Sure Hands replacement passes. The already spent movement point is not charged again; later verified moves advance player/ball with their own costs and source links. Failed/interrupted/checkpoint-separated chains stay unavailable and earlier omissions remain unknown. Source demo6 confirms6→4 across two moves and a successful pickup retaining4; later-move probes are explicitly synthetic. Observed possession and Dodge movement now contribute consequence coverage, without a new luck score. Twelve public component ranges and zero point-valued context estimates remain. Runtime4s limits are unchanged; real-worker HTTP acceptance now runs after parallel corpus tests to avoid unrelated timing contention. All17 broad issues remain open.
+
+
+## 2026-11-11 - Missing-roster-ID qualification
+
+Tightened schema2.19 pickup admission to reject conflicts between the two replay teams and current roster identities. An omitted actor-roster ID needs a distinct known opposing-roster ID; both missing or a third identity stays unsupported. Raw omissions and the twelve positive demo ranges/zero point-valued estimates remain unchanged. No score or schema-shape change.

@@ -188,7 +188,8 @@ function summarize(
   ordinaryMoveDeclaration: string | undefined,
   pickupMoveDeclaration: string | undefined,
   lastMoveSource: { id: string; index: number } | undefined,
-  pickupGeometryTrusted: boolean
+  pickupGeometryTrusted: boolean,
+  knownTeamIds: readonly string[]
 ): PreRollEvidence {
   const actorId = id(event.playerId);
   const active = board.teams.find(
@@ -365,7 +366,8 @@ function summarize(
           actorId,
           pickupMoveDeclaration,
           lastMoveSource.id,
-          event.actorTeamId!
+          event.actorTeamId!,
+          knownTeamIds
         )
       : undefined;
   const destination = stepCell(step?.payload?.CellTo);
@@ -1041,7 +1043,8 @@ export function reconstructReplayContext(
             moveOutcomeSourceIndex !== undefined && moveOutcomeSourceId
               ? { id: moveOutcomeSourceId, index: moveOutcomeSourceIndex }
               : undefined,
-            pickupGeometryTrusted
+            pickupGeometryTrusted,
+            replay.teams.map((t) => t.id)
           )
         );
         const context = result.get(event.id)!;

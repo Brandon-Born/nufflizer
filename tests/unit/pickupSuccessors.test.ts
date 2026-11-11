@@ -62,7 +62,7 @@ function board(complete = true) {
   ).board!;
 }
 const successors = (b = board()) =>
-  pickupBounceSuccessors(b, 10, "declaration", "move", "0")!;
+  pickupBounceSuccessors(b, 10, "declaration", "move", "0", ["0", "1"])!;
 describe("valid pickup failure successors and conditional possession bounds", () => {
   it("constructs all eight independent D8 destinations without mutating the board", () => {
     const b = board(),
@@ -88,6 +88,19 @@ describe("valid pickup failure successors and conditional possession bounds", ()
     ).toBe(true);
     expect(b).toEqual(copy);
   });
+  it.each(["other_owns_actor", "both_omitted", "unknown_other_team"] as const)(
+    "does not repair current roster identity after %s",
+    (change) => {
+      const b = board();
+      b.teams[0]!.explicitTeamId = null;
+      if (change === "both_omitted") b.teams[1]!.explicitTeamId = null;
+      if (change === "unknown_other_team") b.teams[1]!.explicitTeamId = 2;
+      const acting = change === "other_owns_actor" ? "1" : "0";
+      expect(
+        pickupBounceSuccessors(b, 10, "declaration", "move", acting, ["0", "1"])
+      ).toBeUndefined();
+    }
+  );
   it("keeps missing reaction traits/effects uncertain even for empty squares", () => {
     expect(
       successors(board(false)).branches.every(
@@ -173,7 +186,7 @@ describe("valid pickup failure successors and conditional possession bounds", ()
     if (change === "collision") b.teams[1]!.players[0]!.cell = actor.cell;
     if (change === "issues") b.issues.push("unknown_geometry");
     expect(
-      pickupBounceSuccessors(b, 10, "declaration", "move", "0")
+      pickupBounceSuccessors(b, 10, "declaration", "move", "0", ["0", "1"])
     ).toBeUndefined();
   });
   it.each(["pickup_terminal_success", "pickup_terminal_failure"] as const)(

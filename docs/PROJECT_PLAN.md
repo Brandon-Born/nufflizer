@@ -43,6 +43,8 @@ Baseline reviewed commit: `b06d50e9fa2b42b821f4f8b30ef3894c10f588ca`. The active
 
 See [INGESTION_SAFETY.md](INGESTION_SAFETY.md), [the ledger](REMEDIATION_BACKLOG.md#ledger), and [the implementation record](IMPLEMENTATION_LOG.md#2026-11-09---safe-ingestion-and-truthful-report-remediation).
 
+Current pickup-stage roster qualification also requires compatibility with the two replay teams. If the actor roster omits its ID, the other roster must have a distinct known replay-team ID; conflicting, both-omitted or unknown-third-team states cannot admit the new component. Omitted IDs remain absent in the report.
+
 The standard pnpm test command runs the real-worker HTTP acceptance file after the parallel corpus suite, retaining the production4s timeout. No test is skipped and runtime/upload budgets are unchanged.
 
 ## Subsystem Status
