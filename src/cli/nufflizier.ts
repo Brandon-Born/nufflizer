@@ -13,6 +13,7 @@ import {
   scoredEvidenceForTeam,
   formatDiceContribution,
   formatPreRollPosition,
+  formatPlayerObservation,
   explainPreRollEvidence,
   explainContextImpact,
   explainMovementOutcome,
@@ -111,6 +112,7 @@ function formatTeamSummary(
       [
         `${index + 1}. Replay segment ${moment.turn}`,
         moment.teamName,
+        formatPlayerObservation(moment),
         moment.label,
         `weighted delta ${moment.weightedDelta.toFixed(3)}`,
         `${moment.scoringStatus} (${moment.statusReason})`,

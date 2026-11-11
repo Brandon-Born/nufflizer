@@ -698,3 +698,7 @@ Schema2.4 and dice-only-16 retain independently observed block pools when select
 ## 2026-11-10 - Staff-question injury retention
 
 Schema2.5 and dice-only-17 expose original injury dice embedded in staff-choice questions. Fourteen public-demo records reconcile against independently extracted numeric evidence and locators. They retain unknown expectations and add no score. Exact earlier direct originals can link copied questions without adding a random outcome. The production browser verifies the saved Stunty injury through upload, filtering, explanation and export.
+
+## 2026-11-10 - Inspectable timeline identity and clock
+
+Schema2.6 preserves explicitly historical initial-roster names on uniquely attributed events. UI and CLI share their label. Web controls search players and filter observed half, team turn and activation before ranking/pagination. All controls reset for another upload. No dice/context calculation or current-identity inference changes.

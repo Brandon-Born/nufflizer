@@ -31,6 +31,17 @@ export function explainContextCoverage(
   return `Contextual impact quantified for ${evidence.quantifiedCount} of ${evidence.rollCount} roll candidates. Pre-roll position observed for ${evidence.positionCount}, possession known for ${evidence.possessionCount}, and period with team turn known for ${evidence.clockCount}. Linked movement consequences observed for ${evidence.consequenceCount}.`;
 }
 
+export function formatPlayerObservation(
+  event: LuckReport["events"][number]
+): string {
+  if (!event.playerId) return "Player unknown";
+  return `Player ${event.playerId}${
+    event.metadata.initialRosterName
+      ? ` (initial roster: ${event.metadata.initialRosterName})`
+      : ""
+  }`;
+}
+
 export function formatPreRollPosition(
   context: LuckReport["events"][number]["metadata"]["preRoll"]
 ): string | null {

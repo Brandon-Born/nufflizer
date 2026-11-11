@@ -2,7 +2,7 @@
 
 Updated 2026-11-10. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.5` and model `dice-only-17`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.6` and model `dice-only-17`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -133,3 +133,9 @@ A known ResultNoRollSuccess without dice remains visible as deterministic eviden
 Dice-only-17 retains RollInfos from QuestionKORecovery. UI-025 identifies its type11 two-D6 payload as the original Stunty injury, with6+1 giving KO. The question is not a recovery roll. Fourteen questions in the12 public demos now retain their exact raw dice, outcome code and locators as unscored injury evidence. Their probabilities and binary results remain null.
 
 When an exact direct injury already appeared in the same uniquely owned DamageStep, the question links that source through embeddedDamageOriginalId and adds no new random outcome. Linking requires matching subject, source, action, complete dice and outcome. A different subject, action or die prevents this deduplication. Malformed and unsupported-version nested records remain inspectable without promoted odds. This does not establish injury tables, trait effects, staff policy or player availability.
+
+## Schema 2.6 player observations and timeline navigation
+
+The optional initialRosterName is a bounded label from the uniquely owned initial team/player key. Conflicting or unresolved ownership omits it. UI and CLI explicitly say initial roster; the label does not assert current identity after recruitment or reuse of a player ID. It does not influence scoring. The dice and context model versions stay unchanged.
+
+The web timeline searches player IDs and available initial roster names over the full report before sorting and paging. Half and team-turn controls use observed pre-roll metadata, with a separate unknown-half option. An actor-roster scoring-attempt counter can supply the turn when the active-side counter is absent. A row can restrict the timeline to its recorded activation ID. Existing team/category/status/tag filters compose with these controls. Reset and a new upload clear every filter. Missing clocks and activations are not inferred from replay segment numbers.

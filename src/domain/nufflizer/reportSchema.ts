@@ -30,6 +30,7 @@ const pitchCell = z.strictObject({
   y: z.number().int().min(0).max(14)
 });
 export const LuckEventMetadataSchema = z.strictObject({
+  initialRosterName: z.string().max(320).optional(),
   embeddedDamageOriginalId: text.optional(),
   originalDice: z.unknown().optional(),
   rerollOriginalId: text.optional(),

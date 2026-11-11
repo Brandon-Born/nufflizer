@@ -12,6 +12,7 @@ import {
   scoredEvidenceForTeam,
   formatDiceContribution,
   formatPreRollPosition,
+  formatPlayerObservation,
   explainPreRollEvidence,
   explainContextImpact,
   explainMovementOutcome,
@@ -47,6 +48,10 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
   const [teamFilter, setTeamFilter] = useState("all");
   const [scoringFilter, setScoringFilter] = useState("scored");
   const [sortOrder, setSortOrder] = useState("chronological");
+  const [playerQuery, setPlayerQuery] = useState("");
+  const [periodFilter, setPeriodFilter] = useState("all");
+  const [teamTurnFilter, setTeamTurnFilter] = useState("");
+  const [activationFilter, setActivationFilter] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -61,9 +66,31 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
     if (!report) {
       return [];
     }
+    const query = playerQuery.trim().toLocaleLowerCase();
 
     return report.events
       .filter((event) => {
+        if (
+          query &&
+          ![event.playerId, event.metadata.initialRosterName].some((value) =>
+            value?.toLocaleLowerCase().includes(query)
+          )
+        )
+          return false;
+        const context = event.metadata.preRoll;
+        if (
+          periodFilter !== "all" &&
+          (context?.period ?? "unknown") !== periodFilter
+        )
+          return false;
+        if (
+          teamTurnFilter &&
+          (context?.teamTurn ?? context?.scoringAttempt?.teamTurn) !==
+            Number(teamTurnFilter)
+        )
+          return false;
+        if (activationFilter && context?.activationId !== activationFilter)
+          return false;
         if (teamFilter !== "all" && event.teamId !== teamFilter) return false;
         if (scoringFilter !== "all" && event.scoringStatus !== scoringFilter)
           return false;
@@ -87,7 +114,18 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
             : a.turn - b.turn ||
               (a.metadata.sourceIndex ?? 0) - (b.metadata.sourceIndex ?? 0)
       );
-  }, [report, tagFilter, typeFilter, teamFilter, scoringFilter, sortOrder]);
+  }, [
+    report,
+    tagFilter,
+    typeFilter,
+    teamFilter,
+    scoringFilter,
+    sortOrder,
+    playerQuery,
+    periodFilter,
+    teamTurnFilter,
+    activationFilter
+  ]);
 
   function resetFilters() {
     setTagFilter("all");
@@ -95,6 +133,10 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
     setTeamFilter("all");
     setScoringFilter("scored");
     setSortOrder("chronological");
+    setPlayerQuery("");
+    setPeriodFilter("all");
+    setTeamTurnFilter("");
+    setActivationFilter(null);
     setPage(0);
   }
 
@@ -499,6 +541,46 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                 Replay evidence
               </h4>
               <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="search"
+                  aria-label="Player ID or initial roster name"
+                  placeholder="Player ID or initial roster name"
+                  maxLength={320}
+                  value={playerQuery}
+                  onChange={(e) => {
+                    setPlayerQuery(e.target.value);
+                    setPage(0);
+                  }}
+                />
+                <select
+                  aria-label="Half"
+                  value={periodFilter}
+                  onChange={(e) => {
+                    setPeriodFilter(e.target.value);
+                    setPage(0);
+                  }}
+                >
+                  <option value="all">All halves</option>
+                  <option value="first_half">First half</option>
+                  <option value="second_half">Second half</option>
+                  <option value="extra_time">Extra time</option>
+                  <option value="unknown">Half unknown</option>
+                </select>
+                <input
+                  type="number"
+                  aria-label="Team turn"
+                  placeholder="Team turn"
+                  min={1}
+                  step={1}
+                  value={teamTurnFilter}
+                  onChange={(e) => {
+                    setTeamTurnFilter(e.target.value);
+                    setPage(0);
+                  }}
+                />
+                <button type="button" onClick={resetFilters}>
+                  Reset filters
+                </button>
                 <select
                   aria-label="Team"
                   value={teamFilter}
@@ -580,6 +662,22 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
               </div>
             </div>
 
+            {activationFilter && (
+              <div className="text-xs text-amber-100/80">
+                Activation {activationFilter}
+                <button
+                  type="button"
+                  className="ml-2 underline"
+                  onClick={() => {
+                    setActivationFilter(null);
+                    setPage(0);
+                  }}
+                >
+                  Show all activations
+                </button>
+              </div>
+            )}
+
             <p className="text-sm" role="status">
               {filteredMoments.length
                 ? `${filteredMoments.length} matching events; page ${page + 1} of ${Math.ceil(filteredMoments.length / 50)}`
@@ -632,6 +730,23 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                         <td className="px-2 py-3">{moment.teamName}</td>
                         <td className="px-2 py-3">
                           <div>{moment.label}</div>
+                          <div className="text-xs text-amber-100/75">
+                            {formatPlayerObservation(moment)}
+                          </div>
+                          {moment.metadata.preRoll?.activationId && (
+                            <button
+                              type="button"
+                              className="text-xs underline"
+                              onClick={() => {
+                                setActivationFilter(
+                                  moment.metadata.preRoll!.activationId
+                                );
+                                setPage(0);
+                              }}
+                            >
+                              Show this activation
+                            </button>
+                          )}
                           <details className="mt-1">
                             <summary className="cursor-pointer text-xs text-amber-100/80">
                               Why

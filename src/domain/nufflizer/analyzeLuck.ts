@@ -1075,6 +1075,13 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       if (!normalized) {
         continue;
       }
+      if (normalized.teamId !== "unresolved" && normalized.playerId &&
+        playerToTeam.get(normalized.playerId) === normalized.teamId) {
+        const name = replay.playerNamesByTeamAndId?.[
+          `${normalized.teamId}:${normalized.playerId}`
+        ];
+        if (name) normalized.metadata.initialRosterName = name.slice(0, 320);
+      }
 
       if (
         touchdown &&

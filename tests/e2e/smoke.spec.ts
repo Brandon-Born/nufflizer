@@ -73,6 +73,28 @@ test("real final-turn carrier explains a scoring attempt at the left end zone", 
   await expect(row).toContainText("last scheduled turn of the recorded period");
   await expect(row).toContainText("team turn 16");
   await expect(row).toContainText("touchdown immediately after this move");
+  await page.getByLabel("Half", { exact: true }).selectOption("second_half");
+  await page.getByLabel("Team turn", { exact: true }).fill("16");
+  await page.getByLabel("Player ID or initial roster name").fill("40");
+  await expect(row).toBeVisible();
+  await row.getByRole("button", { name: "Show this activation" }).click();
+  await expect(
+    page.getByRole("button", { name: "Show all activations" })
+  ).toBeVisible();
+  await expect(row).toBeVisible();
+  await page.getByLabel("Half", { exact: true }).selectOption("first_half");
+  await expect(page.getByRole("status")).toContainText("No events match");
+  await page
+    .getByRole("button", { name: "Reset filters", exact: true })
+    .click();
+  await expect(page.getByLabel("Half", { exact: true })).toHaveValue("all");
+  await expect(page.getByLabel("Team turn", { exact: true })).toHaveValue("");
+  await expect(page.getByLabel("Player ID or initial roster name")).toHaveValue(
+    ""
+  );
+  await expect(
+    page.getByRole("button", { name: "Show all activations" })
+  ).toHaveCount(0);
 });
 
 test("real BBR explains the pickup and touchdown around a carrier's Rush", async ({
@@ -159,7 +181,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.5");
+  expect(report.schemaVersion).toBe("2.6");
   expect(report.modelVersion).toBe("dice-only-17");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
@@ -276,6 +298,9 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
     path: "/tmp/nufflizier-contract-mobile.png",
     fullPage: false
   });
+  await page.getByLabel("Player ID or initial roster name").fill("Player 22");
+  await page.getByLabel("Half", { exact: true }).selectOption("second_half");
+  await page.getByLabel("Team turn", { exact: true }).fill("16");
   await page.getByRole("button", { name: "Upload Another Replay" }).click();
   await expect(
     page.getByRole("heading", { name: "Nuffle Match Report" })
@@ -292,6 +317,11 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   ).toBeVisible();
   await expect(page.getByLabel("Category", { exact: true })).toHaveValue("all");
   await expect(page.getByLabel("Scoring status")).toHaveValue("scored");
+  await expect(page.getByLabel("Player ID or initial roster name")).toHaveValue(
+    ""
+  );
+  await expect(page.getByLabel("Half", { exact: true })).toHaveValue("all");
+  await expect(page.getByLabel("Team turn", { exact: true })).toHaveValue("");
   await expect(
     page.getByText("No scored evidence", { exact: true })
   ).toHaveCount(2);
@@ -305,7 +335,12 @@ test("complete pre-roll evidence explains the cost of an exposed pickup", async 
   await page.setInputFiles('input[name="replay"]', {
     name: "context.xml",
     mimeType: "application/xml",
-    buffer: Buffer.from(contextReplayXml({ type: 4, exposed: true }))
+    buffer: Buffer.from(
+      contextReplayXml({ type: 4, exposed: true }).replace(
+        "<Id>10</Id>",
+        "<Id>10</Id><Data><Name>Initial Runner</Name></Data>"
+      )
+    )
   });
   await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
   await expect(
@@ -326,6 +361,13 @@ test("complete pre-roll evidence explains the cost of an exposed pickup", async 
   await expect(
     row.getByText(/38% of eligible bounce squares are marked/)
   ).toBeVisible();
+  await expect(row).toContainText("Player 10 (initial roster: Initial Runner)");
+  await page.getByLabel("Player ID or initial roster name").fill("runner");
+  await page.getByLabel("Half", { exact: true }).selectOption("first_half");
+  await page.getByLabel("Team turn", { exact: true }).fill("1");
+  await expect(row).toBeVisible();
+  await page.getByLabel("Half", { exact: true }).selectOption("unknown");
+  await expect(page.getByRole("status")).toContainText("No events match");
 });
 test("invalid replay and hosting-generated text errors are understandable", async ({
   page
