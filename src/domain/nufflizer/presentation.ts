@@ -31,6 +31,14 @@ export function explainContextCoverage(
   return `Contextual impact quantified for ${evidence.quantifiedCount} of ${evidence.rollCount} roll candidates. Pre-roll position observed for ${evidence.positionCount}, possession known for ${evidence.possessionCount}, and period with team turn known for ${evidence.clockCount}. Linked roll consequences observed for ${evidence.consequenceCount}.`;
 }
 
+export function explainRecruitmentEvidence(
+  records: LuckReport["recruitments"]
+): string | null {
+  if (!records.length) return null;
+  const reused = records.filter((r) => r.previousPurchaseSourceId).length;
+  return `Recorded mercenary purchase events: ${records.length}; linked roster observations: ${records.filter((r) => r.rosterTeamId !== null).length}. ${reused} ${reused === 1 ? "record reuses" : "records reuse"} an earlier player ID. Selected trait lists describe separate purchases; current skill eligibility remains unverified.`;
+}
+
 export function formatPlayerObservation(
   event: LuckReport["events"][number]
 ): string {

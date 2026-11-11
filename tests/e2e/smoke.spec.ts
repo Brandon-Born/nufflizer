@@ -6,6 +6,44 @@ import { playbackFragmentXml } from "../helpers/playback";
 
 const DEMO = path.resolve("demo-replays/demo1.bbr");
 
+test("replacement purchases retain separate source-backed trait lists", async ({
+  page
+}) => {
+  await page.goto("/nufflizier");
+  await page.setInputFiles('input[name="replay"]', {
+    name: "sanitized-recruitment.xml",
+    mimeType: "application/xml",
+    buffer: Buffer.from(playbackFragmentXml("008", "UI-087", [], [], true))
+  });
+  await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Nuffle Match Report" })
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      /Recorded mercenary purchase events: 2; linked roster observations: 2/
+    )
+  ).toBeVisible();
+  await expect(
+    page.getByText(/1 record reuses an earlier player ID/)
+  ).toBeVisible();
+  const pending = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download JSON" }).click();
+  const download = await pending;
+  const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
+  expect(
+    report.recruitments.map((r: { playerId: string; playerTypeId: number }) => [
+      r.playerId,
+      r.playerTypeId
+    ])
+  ).toEqual([
+    ["48", 1455],
+    ["48", 1121]
+  ]);
+  expect(report.recruitments[1].innateSkills).toEqual([25, 44, 50, 54, 17]);
+  expect(report.recruitments[1].acquiredSkills).toBeNull();
+});
+
 test("saved staff-question injury remains visible with unknown odds", async ({
   page
 }) => {
@@ -181,8 +219,8 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.8");
-  expect(report.modelVersion).toBe("dice-only-17");
+  expect(report.schemaVersion).toBe("2.9");
+  expect(report.modelVersion).toBe("dice-only-18");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
     report.coverage.rollCandidates.scoredCount +

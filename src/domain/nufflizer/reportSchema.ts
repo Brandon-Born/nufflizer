@@ -37,6 +37,8 @@ const playerTraits = z.strictObject({
   acquiredSkills: z.array(z.number().int().nonnegative()).max(64).nullable()
 });
 export const LuckEventMetadataSchema = z.strictObject({
+  mercenary: z.strictObject({ operation: z.enum(["purchase", "removal_record"]), playerId: text,
+    playerTypeId: z.number().int().nonnegative(), gamerId: z.number().int().min(0).max(1) }).optional(),
   ballTravel: z.strictObject({ from: pitchCell, to: pitchCell }).optional(),
   ballCatchCell: pitchCell.optional(),
   pickupBallChain: z.strictObject({
@@ -84,6 +86,7 @@ export const LuckEventMetadataSchema = z.strictObject({
   preRoll: z
     .strictObject({
       checkpointAfter: count,
+      actorRosterTeamId: text.optional(),
       actorTraits: playerTraits.optional(),
       targetTraits: playerTraits.optional(),
       checkpointReplayStep: z.number().int().positive().optional(),
@@ -338,6 +341,14 @@ export const LuckReportSchema = z
       excludedByReason: z.record(text, count)
     }),
     weightTable: z.record(LuckEventTypeSchema, finite.min(0)),
+    recruitments: z.array(z.strictObject({
+      sourceId: text, sourceIndex: count, playerId: text, playerTypeId: z.number().int().nonnegative(),
+      gamerId: z.number().int().min(0).max(1), candidateTeamId: z.number().int().nonnegative().nullable(),
+      rosterTeamId: text.nullable(), checkpointAfter: count.nullable(),
+      checkpointReplayStep: z.number().int().positive().nullable(), checkpointChildIndex: z.number().int().nonnegative().nullable(),
+      innateSkills: z.array(z.number().int().nonnegative()).max(64).nullable(), acquiredSkills: z.array(z.number().int().nonnegative()).max(64).nullable(),
+      previousPurchaseSourceId: text.optional(), removalSourceId: text.optional()
+    })).max(REPLAY_LIMITS.events),
     damageSteps: z
       .array(
         z.strictObject({
@@ -376,6 +387,40 @@ export const LuckReportSchema = z
     require(ids.size === report.events.length, "Event IDs must be unique.");
     const teamIds = new Set(report.teams.map((team) => team.teamId));
     require(teamIds.size === 2, "Report requires two distinct teams.");
+    require(new Set(report.recruitments.map(r => r.sourceId)).size === report.recruitments.length,
+      "Each recorded purchase must appear once.");
+    require(report.events.filter(event => event.metadata.mercenary?.operation === "purchase" &&
+      event.metadata.sourceId && event.metadata.sourceIndex !== undefined).length === report.recruitments.length,
+      "Every locatable purchase record must appear in recruitment evidence.");
+    for (const purchase of report.recruitments) {
+      const source = sources.get(purchase.sourceId);
+      const selection = source?.metadata.mercenary;
+      require(source?.metadata.sourceTag === "EventBuyMercenary" &&
+        source.metadata.sourceIndex === purchase.sourceIndex && !source.metadata.isRollCandidate &&
+        selection?.operation === "purchase" && selection.playerId === purchase.playerId &&
+        selection.playerTypeId === purchase.playerTypeId && selection.gamerId === purchase.gamerId,
+        "Recruitment evidence must match its recorded purchase source.");
+      require((purchase.rosterTeamId === null) === (purchase.checkpointAfter === null) &&
+        (purchase.rosterTeamId === null || (teamIds.has(purchase.rosterTeamId) &&
+          String(purchase.candidateTeamId) === purchase.rosterTeamId &&
+          purchase.checkpointAfter! >= purchase.sourceIndex)),
+        "A purchase-to-roster binding requires a following observed membership on the candidate team.");
+      for (const list of [purchase.innateSkills, purchase.acquiredSkills])
+        if (list) require(new Set(list).size === list.length, "Selected trait lists cannot repeat codes.");
+      const previous = purchase.previousPurchaseSourceId ? sources.get(purchase.previousPurchaseSourceId) : undefined;
+      if (purchase.previousPurchaseSourceId)
+        require(previous?.metadata.mercenary?.operation === "purchase" &&
+          previous.metadata.mercenary.playerId === purchase.playerId &&
+          previous.metadata.sourceIndex !== undefined && previous.metadata.sourceIndex < purchase.sourceIndex,
+          "A reused instance ID must reference its earlier purchase.");
+      if (purchase.removalSourceId) {
+        const removal = sources.get(purchase.removalSourceId);
+        require(removal?.metadata.sourceTag === "EventRemoveMercenary" && removal.playerId === purchase.playerId &&
+          removal.metadata.sourceIndex !== undefined && removal.metadata.sourceIndex < purchase.sourceIndex &&
+          (!previous || removal.metadata.sourceIndex > (previous.metadata.sourceIndex ?? Infinity)),
+          "The recorded removal must belong to this instance between its purchases.");
+      }
+    }
     require(report.match.homeTeam === report.teams[0].teamName &&
       report.match.awayTeam ===
         report.teams[1].teamName, "Match and team labels must agree.");
@@ -504,6 +549,9 @@ export const LuckReportSchema = z
           event.teamId
         ), "Reported evidence must have a known or unresolved team.");
       const context = event.metadata.preRoll;
+      if (event.scoringStatus === "scored" && context?.actorRosterTeamId !== undefined)
+        require(context.actorRosterTeamId === event.teamId,
+          "Scored ownership must agree with the current observed roster.");
       for (const traits of [context?.actorTraits, context?.targetTraits])
         for (const list of [traits?.innateSkills, traits?.acquiredSkills])
           if (list) require(new Set(list).size === list.length,

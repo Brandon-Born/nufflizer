@@ -710,3 +710,7 @@ Schema2.7 links scoped failed pickups to recorded standard-ball bounces and veri
 ## 2026-11-10 - Current player-trait data
 
 Schema2.8 retains numeric current-snapshot skill lists and player-type observations with separate actor/target roles and strict pre-roll provenance. Omitted lists, malformed data, ownership conflicts, recruitment/ID reuse and future observations cannot supply a fabricated complete trait set. Human-readable trait names describe recorded data without changing odds or implying eligibility. Complete persistence/mutation policies and trait-conditioned tactical models remain open.
+
+## 2026-11-10 - Replacement purchase and actor ownership evidence
+
+Schema2.9 records selected mercenary data separately for each purchase, with strict first-roster and replacement/removal links. Source008's reused ID48 no longer hides the distinction between selected types1455 and1121. Dice-only-18 can attribute an unnamed new actor from fresh unique roster membership while preserving explicit/initial conflicts and unknown current eligibility. No contextual value or complete identity-persistence rule is inferred.

@@ -534,7 +534,9 @@ export function extractStructuredTurnsFromReplayXml(
           type: rollType === undefined ? "unknown" : "roll",
           sourceTag: tag,
           playerId:
-            roll ||
+            tag === "EventBuyMercenary" || tag === "EventRemoveMercenary"
+              ? str(payload.MercenaryId)
+              : roll ||
             tag === "QuestionBribeUsage" ||
             tag === "ResultPlayerRemoval" ||
             tag === "ResultPlayerSentOff"

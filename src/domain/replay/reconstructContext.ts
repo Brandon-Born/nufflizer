@@ -8,6 +8,7 @@ import type { ReplayEvent, ReplayModel } from "./types";
 
 type Cell = { x: number; y: number };
 export type PreRollEvidence = {
+  actorRosterTeamId?: string;
   actorTraits?: NonNullable<ObservedPlayer["traits"]>;
   targetTraits?: NonNullable<ObservedPlayer["traits"]>;
   checkpointAfter: number;
@@ -372,6 +373,10 @@ function summarize(
       };
   }
   return {
+    actorRosterTeamId:
+      actorTeam?.explicitTeamId == null
+        ? undefined
+        : String(actorTeam.explicitTeamId),
     actorTraits,
     targetTraits:
       actorObserved &&

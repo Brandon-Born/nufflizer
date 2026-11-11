@@ -18,7 +18,8 @@ import {
   explainMovementOutcome,
   explainPickupBallChain,
   explainProGate,
-  explainContextCoverage
+  explainContextCoverage,
+  explainRecruitmentEvidence
 } from "@/domain/nufflizer/presentation";
 import { readAnalysisResponse } from "@/lib/readAnalysisResponse";
 import { REPLAY_LIMITS } from "@/domain/replay/limits";
@@ -347,6 +348,11 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
             <p className="mt-2 text-xs">
               {explainContextCoverage(report.coverage.contextEvidence)}
             </p>
+            {report.recruitments.length > 0 && (
+              <p className="mt-2 text-xs">
+                {explainRecruitmentEvidence(report.recruitments)}
+              </p>
+            )}
             <p className="mt-2 text-xs">
               {report.coverage.denominatorDescription} Source records retained
               by parser: {report.coverage.sourceRecordCount}.

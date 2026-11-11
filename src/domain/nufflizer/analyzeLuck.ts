@@ -35,6 +35,10 @@ import {
 } from "@/domain/replay/attribution";
 import { summarizeRollFamilies } from "./rollCoverage";
 import { summarizeContextEvidence } from "./contextCoverage";
+import {
+  mercenaryIdentity,
+  observeRecruitmentPurchases
+} from "@/domain/replay/recruitment";
 import { linkPickupBallConsequences } from "./ballConsequences";
 import {
   retainEmbeddedInjuries,
@@ -376,18 +380,31 @@ function buildNormalizedEvent(
   const { playerToTeam, ambiguousPlayerIds } = ownership;
   const owner =
     event.playerId === undefined ? undefined : playerToTeam.get(event.playerId);
+  const currentOwner = preRoll?.actorRosterTeamId;
   const resolvedTeamId =
     event.actorTeamSource === "turn_inferred"
-      ? undefined
-      : (event.actorTeamId ?? event.teamId);
+      ? currentOwner
+      : (event.actorTeamId ?? event.teamId ?? currentOwner);
   const declaredConflict =
     event.actorTeamId && event.teamId && event.actorTeamId !== event.teamId;
   const rosterConflict = owner && resolvedTeamId && owner !== resolvedTeamId;
+  const currentRosterConflict =
+    currentOwner &&
+    ((resolvedTeamId && currentOwner !== resolvedTeamId) ||
+      (event.teamId && event.teamId !== currentOwner));
+  if (
+    currentOwner &&
+    (!event.actorTeamId || event.actorTeamSource === "turn_inferred")
+  )
+    normalizationNotes.push(
+      "Actor ownership comes from the current pre-roll roster observation."
+    );
   const ambiguousPlayer =
     event.playerId !== undefined && ambiguousPlayerIds.has(event.playerId);
   if (
     declaredConflict ||
     rosterConflict ||
+    currentRosterConflict ||
     ambiguousPlayer ||
     event.attributionConflict
   ) {
@@ -399,6 +416,10 @@ function buildNormalizedEvent(
     if (rosterConflict)
       normalizationNotes.push(
         `Declared team ${resolvedTeamId} conflicts with roster team ${owner}.`
+      );
+    if (currentRosterConflict)
+      normalizationNotes.push(
+        `Current roster team ${currentOwner} conflicts with explicit event ownership.`
       );
     if (ambiguousPlayer)
       normalizationNotes.push("Both rosters list this player ID.");
@@ -698,6 +719,8 @@ function buildNormalizedEvent(
       },
       metadata: {
         sourceTag: event.sourceTag,
+        mercenary:
+          replayVersion === "1-4-0-0" ? mercenaryIdentity(event) : undefined,
         sourceId: event.id,
         actionId: event.actionId,
         sequenceId: event.sequenceId,
@@ -1052,7 +1075,9 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
           "ResultBlockOutcome",
           "ResultPushBack",
           "ResultPlayerRemoval",
-          "ResultNoRollSuccess"
+          "ResultNoRollSuccess",
+          "EventBuyMercenary",
+          "EventRemoveMercenary"
         ].includes(event.sourceTag)
       )
         continue;
@@ -1076,11 +1101,15 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       if (!normalized) {
         continue;
       }
-      if (normalized.teamId !== "unresolved" && normalized.playerId &&
-        playerToTeam.get(normalized.playerId) === normalized.teamId) {
-        const name = replay.playerNamesByTeamAndId?.[
-          `${normalized.teamId}:${normalized.playerId}`
-        ];
+      if (
+        normalized.teamId !== "unresolved" &&
+        normalized.playerId &&
+        playerToTeam.get(normalized.playerId) === normalized.teamId
+      ) {
+        const name =
+          replay.playerNamesByTeamAndId?.[
+            `${normalized.teamId}:${normalized.playerId}`
+          ];
         if (name) normalized.metadata.initialRosterName = name.slice(0, 320);
       }
 
@@ -1135,9 +1164,13 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     }
   }
 
-  const ballSources = new Map(events.flatMap((event) =>
-    event.metadata.sourceId ? [[event.metadata.sourceId, event] as const] : []));
-  for (const turn of replay.turns) linkPickupBallConsequences(turn, ballSources);
+  const ballSources = new Map(
+    events.flatMap((event) =>
+      event.metadata.sourceId ? [[event.metadata.sourceId, event] as const] : []
+    )
+  );
+  for (const turn of replay.turns)
+    linkPickupBallConsequences(turn, ballSources);
 
   const homeAggregate = initialAggregate(homeTeam.id, homeTeam.name);
   const awayAggregate = initialAggregate(awayTeam.id, awayTeam.name);
@@ -1261,7 +1294,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       Array.from(excludedByReason.entries()).sort((a, b) => b[1] - a[1])
     )
   } satisfies LuckReport["coverage"];
-  const idSeed = `${replay.matchId}:${JSON.stringify(events)}`;
+  const recruitments = observeRecruitmentPurchases(replay);
+  const idSeed = `${replay.matchId}:${JSON.stringify({ events, recruitments })}`;
 
   return {
     schemaVersion: REPORT_SCHEMA_VERSION,
@@ -1282,6 +1316,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     verdict,
     coverage,
     damageSteps,
+    recruitments,
     weightTable: { ...LUCK_CATEGORY_WEIGHTS },
     howScoredSummary: buildHowScoredSummary(
       verdict.summary,
