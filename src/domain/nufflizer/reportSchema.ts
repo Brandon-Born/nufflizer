@@ -82,7 +82,7 @@ const activationEnd = z.strictObject({
 const rerollCounterObservation=z.strictObject({checkpointAfter:count,replayStep:z.number().int().positive(),childIndex:count,
   teamId:text,teamTurn:z.number().int().positive(),periodCode:z.number().int().min(0).max(2).nullable(),count:z.number().int().min(0).max(16)});
 export const LuckEventMetadataSchema = z.strictObject({
-  rerollOffer:z.strictObject({gamerId:z.union([z.literal(0),z.literal(1)]),canUseTeamReroll:z.boolean()}).optional(),
+  rerollOffer:z.strictObject({gamerId:z.union([z.literal(0),z.literal(1)]),canUseTeamReroll:z.boolean(),decisionSourceId:text}).optional(),
   teamRerollCounter:z.strictObject({questionSourceId:text,spent:z.union([z.literal(0),z.literal(1)]),before:rerollCounterObservation,after:rerollCounterObservation.optional(),reconciliation:z.enum(["matched","mismatch","after_unavailable"])}).optional(),
   turnEndReason:z.literal(2).optional(),
   pickupTurnEnd:z.strictObject({catchSourceId:text,endSourceId:text,ordinaryMoves:z.strictObject({knownAvailablePlayerIds:z.array(text).max(64),unknownPlayerIds:z.array(text).max(64)}).optional()}).optional(),
@@ -898,20 +898,31 @@ export const LuckReportSchema = z
       if(counter) {
         const question=sources.get(counter.questionSourceId),choice=event.metadata.teamRerollDecision,before=counter.before,after=counter.after;
         require(event.metadata.sourceTag === "ResultTeamRerollUsage" && event.scoringStatus === "excluded" && event.metadata.isRollCandidate === false &&
-          question?.metadata.sourceTag === "QuestionTeamRerollUsage" && !!question.metadata.rerollOffer && !!choice &&
+          !!question && ["QuestionTeamRerollUsage","QuestionBlockDice"].includes(question.metadata.sourceTag) && !!question.metadata.rerollOffer && !!choice &&
           question.metadata.rerollOffer.gamerId === choice.gamerId && choice.used === (counter.spent === 1) &&
+          question.metadata.rerollOffer.decisionSourceId === event.metadata.sourceId &&
           (counter.spent === 0 || question.metadata.rerollOffer.canUseTeamReroll) &&
           event.teamId === before.teamId && question.teamId === event.teamId && !!event.playerId && question.playerId === event.playerId &&
           event.metadata.stepType === question.metadata.stepType && event.metadata.targetId === question.metadata.targetId &&
           before.checkpointAfter < (question.metadata.sourceIndex ?? -1) && (question.metadata.sourceIndex ?? Infinity)<(event.metadata.sourceIndex ?? -1) &&
+          question.metadata.locator?.replayStep !== undefined && before.replayStep <= question.metadata.locator.replayStep &&
+          (before.replayStep !== question.metadata.locator.replayStep || before.childIndex<(question.metadata.locator.childIndex ?? -1)) &&
           (!after || (after.checkpointAfter >= event.metadata.sourceIndex! && after.teamId === before.teamId && after.teamTurn === before.teamTurn &&
             before.periodCode !== null && after.periodCode === before.periodCode && after.replayStep === event.metadata.locator?.replayStep && after.childIndex>(event.metadata.locator?.childIndex ?? Infinity))) &&
           counter.reconciliation === (!after ? "after_unavailable" : after.count === before.count-counter.spent ? "matched" : "mismatch"),
           "Team reroll counter evidence needs one owned offer/decision, ordered checkpoint observations and exact reconciliation without phase/reset backfill.");
       }
+      if(event.metadata.teamRerollDecision)
+        require(event.metadata.sourceTag === "ResultTeamRerollUsage" && event.scoringStatus === "excluded" && event.metadata.isRollCandidate === false &&
+          (event.metadata.teamRerollDecision.used || counter?.spent === 0),
+          "A recorded team-reroll choice must be non-random decision evidence; a decline needs its counter receipt.");
       if(event.metadata.rerollOffer)
-        require(event.metadata.sourceTag === "QuestionTeamRerollUsage" && event.scoringStatus === "excluded" && event.metadata.isRollCandidate === false && counterQuestions.has(event.metadata.sourceId ?? ""),
-          "A counter offer must be linked to one observed decision and cannot add random outcome coverage.");
+        require(((event.metadata.sourceTag === "QuestionTeamRerollUsage" && event.scoringStatus === "excluded" && event.metadata.isRollCandidate === false) ||
+          (event.metadata.sourceTag === "QuestionBlockDice" && event.scoringStatus === "scored" && event.metadata.isRollCandidate === true && event.metadata.rollType === 3 &&
+            event.metadata.block?.pool.attackerChooses === true && event.metadata.block.attackerId === event.playerId && event.metadata.block.chooserTeamId === event.teamId && event.metadata.block.chooserGamerId === event.metadata.rerollOffer.gamerId)) &&
+          sources.get(event.metadata.rerollOffer.decisionSourceId)?.metadata.teamRerollCounter?.questionSourceId === event.metadata.sourceId &&
+          counterQuestions.has(event.metadata.sourceId ?? ""),
+          "A counter offer must reference one observed decision, preserving an existing attacker-selected pool or excluded non-random offer.");
       const pickupEnd=event.metadata.pickupTurnEnd;
       if(pickupEnd) {
         const caught=sources.get(pickupEnd.catchSourceId),end=sources.get(pickupEnd.endSourceId);

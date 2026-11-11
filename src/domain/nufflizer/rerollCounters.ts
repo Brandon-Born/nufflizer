@@ -120,10 +120,38 @@ export function findRerollCounterEvidence(replay: ReplayModel) {
     )
       last = checkpoints[cursor++];
     if (event.sourceTag === "PlayerStep") step = event;
-    if (event.sourceTag === "QuestionTeamRerollUsage") {
+    if (
+      event.sourceTag === "QuestionTeamRerollUsage" ||
+      event.sourceTag === "QuestionBlockDice"
+    ) {
       pending = undefined;
       const gamer = event.payload?.GamerId,
         canUse = event.payload?.CanUseTeamReroll;
+      const blockOffer = event.sourceTag === "QuestionBlockDice";
+      const fields = blockOffer
+        ? [
+            "RolledDiceIndexes",
+            "Dice",
+            "CanChoseDie",
+            "GamerId",
+            "DiceOutcomes",
+            "CanUseTeamReroll",
+            "AttackerChoice",
+            "RollType",
+            "RollStatus",
+            "StModifiers",
+            "Assists",
+            "BrawlerDiceIndexes",
+            "ProDiceIndexes",
+            "StarSpecialRuleDiceIndexes"
+          ]
+        : [
+            "GamerId",
+            "CanUseProReroll",
+            "CanUseTeamReroll",
+            "StarSpecialRule",
+            "RollInfos"
+          ];
       if (
         !event.id ||
         !event.playerId ||
@@ -131,6 +159,20 @@ export function findRerollCounterEvidence(replay: ReplayModel) {
         step?.payload?.IsEvaluation !== 0 ||
         (gamer !== 0 && gamer !== 1) ||
         (canUse !== 0 && canUse !== 1) ||
+        Object.keys(event.payload ?? {}).some((k) => !fields.includes(k)) ||
+        (blockOffer &&
+          (event.payload?.AttackerChoice !== 1 ||
+            event.payload.RollType !== 3 ||
+            event.payload.RollStatus !== 1 ||
+            event.payload.CanChoseDie !== 1 ||
+            [
+              "BrawlerDiceIndexes",
+              "ProDiceIndexes",
+              "StarSpecialRuleDiceIndexes"
+            ].some(
+              (k) => event.payload![k] !== undefined && event.payload![k] !== ""
+            ) ||
+            event.stepType !== 6)) ||
         event.stepTag !== "PlayerStep" ||
         event.stepActorId !== event.playerId ||
         event.actorTeamSource === "turn_inferred" ||
@@ -214,11 +256,19 @@ export function attachRerollCounterEvidence(
       decision.teamId !== proof.before.teamId ||
       question.teamId !== decision.teamId ||
       decision.playerId !== question.playerId ||
-      decision.scoringStatus !== "excluded"
+      decision.scoringStatus !== "excluded" ||
+      (question.metadata.sourceTag === "QuestionBlockDice" &&
+        (question.scoringStatus !== "scored" ||
+          !question.metadata.block?.pool.attackerChooses ||
+          question.metadata.block.chooserTeamId !== decision.teamId))
     )
       continue;
     const { gamerId, canUseTeamReroll, ...evidence } = proof;
-    question.metadata.rerollOffer = { gamerId, canUseTeamReroll };
+    question.metadata.rerollOffer = {
+      gamerId,
+      canUseTeamReroll,
+      decisionSourceId: source
+    };
     decision.metadata.teamRerollDecision = { gamerId, used: proof.spent === 1 };
     decision.metadata.teamRerollCounter = evidence;
     decision.label = proof.spent

@@ -19,7 +19,7 @@ def projection(node):
             if child.tag in seen:
                 continue
             seen.add(child.tag)
-            if child.tag in {'CharacModifiers', 'AdditionalSkills', 'Modifiers', 'Pushbacks'} and not len(child) and not (child.text or '').strip():
+            if child.tag in {'CharacModifiers', 'AdditionalSkills', 'Modifiers', 'Pushbacks', 'StModifiers', 'Assists', 'BrawlerDiceIndexes', 'ProDiceIndexes', 'StarSpecialRuleDiceIndexes'} and not len(child) and not (child.text or '').strip():
                 value[child.tag] = ['']
             elif len(child):
                 value[child.tag] = [projection(x) for x in node.findall(child.tag)]
@@ -51,6 +51,9 @@ selections = [
     ('demo6.bbr', 'loner3_spent_pass', [343, 344, 345, 346]),
     ('demo4.bbr', 'loner4_spent_fail', [414, 415, 416, 417]),
     ('demo-goblins1.bbr', 'missing_zero_and_period', [264, 265, 266, 267]),
+    ('demo-goblins1.bbr', 'block_loner3_spent_pass', [363, 364, 365, 366]),
+    ('demo-goblins1.bbr', 'block_loner3_spent_fail', [387, 388, 389, 390]),
+    ('demo6.bbr', 'block_loner3_boundary_pass', [193, 194, 195, 196]),
 ]
 for filename, identifier, selected in selections:
     source = Path('demo-replays') / filename

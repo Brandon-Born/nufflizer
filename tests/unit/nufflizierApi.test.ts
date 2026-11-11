@@ -81,6 +81,25 @@ describe("POST /api/nufflizier/analyze", () => {
       report.events.some((e) => e.metadata.block?.reroll === "loner")
     ).toBe(true);
     expect(report.events.some((e) => e.metadata.driveEffectExpiry)).toBe(true);
+    const decision = report.events.find(
+      (e) =>
+        e.metadata.locator?.replayStep === 365 && e.metadata.teamRerollCounter
+    )!;
+    expect(decision.metadata.teamRerollCounter).toMatchObject({
+      before: { count: 2, periodCode: 1, teamTurn: 9 },
+      after: { count: 1, periodCode: 1, teamTurn: 9 },
+      spent: 1,
+      reconciliation: "matched"
+    });
+    const offer = report.events.find(
+      (e) =>
+        e.metadata.sourceId ===
+        decision.metadata.teamRerollCounter!.questionSourceId
+    )!;
+    expect(offer.metadata.block?.pool.attackerChooses).toBe(true);
+    expect(offer.metadata.rerollOffer!.decisionSourceId).toBe(
+      decision.metadata.sourceId
+    );
     expect(report.events.filter((e) => e.contextualBounds)).toHaveLength(3);
     expect(
       report.events.find(

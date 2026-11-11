@@ -5,7 +5,8 @@ export function explainRerollCounter(
   event: LuckReport["events"][number],
   sources: ReadonlyMap<string,LuckReport["events"][number]> = new Map()
 ): string | null {
-  const counter=event.metadata.teamRerollCounter ?? sources.get(event.metadata.rerollDecisionId ?? "")?.metadata.teamRerollCounter;
+  const offer=event.metadata.rerollOffer ?? sources.get(event.metadata.block?.previousPoolSourceId ?? "")?.metadata.rerollOffer;
+  const counter=event.metadata.teamRerollCounter ?? sources.get(event.metadata.rerollDecisionId ?? offer?.decisionSourceId ?? "")?.metadata.teamRerollCounter;
   if(!counter) return null;
   const before=counter.before,after=counter.after;
   const choice=counter.spent ? "The recorded decision used one team reroll." : "The recorded decision declined the reroll; no team reroll was spent on this decision.";

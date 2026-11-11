@@ -334,7 +334,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.22");
+  expect(report.schemaVersion).toBe("2.23");
   expect(report.modelVersion).toBe("dice-only-19");
   expect(
     report.events.some(
@@ -360,7 +360,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
     )
   ).toBe(true);
 
-  expect(report.contextModelVersion).toBe("mobility-possession-17");
+  expect(report.contextModelVersion).toBe("mobility-possession-18");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
     report.coverage.rollCandidates.scoredCount +
@@ -936,7 +936,9 @@ test("reroll counters separate resource observations from dice and unknown reset
     {id:"numeric_rush_spent",change:"from 3 to 2 matches this decision",label:"Recorded team reroll used"},
     {id:"numeric_dodge_declined",change:"from 5 to 5 matches this decision",label:"Recorded team reroll declined"},
     {id:"loner4_spent_fail",change:"from 3 to 2 matches this decision",label:"Recorded team reroll spend"},
-    {id:"missing_zero_and_period",change:"next same-turn counter is unknown",label:"Recorded team reroll spend"}
+    {id:"missing_zero_and_period",change:"next same-turn counter is unknown",label:"Recorded team reroll spend"},
+    {id:"block_loner3_spent_pass",change:"from 2 to 1 matches this decision",label:"Recorded team reroll spend"},
+    {id:"block_loner3_spent_fail",change:"next same-turn counter is unknown",label:"Recorded team reroll spend"}
   ]) {
     const xml=lonerDriveXml(c.id,"tests/fixtures/evidence/bb3-reroll-counters.json"),report=analyzeNufflizerInput(xml);
     await page.route("**/api/nufflizier/analyze",route=>route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(report)}));
@@ -946,6 +948,13 @@ test("reroll counters separate resource observations from dice and unknown reset
     if(c.id === "numeric_rush_spent") {
       const roll=table.locator("tbody tr").filter({hasText:"97.2%"});await expect(roll).toHaveCount(1);await roll.locator("summary").click();
       await expect(roll).toContainText(c.change);
+    }
+    if(c.id.startsWith("block_")) {
+      const pools=table.locator("tbody tr").filter({hasText:"Block pool:"});
+      await expect(pools).toHaveCount(c.id.endsWith("pass")?2:1);
+      await pools.first().locator("summary").click();await expect(pools.first()).toContainText(c.change);
+      await expect(pools.first()).toContainText("55.6%");
+      if(c.id.endsWith("pass")) {await pools.nth(1).locator("summary").click();await expect(pools.nth(1)).toContainText(c.change);}
     }
     await page.getByLabel("Scoring status").selectOption("excluded");
     const row=table.locator("tbody tr").filter({hasText:c.label});await expect(row).toHaveCount(1);await row.locator("summary").click();
