@@ -334,7 +334,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.15");
+  expect(report.schemaVersion).toBe("2.16");
   expect(report.modelVersion).toBe("dice-only-19");
   expect(
     report.events.some(
@@ -360,7 +360,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
     )
   ).toBe(true);
 
-  expect(report.contextModelVersion).toBe("mobility-possession-10");
+  expect(report.contextModelVersion).toBe("mobility-possession-11");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
     report.coverage.rollCandidates.scoredCount +
@@ -781,53 +781,78 @@ test("block skills explain Wrestle and subject-specific damage without double co
   expect(errors).toEqual([]);
 });
 
-test("real-source Dodge uncertainty stays bounded and outside point totals", async ({
+test("real-source Dodge uncertainty and active continuation stay outside point totals", async ({
   page
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
   await page.goto("/nufflizier");
-  const replayXml = lonerDriveXml(
-    "terminal_dodge_failure",
-    "tests/fixtures/evidence/bb3-dodge-successors.json"
-  );
-  const report = analyzeNufflizerInput(replayXml);
-  await page.route("**/api/nufflizier/analyze", (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(report)
-    })
-  );
-  await page.setInputFiles('input[name="replay"]', {
-    name: "source-dodge.xml",
-    mimeType: "application/xml",
-    buffer: Buffer.from(replayXml)
-  });
-  await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Nuffle Match Report" })
-  ).toBeVisible();
-  await expect(
-    page.getByText(/Separate ordinary-move ranges are available for 1 check/)
-  ).toBeVisible();
-  await page.getByLabel("Scoring status").selectOption("bounded");
-  const row = page
-    .getByRole("table")
-    .filter({ has: page.getByRole("columnheader", { name: "Replay segment" }) })
-    .locator("tbody tr");
-  await expect(row).toHaveCount(1);
-  await row.locator("summary").click();
-  await expect(row).toContainText("0 to 7 other players");
-  await expect(row).toContainText("terminal die had 66.7% success");
-  await expect(row).toContainText("-4.67 to 0.00 context units");
-  await expect(row).toContainText("No midpoint is added to point totals");
-  await expect(page.getByText("Context: Not scored")).toHaveCount(2);
-  await page.screenshot({
-    path: "/tmp/nufflizier-dodge-bounds-desktop.png",
-    fullPage: true
-  });
+  const cases = [
+    {
+      id: "terminal_dodge_failure",
+      others: 7,
+      range: "-5.33 to 0.00 context units",
+      copy: "also uncertain (0 to 1 option)"
+    },
+    {
+      id: "terminal_dodge_success",
+      others: 9,
+      range: "0.33 to 3.33 context units",
+      copy: "retain one further ordinary move in this activation"
+    }
+  ];
+  for (const [index, c] of cases.entries()) {
+    const replayXml = lonerDriveXml(
+        c.id,
+        "tests/fixtures/evidence/bb3-dodge-successors.json"
+      ),
+      report = analyzeNufflizerInput(replayXml);
+    await page.route("**/api/nufflizier/analyze", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(report)
+      })
+    );
+    await page.setInputFiles('input[name="replay"]', {
+      name: "source-dodge.xml",
+      mimeType: "application/xml",
+      buffer: Buffer.from(replayXml)
+    });
+    await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Nuffle Match Report" })
+    ).toBeVisible();
+    await expect(
+      page.getByText(/Separate ordinary-move ranges are available for 1 check/)
+    ).toBeVisible();
+    await page.getByLabel("Scoring status").selectOption("bounded");
+    const row = page
+      .getByRole("table")
+      .filter({
+        has: page.getByRole("columnheader", { name: "Replay segment" })
+      })
+      .locator("tbody tr");
+    await expect(row).toHaveCount(1);
+    await row.locator("summary").click();
+    await expect(row).toContainText(`0 to ${c.others} other players`);
+    await expect(row).toContainText("terminal die had 66.7% success");
+    await expect(row).toContainText(c.range);
+    await expect(row).toContainText(c.copy);
+    await expect(row).toContainText("No midpoint is added to point totals");
+    await expect(page.getByText("Context: Not scored")).toHaveCount(2);
+    await page.screenshot({
+      path: index
+        ? "/tmp/nufflizier-active-continuation-desktop.png"
+        : "/tmp/nufflizier-dodge-bounds-desktop.png",
+      fullPage: true
+    });
+    await page.getByRole("button", { name: "Upload Another Replay" }).click();
+    await expect(page.getByLabel("Scoring status")).toHaveCount(0);
+    await page.unroute("**/api/nufflizier/analyze");
+  }
   expect(errors).toEqual([]);
-  await page.getByRole("button", { name: "Upload Another Replay" }).click();
-  await expect(page.getByLabel("Scoring status")).toHaveCount(0);
 });

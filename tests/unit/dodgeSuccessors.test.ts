@@ -114,8 +114,8 @@ describe("valid Dodge successor geometry and bounded ordinary-move context", () 
     }
   );
   it.each([
-    ["terminal_dodge_failure", 7, -14 / 3, 0, false],
-    ["terminal_dodge_success", 9, 0, 3, true]
+    ["terminal_dodge_failure", 7, -16 / 3, 0, false],
+    ["terminal_dodge_success", 9, 1 / 3, 10 / 3, true]
   ] as const)(
     "%s reconciles conditional terminal odds and raw unknown availability",
     (id, maximum, lower, upper, success) => {
@@ -175,6 +175,20 @@ describe("valid Dodge successor geometry and bounded ordinary-move context", () 
             acquiredSkills: []
           };
         }
+    // Explicitly synthetic marking: all nearby opposing players have no
+    // tackle zone, so the actor's own unrolled continuation is also known.
+    const destination = availability.successDestination;
+    for (const team of checkpoint.board!.teams)
+      if (team.rosterIndex === 0)
+        for (const p of team.players)
+          if (
+            p.pitchLocation === "on_pitch" &&
+            Math.max(
+              Math.abs(p.cell.x! - destination.x),
+              Math.abs(p.cell.y! - destination.y)
+            ) === 1
+          )
+            p.tackleZone = false;
     const r = LuckReportSchema.parse(analyzeReplayLuck(replay));
     const event = r.events.find(
       (e) => e.metadata.sourceId === original.metadata.sourceId
@@ -182,10 +196,11 @@ describe("valid Dodge successor geometry and bounded ordinary-move context", () 
     expect(event.contextualBounds).toBeUndefined();
     expect(event.contextualImpact).toMatchObject({
       policy: "dodge_skill_reroll",
-      difference: 7,
+      difference: 8,
+      components: { availableMoves: 7, activeContinuation: 1 },
       deviation: -2 / 3
     });
-    expect(event.contextualImpact!.contribution).toBeCloseTo(-14 / 3, 12);
+    expect(event.contextualImpact!.contribution).toBeCloseTo(-16 / 3, 12);
     expect(event.delta).toBeCloseTo(-8 / 9, 12);
     const context = event.metadata.preRoll;
     const values = [1, 2, 3, 4, 5, 6].map(

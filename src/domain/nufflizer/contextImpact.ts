@@ -1,6 +1,6 @@
 import type { PreRollEvidence } from "@/domain/replay/reconstructContext";
 
-export const CONTEXT_MODEL_VERSION = "mobility-possession-10";
+export const CONTEXT_MODEL_VERSION = "mobility-possession-11";
 export type ContextPolicy =
   "declined_team_reroll" | "full_team_reroll" | "dodge_skill_reroll";
 
@@ -41,14 +41,23 @@ export function estimateNumericImpact(
         preRoll.otherUsefulActivations)
   )
     return;
+  const continuation =
+    policy === "dodge_skill_reroll"
+      ? preRoll.activeMoveContinuation
+      : undefined;
+  if (continuation && continuation.minimum !== continuation.maximum) return;
   const components = {
     availableMoves: preRoll.otherUsefulActivations,
+    ...(continuation ? { activeContinuation: continuation.minimum } : {}),
     possession: rollType === 4 ? POSSESSION_VALUE : 0,
     markedBounce:
       rollType === 4 ? preRoll.pickupBounceExposure! * MARKED_LANDING_VALUE : 0
   };
   const difference =
-    components.availableMoves + components.possession + components.markedBounce;
+    components.availableMoves +
+    components.possession +
+    components.markedBounce +
+    (components.activeContinuation ?? 0);
   return {
     policy,
     components,
@@ -74,15 +83,31 @@ export function estimateDodgeImpactBounds(
     preRoll.teamTurn === null ||
     preRoll.actorCarriesBall !== false ||
     !preRoll.movementCheckLinked ||
-    !availability?.unknownPlayerIds.length
+    !availability ||
+    (!availability.unknownPlayerIds.length &&
+      (!preRoll.activeMoveContinuation ||
+        preRoll.activeMoveContinuation.minimum ===
+          preRoll.activeMoveContinuation.maximum))
   )
     return;
   const minimum = availability.knownAvailablePlayerIds.length,
     maximum = minimum + availability.unknownPlayerIds.length;
-  const values = [diceDeviation * minimum, diceDeviation * maximum];
+  const continuation = preRoll.activeMoveContinuation;
+  const values = [
+    diceDeviation * (minimum + (continuation?.minimum ?? 0)),
+    diceDeviation * (maximum + (continuation?.maximum ?? 0))
+  ];
   return {
     policy,
     successChance,
+    ...(continuation
+      ? {
+          activeContinuation: {
+            minimum: continuation.minimum,
+            maximum: continuation.maximum
+          }
+        }
+      : {}),
     minimumMoves: minimum,
     maximumMoves: maximum,
     lower: Math.min(...values) === 0 ? 0 : Math.min(...values),

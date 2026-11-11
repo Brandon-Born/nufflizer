@@ -153,6 +153,22 @@ export function explainPreRollEvidence(
   return details.length > 0 ? details.join(" ") : null;
 }
 
+function explainActiveContinuation(
+  event: LuckReport["events"][number]
+): string {
+  const continuation = event.metadata.preRoll?.activeMoveContinuation;
+  if (!continuation)
+    return "The active player's continuation is outside this component.";
+  if (continuation.minimum === 1)
+    return `Success would also retain one further ordinary move in this activation without another Dodge or Rush (${continuation.movementBefore} movement points before this step, ${continuation.movementAfterSuccess} after success). This is one movement option, not the value of every remaining square.`;
+  if (continuation.maximum === 1)
+    return "The active player's further move without another Dodge or Rush is also uncertain (0 to 1 option): its budget or opponent marking is unknown.";
+  return continuation.movementBefore !== null &&
+    continuation.movementBefore <= 1
+    ? "The recorded budget leaves no further ordinary move after success; possible Rushes are outside this component."
+    : "The successful square is marked, so a further move would need another Dodge; that risky continuation is outside this component.";
+}
+
 export function explainContextImpact(
   event: LuckReport["events"][number]
 ): string | null {
@@ -173,6 +189,9 @@ export function explainContextImpact(
       .filter(Boolean)
       .join("; ") +
     ". " +
+    (impact.policy === "dodge_skill_reroll"
+      ? explainActiveContinuation(event) + " "
+      : "") +
     impact.contribution.toFixed(2) +
     (impact.policy === "dodge_skill_reroll"
       ? " context units for the terminal die after the Dodge reroll was committed, holding recorded modifiers fixed. The earlier failure remains outside this context component."
@@ -185,7 +204,7 @@ export function explainContextBounds(
 ): string | null {
   const bound = event.contextualBounds;
   if (!bound) return null;
-  return `After a successful Dodge, ${bound.minimumMoves} to ${bound.maximumMoves} other players could make an ordinary standing move; availability is incomplete for ${bound.maximumMoves - bound.minimumMoves} players. With the Dodge reroll already committed, the terminal die had ${(bound.successChance * 100).toFixed(1)}% success under the recorded modifiers. Its ordinary-move contribution ranges from ${bound.lower.toFixed(2)} to ${bound.upper.toFixed(2)} context units. This is a possible-value range, not a confidence interval or a whole-action value. No midpoint is added to point totals; the earlier failure and other tactical consequences remain outside this component.`;
+  return `After a successful Dodge, ${bound.minimumMoves} to ${bound.maximumMoves} other players could make an ordinary standing move; availability is incomplete for ${bound.maximumMoves - bound.minimumMoves} players. ${explainActiveContinuation(event)} With the Dodge reroll already committed, the terminal die had ${(bound.successChance * 100).toFixed(1)}% success under the recorded modifiers. Its ordinary-move contribution ranges from ${bound.lower.toFixed(2)} to ${bound.upper.toFixed(2)} context units. This is a possible-value range, not a confidence interval or a whole-action value. No midpoint is added to point totals; the earlier failure and other tactical consequences remain outside this component.`;
 }
 
 export function explainMovementOutcome(

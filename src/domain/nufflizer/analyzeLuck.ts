@@ -343,9 +343,18 @@ function buildNormalizedEvent(
     embeddedInjury?.roll ??
     apothecary?.roll ??
     (isRecord(event.payload) ? event.payload : undefined);
-  const preRoll = contextBySource.get(
+  const recordedPreRoll = contextBySource.get(
     rerollLink?.originalId ?? rerollLink?.questionId ?? event.id ?? ""
   );
+  const preRoll = recordedPreRoll
+    ? {
+        ...recordedPreRoll,
+        activeMoveContinuation:
+          rerollLink?.skill === "Dodge"
+            ? recordedPreRoll.activeMoveContinuation
+            : undefined
+      }
+    : undefined;
   const rollType = event.rollType ?? toNumber(payload?.RollType);
   const rollLabel =
     replayVersion === "1-4-0-0"
@@ -1109,8 +1118,14 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       fall?.skillOriginalId ? fall.rollSourceId : undefined
     );
     for (const link of rerollLinks.values())
-      if (link.skill === "Dodge" && link.decisionId)
+      if (link.skill === "Dodge" && link.decisionId) {
         activationEvidenceSources.add(link.decisionId);
+        const continuation = link.originalId
+          ? contextBySource.get(link.originalId)?.activeMoveContinuation
+          : undefined;
+        if (continuation)
+          activationEvidenceSources.add(continuation.declarationSourceId);
+      }
     linkLonerGates(
       replayTurn.events,
       replay.replayVersion,
@@ -1279,6 +1294,14 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       const skill = ballSources.get(event.metadata.rerollDecisionId);
       if (skill) skill.metadata.skillUsage = { skillId: 7, used: true };
     }
+  for (const event of events) {
+    const source =
+      event.metadata.preRoll?.activeMoveContinuation?.declarationSourceId;
+    if (source) {
+      const declaration = ballSources.get(source);
+      if (declaration) declaration.label = "Recorded ordinary Move declaration";
+    }
+  }
   const blockDamage = new Map(damageSteps.map((step) => [step.actionId, step]));
   for (const consequence of blockConsequences) {
     const pool = ballSources.get(consequence.poolSourceId);

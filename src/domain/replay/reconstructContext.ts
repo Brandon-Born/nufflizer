@@ -1,4 +1,8 @@
 import {
+  activeMoveAfterDodge,
+  type ActiveMoveContinuation
+} from "./activeMoveContinuation";
+import {
   ordinaryMovesAfterSuccess,
   type OrdinaryMoveAvailability
 } from "./ordinaryMoveAvailability";
@@ -30,6 +34,7 @@ import {
 
 type Cell = { x: number; y: number };
 export type PreRollEvidence = {
+  activeMoveContinuation?: ActiveMoveContinuation;
   ordinaryMoveAvailability?: OrdinaryMoveAvailability;
   suppressedTackleZones?: {
     playerId: string;
@@ -163,7 +168,8 @@ function summarize(
   standardPitch: boolean,
   smallPitchObserved: boolean,
   standUpSourceIndex: number | undefined,
-  pickupSourceId: string | undefined
+  pickupSourceId: string | undefined,
+  ordinaryMoveDeclaration: string | undefined
 ): PreRollEvidence {
   const actorId = id(event.playerId);
   const active = board.teams.find(
@@ -343,6 +349,24 @@ function summarize(
     otherUsefulActivations = ordinaryMoveAvailability.unknownPlayerIds.length
       ? null
       : ordinaryMoveAvailability.knownAvailablePlayerIds.length;
+  const knownNonCarrier =
+    board.ball.possession === "not_held" ||
+    (board.ball.possession === "held" && board.ball.carrierId !== actorId);
+  const activeMoveContinuation =
+    movementCheckLinked &&
+    destination &&
+    actorId !== null &&
+    ordinaryMoveDeclaration &&
+    knownNonCarrier &&
+    activationId === ordinaryMoveDeclaration &&
+    activationActionCode === 1
+      ? activeMoveAfterDodge(
+          board,
+          actorId,
+          destination,
+          ordinaryMoveDeclaration
+        )
+      : undefined;
   const carrierCell = cell(board.ball.cell);
   let scoringAttempt: PreRollEvidence["scoringAttempt"];
   if (
@@ -440,6 +464,7 @@ function summarize(
     )
   );
   return {
+    activeMoveContinuation,
     ordinaryMoveAvailability,
     suppressedTackleZones: suppressedTackleZones.length
       ? suppressedTackleZones
@@ -697,7 +722,12 @@ export function reconstructReplayContext(
             standardPitch,
             smallPitchObserved,
             standUpSourceIndex,
-            pickupSourceId
+            pickupSourceId,
+            previousMove &&
+              previousMove.end.actorId === event.playerId &&
+              activationEpoch === epochs.get(checkpoint)
+              ? previousMove.end.declarationSourceId
+              : undefined
           )
         );
         const context = result.get(event.id)!;

@@ -80,6 +80,11 @@ describe("POST /api/nufflizier/analyze", () => {
     ).toBe(true);
     expect(report.events.some((e) => e.metadata.driveEffectExpiry)).toBe(true);
     expect(report.events.filter((e) => e.contextualBounds)).toHaveLength(3);
+    expect(
+      report.events.find(
+        (e) => e.metadata.locator?.replayStep === 94 && e.contextualBounds
+      )?.contextualBounds?.activeContinuation
+    ).toEqual({ minimum: 1, maximum: 1 });
     expect(report.teams.every((team) => team.impactCount === 0)).toBe(true);
     expect(
       report.events.some(
