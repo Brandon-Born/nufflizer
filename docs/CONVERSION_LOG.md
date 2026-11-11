@@ -678,3 +678,7 @@ Dice-only-14 accepts a single independently corroborated Kegs +1 modifier on a d
 ## 2026-11-10 - Held-out movement context and fallout
 
 Schema 2.1 links scoped Rush and Dodge failures to the same player's observed fall, damage and turnover. The group sums existing dice contributions and retains unknown injury odds and observed removals. Mobility-possession-3 preserves the activation through a verified ordinary stand-up and explains a verified move toward or away from an explicitly held ball. These observations add no tactical weights.
+
+## 2026-11-10 - Team reroll outcomes in movement falls
+
+The movement-fall report also links an ordered team-reroll decision when the terminal scored check independently matches that decision and its original question. The existing one- or two-attempt odds supply the movement part of the subtotal.

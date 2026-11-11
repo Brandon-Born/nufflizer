@@ -1025,13 +1025,15 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     const damageByAction = new Map(damageSteps.map((step) => [step.actionId, step]));
     const eventsById = new Map(events.map((event) => [event.id, event]));
     const eventsBySource = new Map(events.map((event) => [event.metadata.sourceId, event]));
-    for (const { rollSourceId, evidence } of movementFalls) {
+    for (const { rollSourceId, decisionSourceId, evidence } of movementFalls) {
       const roll = eventsBySource.get(rollSourceId);
       const damage = damageByAction.get(evidence.damageActionId);
       if (
         !roll ||
         roll.scoringStatus !== "scored" ||
         roll.actualSuccess !== false ||
+        roll.metadata.rerollDecisionId !== decisionSourceId ||
+        (decisionSourceId !== undefined && !roll.metadata.rerollQuestionId) ||
         !damage ||
         damage.playerId !== roll.playerId ||
         damage.teamId !== roll.teamId

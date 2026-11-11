@@ -1329,3 +1329,11 @@ The pre-roll reducer advances player 38 through the independently checked demo1 
 Schema 2.1 and context model mobility-possession-3 expose these observations in JSON, the timeline and CLI explanations. Broader late scoring threats, complete useful activations, causal branches across rerolls and ball outcomes, and calibrated numeric context remain open. No issue closes at this checkpoint.
 
 Local corepack pnpm verify passed lint, typecheck, 351 unit tests in 42 suites, the real Redis integration, the production build and five Chromium flows. The real-upload browser flow opened the demo1 Rush explanation and checked the linked turnover, held armor and −0.42 displayed dice subtotal.
+
+## 2026-11-10 - Team reroll outcomes in movement falls
+
+NUF-012/018 advance. Demo8 at 330/1 step 3 asks to reroll Dodge4+ on 2. At 331/1 the coach declines, the replay repeats the 2, then records broken armor at 10+, injury and removal. The linked subtotal is −1.1 × 1/2 − 30/36. Demo4 at 461/1 step 2 asks about the same target and die. At 462/1 the coach spends one team reroll, fails on a fresh 1 and holds armor below 8+. The subtotal is −1.1 × 3/4 + 15/36. Both direct failure turnovers occur at child 2. Independent stdlib decoding confirms these source locators. The retained original or replacement contributes once. Skill reroll and later ball branches remain open.
+
+The preceding movement-context candidate ea9f9d8 returned HTTP 200 for demo1, demo6 and demo8 on the isolated Preview (1,163,866, 1,054,963 and 828,636 response bytes). Hosted checks confirmed the stand-up budget, carrier adjacency, held armor counterpart and the full Rush fall with two unscored damage rolls.
+
+GitHub CI 42929732586 passed on ea9f9d8. Local corepack pnpm verify for the team-reroll extension passed lint, typecheck, 353 unit tests in 42 suites, the real Redis integration, the production build and all five Chromium flows.

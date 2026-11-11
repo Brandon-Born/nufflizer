@@ -12,12 +12,13 @@ const replay = (name: string) =>
 
 const fallAt = (
   report: ReturnType<typeof analyzeReplayLuck>,
-  replayStep: number
+  replayStep: number,
+  rollType = 1
 ) =>
   report.events.find(
     (event) =>
       event.metadata.locator?.replayStep === replayStep &&
-      event.metadata.rollType === 1
+      event.metadata.rollType === rollType
   )!;
 
 describe("observed movement fall, damage and turnover (NUF-018)", () => {
@@ -74,6 +75,68 @@ describe("observed movement fall, damage and turnover (NUF-018)", () => {
     rush.metadata.movementFall!.diceContribution++;
     expect(LuckReportSchema.safeParse(report).success).toBe(false);
   });
+
+  it.each([
+    {
+      demo: "demo8.bbr",
+      step: 331,
+      odds: 1 / 2,
+      spent: 0,
+      armorHeld: false,
+      unscoredDamageRolls: 1,
+      subtotal: -1.1 / 2 - 30 / 36
+    },
+    {
+      demo: "demo4.bbr",
+      step: 462,
+      odds: 3 / 4,
+      spent: 1,
+      armorHeld: true,
+      unscoredDamageRolls: 0,
+      subtotal: (-1.1 * 3) / 4 + 15 / 36
+    }
+  ])(
+    "counts one resolved Dodge with $spent team rerolls spent ($demo)",
+    (example) => {
+      // Independent decode: both questions show Dodge4+ on 2. At 331/1
+      // the coach keeps 2, armor10+ breaks on [5,6] and injury leads to
+      // removal. At 462/1 the coach uses a reroll, rolls 1 and armor8+
+      // holds on [4,1]. Both 331/2 and 462/2 explicitly report Reason2.
+      const input = replay(example.demo);
+      const report = analyzeReplayLuck(input);
+      const dodge = fallAt(report, example.step, 2);
+      expect(dodge).toMatchObject({
+        probabilitySuccess: example.odds,
+        actualSuccess: false,
+        metadata: {
+          teamRerollsSpent: example.spent,
+          movementFall: {
+            armorHeld: example.armorHeld,
+            unscoredDamageRolls: example.unscoredDamageRolls
+          }
+        }
+      });
+      expect(dodge.metadata.movementFall!.diceContribution).toBeCloseTo(
+        example.subtotal,
+        12
+      );
+      const question = input.turns
+        .flatMap((turn) => turn.events)
+        .find((event) => event.id === dodge.metadata.rerollQuestionId);
+      expect(question).toMatchObject({
+        sourceTag: "QuestionTeamRerollUsage",
+        locator: { replayStep: example.step - 1, childIndex: 1 }
+      });
+      expect(
+        report.events.filter(
+          (event) =>
+            event.metadata.sourceId === question!.id &&
+            event.metadata.isRollCandidate
+        )
+      ).toHaveLength(0);
+      expect(LuckReportSchema.safeParse(report).success).toBe(true);
+    }
+  );
 
   it.each([
     "manual",

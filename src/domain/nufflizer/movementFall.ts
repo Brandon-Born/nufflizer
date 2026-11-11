@@ -63,7 +63,10 @@ export function findMovementFall(turn: ReplayTurn) {
   const outcome = events[i - 1];
   const move = events[i - 2];
   const roll = events[i - 3];
-  const step = events[i - 4];
+  const beforeRoll = events[i - 4];
+  const decision =
+    beforeRoll?.sourceTag === "ResultTeamRerollUsage" ? beforeRoll : undefined;
+  const step = decision ? events[i - 5] : beforeRoll;
   const from = pitchCell(step?.payload?.CellFrom);
   const to = pitchCell(step?.payload?.CellTo);
   const damageCell = pitchCell(damage?.payload?.CellFrom);
@@ -80,7 +83,11 @@ export function findMovementFall(turn: ReplayTurn) {
     roll?.sourceTag !== "ResultRoll" ||
     (roll.rollType !== 1 && roll.rollType !== 2) ||
     roll.payload?.Outcome !== 0 ||
-    roll.payload.NewRoll !== 1 ||
+    (decision
+      ? !decision.id ||
+        (decision.payload?.Used !== 0 && decision.payload?.Used !== 1) ||
+        roll.payload.NewRoll !== decision.payload.Used
+      : roll.payload.NewRoll !== 1) ||
     step?.sourceTag !== "PlayerStep" ||
     step.stepType !== 1 ||
     step.payload?.IsEvaluation !== 0 ||
@@ -96,6 +103,10 @@ export function findMovementFall(turn: ReplayTurn) {
     ) ||
     damage.targetId !== step.playerId ||
     [roll, move, outcome].some((e) => e.actionId !== step.actionId) ||
+    (decision &&
+      (decision.actionId !== step.actionId ||
+        decision.playerId !== step.playerId ||
+        decision.attributionConflict)) ||
     !from ||
     !to ||
     Math.max(Math.abs(from.X - to.X), Math.abs(from.Y - to.Y)) !== 1 ||
@@ -112,6 +123,7 @@ export function findMovementFall(turn: ReplayTurn) {
   if (summary?.RollType !== roll.rollType || summary.Outcome !== 0) return;
   return {
     rollSourceId: roll.id,
+    decisionSourceId: decision?.id,
     evidence: {
       damageActionId,
       moveOutcomeSourceIndex: outcome.sourceIndex,
