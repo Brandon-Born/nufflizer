@@ -15,6 +15,7 @@ export type ObservedPlayer = {
 export type ObservedTeam = {
   rosterIndex: number;
   explicitTeamId: number | null;
+  sideCode: number | null;
   gameTurn: number | null;
   touchdowns: number | null;
   rerolls: number | null;
@@ -22,6 +23,7 @@ export type ObservedTeam = {
 };
 export type ObservedBoard = {
   stable: boolean | null;
+  pitchLayout: "standard" | "small" | null;
   periodCode: number | null;
   phaseCode: number | null;
   turnsPerPeriod: number | null;
@@ -84,6 +86,22 @@ function pitchLocation(c: ObservedCell): ObservedPlayer["pitchLocation"] {
     : "off_pitch";
 }
 
+function pitchLayout(raw: RecordLike): ObservedBoard["pitchLayout"] {
+  if (flag(raw.UseSmallPitch) === true) return "small";
+  if (flag(raw.UseSmallPitch) !== false) return null;
+  const ends = array(record(raw.PitchZones).PitchZone)
+    .map(record)
+    .filter((zone) => integer(zone.ZoneType) === 1);
+  const complete = [0, 25].every((x) =>
+    ends.some((zone) => {
+      const from = cell(zone.BottomLeft);
+      const to = cell(zone.TopRight);
+      return from.x === x && from.y === 0 && to.x === x && to.y === 14;
+    })
+  );
+  return ends.length === 2 && complete ? "standard" : null;
+}
+
 export function observeBoardCheckpoint(
   payload: unknown,
   replayVersion: string | undefined,
@@ -122,6 +140,7 @@ export function observeBoardCheckpoint(
           return {
             rosterIndex,
             explicitTeamId: nonnegative(record(team.Data).TeamId),
+            sideCode: nonnegative(team.Side),
             gameTurn: nonnegative(team.GameTurn),
             touchdowns: nonnegative(team.Touchdown),
             rerolls: nonnegative(team.RerollNumber),
@@ -158,6 +177,7 @@ export function observeBoardCheckpoint(
     status: "observed",
     board: {
       stable: flag(raw.IsStable),
+      pitchLayout: pitchLayout(raw),
       periodCode: nonnegative(raw.Period),
       phaseCode: nonnegative(raw.CurrentPhase),
       turnsPerPeriod: nonnegative(raw.TurnsPerPeriod),

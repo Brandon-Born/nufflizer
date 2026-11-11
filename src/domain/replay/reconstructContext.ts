@@ -20,6 +20,13 @@ export type PreRollEvidence = {
   actorStandUpSourceIndex?: number;
   actorMovementRemaining?: number;
   actorPickupSourceId?: string;
+  scoringAttempt?: {
+    destination: Cell;
+    sideCode: 32 | 64;
+    teamTurn: number | null;
+    turnsRemaining: number | null;
+    turnsPerPeriod: number | null;
+  };
   teammateCarrierMove?: {
     carrierCell: Cell;
     destination: Cell;
@@ -117,6 +124,8 @@ function summarize(
   event: ReplayEvent,
   step: ReplayEvent | undefined,
   activationId: string | null,
+  activationActionCode: number | undefined,
+  standardPitch: boolean,
   standUpSourceIndex: number | undefined,
   pickupSourceId: string | undefined
 ): PreRollEvidence {
@@ -272,6 +281,64 @@ function summarize(
       !occupied.has(key(destination))
     );
   const carrierCell = cell(board.ball.cell);
+  let scoringAttempt: PreRollEvidence["scoringAttempt"];
+  if (
+    normal &&
+    standardPitch &&
+    board.pitchLayout !== "small" &&
+    activationId &&
+    activationActionCode === 1 &&
+    actorId !== null &&
+    actorId === board.activePlayerId &&
+    actorTeam &&
+    (board.activeTeamIndex === null || active === actorTeam) &&
+    (actorTeam.explicitTeamId === null ||
+      String(actorTeam.explicitTeamId) === event.actorTeamId) &&
+    (event.actorTeamSource === "player_map" ||
+      event.actorTeamSource === "explicit") &&
+    event.actorTeamId !== undefined &&
+    !event.attributionConflict &&
+    board.ball.possession === "held" &&
+    board.ball.carrierId === actorId &&
+    consistentGeometry &&
+    actorCell &&
+    destination &&
+    pitch(destination) &&
+    distance(actorCell, destination) === 1 &&
+    !occupied.has(key(destination)) &&
+    step?.sourceTag === "PlayerStep" &&
+    step.stepType === 1 &&
+    step.actionId !== undefined &&
+    step.actionId === event.actionId &&
+    step.stepActorId === event.playerId &&
+    step.payload?.IsEvaluation === 0 &&
+    same(actorCell, stepCell(step.payload.CellFrom)) &&
+    (rollType === 1 || rollType === 2) &&
+    ((actorTeam.sideCode === 32 && destination.x === 25) ||
+      (actorTeam.sideCode === 64 && destination.x === 0))
+  ) {
+    const counter = actorTeam.gameTurn;
+    const actorTurn = counter !== null && counter > 0 ? counter : null;
+    const remaining =
+      actorTurn !== null &&
+      endOfPeriod !== null &&
+      actorTurn <= endOfPeriod &&
+      actorTurn > endOfPeriod - board.turnsPerPeriod!
+        ? endOfPeriod - actorTurn
+        : null;
+    scoringAttempt = {
+      destination,
+      sideCode: actorTeam.sideCode as 32 | 64,
+      teamTurn: actorTurn,
+      turnsRemaining: remaining,
+      turnsPerPeriod:
+        board.turnsPerPeriod !== null &&
+        board.turnsPerPeriod >= 1 &&
+        board.turnsPerPeriod <= 16
+          ? board.turnsPerPeriod
+          : null
+    };
+  }
   let teammateCarrierMove: PreRollEvidence["teammateCarrierMove"];
   if (
     movementCheckLinked &&
@@ -315,6 +382,7 @@ function summarize(
       actorId !== null && board.ball.carrierId === actorId
         ? pickupSourceId
         : undefined,
+    scoringAttempt,
     teammateCarrierMove,
     actorCarriesBall:
       board.ball.possession === "unknown"
@@ -334,6 +402,7 @@ export function reconstructPreRollEvidence(
   const result = new Map<string, PreRollEvidence>();
   if (replay.replayVersion !== "1-4-0-0") return result;
   const checkpoints = replay.boardCheckpoints ?? [];
+  let standardPitch = false;
   let cursor = 0;
   let checkpoint: ReplayBoardCheckpoint | undefined;
   let board: ObservedBoard | null = null;
@@ -354,6 +423,9 @@ export function reconstructPreRollEvidence(
       ) {
         checkpoint = checkpoints[cursor++]!;
         const next = checkpoint.board;
+        if (checkpoint.kind === "initial")
+          standardPitch = next?.pitchLayout === "standard";
+        if (next?.pitchLayout === "small") standardPitch = false;
         if (
           !board ||
           !next ||
@@ -400,6 +472,8 @@ export function reconstructPreRollEvidence(
             event,
             step,
             activationId,
+            activationActionCode,
+            standardPitch,
             standUpSourceIndex,
             pickupSourceId
           )

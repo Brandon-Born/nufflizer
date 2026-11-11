@@ -2,6 +2,7 @@ import { VERDICT_SUMMARIES } from "./explainabilityCopy";
 import { formatDiceContribution, scoredEvidenceForTeam } from "./presentation";
 import {
   linkLonerGates,
+  linkProGates,
   linkObservedSkillRerolls,
   linkTeamRerolls,
   type RerollLink
@@ -349,6 +350,7 @@ function buildNormalizedEvent(
     teamRerollsSpent: rerollLink?.teamRerollsSpent,
     rerollSkill: rerollLink?.skill,
     lonerGate: rerollLink?.lonerGate,
+    proGate: rerollLink?.proGate,
     rerollPolicy: rerollLink?.policy,
     mergedRerollAnchorId: rerollLink?.mergedIntoId
   };
@@ -635,12 +637,14 @@ function buildNormalizedEvent(
       type: eventType,
       probabilitySuccess: null,
       actualSuccess:
-        !contractExclusion && resolvedActual.deterministic
+        rerollLink?.proGate?.passed ?? (!contractExclusion && resolvedActual.deterministic
           ? resolvedActual.actualSuccess
-          : null,
+          : null),
       delta: 0,
       weightedDelta: 0,
-      label: buildMomentLabel(
+      label: rerollLink?.proGate
+        ? `Pro test ${rerollLink.proGate.passed ? "passed" : "failed"}`
+        : buildMomentLabel(
         eventType,
         resolvedActual.actualSuccess,
         undefined,
@@ -652,7 +656,9 @@ function buildNormalizedEvent(
       explainability: {
         target,
         weight: LUCK_CATEGORY_WEIGHTS[eventType],
-        inputsSummary: buildInputsSummary(
+        inputsSummary: rerollLink?.proGate
+          ? `Recorded Pro 3+ test with die ${dice[0]}.`
+          : buildInputsSummary(
           eventType,
           target,
           dice,
@@ -979,6 +985,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       playerToTeam,
       rerollLinks
     );
+    linkProGates(replayTurn.events, replay.replayVersion, playerToTeam, rerollLinks);
     const blockRecords = linkBlockPools(
       replayTurn.events,
       replay.replayVersion

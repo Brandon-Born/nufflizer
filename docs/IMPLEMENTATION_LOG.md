@@ -1347,3 +1347,15 @@ Demo8 at 102/3 records the ball at [17,12] with holder fields omitted. At 103/1 
 Prior candidate 6eb8fd2 passed GitHub CI 42930329986. Its isolated Preview returned HTTP 200 for demo1, demo4, demo6 and demo8 and enforced a typed 429 under the shared quota probe. That is historical hosted acceptance for the prior candidate. Current work uses the zero-cost restriction and local verification. No account, Redis configuration or deployment was changed.
 
 Local corepack pnpm verify passed lint, typecheck, 355 unit tests in 42 suites, real Redis, the production build and six Chromium flows. The new demo8 browser flow opened the Rush explanation and verified the earlier pickup and immediate touchdown. GitHub lists the repository as public and its workflow uses a standard Ubuntu runner. The Vercel project inventory found no connection to this GitHub repository. Exact-candidate hosted verification is pending.
+
+## 2026-11-10 - Final-turn scoring attempts and Pro observations
+
+NUF-012/016/017/018/020/021/022 advance. Independent raw traversal matched 23 public-demo touchdowns to their preceding encoded player moves. Side32 maps to x25 in15, and Side64 maps to x0 in8. All eight direct x0 touchdown records omit X, while their encoded move retains explicit0. Schema 2.3 keeps the partial direct observation alongside the move destination. The pre-roll description requires the verified carrier, an ordinary Move declaration, an adjacent open target, explicit Side and a previously observed initial standard layout. Later observations cannot supply earlier geometry.
+
+Demo1 654/1 step7 and demo5 540/1 step8 provide two final-period-turn Rush attempts at opposite ends. Their actor roster counter is16 and Period is1, with eight turns per period. Active-side attribution remains separate where omitted. Matched counter14 inputs report two further turns. The observed clock and scoring attempt receive no tactical weight.
+
+GR-025 and UI-047/087 independently support a Pro3+ gate, with success on3 and failure on1. The latter is a kept original after an explicit declined team reroll in an AccuracyStep continuation. The report validates actor, skill50, source links, target, die and outcome, and shows the observed gate result with its 4/6 chance outside additive scores. Changed skill ownership or a contradictory kept die rejects the gate claim. Full replacement-choice policies remain open.
+
+The current capture audit records why injury type11 plus dice cannot choose an expected-value table: observed total8 can be KO or Thick-Skull Stunned, and current trait provenance must be established across roster changes. Work continued on the independent clock and Pro contracts. Broader table, referee and quantified tactical acceptance remain open.
+
+Local corepack pnpm verify passed lint, typecheck, 360 unit tests in43 suites, the real Redis integration, production build and seven Chromium flows. The real demo5 browser upload opens the turn16 scoring attempt and its left-end touchdown. These results are local; no newer Preview was deployed under the zero-cost restriction. Commit845c530 passed GitHub CI42933125895.

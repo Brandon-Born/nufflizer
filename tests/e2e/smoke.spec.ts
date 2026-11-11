@@ -5,6 +5,32 @@ import { contextReplayXml } from "../helpers/contextReplay";
 
 const DEMO = path.resolve("demo-replays/demo1.bbr");
 
+test("real final-turn carrier explains a scoring attempt at the left end zone", async ({
+  page
+}) => {
+  await page.goto("/nufflizier");
+  await page.setInputFiles(
+    'input[name="replay"]',
+    path.resolve("demo-replays/demo5.bbr")
+  );
+  await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Nuffle Match Report" })
+  ).toBeVisible();
+  await page
+    .getByLabel("Category", { exact: true })
+    .selectOption("movement_risk");
+  // Raw reference 540/1 step8 is a final-turn Rush by carrier40.
+  const row = page.locator("tbody tr").filter({ hasText: "source-3997" });
+  await row.getByText("Why", { exact: true }).click();
+  await expect(row).toContainText(
+    "The carrier was attempting to enter the opponent's end zone."
+  );
+  await expect(row).toContainText("last scheduled turn of the recorded period");
+  await expect(row).toContainText("team turn 16");
+  await expect(row).toContainText("touchdown immediately after this move");
+});
+
 test("real BBR explains the pickup and touchdown around a carrier's Rush", async ({
   page
 }) => {
@@ -89,7 +115,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.2");
+  expect(report.schemaVersion).toBe("2.3");
   expect(report.modelVersion).toBe("dice-only-15");
   // Independent raw decode: sequence 6 step 4 offers Push/Stumbles; away
   // chooses Stumbles (7/0/0) and outcome 6 resolves at 9/0/1.

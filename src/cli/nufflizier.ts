@@ -15,7 +15,8 @@ import {
   formatPreRollPosition,
   explainPreRollEvidence,
   explainContextImpact,
-  explainMovementOutcome
+  explainMovementOutcome,
+  explainProGate
 } from "@/domain/nufflizer/presentation";
 import { runAnalysis } from "@/server/runAnalysis";
 
@@ -115,7 +116,8 @@ function formatTeamSummary(
         formatPreRollPosition(moment.metadata.preRoll),
         explainPreRollEvidence(moment.metadata.preRoll),
         explainContextImpact(moment),
-        explainMovementOutcome(moment.metadata)
+        explainMovementOutcome(moment.metadata),
+        explainProGate(moment.metadata.proGate)
       ]
         .filter(Boolean)
         .join(" | ")

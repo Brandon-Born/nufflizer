@@ -686,3 +686,7 @@ The movement-fall report also links an ordered team-reroll decision when the ter
 ## 2026-11-10 - Skill-rerolled falls and scoring-move evidence
 
 Dice-only-15 links a verified failed Dodge-skill replacement to the matching self-fall and turnover. Schema 2.2 and mobility-possession-4 carry a verified pickup through later movement and record a direct touchdown after a matched successful move. The report keeps the observed touchdown separate from pre-roll context and from the roll's dice contribution.
+
+## 2026-11-10 - Final-turn scoring attempts and Pro observations
+
+Schema 2.3 and mobility-possession-5 expose the carrier's recorded team-turn counter and end-zone attempt under verified standard geometry and explicit roster Side. Partial direct touchdown coordinates remain nullable. Pro gates show source-linked 3+ pass/fail observations and zero team reroll spend. The existing dice model remains dice-only-15.

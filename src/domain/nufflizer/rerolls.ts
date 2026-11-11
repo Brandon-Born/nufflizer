@@ -16,6 +16,7 @@ export type RerollLink = {
   mergedIntoId?: string;
   policy?: string;
   lonerGate?: { passed: boolean; gamerId: 0 | 1; skillSourceId: string };
+  proGate?: { passed: boolean; successChance: number; skillSourceId: string };
 };
 function singleD6(roll: Record<string, unknown>): number | undefined {
   const dice = roll.Dice as
@@ -120,6 +121,150 @@ export function linkLonerGates(
     });
   }
 }
+
+// GR-025 and UI-047/087 distinguish the 3+ gate from the die it may reroll.
+export function linkProGates(
+  events: readonly ReplayEvent[],
+  version: string | undefined,
+  owners: ReadonlyMap<string, string>,
+  links: Map<number, RerollLink>
+): void {
+  if (version !== "1-4-0-0") return;
+  const bySource = new Map(events.map((event, index) => [event.id, index]));
+  const counts = new Map<string, number>();
+  for (const event of events)
+    if (
+      event.sourceTag === "ResultRoll" &&
+      event.rollType === 15 &&
+      event.actionId
+    )
+      counts.set(event.actionId, (counts.get(event.actionId) ?? 0) + 1);
+  for (const [index, roll] of events.entries()) {
+    let link = links.get(index);
+    // UI-087 uses an AccuracyStep continuation, outside the ordinary
+    // numeric reroll path. Match that kept Pro gate's complete local shape.
+    if (
+      !link &&
+      roll.sourceTag === "ResultRoll" &&
+      roll.rollType === 15 &&
+      roll.stepTag === "AccuracyStep" &&
+      roll.stepType === 24 &&
+      roll.payload?.NewRoll === 0
+    ) {
+      const question = events[index - 3];
+      const continuation = events[index - 2];
+      const decision = events[index - 1];
+      const original = question?.payload?.RollInfos as
+        Record<string, unknown> | undefined;
+      const gamer = question?.payload?.GamerId;
+      if (
+        question?.sourceTag === "QuestionTeamRerollUsage" &&
+        question.id &&
+        question.payload?.CanUseProReroll === 0 &&
+        question.payload.CanUseTeamReroll === 1 &&
+        (gamer === 0 || gamer === 1) &&
+        continuation?.sourceTag === "AccuracyStep" &&
+        decision?.sourceTag === "ResultTeamRerollUsage" &&
+        decision.id &&
+        decision.payload?.GamerId === gamer &&
+        decision.payload.Used === 0 &&
+        original?.RollType === 15 &&
+        original.Status === 1 &&
+        original.NewRoll === 1 &&
+        original.Outcome === 0 &&
+        sameRoll(original, roll.payload) &&
+        singleD6(original) === singleD6(roll.payload) &&
+        [question, continuation, decision].every(
+          (event) =>
+            event.stepTag === roll.stepTag &&
+            event.stepType === roll.stepType &&
+            event.stepActorId === roll.stepActorId &&
+            event.stepTargetId === roll.stepTargetId &&
+            event.playerId === roll.playerId &&
+            event.actorTeamId === roll.actorTeamId &&
+            !event.attributionConflict
+        )
+      )
+        link = {
+          rerollAvailable: false,
+          rerollUsed: false,
+          retainedOriginal: true,
+          questionId: question.id,
+          decisionId: decision.id,
+          originalDice: original.Dice
+        };
+    }
+    const questionIndex = link?.questionId
+      ? bySource.get(link.questionId)
+      : undefined;
+    const skill =
+      events[
+        (link?.retainedOriginal && questionIndex !== undefined
+          ? questionIndex
+          : index) - 1
+      ];
+    const actor = roll.stepActorId;
+    const owner = actor ? owners.get(actor) : undefined;
+    const p = roll.payload;
+    if (
+      roll.sourceTag !== "ResultRoll" ||
+      roll.rollType !== 15 ||
+      !roll.actionId ||
+      counts.get(roll.actionId) !== 1 ||
+      !owner ||
+      !skill?.id ||
+      skill.sourceTag !== "ResultSkillUsage" ||
+      skill.payload?.Skill !== 50 ||
+      skill.payload.Used !== 1 ||
+      String(skill.payload.PlayerId) !== actor ||
+      !(
+        (roll.stepTag === "PlayerStep" && roll.stepType === 6) ||
+        (roll.stepTag === "AccuracyStep" && roll.stepType === 24)
+      ) ||
+      p?.Status !== 1 ||
+      p.Requirement !== 3 ||
+      p.Difficulty !== 3 ||
+      (p.Modifiers !== undefined && p.Modifiers !== "") ||
+      !(
+        (p.NewRoll === 1 && skill.actionId === roll.actionId) ||
+        (p.NewRoll === 0 && link?.retainedOriginal)
+      )
+    )
+      continue;
+    if (
+      [roll, skill].some(
+        (event) =>
+          event.playerId !== actor ||
+          event.stepActorId !== actor ||
+          event.stepTag !== roll.stepTag ||
+          event.stepType !== roll.stepType ||
+          event.stepTargetId !== roll.stepTargetId ||
+          event.targetId !== roll.targetId ||
+          event.actorTeamId !== owner ||
+          event.attributionConflict ||
+          (event.teamId !== undefined && event.teamId !== owner)
+      )
+    )
+      continue;
+    const die = singleD6(p);
+    if (die === undefined || p.Outcome !== Number(die >= 3)) continue;
+    links.set(index, {
+      ...link,
+      rerollAvailable: false,
+      rerollUsed: false,
+      resource: "skill",
+      teamRerollsSpent: 0,
+      decisionId: link?.decisionId ?? skill.id,
+      proGate: {
+        passed: die >= 3,
+        successChance: 2 / 3,
+        skillSourceId: skill.id
+      },
+      exclusionReason: "Pro gate observed separately from any replacement die"
+    });
+  }
+}
+
 function sameRoll(
   a: Record<string, unknown>,
   b: Record<string, unknown>

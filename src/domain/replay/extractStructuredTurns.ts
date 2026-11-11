@@ -99,6 +99,14 @@ const boardProjection = {
   Period: true,
   CurrentPhase: true,
   TurnsPerPeriod: true,
+  UseSmallPitch: true,
+  PitchZones: {
+    PitchZone: {
+      ZoneType: true,
+      BottomLeft: cellProjection,
+      TopRight: cellProjection
+    }
+  },
   IsStable: true,
   ActiveTeam: true,
   ActiveGamer: true,
@@ -109,6 +117,7 @@ const boardProjection = {
       GameTurn: true,
       Touchdown: true,
       RerollNumber: true,
+      Side: true,
       ListPitchPlayers: {
         PlayerState: {
           Id: true,

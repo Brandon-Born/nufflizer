@@ -58,3 +58,9 @@ Source016 follow-up (2026-11-10): UI-098 independently displays away8 Action9 Lo
 
 
 Offline export follow-up (2026-11-10): HS-B used two default Black Orc teams in offline local hotseat, bought no inducements, and finished normally0–0 after both sides ended turn16. The results view exposed no Replay/Download control. At15:38:14Z the replay directory remained28 files with unchanged newest write/length. The temporary Hold→Toggle input test was restored to Hold; pitch selection remained unresolved while menu/End of Turn worked. See HOTSEAT_EXPERIMENTS for setup and limits. No new raw replay, paired case, runtime mapping or issue closure resulted. Raw-linked failed-Bribe/natural1 Argue remain blocked on a viable capture route; existing-file research remains possible. Current paired totals remain99 cases/410 steps/35 direct events across22 sources. The game is open and the full data-gathering objective remains incomplete.
+
+## Implementation follow-up and precise remaining rule gaps
+
+Ordered source evidence now supports actor-team clock and scoring-attempt explanations at both end zones, plus Pro gate pass/fail observations. These can progress independently of the remaining injury and referee capture gaps.
+
+A complete injury expectation still needs the selected table and applicable traits at that damage step. UI-035's ordinary injury[4,4] becomes Stunned with Thick Skull, while UI-044's ordinary[5,3] becomes KO. Both total8 and use type11. GR-010 explains the skill exception, but type11 and the dice alone do not identify the applicable table. Initial roster skills can also be affected by later recruitment or transformation. A complete supported table reference and source-backed trait availability at the injury are needed before pricing those outcomes. The existing observed injury and casualty records remain usable as aftermath with unknown odds. Raw-linked failed Bribe and natural1 Argue still need the capture route described above.

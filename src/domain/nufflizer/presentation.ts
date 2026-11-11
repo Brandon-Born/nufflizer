@@ -28,7 +28,8 @@ export function formatDiceContribution(
 export function formatPreRollPosition(
   context: LuckReport["events"][number]["metadata"]["preRoll"]
 ): string | null {
-  if (!context || context.teamTurn === null) return null;
+  const counter = context?.teamTurn ?? context?.scoringAttempt?.teamTurn;
+  if (!context || counter === null || counter === undefined) return null;
   const period =
     context.period === "first_half"
       ? "First half"
@@ -37,7 +38,12 @@ export function formatPreRollPosition(
         : context.period === "extra_time"
           ? "Extra time"
           : null;
-  return [period, "team turn " + context.teamTurn].filter(Boolean).join(", ");
+  return [
+    period,
+    (context.teamTurn === null ? "actor team turn " : "team turn ") + counter
+  ]
+    .filter(Boolean)
+    .join(", ");
 }
 
 export function explainPreRollEvidence(
@@ -55,6 +61,18 @@ export function explainPreRollEvidence(
     details.push(
       "The player was carrying the ball they picked up earlier in this activation."
     );
+  }
+  if (context?.scoringAttempt) {
+    const remaining = context.scoringAttempt.turnsRemaining;
+    details.push(
+      "The carrier was attempting to enter the opponent's end zone."
+    );
+    if (remaining !== null)
+      details.push(
+        remaining === 0
+          ? "This was the actor team's last scheduled turn of the recorded period."
+          : `The actor team had ${remaining} further scheduled turns in the recorded period.`
+      );
   }
   if (context?.teammateCarrierMove) {
     details.push(
@@ -116,4 +134,12 @@ export function explainMovementOutcome(
     ? ` Damage rolls without verified odds: ${fall.unscoredDamageRolls}.`
     : "";
   return `${aftermath} Dice subtotal for the movement check and scored damage: ${fall.diceContribution.toFixed(2)}.${unknown}`;
+}
+
+export function explainProGate(
+  gate: LuckReport["events"][number]["metadata"]["proGate"]
+): string | null {
+  return gate
+    ? `Pro ${gate.passed ? "passed" : "failed"} its recorded 3+ test. Four of six faces pass this test.`
+    : null;
 }

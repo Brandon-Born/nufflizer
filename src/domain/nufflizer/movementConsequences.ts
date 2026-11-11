@@ -232,8 +232,10 @@ export function findMovementTouchdown(turn: ReplayTurn) {
     !to ||
     Math.max(Math.abs(from.X - to.X), Math.abs(from.Y - to.Y)) !== 1 ||
     (to.X !== 0 && to.X !== 25) ||
-    scoredCell?.X !== String(to.X) ||
-    scoredCell.Y !== String(to.Y) ||
+    !scoredCell ||
+    (scoredCell.X !== undefined && scoredCell.X !== String(to.X)) ||
+    (scoredCell.Y !== undefined && scoredCell.Y !== String(to.Y)) ||
+    (scoredCell.X === undefined && scoredCell.Y === undefined) ||
     summary?.RollType !== roll.rollType ||
     summary.Outcome !== 1
   )
@@ -243,7 +245,11 @@ export function findMovementTouchdown(turn: ReplayTurn) {
     evidence: {
       sourceIndex: touchdown.sourceIndex,
       childIndex: touchdown.locator.childIndex,
-      destination: { x: to.X, y: to.Y }
+      destination: { x: to.X, y: to.Y },
+      recordedCell: {
+        x: scoredCell.X === undefined ? null : to.X,
+        y: scoredCell.Y === undefined ? null : to.Y
+      }
     }
   };
 }

@@ -2,7 +2,7 @@
 
 Updated 2026-11-10. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.2` and model `dice-only-15`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.3` and model `dice-only-15`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -109,3 +109,11 @@ Mobility-possession-3 retains a corroborated ordinary stand-up and its recorded 
 Dice-only-15 scores the terminal same-step Dodge-skill failure when the original, Dodge usage and replacement match the verified skill reroll contract and lead directly to the matching self-fall and failure turnover. The fresh pair is one check at two-attempt odds with zero team rerolls spent. Unlinked or contradictory responses remain outside this expanded contract.
 
 Mobility-possession-4 can establish held possession after a verified ordinary move onto the recorded ball square and an immediate fresh unmodified pickup success. The later carrier roll can link back to the original pickup with actor and source order preserved. In the narrow successful end-zone move path, the report can also link the direct touchdown for that same carrier and square. That observed consequence adds no tactical or dice weight. It is independent of the pre-roll evidence used to describe possession.
+
+## Schema 2.3 clock, pitch and Pro evidence
+
+Mobility-possession-5 reads the observed actor roster's cumulative GameTurn for a declared ordinary carrier move into the opponent's end zone. The clock basis remains the actor roster when the active-side field is omitted. Explicit Period and TurnsPerPeriod bound the remaining scheduled turns. Missing counters and periods stay unknown. Pitch orientation requires an earlier initial standard 26×15 layout, the actor roster's explicit Side32 or Side64, an adjacent open destination, and the verified holder. Installed pitch-zone enums name these sides. Independent traversal matched 23 scoring moves across all public demos, with 15 Side32 moves to x25 and eight Side64 moves to x0.
+
+A direct touchdown can match that same carrier's encoded move when its available coordinate fields agree. The report retains nullable recorded coordinates alongside the encoded destination. Omitted coordinates are preserved. Goal-threat observations and the observed touchdown add no numerical impact weight.
+
+The separate Pro gate contract uses GR-025 and UI-047/087. A recorded 3+ gate has four passing D6 faces. Fresh success requires the same actor's skill50 use immediately before the gate. The kept failed gate requires its original question, matching AccuracyStep continuation, declined team reroll, unchanged die, target and actor. The report displays the observed outcome and retains it outside additive luck contributions.

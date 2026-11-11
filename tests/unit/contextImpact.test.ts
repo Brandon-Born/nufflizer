@@ -4,7 +4,10 @@ import { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
 import { estimateNumericImpact } from "@/domain/nufflizer/contextImpact";
 import { LuckReportSchema } from "@/domain/nufflizer/reportSchema";
 import { analyzeReplayLuck } from "@/domain/nufflizer/analyzeLuck";
-import { explainPreRollEvidence } from "@/domain/nufflizer/presentation";
+import {
+  explainPreRollEvidence,
+  formatPreRollPosition
+} from "@/domain/nufflizer/presentation";
 import { parseReplayXml } from "@/domain/replay/parseXml";
 import { decodeReplayInput } from "@/domain/replay/decodeReplay";
 import { contextReplayXml } from "../helpers/contextReplay";
@@ -131,6 +134,99 @@ describe("held-out public replay context (NUF-016/017/022)", () => {
       decodeReplayInput(readFileSync(`demo-replays/${name}`, "utf8")).xml
     );
   }
+
+  it.each([
+    {
+      file: "demo1.bbr",
+      step: 654,
+      actor: "1",
+      side: 32,
+      from: { x: 24, y: 13 },
+      to: { x: 25, y: 14 },
+      recorded: { x: 25, y: 14 }
+    },
+    {
+      file: "demo5.bbr",
+      step: 540,
+      actor: "40",
+      side: 64,
+      from: { x: 1, y: 3 },
+      to: { x: 0, y: 3 },
+      recorded: { x: null, y: 3 }
+    }
+  ])(
+    "explains the last scheduled scoring attempt using the actor's recorded clock ($file)",
+    (reference) => {
+      // Independent raw traversal checks Side32 -> x25 and Side64 -> x0,
+      // with cumulative actor team counter16 in period1. The latter direct
+      // touchdown omits X while its encoded move supplies an explicit zero.
+      const replay = demo(reference.file);
+      const report = analyzeReplayLuck(replay);
+      const event = report.events.find(
+        (event) =>
+          event.metadata.locator?.replayStep === reference.step &&
+          event.metadata.rollType === 1
+      )!;
+      expect(event.playerId).toBe(reference.actor);
+      expect(event.metadata.preRoll).toMatchObject({
+        period: "second_half",
+        actorCell: reference.from,
+        actorCarriesBall: true,
+        scoringAttempt: {
+          sideCode: reference.side,
+          destination: reference.to,
+          teamTurn: 16,
+          turnsRemaining: 0,
+          turnsPerPeriod: 8
+        }
+      });
+      expect(event.metadata.movementTouchdown).toMatchObject({
+        destination: reference.to,
+        recordedCell: reference.recorded
+      });
+      expect(explainPreRollEvidence(event.metadata.preRoll)).toContain(
+        "last scheduled turn"
+      );
+      expect(formatPreRollPosition(event.metadata.preRoll)).toContain(
+        "team turn 16"
+      );
+      expect(event.contextualImpact).toBeUndefined();
+      expect(LuckReportSchema.safeParse(report).success).toBe(true);
+      const checkpoint = replay.boardCheckpoints!.find(
+        (c) => c.replayStep === reference.step - 1
+      )!;
+      const owner = checkpoint.board!.teams.find((t) =>
+        t.players.some((p) => String(p.id) === reference.actor)
+      )!;
+      owner.gameTurn = 14;
+      const earlier = analyzeReplayLuck(replay).events.find(
+        (e) => e.id === event.id
+      )!;
+      expect(earlier.metadata.preRoll?.scoringAttempt?.turnsRemaining).toBe(2);
+      expect(explainPreRollEvidence(earlier.metadata.preRoll)).toContain(
+        "2 further scheduled turns"
+      );
+      owner.sideCode = null;
+      expect(
+        analyzeReplayLuck(replay).events.find((e) => e.id === event.id)!
+          .metadata.preRoll?.scoringAttempt
+      ).toBeUndefined();
+      owner.sideCode = reference.side;
+      const initial = replay.boardCheckpoints!.find(
+        (c) => c.kind === "initial"
+      )!;
+      initial.kind = "board";
+      replay.boardCheckpoints!.push({
+        ...initial,
+        kind: "initial",
+        afterSourceIndex: replay.turns.flatMap((t) => t.events).length + 1
+      });
+      expect(
+        analyzeReplayLuck(replay).events.find((e) => e.id === event.id)!
+          .metadata.preRoll?.scoringAttempt
+      ).toBeUndefined();
+    }
+  );
 
   it("carries a fresh pickup through later movement without reading the touchdown", () => {
     // Independent stdlib decode: demo8 102/3 records the ball at [17,12]

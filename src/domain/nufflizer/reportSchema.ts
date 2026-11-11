@@ -43,6 +43,11 @@ export const LuckEventMetadataSchema = z.strictObject({
       skillSourceId: text
     })
     .optional(),
+  proGate: z.strictObject({
+    passed: z.boolean(),
+    successChance: z.literal(2 / 3),
+    skillSourceId: text
+  }).optional(),
   rerollPolicy: text.optional(),
   mergedRerollAnchorId: text.optional(),
   sourceTag: text,
@@ -72,6 +77,13 @@ export const LuckEventMetadataSchema = z.strictObject({
       actorStandUpSourceIndex: count.optional(),
       actorMovementRemaining: count.optional(),
       actorPickupSourceId: text.optional(),
+      scoringAttempt: z.strictObject({
+        destination: pitchCell,
+        sideCode: z.union([z.literal(32), z.literal(64)]),
+        teamTurn: z.number().int().positive().nullable(),
+        turnsRemaining: count.nullable(),
+        turnsPerPeriod: z.number().int().min(1).max(16).nullable()
+      }).optional(),
       teammateCarrierMove: z.strictObject({
         carrierCell: pitchCell,
         destination: pitchCell,
@@ -138,7 +150,11 @@ export const LuckEventMetadataSchema = z.strictObject({
   movementTouchdown: z.strictObject({
     sourceIndex: count,
     childIndex: count,
-    destination: pitchCell
+    destination: pitchCell,
+    recordedCell: z.strictObject({
+      x: z.number().int().min(0).max(25).nullable(),
+      y: z.number().int().min(0).max(14).nullable()
+    })
   }).optional(),
   apothecary: z
     .strictObject({
@@ -397,6 +413,26 @@ export const LuckReportSchema = z
         ([reason, n]) => report.coverage.excludedByReason[reason] === n
       ), "Exclusion reasons must conserve excluded records.");
     for (const event of report.events) {
+      const pro = event.metadata.proGate;
+      if (pro) {
+        const { dice, dieTypes, rollType, outcomeCode, teamRerollsSpent, rerollResource } = event.metadata;
+        require(
+          rollType === 15 &&
+            dice?.length === 1 &&
+            dieTypes?.length === 1 &&
+            dieTypes[0] === 0 &&
+            Number.isInteger(dice[0]) &&
+            dice[0]! >= 1 &&
+            dice[0]! <= 6 &&
+            pro.passed === (dice[0]! >= 3) &&
+            outcomeCode === Number(pro.passed) &&
+            event.actualSuccess === pro.passed &&
+            teamRerollsSpent === 0 &&
+            rerollResource === "skill" &&
+            event.scoringStatus === "excluded",
+          "Pro evidence requires a verified 3+ gate and its skill resource."
+        );
+      }
       const gate = event.metadata.lonerGate;
       if (gate) {
         const {
@@ -458,6 +494,30 @@ export const LuckReportSchema = z
         );
       }
       const carrierMove = context?.teammateCarrierMove;
+      const scoringAttempt = context?.scoringAttempt;
+      if (scoringAttempt) {
+        const from = context?.actorCell;
+        const to = scoringAttempt.destination;
+        const period = context?.period === "first_half" ? 1 : context?.period === "second_half" ? 2 : context?.period === "extra_time" ? 3 : null;
+        const turns = scoringAttempt.turnsPerPeriod;
+        const end = period !== null && turns !== null ? period * turns : null;
+        require(
+          (event.metadata.rollType === 1 || event.metadata.rollType === 2) &&
+            context?.phaseCode === 5 &&
+            context.activationId !== null &&
+            context.actorCarriesBall === true &&
+            !!from &&
+            Math.max(Math.abs(from.x - to.x), Math.abs(from.y - to.y)) === 1 &&
+            to.x === (scoringAttempt.sideCode === 32 ? 25 : 0) &&
+            (scoringAttempt.turnsRemaining === null ||
+              (end !== null &&
+                scoringAttempt.teamTurn !== null &&
+                turns !== null &&
+                scoringAttempt.teamTurn > end - turns &&
+                scoringAttempt.turnsRemaining === end - scoringAttempt.teamTurn)),
+          "A scoring attempt requires a verified carrier move and its recorded side and clock."
+        );
+      }
       if (carrierMove) {
         const { carrierCell, destination, effect } = carrierMove;
         const distance = (a: typeof carrierCell, b: typeof carrierCell) =>
@@ -499,6 +559,7 @@ export const LuckReportSchema = z
         const { locator, sourceIndex, rollType } = event.metadata;
         const from = context?.actorCell;
         const to = touchdown.destination;
+        const recorded = touchdown.recordedCell;
         require(
           event.scoringStatus === "scored" &&
             event.actualSuccess === true &&
@@ -507,6 +568,9 @@ export const LuckReportSchema = z
             !!from &&
             Math.max(Math.abs(from.x - to.x), Math.abs(from.y - to.y)) === 1 &&
             (to.x === 0 || to.x === 25) &&
+            (recorded.x === null || recorded.x === to.x) &&
+            (recorded.y === null || recorded.y === to.y) &&
+            (recorded.x !== null || recorded.y !== null) &&
             locator?.replayStep !== undefined &&
             locator.childIndex !== undefined &&
             touchdown.childIndex === locator.childIndex + 1 &&
