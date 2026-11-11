@@ -2,7 +2,7 @@
 
 Updated 2026-11-10. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.4` and model `dice-only-16`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.5` and model `dice-only-17`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -127,3 +127,9 @@ UI-047 records an initial Skull, a successful Pro3+ gate and a one-die Push repl
 `coverage.contextEvidence` reconciles overlapping counts over reported roll candidates: actor position, known possession, period with team-turn clock, activation identity, quantified contextual impact, and linked movement consequences. Counts describe recorded fields and supported calculations, without claiming complete state, calibrated confidence or full causal coverage. UI and CLI display the same explanation, and exported JSON retains all counts.
 
 A known ResultNoRollSuccess without dice remains visible as deterministic evidence and adds no roll candidate. An exact contiguous non-fresh kept summary adds no second candidate only when it matches a supported linked numeric check in the same action. A different action, interrupted sequence, changed die or unsupported family is not deduplicated by this rule. Replay team order supplies the home/away labels when exactly two source teams exist; turn frequency cannot swap them.
+
+## Schema 2.5 embedded staff-question injury evidence
+
+Dice-only-17 retains RollInfos from QuestionKORecovery. UI-025 identifies its type11 two-D6 payload as the original Stunty injury, with6+1 giving KO. The question is not a recovery roll. Fourteen questions in the12 public demos now retain their exact raw dice, outcome code and locators as unscored injury evidence. Their probabilities and binary results remain null.
+
+When an exact direct injury already appeared in the same uniquely owned DamageStep, the question links that source through embeddedDamageOriginalId and adds no new random outcome. Linking requires matching subject, source, action, complete dice and outcome. A different subject, action or die prevents this deduplication. Malformed and unsupported-version nested records remain inspectable without promoted odds. This does not establish injury tables, trait effects, staff policy or player availability.

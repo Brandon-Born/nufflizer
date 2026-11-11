@@ -35,6 +35,10 @@ import {
 } from "@/domain/replay/attribution";
 import { summarizeRollFamilies } from "./rollCoverage";
 import { summarizeContextEvidence } from "./contextCoverage";
+import {
+  retainEmbeddedInjuries,
+  type EmbeddedInjuryRecord
+} from "./embeddedInjury";
 import { numericCheckExclusion } from "./numericCheckContract";
 import { labelForRollType } from "@/domain/replay/rollTypeContracts";
 import { createHash } from "node:crypto";
@@ -315,11 +319,14 @@ function buildNormalizedEvent(
   rerollLink: RerollLink | undefined,
   regeneration: RegenerationEvidence | undefined,
   apothecary: ApothecaryRecord | undefined,
+  embeddedInjury: EmbeddedInjuryRecord | undefined,
   koRecoveryChecks: ReadonlyMap<string, number>,
   armorCountInStep: number | undefined
 ): LuckEvent | null {
   const payload =
-    apothecary?.roll ?? (isRecord(event.payload) ? event.payload : undefined);
+    embeddedInjury?.roll ??
+    apothecary?.roll ??
+    (isRecord(event.payload) ? event.payload : undefined);
   const preRoll = contextBySource.get(
     rerollLink?.originalId ?? rerollLink?.questionId ?? event.id ?? ""
   );
@@ -436,11 +443,13 @@ function buildNormalizedEvent(
     difficulty,
     diceCount: dice.length
   });
-  const isRollCandidate = apothecary
-    ? Boolean(apothecary.roll && !apothecary.repeatedOriginal)
-    : !rerollLink?.mergedIntoId &&
-      blockRecord?.kind !== "summary" &&
-      isRollCandidateEvent(event);
+  const isRollCandidate = embeddedInjury
+    ? Boolean(embeddedInjury.roll && !embeddedInjury.repeatedOriginalId)
+    : apothecary
+      ? Boolean(apothecary.roll && !apothecary.repeatedOriginal)
+      : !rerollLink?.mergedIntoId &&
+        blockRecord?.kind !== "summary" &&
+        isRollCandidateEvent(event);
 
   const armor = verifyArmorCheck(
     replayVersion,
@@ -540,7 +549,7 @@ function buildNormalizedEvent(
       }
     : undefined;
   const eventType =
-    apothecary || isKoRecovery
+    embeddedInjury?.observed || apothecary || isKoRecovery
       ? "injury"
       : defaultCategory(classification.eventType);
   const target = block
@@ -551,6 +560,13 @@ function buildNormalizedEvent(
         ? `${recoveryName} on ${recoveryTarget}+${koRecovery?.target === 3 ? " with Kegs" : ""}`
         : targetLabel(requirement, difficulty);
   const contractExclusion =
+    (embeddedInjury
+      ? embeddedInjury.repeatedOriginalId
+        ? "original injury dice already reported in this damage step"
+        : embeddedInjury.observed
+          ? "observed injury dice in a staff-choice question have no verified odds"
+          : "staff-choice question has no verified injury dice; no recovery is inferred"
+      : undefined) ??
     (apothecary
       ? apothecary.resolution
         ? apothecary.resolution.applied === "injury_treatment"
@@ -651,14 +667,18 @@ function buildNormalizedEvent(
           : null),
       delta: 0,
       weightedDelta: 0,
-      label: rerollLink?.proGate
-        ? `Pro test ${rerollLink.proGate.passed ? "passed" : "failed"}`
-        : buildMomentLabel(
-            eventType,
-            resolvedActual.actualSuccess,
-            undefined,
-            difficulty ?? requirement
-          ),
+      label: embeddedInjury
+        ? embeddedInjury.observed
+          ? "Observed injury dice"
+          : "Unverified staff-choice evidence"
+        : rerollLink?.proGate
+          ? `Pro test ${rerollLink.proGate.passed ? "passed" : "failed"}`
+          : buildMomentLabel(
+              eventType,
+              resolvedActual.actualSuccess,
+              undefined,
+              difficulty ?? requirement
+            ),
       tags: [],
       scoringStatus: "excluded",
       statusReason: exclusionReason,
@@ -684,6 +704,7 @@ function buildNormalizedEvent(
         locator: event.locator,
         preRoll,
         apothecary: apothecary?.resolution,
+        embeddedDamageOriginalId: embeddedInjury?.repeatedOriginalId,
         isRollCandidate,
         targetId: event.targetId,
         rollType,
@@ -1015,9 +1036,15 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       replay.replayVersion,
       playerToTeam
     );
+    const embeddedInjuries = retainEmbeddedInjuries(
+      replayTurn.events,
+      replay.replayVersion,
+      playerToTeam
+    );
     for (const [eventIndex, event] of replayTurn.events.entries()) {
       if (
         !apothecary.has(eventIndex) &&
+        !embeddedInjuries.has(eventIndex) &&
         !isRollCandidateEvent(event) &&
         !isDirectResultOrQuestion(event) &&
         ![
@@ -1041,6 +1068,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         rerollLinks.get(eventIndex),
         regeneration.get(eventIndex),
         apothecary.get(eventIndex),
+        embeddedInjuries.get(eventIndex),
         koRecoveryChecks,
         event.actionId ? armorCounts.get(event.actionId) : undefined
       );

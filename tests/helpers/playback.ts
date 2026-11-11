@@ -24,7 +24,7 @@ function xml(value: Projection): string {
 }
 // Replay the exact numeric extracts through the production decoder and scorer.
 // UI labels and expected probabilities below are independent of runtime maps.
-export function playbackFragment(
+export function playbackFragmentXml(
   source: string,
   id: string,
   home: number[],
@@ -62,7 +62,11 @@ export function playbackFragment(
     (step) =>
       `<ReplayStep>${step ? Array.from(step, (child) => child ?? "<Clock/>").join("") : ""}</ReplayStep>`
   ).join("");
-  return parseReplayXml(
-    `<Replay><ReplayVersion>${evidence.source.replayVersion}</ReplayVersion><Teams><Team><id>0</id><name>Home</name></Team><Team><id>1</id><name>Away</name></Team></Teams><NotificationGameJoined><InitialBoardState><ListTeams>${roster(0, home)}${roster(1, away)}</ListTeams></InitialBoardState></NotificationGameJoined><EventExecuteSequence><Sequence>${steps}</Sequence></EventExecuteSequence>${directXml}</Replay>`
-  );
+  return `<Replay><ReplayVersion>${evidence.source.replayVersion}</ReplayVersion><Teams><Team><id>0</id><name>Home</name></Team><Team><id>1</id><name>Away</name></Team></Teams><NotificationGameJoined><InitialBoardState><ListTeams>${roster(0, home)}${roster(1, away)}</ListTeams></InitialBoardState></NotificationGameJoined><EventExecuteSequence><Sequence>${steps}</Sequence></EventExecuteSequence>${directXml}</Replay>`;
+}
+
+export function playbackFragment(
+  ...args: Parameters<typeof playbackFragmentXml>
+) {
+  return parseReplayXml(playbackFragmentXml(...args));
 }

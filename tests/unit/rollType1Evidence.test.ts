@@ -56,6 +56,14 @@ it("preserves the independently inventoried direct results in all 12 demo report
       sha256: string;
       counts: Record<string, number>;
       directResultCounts: Record<string, number>;
+      staffQuestionInjuries: {
+        sequence: number;
+        stepIndex: number;
+        messageIndex: number;
+        rollType: number;
+        dice: number[];
+        outcome: number;
+      }[];
     }[];
   };
   const expected = new Map(baseline.files.map((file) => [file.sha256, file]));
@@ -81,6 +89,29 @@ it("preserves the independently inventoried direct results in all 12 demo report
       direct[key] = (direct[key] ?? 0) + 1;
     }
     expect(direct, file).toEqual(reference!.directResultCounts);
+    const staffInjuries = report.events.filter(
+      (e) => e.metadata.sourceTag === "QuestionKORecovery"
+    );
+    expect(staffInjuries, file).toHaveLength(
+      reference!.staffQuestionInjuries.length
+    );
+    for (const [index, event] of staffInjuries.entries()) {
+      const raw = reference!.staffQuestionInjuries[index]!;
+      expect(event, file).toMatchObject({
+        type: "injury",
+        scoringStatus: "excluded",
+        probabilitySuccess: null,
+        actualSuccess: null,
+        metadata: {
+          rollType: raw.rollType,
+          dice: raw.dice,
+          outcomeCode: raw.outcome,
+          isRollCandidate: true,
+          actionId: `sequence-${raw.sequence}-step-${raw.stepIndex}`,
+          locator: { stepIndex: raw.stepIndex, messageIndex: raw.messageIndex }
+        }
+      });
+    }
     const recovery = report.events.filter(
       (e) => e.metadata.sourceTag === "EventRoll" && e.metadata.rollType === 13
     );

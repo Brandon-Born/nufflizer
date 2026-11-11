@@ -2,8 +2,52 @@ import { test, expect } from "@playwright/test";
 import path from "node:path";
 import { readFileSync } from "node:fs";
 import { contextReplayXml } from "../helpers/contextReplay";
+import { playbackFragmentXml } from "../helpers/playback";
 
 const DEMO = path.resolve("demo-replays/demo1.bbr");
+
+test("saved staff-question injury remains visible with unknown odds", async ({
+  page
+}) => {
+  await page.goto("/nufflizier");
+  await page.setInputFiles('input[name="replay"]', {
+    name: "sanitized-ui025.xml",
+    mimeType: "application/xml",
+    buffer: Buffer.from(playbackFragmentXml("002", "UI-025", [], [42]))
+  });
+  await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Nuffle Match Report" })
+  ).toBeVisible();
+  await page.getByLabel("Category", { exact: true }).selectOption("injury");
+  await page.getByLabel("Scoring status").selectOption("excluded");
+  const row = page
+    .locator("tbody tr")
+    .filter({ hasText: "Observed injury dice" });
+  await expect(row).toHaveCount(1);
+  await row.locator("summary").click();
+  await expect(
+    row.getByText(
+      /observed injury dice in a staff-choice question have no verified odds/
+    )
+  ).toBeVisible();
+  await expect(row.getByText(/dice \[6, 1\]/)).toBeVisible();
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download JSON" }).click();
+  const download = await downloadPromise;
+  const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
+  expect(
+    report.events.find(
+      (e: { metadata: { sourceTag: string } }) =>
+        e.metadata.sourceTag === "QuestionKORecovery"
+    )
+  ).toMatchObject({
+    probabilitySuccess: null,
+    actualSuccess: null,
+    scoringStatus: "excluded",
+    metadata: { dice: [6, 1], rollType: 11 }
+  });
+});
 
 test("real final-turn carrier explains a scoring attempt at the left end zone", async ({
   page
@@ -115,8 +159,8 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.4");
-  expect(report.modelVersion).toBe("dice-only-16");
+  expect(report.schemaVersion).toBe("2.5");
+  expect(report.modelVersion).toBe("dice-only-17");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
     report.coverage.rollCandidates.scoredCount +

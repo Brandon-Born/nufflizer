@@ -1,5 +1,9 @@
 # Roll Type Evidence Matrix (Demo Replay Baseline)
 
+## Embedded staff-question injury evidence
+
+`QuestionKORecovery|11` carries original injury dice in RollInfos. UI-025 independently observes Stunty injury6+1=KO. An independent stdlib traversal found14 such questions across the12 public demos: demo1 has10, demo2 and demo-goblins1 have1 each, and demo3 has2. Their numeric records and locators are in the raw inventory fixture. These are unscored injury outcomes with unknown expectations. They are not direct KO recovery checks. An exact prior direct injury in the same verified damage step makes the question a copy. Full damage distributions and staff effects remain open.
+
 ## Current direct-event evidence
 
 Independent 12-demo raw inventory: `EventRoll|13`. UI-040 verifies a scoped direct unmodified 4+ KO recovery contract, including the omitted outcome on failure. Modified and ambiguous recovery records remain visible with unknown odds. See [raw counts](../tests/fixtures/evidence/bb3-demo-raw-roll-inventory.json). Historical tables below do not control runtime labels or scores.

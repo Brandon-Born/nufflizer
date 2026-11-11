@@ -32,6 +32,16 @@ function contractKey(sourceTag: string, rollType: number): string {
 // must still pass their versioned runtime contracts.
 const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
   {
+    sourceTag: "QuestionKORecovery",
+    rollType: 11,
+    label: "injury",
+    kind: "excluded_deterministic",
+    confidence: "high",
+    status: "known",
+    scoringCategory: "injury",
+    notes: "UI-025 records Stunty injury dice inside a staff-choice question. These are original injury evidence, not a recovery check; expected odds remain unknown."
+  },
+  {
     sourceTag: "EventRoll",
     rollType: 13,
     label: "ko_recovery",

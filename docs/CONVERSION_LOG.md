@@ -694,3 +694,7 @@ Schema 2.3 and mobility-possession-5 expose the carrier's recorded team-turn cou
 ## 2026-11-10 - Raw block and context-evidence contracts
 
 Schema2.4 and dice-only-16 retain independently observed block pools when selection or applied outcome is unavailable. A verified Pro pass can link one explicitly eligible replacement die and its conditional raw distribution. Deterministic no-roll records and exact same-action kept summaries add no random outcome. Reports preserve source home/away order and expose reconciled context-field, calculated-impact and movement-consequence counts across JSON, UI and CLI. Whole-match verdicts still abstain.
+
+## 2026-11-10 - Staff-question injury retention
+
+Schema2.5 and dice-only-17 expose original injury dice embedded in staff-choice questions. Fourteen public-demo records reconcile against independently extracted numeric evidence and locators. They retain unknown expectations and add no score. Exact earlier direct originals can link copied questions without adding a random outcome. The production browser verifies the saved Stunty injury through upload, filtering, explanation and export.

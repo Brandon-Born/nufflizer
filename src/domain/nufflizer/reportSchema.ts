@@ -30,6 +30,7 @@ const pitchCell = z.strictObject({
   y: z.number().int().min(0).max(14)
 });
 export const LuckEventMetadataSchema = z.strictObject({
+  embeddedDamageOriginalId: text.optional(),
   originalDice: z.unknown().optional(),
   rerollOriginalId: text.optional(),
   rerollQuestionId: text.optional(),
@@ -778,6 +779,20 @@ export const LuckReportSchema = z
         }
       }
       const apothecary = event.metadata.apothecary;
+      if (event.metadata.embeddedDamageOriginalId) {
+        const original = sources.get(event.metadata.embeddedDamageOriginalId);
+        require(
+          event.metadata.sourceTag === "QuestionKORecovery" &&
+            !event.metadata.isRollCandidate && event.scoringStatus === "excluded" &&
+            original?.metadata.isRollCandidate === true &&
+            original.metadata.actionId === event.metadata.actionId &&
+            original.playerId === event.playerId && original.teamId === event.teamId &&
+            original.metadata.rollType === 11 && event.metadata.rollType === 11 &&
+            original.metadata.outcomeCode === event.metadata.outcomeCode &&
+            JSON.stringify(original.metadata.dice) === JSON.stringify(event.metadata.dice),
+          "Copied staff-question injury dice require their original damage-step evidence."
+        );
+      }
       if (apothecary) {
         const original = sources.get(apothecary.originalSourceId);
         const replacement = apothecary.replacementSourceId
