@@ -1010,8 +1010,13 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       loss.followingActivationSourceId
     ])
   );
-  const { preRollEvidence: contextBySource, activationEnds } =
-    reconstructReplayContext(replay, activationLosses);
+  const {
+    preRollEvidence: contextBySource,
+    activationEnds,
+    mentalEffectEnds,
+    mentalSkillUses,
+    mentalTraitResults
+  } = reconstructReplayContext(replay, activationLosses);
   for (const end of activationEnds.values())
     for (const source of [
       end.sourceId,
@@ -1027,6 +1032,12 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     ]) {
       if (source) activationEvidenceSources.add(source);
     }
+  for (const [source, end] of mentalEffectEnds) {
+    activationEvidenceSources.add(source);
+    activationEvidenceSources.add(end.declarationSourceId);
+  }
+  for (const source of mentalSkillUses.keys())
+    activationEvidenceSources.add(source);
   const koRecoveryChecks = countKoRecoveryChecks(replay.turns);
 
   for (const replayTurn of replay.turns) {
@@ -1095,6 +1106,10 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         !apothecary.has(eventIndex) &&
         !embeddedInjuries.has(eventIndex) &&
         !activationEvidenceSources.has(event.id ?? "") &&
+        !(
+          event.sourceTag === "ResultUseAction" &&
+          contextBySource.get(event.id ?? "")?.suppressedTackleZones?.length
+        ) &&
         !isRollCandidateEvent(event) &&
         !isDirectResultOrQuestion(event) &&
         ![
@@ -1271,6 +1286,39 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         roll.actualSuccess = false;
         roll.label = `${name} failed; activation and tackle zone lost`;
       }
+    }
+  }
+
+  for (const [source, end] of mentalEffectEnds) {
+    const event = ballSources.get(source);
+    if (event) {
+      event.metadata.mentalEffectEnd = end;
+      event.metadata.recordedEffect = {
+        effectId: 44,
+        providerType: 4,
+        providerId: end.providerSkillId,
+        durations: [6, 1]
+      };
+      event.label = "Recorded mental-trait effect ended";
+      event.statusReason =
+        "The previous effect ended at this activation. Tackle-zone recovery still needs its own evidence.";
+    }
+  }
+  for (const [source, skillId] of mentalSkillUses) {
+    const event = ballSources.get(source);
+    if (event) {
+      event.metadata.skillUsage = { skillId, used: true };
+      event.label = `Recorded ${skillId === 51 ? "Really Stupid" : "Bone Head"} use`;
+    }
+  }
+
+  for (const [source, resolution] of mentalTraitResults) {
+    const event = ballSources.get(source);
+    if (event) {
+      const { success, ...proof } = resolution;
+      event.metadata.mentalTraitResolution = proof;
+      event.actualSuccess = success;
+      event.label = `${proof.providerSkillId === 51 ? "Really Stupid" : "Bone Head"} ${success ? "passed" : "failed"} its recorded activation test`;
     }
   }
 

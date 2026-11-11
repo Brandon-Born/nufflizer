@@ -58,10 +58,12 @@ const activationEnd = z.strictObject({
   lonerSourceId: text.optional(),
   lonerSkillSourceId: text.optional(),
   policy: z
-    .enum(["fresh_final", "kept_original", "team_loner_replacement"])
+    .enum(["fresh_final", "kept_original", "team_loner_replacement", "failed_loner_kept_original"])
     .optional()
 });
 export const LuckEventMetadataSchema = z.strictObject({
+  mentalTraitResolution: z.strictObject({ providerSkillId: z.union([z.literal(31), z.literal(51)]), effectEndSourceId: text, skillSourceId: text }).optional(),
+  mentalEffectEnd: z.strictObject({ providerSkillId: z.union([z.literal(31),z.literal(51)]), declarationSourceId: text, playerId: text }).optional(),
   activationEnd: activationEnd.optional(),
   recordedEffect: z
     .strictObject({
@@ -129,7 +131,10 @@ export const LuckEventMetadataSchema = z.strictObject({
   preRoll: z
     .strictObject({
       checkpointAfter: count,
+      suppressedTackleZones: z.array(z.strictObject({ playerId: text, rosterIndex: z.number().int().min(0).max(1), teamId: text.nullable(), providerSkillId: z.union([z.literal(31),z.literal(51)]) })).max(128).optional(),
+      actorMentalEffectEnd: z.strictObject({ sourceId: text, providerSkillId: z.union([z.literal(31),z.literal(51)]) }).optional(),
       endedActivationSourceIds: z.array(text).max(64).optional(),
+      actorTackleZone: z.boolean().nullable().optional(),
       actorRosterTeamId: text.optional(),
       actorTraits: playerTraits.optional(),
       targetTraits: playerTraits.optional(),
@@ -605,6 +610,50 @@ export const LuckReportSchema = z
           context.period === (loss.periodCode === 0 ? "first_half" : loss.periodCode === 1 ? "second_half" : loss.periodCode === 2 ? "extra_time" : null) &&
           loss.followingSourceIndex <= (event.metadata.sourceIndex ?? -1);
       }), "Known ended activations require earlier confirmed same-team, same-turn evidence.");
+      const suppressed = context?.suppressedTackleZones;
+      if (suppressed) require(new Set(suppressed.map(p=>p.playerId)).size === suppressed.length &&
+        suppressed.every(p=>(p.teamId === null || teamIds.has(p.teamId)) && (p.playerId !== event.playerId || context?.actorTackleZone === false)), "Tackle-zone effect observations require unique players and observed team identities.");
+      const recovery = context?.actorMentalEffectEnd;
+      if (recovery) {
+        const source = sources.get(recovery.sourceId);
+        require(source?.metadata.mentalEffectEnd?.providerSkillId === recovery.providerSkillId && source.playerId === event.playerId &&
+          source.teamId === event.teamId && context?.actorTackleZone === null && source.metadata.mentalEffectEnd.declarationSourceId === context?.activationId &&
+          (source.metadata.sourceIndex ?? Infinity) < (event.metadata.sourceIndex ?? -1) &&
+          (context?.checkpointAfter ?? Infinity) < (source.metadata.sourceIndex ?? -1), "An ended actor effect requires its earlier source in this observed activation frame.");
+      }
+      const resolution = event.metadata.mentalTraitResolution;
+      if (resolution) {
+        const end = sources.get(resolution.effectEndSourceId), skill = sources.get(resolution.skillSourceId);
+        const face = event.metadata.dice?.[0], target = event.metadata.difficulty;
+        const modifiers = event.metadata.modifiers ?? [];
+        const unmodified = modifiers.length === 0 && event.metadata.modifiersSum === 0;
+        const targetKnown = resolution.providerSkillId === 31
+          ? event.metadata.requirement === 2 && target === 2 && unmodified
+          : event.metadata.requirement === 4 && ((target === 4 && unmodified) ||
+              (target === 2 && modifiers.length === 1 && modifiers[0] === 2 && event.metadata.modifiersSum === 2));
+        require(event.metadata.dice?.length === 1 && event.metadata.dieTypes?.length === 1 && event.metadata.dieTypes[0] === 0 &&
+          face !== undefined && Number.isInteger(face) && face >= 1 && face <= 6 && targetKnown &&
+          event.actualSuccess === (face >= target!) && event.metadata.outcomeCode === Number(event.actualSuccess),
+          "A resolved mental test requires one consistent D6, effective target, modifiers and observed outcome.");
+        require(event.metadata.sourceTag === "ResultRoll" && event.metadata.rollType === (resolution.providerSkillId === 51 ? 34 : 33) &&
+          typeof event.actualSuccess === "boolean" && event.actualSuccess === Boolean(event.metadata.outcomeCode) &&
+          event.scoringStatus === "excluded" && event.probabilitySuccess === null &&
+          context?.actorMentalEffectEnd?.sourceId === resolution.effectEndSourceId && end?.metadata.mentalEffectEnd?.providerSkillId === resolution.providerSkillId &&
+          skill?.metadata.sourceTag === "ResultSkillUsage" && skill.metadata.skillUsage?.skillId === resolution.providerSkillId && skill.metadata.skillUsage.used &&
+          skill.playerId === event.playerId && skill.metadata.actionId === event.metadata.actionId &&
+          (end?.metadata.sourceIndex ?? Infinity) < (skill.metadata.sourceIndex ?? -1) && (skill.metadata.sourceIndex ?? Infinity) < (event.metadata.sourceIndex ?? -1),
+          "A resolved mental test requires its ended prior effect and same-actor applied skill, with unknown odds.");
+      }
+      const effectEnd = event.metadata.mentalEffectEnd;
+      if (effectEnd) {
+        const declaration = sources.get(effectEnd.declarationSourceId);
+        require(event.metadata.sourceTag === "ResultEndPlayerEffect" && event.teamId !== "unresolved" && event.playerId === effectEnd.playerId &&
+          event.metadata.recordedEffect?.providerId === effectEnd.providerSkillId &&
+          declaration?.metadata.sourceTag === "ResultUseAction" && declaration.playerId === event.playerId && declaration.teamId === event.teamId &&
+          declaration.metadata.actionId === event.metadata.actionId &&
+          (declaration.metadata.actionCode ?? 0) >= 1 && (declaration.metadata.actionCode ?? 0) <= 6 &&
+          (declaration.metadata.sourceIndex ?? Infinity) < (event.metadata.sourceIndex ?? -1), "Effect-end evidence requires the actor's own prior ordinary declaration.");
+      }
       const end = event.metadata.activationEnd;
       if (end) {
         const declaration = sources.get(end.declarationSourceId);
@@ -681,11 +730,11 @@ export const LuckReportSchema = z
               (decision?.metadata.sourceIndex ?? Infinity) <
                 (roll?.metadata.sourceIndex ??
                   -1), "A terminal reroll policy requires ordered question and decision evidence.");
-            if (end.policy === "team_loner_replacement") {
+            if (end.policy === "team_loner_replacement" || end.policy === "failed_loner_kept_original") {
               const loner = linked(end.lonerSourceId, "ResultRoll"),
                 lonerSkill = linked(end.lonerSkillSourceId, "ResultSkillUsage");
               require(loner?.metadata.rollType === 71 &&
-                loner.metadata.lonerGate?.passed === true &&
+                loner.metadata.lonerGate?.passed === (end.policy === "team_loner_replacement") &&
                 lonerSkill?.metadata.skillUsage?.skillId === 44 &&
                 lonerSkill.metadata.skillUsage.used &&
                 loner.metadata.lonerGate.skillSourceId ===
@@ -694,7 +743,7 @@ export const LuckReportSchema = z
                   (loner?.metadata.sourceIndex ?? -1) &&
                 (loner?.metadata.sourceIndex ?? Infinity) <
                   (roll?.metadata.sourceIndex ??
-                    -1), "A replacement trait requires the passed Loner gate.");
+                    -1), "A terminal trait policy requires its matching passed or failed Loner gate.");
             } else
               require(end.policy === "kept_original" &&
                 !end.lonerSourceId &&

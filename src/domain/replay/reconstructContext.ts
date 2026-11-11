@@ -1,3 +1,10 @@
+import { checkpointClockEpochs } from "./boardState";
+import {
+  applyObservedMentalEffects,
+  recordedMentalEffect,
+  mentalTraitTest,
+  type MentalEffectEnd
+} from "./mentalEffects";
 import {
   applyActivationEnds,
   findMentalActivationEnds,
@@ -19,7 +26,15 @@ import {
 
 type Cell = { x: number; y: number };
 export type PreRollEvidence = {
+  suppressedTackleZones?: {
+    playerId: string;
+    rosterIndex: number;
+    teamId: string | null;
+    providerSkillId: 31 | 51;
+  }[];
+  actorMentalEffectEnd?: { sourceId: string; providerSkillId: 31 | 51 };
   endedActivationSourceIds?: string[];
+  actorTackleZone?: boolean | null;
   actorRosterTeamId?: string;
   actorTraits?: NonNullable<ObservedPlayer["traits"]>;
   targetTraits?: NonNullable<ObservedPlayer["traits"]>;
@@ -227,6 +242,10 @@ function summarize(
         (player.situationCode !== null && player.situationCode !== 0)
       )
         continue;
+      if (player.mentalEffect) {
+        otherUsefulActivations = null;
+        break;
+      }
       // These count ordinary standing movement opportunities only. Unknown
       // posture/availability cannot be interpreted as a spent activation.
       if (
@@ -384,7 +403,30 @@ function summarize(
         effect: toAdjacent ? "approach" : "leave"
       };
   }
+  const suppressedTackleZones = board.teams.flatMap((t) =>
+    t.players.flatMap((p) =>
+      p.mentalEffect &&
+      p.tackleZone === false &&
+      p.pitchLocation === "on_pitch" &&
+      p.id !== null
+        ? [
+            {
+              playerId: String(p.id),
+              rosterIndex: t.rosterIndex,
+              teamId:
+                t.explicitTeamId === null ? null : String(t.explicitTeamId),
+              providerSkillId: p.mentalEffect.providerSkillId
+            }
+          ]
+        : []
+    )
+  );
   return {
+    suppressedTackleZones: suppressedTackleZones.length
+      ? suppressedTackleZones
+      : undefined,
+    actorTackleZone:
+      actor?.pitchLocation === "on_pitch" ? actor.tackleZone : undefined,
     actorRosterTeamId:
       actorTeam?.explicitTeamId == null
         ? undefined
@@ -441,9 +483,28 @@ export function reconstructReplayContext(
 ) {
   const result = new Map<string, PreRollEvidence>();
   const activationEnds = new Map<string, ActivationEnd>();
+  const mentalEffectEnds = new Map<string, MentalEffectEnd>();
+  const mentalSkillUses = new Map<string, 31 | 51>();
+  const mentalTraitResults = new Map<
+    string,
+    {
+      providerSkillId: 31 | 51;
+      effectEndSourceId: string;
+      skillSourceId: string;
+      success: boolean;
+    }
+  >();
   if (replay.replayVersion !== "1-4-0-0")
-    return { preRollEvidence: result, activationEnds };
+    return {
+      preRollEvidence: result,
+      activationEnds,
+      mentalEffectEnds,
+      mentalSkillUses,
+      mentalTraitResults
+    };
   const checkpoints = replay.boardCheckpoints ?? [];
+  const epochs = checkpointClockEpochs(checkpoints);
+  let activationEpoch: number | undefined;
   let standardPitch = false;
   let cursor = 0;
   let checkpoint: ReplayBoardCheckpoint | undefined;
@@ -458,6 +519,18 @@ export function reconstructReplayContext(
   let pickupSourceId: string | undefined;
   let blockDeclarationActionId: string | undefined;
   let foulAppearanceActionId: string | undefined;
+  let mentalActivationPending = false;
+  let actorEffectEnd:
+    | {
+        sourceId: string;
+        providerSkillId: 31 | 51;
+        actorId: string;
+        actionId: string;
+        skillObserved: boolean;
+        skillSourceId?: string;
+        resolved: boolean;
+      }
+    | undefined;
   const lossesByConfirmation = new Map(
     confirmedLosses.map((loss) => [loss.followingActivationSourceId, loss])
   );
@@ -491,8 +564,10 @@ export function reconstructReplayContext(
           activationId = null;
         board =
           next && next.teams.length === 2 && next.issues.length === 0
-            ? next
+            ? applyObservedMentalEffects(next)
             : null;
+        actorEffectEnd = undefined;
+        mentalActivationPending = false;
         moveObserved = false;
         moveOutcomeSourceIndex = undefined;
         standUpPending = false;
@@ -528,8 +603,28 @@ export function reconstructReplayContext(
         previousMove = undefined;
       }
       if (event.type === "step" || event.sourceTag === "BallStep") {
+        if (
+          event.sourceTag === "PlayerStep" &&
+          event.stepType !== 0 &&
+          (mentalActivationPending ||
+            board?.teams.some((t) =>
+              t.players.some(
+                (p) => String(p.id) === event.stepActorId && p.mentalEffect
+              )
+            ))
+        ) {
+          board = null;
+          activeEnds.clear();
+          activeLosses.clear();
+          previousMove = undefined;
+          actorEffectEnd = undefined;
+          mentalActivationPending = false;
+          activationId = null;
+        }
         blockDeclarationActionId = undefined;
         foulAppearanceActionId = undefined;
+        if (event.sourceTag === "PlayerStep" && event.stepType === 0)
+          actorEffectEnd = undefined;
         if (standUpPending) {
           board = null;
           activeLosses.clear();
@@ -582,6 +677,15 @@ export function reconstructReplayContext(
           )
         );
         const context = result.get(event.id)!;
+        if (
+          actorEffectEnd &&
+          actorEffectEnd.actorId === event.playerId &&
+          board.activePlayerId === id(event.playerId)
+        )
+          context.actorMentalEffectEnd = {
+            sourceId: actorEffectEnd.sourceId,
+            providerSkillId: actorEffectEnd.providerSkillId
+          };
         const ended = [...activeLosses.values()]
           .filter(
             (loss) =>
@@ -680,6 +784,109 @@ export function reconstructReplayContext(
         (!event.teamId ||
           !event.actorTeamId ||
           event.teamId === event.actorTeamId);
+      const currentActorTeam = board.teams.find(
+        (t) => t.rosterIndex === board!.activeTeamIndex
+      );
+      const currentActor = currentActorTeam?.players.find(
+        (p) => p.id === actor
+      );
+      const effect = recordedMentalEffect(p?.Effect);
+      if (
+        event.sourceTag === "ResultEndPlayerEffect" &&
+        mentalActivationPending &&
+        event.id &&
+        effect &&
+        inStep &&
+        stepActorMatches &&
+        step?.sourceTag === "PlayerStep" &&
+        step.stepType === 0 &&
+        step.payload?.Skill === 0 &&
+        step.payload.IsEvaluation === 0 &&
+        activationId &&
+        activationEpoch === epochs.get(checkpoint) &&
+        actor === board.activePlayerId &&
+        board.phaseCode === NORMAL_TURN &&
+        board.stable === true &&
+        currentActorTeam?.explicitTeamId != null &&
+        event.actorTeamId === String(currentActorTeam.explicitTeamId) &&
+        event.actorTeamSource !== "turn_inferred" &&
+        currentActor?.pitchLocation === "on_pitch" &&
+        same(cell(currentActor.cell), stepCell(step.payload.CellFrom)) &&
+        currentActor?.mentalEffect?.providerSkillId ===
+          effect.providerSkillId &&
+        String(p?.PlayerId) === event.playerId &&
+        event.actionId
+      ) {
+        board = changePlayer(board, actor!, (player) => ({
+          ...player,
+          mentalEffect: null,
+          tackleZone: null
+        }));
+        actorEffectEnd = {
+          sourceId: event.id,
+          providerSkillId: effect.providerSkillId,
+          actorId: event.playerId!,
+          actionId: event.actionId,
+          skillObserved: false,
+          resolved: false
+        };
+        mentalEffectEnds.set(event.id, {
+          playerId: event.playerId!,
+          providerSkillId: effect.providerSkillId,
+          declarationSourceId: activationId
+        });
+        continue;
+      }
+      if (
+        actorEffectEnd &&
+        !actorEffectEnd.resolved &&
+        actorEffectEnd.actionId === event.actionId &&
+        actorEffectEnd.actorId === event.playerId &&
+        inStep &&
+        stepActorMatches &&
+        step?.stepType === 0
+      ) {
+        if (
+          event.sourceTag === "ResultSkillUsage" &&
+          event.id &&
+          p?.Skill === actorEffectEnd.providerSkillId &&
+          p.Used === 1 &&
+          !actorEffectEnd.skillObserved &&
+          String(p.PlayerId) === event.playerId
+        ) {
+          actorEffectEnd.skillObserved = true;
+          actorEffectEnd.skillSourceId = event.id;
+          mentalSkillUses.set(event.id, actorEffectEnd.providerSkillId);
+          continue;
+        }
+        if (event.sourceTag === "ResultRoll" && actorEffectEnd.skillObserved) {
+          const success = mentalTraitTest(
+            p,
+            actorEffectEnd.providerSkillId,
+            1,
+            1
+          );
+          if (success !== null && event.id && actorEffectEnd.skillSourceId) {
+            mentalTraitResults.set(event.id, {
+              providerSkillId: actorEffectEnd.providerSkillId,
+              effectEndSourceId: actorEffectEnd.sourceId,
+              skillSourceId: actorEffectEnd.skillSourceId,
+              success
+            });
+            actorEffectEnd.resolved = true;
+            mentalActivationPending = false;
+            if (!success) {
+              board = null;
+              activationId = null;
+              activeEnds.clear();
+              activeLosses.clear();
+              previousMove = undefined;
+              actorEffectEnd = undefined;
+            }
+            continue;
+          }
+        }
+      }
       if (
         event.sourceTag === "ResultUseAction" &&
         inStep &&
@@ -700,6 +907,16 @@ export function reconstructReplayContext(
             t.players.some((p) => p.id === actor && p.canAct !== false)
         )
       ) {
+        if (mentalActivationPending) {
+          board = null;
+          activationId = null;
+          activeEnds.clear();
+          activeLosses.clear();
+          previousMove = undefined;
+          actorEffectEnd = undefined;
+          mentalActivationPending = false;
+          continue;
+        }
         const activeTeam = board.teams.find(
           (t) => t.rosterIndex === board!.activeTeamIndex
         );
@@ -790,13 +1007,26 @@ export function reconstructReplayContext(
             }
           };
         }
+        actorEffectEnd = undefined;
+        mentalActivationPending = !!currentPlayer?.mentalEffect;
         board = { ...board, activePlayerId: actor };
         activationId = event.id ?? null;
+        activationEpoch = epochs.get(checkpoint);
         activationActionCode = event.actionCode;
         blockDeclarationActionId =
           event.actionCode === 2 ? event.actionId : undefined;
         standUpSourceIndex = undefined;
         pickupSourceId = undefined;
+        continue;
+      }
+      if (mentalActivationPending) {
+        board = null;
+        activationId = null;
+        activeEnds.clear();
+        activeLosses.clear();
+        previousMove = undefined;
+        actorEffectEnd = undefined;
+        mentalActivationPending = false;
         continue;
       }
       if (
@@ -974,6 +1204,8 @@ export function reconstructReplayContext(
       }
       // For unverified mutations do not fill the gap from a future snapshot.
       board = null;
+      actorEffectEnd = undefined;
+      mentalActivationPending = false;
       activeLosses.clear();
       activeEnds.clear();
       previousMove = undefined;
@@ -983,7 +1215,13 @@ export function reconstructReplayContext(
       standUpSourceIndex = undefined;
       pickupSourceId = undefined;
     }
-  return { preRollEvidence: result, activationEnds };
+  return {
+    preRollEvidence: result,
+    activationEnds,
+    mentalEffectEnds,
+    mentalSkillUses,
+    mentalTraitResults
+  };
 }
 
 export function reconstructPreRollEvidence(

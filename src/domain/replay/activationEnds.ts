@@ -1,3 +1,4 @@
+import { mentalTraitTest, recordedMentalEffect } from "./mentalEffects";
 import {
   checkpointClockEpochs,
   lastBoardCheckpointBefore,
@@ -27,7 +28,11 @@ export type ActivationEnd = {
   decisionSourceId?: string;
   lonerSourceId?: string;
   lonerSkillSourceId?: string;
-  policy?: "fresh_final" | "kept_original" | "team_loner_replacement";
+  policy?:
+    | "fresh_final"
+    | "kept_original"
+    | "team_loner_replacement"
+    | "failed_loner_kept_original";
 };
 
 export function sameActivationClock(board: ObservedBoard, end: ActivationEnd) {
@@ -106,40 +111,7 @@ function failed(
   status: number,
   fresh: number
 ) {
-  const f = face(p);
-  if (
-    p?.RollType !== type ||
-    p.Status !== status ||
-    p.NewRoll !== fresh ||
-    p.Outcome !== 0 ||
-    f === undefined
-  )
-    return false;
-  if (type === 33)
-    return (
-      p.Requirement === 2 &&
-      p.Difficulty === 2 &&
-      f === 1 &&
-      (p.Modifiers === undefined || p.Modifiers === "")
-    );
-  if (
-    p.Requirement !== 4 ||
-    (p.Difficulty !== 2 && p.Difficulty !== 4) ||
-    f >= p.Difficulty
-  )
-    return false;
-  if (p.Difficulty === 4)
-    return p.Modifiers === undefined || p.Modifiers === "";
-  const mod = (
-    p.Modifiers as { Modifier?: Record<string, unknown> } | undefined
-  )?.Modifier;
-  return (
-    mod?.ModifierType === 17 &&
-    mod.Value === 2 &&
-    mod.Skill === -1 &&
-    mod.Effect === -1 &&
-    typeof mod.PlayerId === "number"
-  );
+  return mentalTraitTest(p, type === 33 ? 31 : 51, status, fresh) === false;
 }
 function sameStep(a: ReplayEvent, b: ReplayEvent) {
   return (
@@ -171,18 +143,13 @@ export function findMentalActivationEnds(replay: ReplayModel): ActivationEnd[] {
     );
     for (let i = 0; i < events.length; i++) {
       const effect = events[i]!;
-      const raw = effect.payload?.Effect as Record<string, unknown> | undefined;
-      const provider = raw?.ProviderId;
+      const observed = recordedMentalEffect(effect.payload?.Effect);
+      const provider = observed?.providerSkillId;
       if (
         effect.sourceTag !== "ResultAddPlayerEffect" ||
         !effect.id ||
-        raw?.EffectId !== 44 ||
-        raw.ProviderType !== 4 ||
-        (provider !== 31 && provider !== 51) ||
-        JSON.stringify(
-          (raw.Durations as { DurationsItem?: unknown } | undefined)
-            ?.DurationsItem
-        ) !== "[6,1]"
+        !observed ||
+        provider === undefined
       )
         continue;
       const type = provider === 31 ? 33 : 34;
@@ -202,15 +169,17 @@ export function findMentalActivationEnds(replay: ReplayModel): ActivationEnd[] {
       } else {
         const replacement = failed(roll.payload, type, 2, 1);
         if (!replacement && !failed(roll.payload, type, 1, 0)) continue;
-        const continuation = events[i - (replacement ? 5 : 3)];
-        decision = events[i - (replacement ? 4 : 2)];
+        const failedLoner = !replacement && events[i - 2]?.rollType === 71;
+        const lonerAttempt = replacement || failedLoner;
+        const continuation = events[i - (lonerAttempt ? 5 : 3)];
+        decision = events[i - (lonerAttempt ? 4 : 2)];
         if (
           !continuation ||
           continuation.sourceTag !== "PlayerStep" ||
           decision?.sourceTag !== "ResultTeamRerollUsage"
         )
           continue;
-        const start = i - (replacement ? 9 : 7);
+        const start = i - (lonerAttempt ? 9 : 7);
         [originalStep, declaration, skill, question] = events.slice(
           start,
           start + 4
@@ -228,7 +197,7 @@ export function findMentalActivationEnds(replay: ReplayModel): ActivationEnd[] {
           question.payload?.CanUseProReroll !== 0 ||
           question.payload?.StarSpecialRule !== -1 ||
           question.payload?.CanUseTeamReroll !== 1 ||
-          decision.payload?.Used !== Number(replacement) ||
+          decision.payload?.Used !== Number(lonerAttempt) ||
           decision.gamerId !== question.gamerId ||
           decision.actionId !== roll.actionId
         )
@@ -242,7 +211,7 @@ export function findMentalActivationEnds(replay: ReplayModel): ActivationEnd[] {
           )
         )
           continue;
-        if (replacement) {
+        if (lonerAttempt) {
           lonerSkill = events[i - 3];
           loner = events[i - 2];
           if (
@@ -256,21 +225,28 @@ export function findMentalActivationEnds(replay: ReplayModel): ActivationEnd[] {
             loner.actionId !== roll.actionId ||
             loner.payload?.Status !== 1 ||
             loner.payload.NewRoll !== 1 ||
-            loner.payload.Outcome !== 1 ||
+            loner.payload.Outcome !== Number(replacement) ||
             loner.payload.Requirement !== 4 ||
             loner.payload.Difficulty !== 4 ||
             loner.playerId !== roll.playerId ||
             (loner.payload.Modifiers !== undefined &&
               loner.payload.Modifiers !== "") ||
-            (face(loner.payload) ?? 0) < 4
+            face(loner.payload) === undefined ||
+            face(loner.payload)! >= 4 !== replacement
           )
             continue;
-        } else if (
+        }
+        if (
+          !replacement &&
           JSON.stringify(question.payload?.RollInfos) !==
-          JSON.stringify({ ...roll.payload, NewRoll: 1 })
+            JSON.stringify({ ...roll.payload, NewRoll: 1 })
         )
           continue;
-        policy = replacement ? "team_loner_replacement" : "kept_original";
+        policy = replacement
+          ? "team_loner_replacement"
+          : failedLoner
+            ? "failed_loner_kept_original"
+            : "kept_original";
       }
       if (
         originalStep?.sourceTag !== "PlayerStep" ||

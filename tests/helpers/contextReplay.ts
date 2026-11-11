@@ -3,6 +3,8 @@ import { encodedMessage, envelope, rollXml } from "./replay";
 export function contextReplayXml(
   options: {
     type?: 2 | 4;
+    mentalEffectPlayer?: 10 | 11 | 40;
+    mentalEffectProvider?: 31 | 51;
     remainingTeammates?: number;
     exposed?: boolean;
     omittedAvailability?: boolean;
@@ -28,7 +30,11 @@ export function contextReplayXml(
     "</Id>" +
     position(x, y) +
     (available === null ? "" : "<CanAct>" + Number(available) + "</CanAct>") +
-    "<MovePoint>5</MovePoint><Status>0</Status><Situation>0</Situation><TackleZone>1</TackleZone></PlayerState>";
+    "<MovePoint>5</MovePoint><Status>0</Status><Situation>0</Situation>" +
+    (id === options.mentalEffectPlayer
+      ? `<Effects><PlayerEffect><Durations><DurationsItem>6</DurationsItem><DurationsItem>1</DurationsItem></Durations><ProviderType>4</ProviderType><ProviderId>${options.mentalEffectProvider ?? 51}</ProviderId><EffectId>44</EffectId></PlayerEffect></Effects>`
+      : "<TackleZone>1</TackleZone>") +
+    "</PlayerState>";
   const team = (teamId: number, turn: number, roster: string) =>
     "<TeamState><Data><TeamId>" +
     teamId +

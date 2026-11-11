@@ -131,6 +131,7 @@ const boardProjection = {
           Cell: cellProjection,
           CanAct: true,
           TackleZone: true,
+          Effects: true,
           Status: true,
           Situation: true,
           MovePoint: true

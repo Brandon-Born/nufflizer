@@ -75,6 +75,14 @@ export function explainPreRollEvidence(
   context: LuckReport["events"][number]["metadata"]["preRoll"]
 ): string | null {
   const details: string[] = [];
+  for (const player of context?.suppressedTackleZones ?? [])
+    details.push(
+      `Player ${player.playerId} had no tackle zone under the recorded ${player.providerSkillId === 51 ? "Really Stupid" : "Bone Head"} effect at this checkpoint.`
+    );
+  if (context?.actorMentalEffectEnd)
+    details.push(
+      "The player's previous mental-trait effect ended earlier in this activation. That record alone does not establish tackle-zone recovery."
+    );
   const ended = context?.endedActivationSourceIds?.length ?? 0;
   if (ended)
     details.push(

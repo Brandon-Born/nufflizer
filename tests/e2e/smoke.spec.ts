@@ -273,9 +273,33 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.11");
+  expect(report.schemaVersion).toBe("2.12");
   expect(report.modelVersion).toBe("dice-only-18");
-  expect(report.contextModelVersion).toBe("mobility-possession-7");
+  expect(
+    report.events.some(
+      (event: {
+        metadata: {
+          preRoll?: {
+            suppressedTackleZones?: {
+              playerId: string;
+              providerSkillId: number;
+            }[];
+          };
+        };
+      }) =>
+        event.metadata.preRoll?.suppressedTackleZones?.some(
+          (p) => p.playerId === "37" && p.providerSkillId === 51
+        )
+    )
+  ).toBe(true);
+  expect(
+    report.events.some(
+      (event: { metadata: { mentalEffectEnd?: unknown } }) =>
+        event.metadata.mentalEffectEnd
+    )
+  ).toBe(true);
+
+  expect(report.contextModelVersion).toBe("mobility-possession-8");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
     report.coverage.rollCandidates.scoredCount +
@@ -484,6 +508,42 @@ test("complete pre-roll evidence explains the cost of an exposed pickup", async 
   await expect(row).toBeVisible();
   await page.getByLabel("Half", { exact: true }).selectOption("unknown");
   await expect(page.getByRole("status")).toContainText("No events match");
+  await page.getByRole("button", { name: "Upload Another Replay" }).click();
+  const suppressedXml = contextReplayXml({
+    type: 4,
+    exposed: true,
+    mentalEffectPlayer: 40
+  });
+  const suppressedReport = analyzeNufflizerInput(suppressedXml);
+  // This second UI state uses a production-service report without adding an
+  // eleventh real upload to the suite's ten-per-minute API quota. The real
+  // demo upload/export above separately verifies these fields through HTTP.
+  await page.route("**/api/nufflizier/analyze", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(suppressedReport)
+    })
+  );
+  await page.setInputFiles('input[name="replay"]', {
+    name: "observed-effect.xml",
+    mimeType: "application/xml",
+    buffer: Buffer.from(suppressedXml)
+  });
+  await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
+  await expect(
+    page.getByText(/Context: -3\.33 context units across 1 estimate/)
+  ).toBeVisible();
+  const suppressedRow = page
+    .locator("tbody tr")
+    .filter({ hasText: "Ball handling failed" });
+  await suppressedRow.locator("summary").click();
+  await expect(suppressedRow).toContainText(
+    "Player 40 had no tackle zone under the recorded Really Stupid effect"
+  );
+  await expect(suppressedRow).toContainText(
+    "0% of eligible bounce squares are marked"
+  );
 });
 test("invalid replay and hosting-generated text errors are understandable", async ({
   page

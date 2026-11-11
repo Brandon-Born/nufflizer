@@ -1,9 +1,11 @@
+import { observeMentalEffect, type MentalTraitEffect } from "./mentalEffects";
 // Observed checkpoints, not a simulator. Each snapshot replaces the previous
 // observation: omitted fields are unknown, never defaults or carry-forwards.
 import { observePlayerTraits, type ObservedPlayerTraits } from "./playerTraits";
 type RecordLike = Record<string, unknown>;
 export type ObservedCell = { x: number | null; y: number | null };
 export type ObservedPlayer = {
+  mentalEffect: MentalTraitEffect | null;
   traits: ObservedPlayerTraits | null;
   id: number | null;
   cell: ObservedCell;
@@ -128,7 +130,11 @@ export function observeBoardCheckpoint(
               : playerNodes.map((entry) => {
                   const p = record(entry);
                   const position = cell(p.Cell);
+                  const mentalEffect = observeMentalEffect(p.Effects);
+                  if (mentalEffect && flag(p.TackleZone) === true)
+                    issues.push("conflicting_tackle_zone_effect");
                   return {
+                    mentalEffect,
                     traits: observePlayerTraits(
                       p.Data,
                       nonnegative(p.Id),

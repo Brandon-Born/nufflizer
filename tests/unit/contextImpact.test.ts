@@ -405,13 +405,23 @@ describe("held-out public replay context (NUF-016/017/022)", () => {
     );
     // The drive boundary subsequently emits two independent KO checks.
     expect(
-      sameStep.map((event) => [
-        event.metadata.locator?.childIndex,
-        event.metadata.rollType
-      ])
+      sameStep
+        .filter((event) => event.metadata.isRollCandidate)
+        .map((event) => [
+          event.metadata.locator?.childIndex,
+          event.metadata.rollType
+        ])
     ).toEqual([
       [4, 13],
       [5, 13]
     ]);
+    const declaration = sameStep.find(
+      (event) => event.metadata.sourceTag === "ResultUseAction"
+    )!;
+    expect(declaration.metadata.isRollCandidate).toBe(false);
+    expect(declaration.weightedDelta).toBe(0);
+    expect(
+      declaration.metadata.preRoll?.suppressedTackleZones?.length
+    ).toBeGreaterThan(0);
   });
 });

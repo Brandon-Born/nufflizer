@@ -7,13 +7,11 @@ type Row = {
   projection?: Projection;
   steps?: { step: Projection; messages: Projection[] }[];
 };
-export function activationAftermathFragment(id: string) {
-  const evidence = JSON.parse(
-    readFileSync(
-      "tests/fixtures/evidence/bb3-activation-aftermath.json",
-      "utf8"
-    )
-  );
+export function activationAftermathFragment(
+  id: string,
+  evidenceFile = "tests/fixtures/evidence/bb3-activation-aftermath.json"
+) {
+  const evidence = JSON.parse(readFileSync(evidenceFile, "utf8"));
   const c = evidence.cases.find((c: { id: string }) => c.id === id);
   // The source's numeric roster order supplies only an ownership scaffold;
   // fragment locators are renumbered. No omitted state flags are filled.

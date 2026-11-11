@@ -727,3 +727,8 @@ Schema2.11/context mobility-possession-7 distinguish completed ordinary movement
 ## 2026-11-11 - Continuous activation-confirmation clocks
 
 Strengthened the new and existing activation-loss paths to reject an intermediate clock change even if a later board returns to the same values. The bounded checkpoint pass retains pending-reroll states while refusing unknown/changed clock epochs. Foul Appearance now anchors its before-state strictly before declaration. Schema/model versions and accepted positive policies remain unchanged.
+
+
+## 2026-11-11 - Current Confused effects and next-activation state
+
+Schema2.12/context mobility-possession-8 derive current tackle-zone suppression from bounded positive effect44/provider31 or51 observations, including opponent turns, without carrying omissions or declaring a player spent in its next turn. Explicit effect ending removes the old effect without fabricating restored tackle zones. Matched fresh trait tests preserve supported movement or wait for new failure aftermath. A failed Loner4+ branch retains the original and one team resource spent. Independent public-source projections and complete-state synthetic pickup comparisons keep observed state, dice odds and provisional context units separate. Broad completion, duration/resource policies, calibration and all17 remaining issues stay open; dice-only-18 is unchanged.
