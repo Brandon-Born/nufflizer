@@ -147,3 +147,6 @@ Schema2.19/context mobility-possession-14 implements the separate success transi
 
 
 The new pickup paths additionally qualify current roster roles against the two known replay teams. An omitted actor-roster ID needs a distinct known other-roster ID within that pair; both missing, a conflicting acting ID on the other roster or a third identity withholds geometry and actual possession continuation. No raw TeamId is supplied from an array index. The source demo6 omission remains unknown and its compatible other-roster observation satisfies this narrower proof.
+
+
+Validation setup follow-up: the finalized state model still has the same756 local unit/API regressions and14 browser flows. CI's Redis tool acquisition is now pinned to the locally verified7.4.12 source/checksum rather than an apt mirror; this changes neither reconstruction nor hosted state. Exact-candidate CI remains a separate required check.

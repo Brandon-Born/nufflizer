@@ -772,3 +772,8 @@ Schema2.19/context mobility-possession-14 resumes actual held-ball state only af
 ## 2026-11-11 - Missing-roster-ID qualification
 
 Tightened schema2.19 pickup admission to reject conflicts between the two replay teams and current roster identities. An omitted actor-roster ID needs a distinct known opposing-roster ID; both missing or a third identity stays unsupported. Raw omissions and the twelve positive demo ranges/zero point-valued estimates remain unchanged. No score or schema-shape change.
+
+
+## 2026-11-11 - Reproducible ephemeral CI tooling
+
+Replaced CI's Ubuntu apt Redis acquisition after a confirmed mirror DNS failure with checksum-pinned Redis7.4.12 built in runner temporary storage. Chromium installation also avoids apt and still must launch/pass every production browser flow. Real Redis quota checks, Node22, frozen dependencies, runtime limits and report behavior are unchanged. This provisions no hosted service and claims no new hosted acceptance.

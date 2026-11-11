@@ -45,7 +45,7 @@ See [INGESTION_SAFETY.md](INGESTION_SAFETY.md), [the ledger](REMEDIATION_BACKLOG
 
 Current pickup-stage roster qualification also requires compatibility with the two replay teams. If the actor roster omits its ID, the other roster must have a distinct known replay-team ID; conflicting, both-omitted or unknown-third-team states cannot admit the new component. Omitted IDs remain absent in the report.
 
-The standard pnpm test command runs the real-worker HTTP acceptance file after the parallel corpus suite, retaining the production4s timeout. No test is skipped and runtime/upload budgets are unchanged.
+The standard pnpm test command runs the real-worker HTTP acceptance file after the parallel corpus suite, retaining the production4s timeout. No test is skipped and runtime/upload budgets are unchanged. CI now builds checksum-pinned Redis7.4.12 in runner temporary storage and installs the package-pinned Chromium without apt; the real Lua and all browser gates remain mandatory. This avoids the observed Ubuntu mirror DNS failure without claiming new hosted acceptance.
 
 ## Subsystem Status
 

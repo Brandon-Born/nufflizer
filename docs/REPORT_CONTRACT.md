@@ -281,3 +281,6 @@ The independent demo6 board98/ReplayStep99/after-board projection observes actor
 
 
 Schema2.19 qualification follow-up: the candidate constructor checks the two distinct replay team IDs against every explicit current roster ID. If the actor roster's ID is omitted, the other roster must be known, belong to that pair and differ from the recorded acting team. A current opponent carrying that acting ID, two omitted roster IDs or an unknown third-team ID rejects the component and its actual-state continuation. This is a role qualification, not a default assignment to the omitted raw field or a relaxation of player eligibility. Three explicit counterexamples supplement the positive unknown-home-ID source cases; schema shape, units and accepted demo results are unchanged.
+
+
+CI tool qualification is separate from report behavior. scripts/prepare-test-redis.mjs downloads Redis7.4.12 with a pinned upstream SHA256, builds server/CLI in ephemeral runner storage and exports only their local binary path. No hosted store/account configuration is read or changed. The production Lua integration and every browser flow remain required. Chromium uses the package-pinned executable against the runner's libraries; a missing native dependency still fails its launch/tests. No dependency, report schema, runtime/upload limit or contextual model changed for this setup correction.
