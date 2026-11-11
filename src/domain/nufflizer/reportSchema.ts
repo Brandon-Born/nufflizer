@@ -70,6 +70,9 @@ const activationEnd = z.strictObject({
     .optional()
 });
 export const LuckEventMetadataSchema = z.strictObject({
+  dodgeMovement: z.strictObject({declarationSourceId:text,doMoveSourceId:text,outcomeSourceId:text,
+    from:pitchCell,to:pitchCell,movementBefore:z.number().int().min(1).max(16).nullable(),
+    movementAfter:z.number().int().min(0).max(15).nullable(),carriesBall:z.boolean(),checkpointAfter:count}).optional(),
   blockSelection:z.strictObject({face:z.number().int().min(0).max(4)}).optional(),
   blockResolution: z.strictObject({
     outcome:z.enum(["attacker_down","both_down","wrestled_prone","both_stay_up","push","defender_down","defender_pushed_down"]),
@@ -153,6 +156,7 @@ export const LuckEventMetadataSchema = z.strictObject({
     .strictObject({
       checkpointAfter: count,
       activeMoveContinuation:activeMoveContinuation.optional(),
+      actorDodgeMoveSourceId:text.optional(),
       ordinaryMoveAvailability:z.strictObject({successDestination:pitchCell,knownAvailablePlayerIds:z.array(text).max(64),unknownPlayerIds:z.array(text).max(64)}).optional(),
       suppressedTackleZones: z.array(z.strictObject({ playerId: text, rosterIndex: z.number().int().min(0).max(1), teamId: text.nullable(), providerSkillId: z.union([z.literal(31),z.literal(51)]) })).max(128).optional(),
       actorMentalEffectEnd: z.strictObject({ sourceId: text, providerSkillId: z.union([z.literal(31),z.literal(51)]) }).optional(),
@@ -863,6 +867,49 @@ export const LuckReportSchema = z
           "Stand-up evidence must be between the checkpoint and roll of the same activation."
         );
       }
+      const dodgeMove = event.metadata.dodgeMovement;
+      if (dodgeMove) {
+        const declaration = sources.get(dodgeMove.declarationSourceId);
+        const original = sources.get(event.metadata.rerollOriginalId ?? "");
+        const skill = sources.get(event.metadata.rerollDecisionId ?? "");
+        const doMove = sources.get(dodgeMove.doMoveSourceId);
+        const outcome = sources.get(dodgeMove.outcomeSourceId);
+        const sameMove = (e: typeof event | undefined, tag: string) => e?.metadata.sourceTag === tag &&
+          e.playerId === event.playerId && e.teamId === event.teamId && e.metadata.actionId === event.metadata.actionId &&
+          e.metadata.sequenceId === event.metadata.sequenceId;
+        require(event.scoringStatus === "scored" && event.actualSuccess === true && event.metadata.rollType === 2 &&
+          event.metadata.rerollSkill === "Dodge" && event.metadata.outcomeCode === 1 &&
+          original?.metadata.outcomeCode === 0 && original.metadata.mergedRerollAnchorId === event.metadata.sourceId &&
+          skill?.metadata.skillUsage?.skillId === 7 && skill.metadata.skillUsage.used &&
+          sameMove(original,"ResultRoll") && sameMove(skill,"ResultSkillUsage") &&
+          sameMove(doMove,"ResultDoMove") && sameMove(outcome,"ResultMoveOutcome") &&
+          event.metadata.sourceIndex !== undefined && skill?.metadata.sourceIndex === event.metadata.sourceIndex - 1 &&
+          original?.metadata.sourceIndex === event.metadata.sourceIndex - 2 &&
+          doMove?.metadata.sourceIndex === event.metadata.sourceIndex + 1 && outcome?.metadata.sourceIndex === event.metadata.sourceIndex + 2 &&
+          declaration?.metadata.sourceTag === "ResultUseAction" && declaration.metadata.actionCode === 1 && declaration.metadata.stepType === 0 &&
+          declaration.playerId === event.playerId && declaration.teamId === event.teamId &&
+          declaration.metadata.sourceIndex !== undefined && original?.metadata.sourceIndex !== undefined &&
+          declaration.metadata.sourceIndex < original.metadata.sourceIndex &&
+          context?.activationId === dodgeMove.declarationSourceId && context.checkpointAfter === dodgeMove.checkpointAfter &&
+          context.actorCell?.x === dodgeMove.from.x && context.actorCell.y === dodgeMove.from.y &&
+          context.actorCarriesBall === dodgeMove.carriesBall &&
+          event.metadata.modifiers?.length === 0 && original?.metadata.modifiers?.length === 0 &&
+          (!context.ordinaryMoveAvailability || (context.ordinaryMoveAvailability.successDestination.x === dodgeMove.to.x && context.ordinaryMoveAvailability.successDestination.y === dodgeMove.to.y)) &&
+          (context.actorMovementRemaining ?? null) === dodgeMove.movementBefore &&
+          Math.max(Math.abs(dodgeMove.from.x - dodgeMove.to.x),Math.abs(dodgeMove.from.y - dodgeMove.to.y)) === 1 &&
+          dodgeMove.movementAfter === (dodgeMove.movementBefore === null ? null : dodgeMove.movementBefore - 1),
+          "Observed Dodge movement needs its owned adjacent original/skill/replacement/move chain and current budget.");
+      }
+      if (context?.actorDodgeMoveSourceId) {
+        const earlier = sources.get(context.actorDodgeMoveSourceId);
+        const move = earlier?.metadata.dodgeMovement;
+        const outcome = sources.get(move?.outcomeSourceId ?? "");
+        require(!!move && earlier?.playerId === event.playerId && earlier.teamId === event.teamId &&
+          move.declarationSourceId === context.activationId && move.checkpointAfter === context.checkpointAfter &&
+          outcome?.metadata.sourceIndex !== undefined && event.metadata.sourceIndex !== undefined &&
+          outcome.metadata.sourceIndex < event.metadata.sourceIndex,
+          "Reconstructed movement must reference an earlier verified Dodge move in the same activation/frame.");
+      }
       if (context?.actorPickupSourceId) {
         const pickup = sources.get(context.actorPickupSourceId);
         const index = pickup?.metadata.sourceIndex;
@@ -954,7 +1001,7 @@ export const LuckReportSchema = z
           near(bound.successChance,(7-(event.metadata.difficulty ?? 0))/6) && near(bound.lower,expected.lower) && near(bound.upper,expected.upper),
           "Partial ordinary-move bounds must reconcile with missing availability, the fixed policy and dice deviation, without a point estimate.");
       }
-      if (bound || continuation || event.contextualImpact?.policy === "dodge_skill_reroll") {
+      if (bound || continuation || dodgeMove || event.contextualImpact?.policy === "dodge_skill_reroll") {
         const original=event.metadata.rerollOriginalId ? sources.get(event.metadata.rerollOriginalId) : undefined;
         const use=event.metadata.rerollDecisionId ? sources.get(event.metadata.rerollDecisionId) : undefined;
         const target=event.metadata.difficulty;

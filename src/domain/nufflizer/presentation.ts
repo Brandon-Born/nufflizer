@@ -126,6 +126,9 @@ export function explainPreRollEvidence(
         : `The player stood up earlier in this activation and had ${context.actorMovementRemaining} movement points at this roll.`
     );
   }
+  if (context?.actorDodgeMoveSourceId) details.push(
+    "An earlier successful Dodge skill reroll and its recorded move preserve this player's position and movement in the same activation."
+  );
   if (context?.actorPickupSourceId) {
     details.push(
       "The player was carrying the ball they picked up earlier in this activation."
@@ -210,12 +213,17 @@ export function explainContextBounds(
 export function explainMovementOutcome(
   metadata: Pick<
     LuckReport["events"][number]["metadata"],
-    "movementFall" | "movementTouchdown"
+    "movementFall" | "movementTouchdown" | "dodgeMovement"
   >
 ): string | null {
   const { movementFall: fall, movementTouchdown } = metadata;
   if (movementTouchdown)
     return "The replay records a touchdown immediately after this move.";
+  if (metadata.dodgeMovement) {
+    const move = metadata.dodgeMovement;
+    const budget = move.movementAfter === null ? "Remaining movement is unknown." : `${move.movementAfter} movement points remained after this step.`;
+    return `The replay confirms this move after the successful Dodge skill reroll. ${budget}${move.carriesBall ? " The carried ball followed the player." : ""} This observed movement adds no luck score.`;
+  }
   if (!fall) return null;
   const aftermath = [
     "The player fell and the turn ended.",

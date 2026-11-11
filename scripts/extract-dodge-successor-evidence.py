@@ -19,7 +19,7 @@ def projection(node):
             if child.tag in seen:
                 continue
             seen.add(child.tag)
-            if child.tag in {'CharacModifiers', 'AdditionalSkills'} and not len(child) and not (child.text or '').strip():
+            if child.tag in {'CharacModifiers', 'AdditionalSkills', 'Modifiers', 'Pushbacks'} and not len(child) and not (child.text or '').strip():
                 value[child.tag] = ['']
             elif len(child):
                 value[child.tag] = [projection(x) for x in node.findall(child.tag)]

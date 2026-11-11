@@ -1,4 +1,9 @@
 import {
+  unmodifiedDodgeDie,
+  successfulDodgeMoveOutcome,
+  type ObservedDodgeMovement
+} from "./dodgeMovement";
+import {
   activeMoveAfterDodge,
   type ActiveMoveContinuation
 } from "./activeMoveContinuation";
@@ -34,6 +39,7 @@ import {
 
 type Cell = { x: number; y: number };
 export type PreRollEvidence = {
+  actorDodgeMoveSourceId?: string;
   activeMoveContinuation?: ActiveMoveContinuation;
   ordinaryMoveAvailability?: OrdinaryMoveAvailability;
   suppressedTackleZones?: {
@@ -496,9 +502,13 @@ function summarize(
         ? standUpSourceIndex
         : undefined,
     actorMovementRemaining:
-      standUpSourceIndex !== undefined &&
       actorCell &&
-      board.activePlayerId === actorId
+      board.activePlayerId === actorId &&
+      actor?.movementRemaining !== null &&
+      actor?.movementRemaining !== undefined &&
+      Number.isInteger(actor.movementRemaining) &&
+      actor.movementRemaining >= 0 &&
+      actor.movementRemaining <= 16
         ? (actor?.movementRemaining ?? undefined)
         : undefined,
     actorPickupSourceId:
@@ -526,6 +536,7 @@ export function reconstructReplayContext(
   )
 ) {
   const result = new Map<string, PreRollEvidence>();
+  const dodgeMovements = new Map<string, ObservedDodgeMovement>();
   const activationEnds = new Map<string, ActivationEnd>();
   const mentalEffectEnds = new Map<string, MentalEffectEnd>();
   const mentalSkillUses = new Map<string, 31 | 51>();
@@ -541,6 +552,7 @@ export function reconstructReplayContext(
   if (replay.replayVersion !== "1-4-0-0")
     return {
       preRollEvidence: result,
+      dodgeMovements,
       activationEnds,
       mentalEffectEnds,
       mentalSkillUses,
@@ -584,6 +596,22 @@ export function reconstructReplayContext(
   );
   let activeEnds = new Map<string, ActivationEnd>();
   let previousMove: { end: ActivationEnd; moved: boolean } | undefined;
+  let actorDodgeMoveSourceId: string | undefined;
+  let pendingDodge:
+    | {
+        board: ObservedBoard;
+        original: ReplayEvent;
+        threshold: number;
+        from: Cell;
+        to: Cell;
+        declarationSourceId: string;
+        checkpointAfter: number;
+        lastIndex: number;
+        stage: "skill" | "replacement" | "do_move" | "outcome";
+        replacementSourceId?: string;
+        doMoveSourceId?: string;
+      }
+    | undefined;
   let activeLosses = new Map<string, ConfirmedActivationLoss>();
   for (const turn of replay.turns)
     for (const event of turn.events) {
@@ -595,6 +623,12 @@ export function reconstructReplayContext(
       ) {
         checkpoint = checkpoints[cursor++]!;
         frameChanged = true;
+        if (pendingDodge) {
+          previousMove = undefined;
+          activationId = null;
+        }
+        pendingDodge = undefined;
+        actorDodgeMoveSourceId = undefined;
         const next = checkpoint.board;
         if (checkpoint.kind === "initial")
           standardPitch = next?.pitchLayout === "standard";
@@ -649,6 +683,114 @@ export function reconstructReplayContext(
         activeLosses.clear();
         activeEnds.clear();
         previousMove = undefined;
+      }
+      if (pendingDodge) {
+        const pending = pendingDodge;
+        const original = pending.original;
+        const owner = pending.board.teams.find(
+          (t) => t.rosterIndex === pending.board.activeTeamIndex
+        );
+        const sameChain =
+          event.id &&
+          event.sourceIndex === pending.lastIndex + 1 &&
+          event.actionId === original.actionId &&
+          event.sequenceId === original.sequenceId &&
+          event.playerId === original.playerId &&
+          event.stepActorId === original.stepActorId &&
+          event.stepTargetId === original.stepTargetId &&
+          event.targetId === original.targetId &&
+          event.stepType === original.stepType &&
+          event.stepTag === original.stepTag &&
+          !event.attributionConflict &&
+          event.actorTeamSource !== "turn_inferred" &&
+          event.actorTeamId === String(owner!.explicitTeamId) &&
+          (!event.teamId || event.teamId === event.actorTeamId);
+        const p = event.payload;
+        let accepted = false;
+        if (
+          sameChain &&
+          pending.stage === "skill" &&
+          event.sourceTag === "ResultSkillUsage" &&
+          p?.Skill === 7 &&
+          p.Used === 1 &&
+          String(p.PlayerId) === original.playerId &&
+          Object.keys(p).every((k) => ["Skill", "Used", "PlayerId"].includes(k))
+        ) {
+          pending.stage = "replacement";
+          accepted = true;
+        } else if (
+          sameChain &&
+          pending.stage === "replacement" &&
+          unmodifiedDodgeDie(event, 2, true) === pending.threshold
+        ) {
+          pending.replacementSourceId = event.id;
+          pending.stage = "do_move";
+          accepted = true;
+        } else if (
+          sameChain &&
+          pending.stage === "do_move" &&
+          event.sourceTag === "ResultDoMove" &&
+          (!p || Object.keys(p).length === 0)
+        ) {
+          pending.doMoveSourceId = event.id;
+          pending.stage = "outcome";
+          accepted = true;
+        } else if (
+          sameChain &&
+          pending.stage === "outcome" &&
+          successfulDodgeMoveOutcome(event)
+        ) {
+          const actor = Number(original.playerId);
+          const player = owner!.players.find((p) => p.id === actor)!;
+          const before = player.movementRemaining;
+          board = changePlayer(pending.board, actor, (p) => ({
+            ...p,
+            cell: pending.to,
+            movementRemaining: before === null ? null : before - 1
+          }));
+          const carriesBall =
+            board.ball.possession === "held" && board.ball.carrierId === actor;
+          if (carriesBall)
+            board = { ...board, ball: { ...board.ball, cell: pending.to } };
+          dodgeMovements.set(pending.replacementSourceId!, {
+            declarationSourceId: pending.declarationSourceId,
+            doMoveSourceId: pending.doMoveSourceId!,
+            outcomeSourceId: event.id!,
+            from: pending.from,
+            to: pending.to,
+            movementBefore: before,
+            movementAfter: before === null ? null : before - 1,
+            carriesBall,
+            checkpointAfter: pending.checkpointAfter
+          });
+          actorDodgeMoveSourceId = pending.replacementSourceId;
+          if (previousMove) {
+            previousMove.moved = true;
+            previousMove.end.moveSourceId = event.id;
+            previousMove.end.actorCell = pending.to;
+          }
+          moveObserved = false;
+          moveOutcomeSourceIndex = event.sourceIndex;
+          pendingDodge = undefined;
+          continue;
+        }
+        if (accepted) {
+          pending.lastIndex = event.sourceIndex;
+          continue;
+        }
+        // A chain interruption discards the saved frame. A later matching die
+        // or checkpoint cannot repair this unverified transition.
+        pendingDodge = undefined;
+        board = null;
+        previousMove = undefined;
+        activeEnds.clear();
+        activeLosses.clear();
+        activationId = null;
+        actorDodgeMoveSourceId = undefined;
+        pickupSourceId = undefined;
+        actorEffectEnd = undefined;
+        mentalActivationPending = false;
+        continue;
       }
       if (event.type === "step" || event.sourceTag === "BallStep") {
         if (
@@ -731,6 +873,12 @@ export function reconstructReplayContext(
           )
         );
         const context = result.get(event.id)!;
+        if (
+          actorDodgeMoveSourceId &&
+          activationId &&
+          board.activePlayerId === id(event.playerId)
+        )
+          context.actorDodgeMoveSourceId = actorDodgeMoveSourceId;
         if (
           actorEffectEnd &&
           actorEffectEnd.actorId === event.playerId &&
@@ -1067,6 +1215,7 @@ export function reconstructReplayContext(
         activationId = event.id ?? null;
         activationEpoch = epochs.get(checkpoint);
         activationActionCode = event.actionCode;
+        actorDodgeMoveSourceId = undefined;
         blockDeclarationActionId =
           event.actionCode === 2 ? event.actionId : undefined;
         standUpSourceIndex = undefined;
@@ -1137,6 +1286,64 @@ export function reconstructReplayContext(
         activationId = null;
         standUpSourceIndex = undefined;
         continue;
+      }
+      const failedDodgeTarget = unmodifiedDodgeDie(event, 1, false);
+      if (
+        failedDodgeTarget &&
+        event.id &&
+        result.get(event.id)?.actorCarriesBall !== null &&
+        activationId &&
+        previousMove &&
+        previousMove.end.actorId === event.playerId &&
+        activationEpoch === epochs.get(checkpoint) &&
+        activationActionCode === 1 &&
+        actor === board.activePlayerId &&
+        inStep &&
+        stepActorMatches &&
+        step?.sourceTag === "PlayerStep" &&
+        step.stepType === 1 &&
+        step.stepTargetId === "-1" &&
+        step.payload?.Skill === 0 &&
+        step.payload.IsEvaluation === 0 &&
+        board.phaseCode === NORMAL_TURN &&
+        board.stable === true &&
+        !smallPitchObserved &&
+        currentActorTeam?.explicitTeamId != null &&
+        event.actorTeamSource !== "turn_inferred" &&
+        event.actorTeamId === String(currentActorTeam.explicitTeamId) &&
+        currentActor?.pitchLocation === "on_pitch" &&
+        currentActor.canAct === true &&
+        !currentActor.mentalEffect &&
+        (currentActor.statusCode === null || currentActor.statusCode === 0) &&
+        (currentActor.situationCode === null ||
+          currentActor.situationCode === 0) &&
+        (currentActor.movementRemaining === null ||
+          (Number.isInteger(currentActor.movementRemaining) &&
+            currentActor.movementRemaining >= 1 &&
+            currentActor.movementRemaining <= 16))
+      ) {
+        const from = stepCell(step.payload.CellFrom),
+          to = stepCell(step.payload.CellTo);
+        if (
+          from &&
+          to &&
+          same(from, cell(currentActor.cell)) &&
+          ordinaryMovesAfterSuccess(board, actor!, to)
+        ) {
+          pendingDodge = {
+            board,
+            original: event,
+            threshold: failedDodgeTarget,
+            from,
+            to,
+            declarationSourceId: activationId,
+            checkpointAfter: checkpoint.afterSourceIndex,
+            lastIndex: event.sourceIndex,
+            stage: "skill"
+          };
+          board = null;
+          continue;
+        }
       }
       if (
         event.sourceTag === "ResultRoll" &&
@@ -1256,6 +1463,7 @@ export function reconstructReplayContext(
           continue;
         }
       }
+      actorDodgeMoveSourceId = undefined;
       // For unverified mutations do not fill the gap from a future snapshot.
       board = null;
       actorEffectEnd = undefined;
@@ -1271,6 +1479,7 @@ export function reconstructReplayContext(
     }
   return {
     preRollEvidence: result,
+    dodgeMovements,
     activationEnds,
     mentalEffectEnds,
     mentalSkillUses,

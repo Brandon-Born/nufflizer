@@ -1058,8 +1058,12 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     activationEnds,
     mentalEffectEnds,
     mentalSkillUses,
-    mentalTraitResults
+    mentalTraitResults,
+    dodgeMovements
   } = reconstructReplayContext(replay, activationLosses);
+  for (const move of dodgeMovements.values())
+    for (const source of [move.declarationSourceId, move.doMoveSourceId, move.outcomeSourceId])
+      activationEvidenceSources.add(source);
   for (const end of activationEnds.values())
     for (const source of [
       end.sourceId,
@@ -1300,6 +1304,15 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     if (source) {
       const declaration = ballSources.get(source);
       if (declaration) declaration.label = "Recorded ordinary Move declaration";
+    }
+  }
+  for (const [source, movement] of dodgeMovements) {
+    const roll = ballSources.get(source);
+    if (roll) roll.metadata.dodgeMovement = movement;
+    const outcome = ballSources.get(movement.outcomeSourceId);
+    if (outcome) {
+      outcome.label = "Recorded movement after Dodge reroll";
+      outcome.statusReason = "The successful own Dodge replacement and its immediately recorded movement preserve the observed position and remaining movement; no extra luck score is added.";
     }
   }
   const blockDamage = new Map(damageSteps.map((step) => [step.actionId, step]));

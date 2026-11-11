@@ -810,7 +810,8 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                               </p>
                             ) : null}
                             {moment.metadata.movementFall ||
-                            moment.metadata.movementTouchdown ? (
+                            moment.metadata.movementTouchdown ||
+                            moment.metadata.dodgeMovement ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainMovementOutcome(moment.metadata)}
                               </p>

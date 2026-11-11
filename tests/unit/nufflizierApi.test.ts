@@ -85,6 +85,8 @@ describe("POST /api/nufflizier/analyze", () => {
         (e) => e.metadata.locator?.replayStep === 94 && e.contextualBounds
       )?.contextualBounds?.activeContinuation
     ).toEqual({ minimum: 1, maximum: 1 });
+    expect(report.events.find(e=>e.metadata.locator?.replayStep === 94 && e.metadata.dodgeMovement)?.metadata.dodgeMovement)
+      .toMatchObject({movementBefore:6,movementAfter:5,from:{x:12,y:2},to:{x:13,y:3}});
     expect(report.teams.every((team) => team.impactCount === 0)).toBe(true);
     expect(
       report.events.some(

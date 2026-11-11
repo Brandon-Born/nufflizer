@@ -334,7 +334,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.16");
+  expect(report.schemaVersion).toBe("2.17");
   expect(report.modelVersion).toBe("dice-only-19");
   expect(
     report.events.some(
@@ -360,7 +360,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
     )
   ).toBe(true);
 
-  expect(report.contextModelVersion).toBe("mobility-possession-11");
+  expect(report.contextModelVersion).toBe("mobility-possession-12");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
     report.coverage.rollCandidates.scoredCount +
@@ -843,6 +843,11 @@ test("real-source Dodge uncertainty and active continuation stay outside point t
     await expect(row).toContainText(c.range);
     await expect(row).toContainText(c.copy);
     await expect(row).toContainText("No midpoint is added to point totals");
+    if (c.id === "terminal_dodge_success") {
+      await expect(row).toContainText("replay confirms this move after the successful Dodge skill reroll");
+      await expect(row).toContainText("5 movement points remained after this step");
+      await expect(row).toContainText("observed movement adds no luck score");
+    }
     await expect(page.getByText("Context: Not scored")).toHaveCount(2);
     await page.screenshot({
       path: index
