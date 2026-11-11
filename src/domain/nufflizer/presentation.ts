@@ -51,6 +51,11 @@ export function explainPreRollEvidence(
         : `The player stood up earlier in this activation and had ${context.actorMovementRemaining} movement points at this roll.`
     );
   }
+  if (context?.actorPickupSourceId) {
+    details.push(
+      "The player was carrying the ball they picked up earlier in this activation."
+    );
+  }
   if (context?.teammateCarrierMove) {
     details.push(
       context.teammateCarrierMove.effect === "approach"
@@ -86,9 +91,15 @@ export function explainContextImpact(
   );
 }
 
-export function explainMovementFall(
-  fall: LuckReport["events"][number]["metadata"]["movementFall"]
+export function explainMovementOutcome(
+  metadata: Pick<
+    LuckReport["events"][number]["metadata"],
+    "movementFall" | "movementTouchdown"
+  >
 ): string | null {
+  const { movementFall: fall, movementTouchdown } = metadata;
+  if (movementTouchdown)
+    return "The replay records a touchdown immediately after this move.";
   if (!fall) return null;
   const aftermath = [
     "The player fell and the turn ended.",

@@ -19,6 +19,7 @@ export type PreRollEvidence = {
   actorCell: Cell | null;
   actorStandUpSourceIndex?: number;
   actorMovementRemaining?: number;
+  actorPickupSourceId?: string;
   teammateCarrierMove?: {
     carrierCell: Cell;
     destination: Cell;
@@ -116,7 +117,8 @@ function summarize(
   event: ReplayEvent,
   step: ReplayEvent | undefined,
   activationId: string | null,
-  standUpSourceIndex: number | undefined
+  standUpSourceIndex: number | undefined,
+  pickupSourceId: string | undefined
 ): PreRollEvidence {
   const actorId = id(event.playerId);
   const active = board.teams.find(
@@ -309,6 +311,10 @@ function summarize(
       board.activePlayerId === actorId
         ? (actor?.movementRemaining ?? undefined)
         : undefined,
+    actorPickupSourceId:
+      actorId !== null && board.ball.carrierId === actorId
+        ? pickupSourceId
+        : undefined,
     teammateCarrierMove,
     actorCarriesBall:
       board.ball.possession === "unknown"
@@ -335,8 +341,10 @@ export function reconstructPreRollEvidence(
   let activationId: string | null = null;
   let activationActionCode: number | undefined;
   let moveObserved = false;
+  let moveOutcomeSourceIndex: number | undefined;
   let standUpPending = false;
   let standUpSourceIndex: number | undefined;
+  let pickupSourceId: string | undefined;
   for (const turn of replay.turns)
     for (const event of turn.events) {
       if (event.sourceIndex === undefined) continue;
@@ -359,8 +367,10 @@ export function reconstructPreRollEvidence(
             ? next
             : null;
         moveObserved = false;
+        moveOutcomeSourceIndex = undefined;
         standUpPending = false;
         standUpSourceIndex = undefined;
+        pickupSourceId = undefined;
       }
       if (event.type === "step" || event.sourceTag === "BallStep") {
         if (standUpPending) {
@@ -371,6 +381,7 @@ export function reconstructPreRollEvidence(
           event.sourceTag === "PlayerStep" && event.stepType === 7;
         step = event;
         moveObserved = false;
+        moveOutcomeSourceIndex = undefined;
         continue;
       }
       if (!board || !checkpoint) continue;
@@ -389,7 +400,8 @@ export function reconstructPreRollEvidence(
             event,
             step,
             activationId,
-            standUpSourceIndex
+            standUpSourceIndex,
+            pickupSourceId
           )
         );
       if (
@@ -424,9 +436,13 @@ export function reconstructPreRollEvidence(
         event.actionCode >= 1 &&
         event.actionCode <= 6 &&
         board.phaseCode === NORMAL_TURN &&
+        board.stable === true &&
         board.teams.some(
           (t) =>
-            t.rosterIndex === board!.activeTeamIndex &&
+            (t.rosterIndex === board!.activeTeamIndex ||
+              (board!.activeTeamIndex === null &&
+                event.actionCode === 1 &&
+                event.actorTeamSource === "player_map")) &&
             t.players.some((p) => p.id === actor)
         )
       ) {
@@ -434,6 +450,7 @@ export function reconstructPreRollEvidence(
         activationId = event.id ?? null;
         activationActionCode = event.actionCode;
         standUpSourceIndex = undefined;
+        pickupSourceId = undefined;
         continue;
       }
       if (
@@ -498,6 +515,48 @@ export function reconstructPreRollEvidence(
       )
         continue;
       if (
+        event.sourceTag === "ResultRoll" &&
+        event.rollType === 4 &&
+        event.id &&
+        inStep &&
+        step?.sourceTag === "PlayerStep" &&
+        step.stepType === 1 &&
+        step.payload?.IsEvaluation === 0 &&
+        stepActorMatches &&
+        moveOutcomeSourceIndex === event.sourceIndex - 1 &&
+        activationId &&
+        activationActionCode === 1 &&
+        actor === board.activePlayerId &&
+        board.phaseCode === NORMAL_TURN &&
+        board.stable === true &&
+        (event.actorTeamSource === "player_map" ||
+          event.actorTeamSource === "explicit") &&
+        board.ball.possession !== "held" &&
+        board.ball.carrierId === null &&
+        (p?.Modifiers === undefined || p.Modifiers === "") &&
+        p?.Requirement === p?.Difficulty &&
+        verifiedMovementSuccess(event)
+      ) {
+        const destination = stepCell(step.payload.CellTo);
+        const owner = board.teams.find((t) =>
+          t.players.some((player) => player.id === actor)
+        );
+        if (owner && destination && same(cell(board.ball.cell), destination)) {
+          board = {
+            ...board,
+            ball: {
+              cell: destination,
+              carrierId: actor,
+              holderRosterIndex: owner.rosterIndex,
+              isHeld: true,
+              possession: "held"
+            }
+          };
+          pickupSourceId = event.id;
+          continue;
+        }
+      }
+      if (
         event.sourceTag === "ResultDoMove" &&
         inStep &&
         step?.sourceTag === "PlayerStep" &&
@@ -550,6 +609,7 @@ export function reconstructPreRollEvidence(
           )
             board = { ...board, ball: { ...board.ball, cell: to } };
           moveObserved = false;
+          moveOutcomeSourceIndex = event.sourceIndex;
           continue;
         }
       }
@@ -557,6 +617,7 @@ export function reconstructPreRollEvidence(
       board = null;
       activationId = null;
       standUpSourceIndex = undefined;
+      pickupSourceId = undefined;
     }
   return result;
 }

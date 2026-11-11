@@ -13,7 +13,11 @@ import {
 } from "@/domain/replay/reconstructContext";
 import { verifyArmorCheck } from "./armorChecks";
 import { summarizeDamageSteps } from "./damageSteps";
-import { findMovementFall, summarizeMovementFall } from "./movementFall";
+import {
+  findMovementFall,
+  findMovementTouchdown,
+  summarizeMovementFall
+} from "./movementConsequences";
 import { linkRegeneration, type RegenerationEvidence } from "./regeneration";
 import { countKoRecoveryChecks, verifyKoRecovery } from "./koRecovery";
 import { linkApothecary, type ApothecaryRecord } from "./apothecary";
@@ -946,6 +950,9 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         ? findMovementFall(replayTurn)
         : undefined;
     if (fall) movementFalls.push(fall);
+    const touchdown = replay.replayVersion === "1-4-0-0"
+      ? findMovementTouchdown(replayTurn)
+      : undefined;
     const armorCounts = new Map<string, number>();
     for (const event of replayTurn.events) {
       if (
@@ -963,7 +970,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       replayTurn.events,
       replay.replayVersion,
       playerToTeam,
-      rerollLinks
+      rerollLinks,
+      fall?.skillOriginalId ? fall.rollSourceId : undefined
     );
     linkLonerGates(
       replayTurn.events,
@@ -1016,6 +1024,14 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         continue;
       }
 
+      if (
+        touchdown &&
+        touchdown.rollSourceId === event.id &&
+        normalized.scoringStatus === "scored" &&
+        normalized.actualSuccess === true &&
+        normalized.metadata.preRoll?.actorCarriesBall === true
+      )
+        normalized.metadata.movementTouchdown = touchdown.evidence;
       events.push(normalized);
     }
   }
@@ -1025,7 +1041,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     const damageByAction = new Map(damageSteps.map((step) => [step.actionId, step]));
     const eventsById = new Map(events.map((event) => [event.id, event]));
     const eventsBySource = new Map(events.map((event) => [event.metadata.sourceId, event]));
-    for (const { rollSourceId, decisionSourceId, evidence } of movementFalls) {
+    for (const { rollSourceId, decisionSourceId, skillOriginalId, evidence } of movementFalls) {
       const roll = eventsBySource.get(rollSourceId);
       const damage = damageByAction.get(evidence.damageActionId);
       if (
@@ -1033,7 +1049,10 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         roll.scoringStatus !== "scored" ||
         roll.actualSuccess !== false ||
         roll.metadata.rerollDecisionId !== decisionSourceId ||
-        (decisionSourceId !== undefined && !roll.metadata.rerollQuestionId) ||
+        (skillOriginalId
+          ? roll.metadata.rerollOriginalId !== skillOriginalId ||
+            roll.metadata.rerollSkill !== "Dodge"
+          : decisionSourceId !== undefined && !roll.metadata.rerollQuestionId) ||
         !damage ||
         damage.playerId !== roll.playerId ||
         damage.teamId !== roll.teamId

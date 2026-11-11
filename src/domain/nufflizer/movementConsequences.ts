@@ -66,7 +66,10 @@ export function findMovementFall(turn: ReplayTurn) {
   const beforeRoll = events[i - 4];
   const decision =
     beforeRoll?.sourceTag === "ResultTeamRerollUsage" ? beforeRoll : undefined;
-  const step = decision ? events[i - 5] : beforeRoll;
+  const skill =
+    beforeRoll?.sourceTag === "ResultSkillUsage" ? beforeRoll : undefined;
+  const original = skill ? events[i - 5] : undefined;
+  const step = skill ? events[i - 6] : decision ? events[i - 5] : beforeRoll;
   const from = pitchCell(step?.payload?.CellFrom);
   const to = pitchCell(step?.payload?.CellTo);
   const damageCell = pitchCell(damage?.payload?.CellFrom);
@@ -107,6 +110,21 @@ export function findMovementFall(turn: ReplayTurn) {
       (decision.actionId !== step.actionId ||
         decision.playerId !== step.playerId ||
         decision.attributionConflict)) ||
+    (skill &&
+      (roll.rollType !== 2 ||
+        !skill.id ||
+        skill.payload?.Skill !== 7 ||
+        skill.payload.Used !== 1 ||
+        skill.actionId !== step.actionId ||
+        skill.playerId !== step.playerId ||
+        skill.attributionConflict ||
+        !original?.id ||
+        original.sourceTag !== "ResultRoll" ||
+        original.rollType !== 2 ||
+        original.actionId !== step.actionId ||
+        original.playerId !== step.playerId ||
+        original.attributionConflict ||
+        original.payload?.Outcome !== 0)) ||
     !from ||
     !to ||
     Math.max(Math.abs(from.X - to.X), Math.abs(from.Y - to.Y)) !== 1 ||
@@ -123,7 +141,8 @@ export function findMovementFall(turn: ReplayTurn) {
   if (summary?.RollType !== roll.rollType || summary.Outcome !== 0) return;
   return {
     rollSourceId: roll.id,
-    decisionSourceId: decision?.id,
+    decisionSourceId: decision?.id ?? skill?.id,
+    skillOriginalId: original?.id,
     evidence: {
       damageActionId,
       moveOutcomeSourceIndex: outcome.sourceIndex,
@@ -150,5 +169,81 @@ export function summarizeMovementFall(
     playerRemoved: damageEvents.some(
       (event) => event.metadata.sourceTag === "ResultPlayerRemoval"
     )
+  };
+}
+
+// Match the last move directly to the recorded scoring square and player.
+// The touchdown is aftermath evidence for the roll, with no extra score.
+export function findMovementTouchdown(turn: ReplayTurn) {
+  const end = turn.events.at(-1);
+  const touchdown = turn.events.at(-2);
+  const spp = turn.events.at(-3);
+  const outcome = turn.events.at(-4);
+  const move = turn.events.at(-5);
+  const roll = turn.events.at(-6);
+  const step = turn.events.at(-7);
+  if (
+    end?.sourceTag !== "EventEndTurn" ||
+    end.reasonCode !== 4 ||
+    touchdown?.sourceTag !== "EventTouchdown" ||
+    touchdown.sourceIndex === undefined ||
+    touchdown.locator?.replayStep === undefined ||
+    touchdown.locator.childIndex === undefined ||
+    end.locator?.replayStep !== touchdown.locator.replayStep ||
+    end.locator.childIndex !== touchdown.locator.childIndex + 1 ||
+    step?.sourceTag !== "PlayerStep" ||
+    step.stepType !== 1 ||
+    step.payload?.IsEvaluation !== 0 ||
+    step.locator?.replayStep !== touchdown.locator.replayStep ||
+    step.locator.childIndex !== touchdown.locator.childIndex - 1 ||
+    !step.actionId ||
+    !step.playerId ||
+    step.attributionConflict ||
+    roll?.sourceTag !== "ResultRoll" ||
+    !roll.id ||
+    (roll.rollType !== 1 && roll.rollType !== 2) ||
+    roll.payload?.Outcome !== 1 ||
+    roll.payload.NewRoll !== 1 ||
+    move?.sourceTag !== "ResultDoMove" ||
+    outcome?.sourceTag !== "ResultMoveOutcome" ||
+    outcome.payload?.Moved !== 1 ||
+    outcome.payload.TentacleUsed !== 0 ||
+    outcome.payload.FumbleRooskieUsed !== 0 ||
+    spp?.sourceTag !== "ResultGainSpp" ||
+    [roll, move, outcome, spp].some(
+      (e) =>
+        e.actionId !== step.actionId ||
+        e.playerId !== step.playerId ||
+        e.attributionConflict
+    ) ||
+    touchdown.payload?.PlayerId !== step.playerId
+  )
+    return;
+  const from = pitchCell(step.payload.CellFrom);
+  const to = pitchCell(step.payload.CellTo);
+  const scoredCell = touchdown.payload.Cell as
+    { X?: string; Y?: string } | undefined;
+  const summary = (
+    outcome.payload.Rolls as
+      { RollSummary?: { RollType?: number; Outcome?: number } } | undefined
+  )?.RollSummary;
+  if (
+    !from ||
+    !to ||
+    Math.max(Math.abs(from.X - to.X), Math.abs(from.Y - to.Y)) !== 1 ||
+    (to.X !== 0 && to.X !== 25) ||
+    scoredCell?.X !== String(to.X) ||
+    scoredCell.Y !== String(to.Y) ||
+    summary?.RollType !== roll.rollType ||
+    summary.Outcome !== 1
+  )
+    return;
+  return {
+    rollSourceId: roll.id,
+    evidence: {
+      sourceIndex: touchdown.sourceIndex,
+      childIndex: touchdown.locator.childIndex,
+      destination: { x: to.X, y: to.Y }
+    }
   };
 }

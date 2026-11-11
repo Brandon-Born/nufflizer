@@ -5,7 +5,7 @@ import { DICE_MODEL_VERSION, LUCK_CATEGORY_WEIGHTS, REPORT_SCHEMA_VERSION } from
 import { REPLAY_LIMITS } from "@/domain/replay/limits";
 import { summarizeRollFamilies } from "./rollCoverage";
 import { summarizeDamageSteps } from "./damageSteps";
-import { summarizeMovementFall } from "./movementFall";
+import { summarizeMovementFall } from "./movementConsequences";
 
 export const LuckEventTypeSchema = z.enum([
   "block",
@@ -71,6 +71,7 @@ export const LuckEventMetadataSchema = z.strictObject({
       actorCell: pitchCell.nullable(),
       actorStandUpSourceIndex: count.optional(),
       actorMovementRemaining: count.optional(),
+      actorPickupSourceId: text.optional(),
       teammateCarrierMove: z.strictObject({
         carrierCell: pitchCell,
         destination: pitchCell,
@@ -133,6 +134,11 @@ export const LuckEventMetadataSchema = z.strictObject({
     unscoredDamageRolls: count,
     armorHeld: z.boolean().nullable(),
     playerRemoved: z.boolean()
+  }).optional(),
+  movementTouchdown: z.strictObject({
+    sourceIndex: count,
+    childIndex: count,
+    destination: pitchCell
   }).optional(),
   apothecary: z
     .strictObject({
@@ -433,6 +439,24 @@ export const LuckReportSchema = z
           "Stand-up evidence must be between the checkpoint and roll of the same activation."
         );
       }
+      if (context?.actorPickupSourceId) {
+        const pickup = sources.get(context.actorPickupSourceId);
+        const index = pickup?.metadata.sourceIndex;
+        require(
+          context.actorCarriesBall === true &&
+            context.activationId !== null &&
+            context.actorCell !== null &&
+            pickup?.metadata.rollType === 4 &&
+            pickup.scoringStatus === "scored" &&
+            pickup.actualSuccess === true &&
+            pickup.playerId === event.playerId &&
+            index !== undefined &&
+            index > context.checkpointAfter &&
+            event.metadata.sourceIndex !== undefined &&
+            index < event.metadata.sourceIndex,
+          "Reconstructed possession must link to the earlier successful pickup."
+        );
+      }
       const carrierMove = context?.teammateCarrierMove;
       if (carrierMove) {
         const { carrierCell, destination, effect } = carrierMove;
@@ -470,6 +494,28 @@ export const LuckReportSchema = z
       }
       const block = event.metadata.block;
       const damage = event.metadata.damage;
+      const touchdown = event.metadata.movementTouchdown;
+      if (touchdown) {
+        const { locator, sourceIndex, rollType } = event.metadata;
+        const from = context?.actorCell;
+        const to = touchdown.destination;
+        require(
+          event.scoringStatus === "scored" &&
+            event.actualSuccess === true &&
+            (rollType === 1 || rollType === 2) &&
+            context?.actorCarriesBall === true &&
+            !!from &&
+            Math.max(Math.abs(from.x - to.x), Math.abs(from.y - to.y)) === 1 &&
+            (to.x === 0 || to.x === 25) &&
+            locator?.replayStep !== undefined &&
+            locator.childIndex !== undefined &&
+            touchdown.childIndex === locator.childIndex + 1 &&
+            sourceIndex !== undefined &&
+            touchdown.sourceIndex === sourceIndex + 4 &&
+            touchdown.sourceIndex <= report.coverage.sourceRecordCount,
+          "Touchdown evidence requires the same carrier's successful move to the end zone."
+        );
+      }
       const fall = event.metadata.movementFall;
       if (fall) {
         const step = damageByAction.get(fall.damageActionId);

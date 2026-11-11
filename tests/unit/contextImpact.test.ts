@@ -132,6 +132,70 @@ describe("held-out public replay context (NUF-016/017/022)", () => {
     );
   }
 
+  it("carries a fresh pickup through later movement without reading the touchdown", () => {
+    // Independent stdlib decode: demo8 102/3 records the ball at [17,12]
+    // with no holder. Player 8 moves onto it at 103/1 step 1, rolls 4
+    // on Pickup3+, then moves to [24,13] before the last Rush at step 9.
+    const replay = demo("demo8.bbr");
+    const evidence = (report: ReturnType<typeof analyzeReplayLuck>) => {
+      const rolls = report.events.filter(
+        (event) => event.metadata.locator?.replayStep === 103
+      );
+      return {
+        pickup: rolls.find((event) => event.metadata.rollType === 4)!,
+        rush: rolls.find((event) => event.metadata.rollType === 1)!
+      };
+    };
+    const report = analyzeReplayLuck(replay);
+    const { pickup, rush } = evidence(report);
+    expect(pickup.metadata.preRoll?.actorCarriesBall).toBeNull();
+    expect(rush.metadata.preRoll).toMatchObject({
+      checkpointReplayStep: 102,
+      actorCell: { x: 24, y: 13 },
+      actorCarriesBall: true,
+      actorPickupSourceId: pickup.metadata.sourceId,
+      teamTurn: null
+    });
+    expect(explainPreRollEvidence(rush.metadata.preRoll)).toContain(
+      "picked up earlier"
+    );
+    expect(rush.metadata.movementTouchdown).toMatchObject({
+      childIndex: 2,
+      destination: { x: 25, y: 13 }
+    });
+    expect(rush.weightedDelta).toBeCloseTo(1 / 6, 12);
+    expect(rush.contextualImpact).toBeUndefined();
+    expect(LuckReportSchema.safeParse(report).success).toBe(true);
+    const checkpoint = replay.boardCheckpoints!.find(
+      (c) => c.replayStep === 103
+    )!;
+    checkpoint.board!.ball.carrierId = 41;
+    expect(evidence(analyzeReplayLuck(replay)).rush.metadata.preRoll).toEqual(
+      rush.metadata.preRoll
+    );
+    const touchdown = replay.turns
+      .flatMap((turn) => turn.events)
+      .find(
+        (event) =>
+          event.sourceIndex === rush.metadata.movementTouchdown?.sourceIndex
+      )!;
+    expect(touchdown).toMatchObject({
+      sourceTag: "EventTouchdown",
+      payload: { PlayerId: "8" }
+    });
+    touchdown.payload!.PlayerId = "9";
+    const wrongScorer = evidence(analyzeReplayLuck(replay)).rush;
+    expect(wrongScorer.metadata.movementTouchdown).toBeUndefined();
+    expect(wrongScorer.weightedDelta).toBe(rush.weightedDelta);
+    const original = replay.turns
+      .flatMap((turn) => turn.events)
+      .find((event) => event.id === pickup.metadata.sourceId)!;
+    original.payload!.Dice = { Die: { Value: 1, DieType: 0 } };
+    expect(
+      evidence(analyzeReplayLuck(replay)).rush.metadata.preRoll
+    ).toBeUndefined();
+  });
+
   it("retains the declared activation and movement through a corroborated stand-up", () => {
     // Independent stdlib decode: 143/3 player38 is prone at [13,5] with
     // CanAct1 and 3 points. At 144/1 steps 0–2 he declares Move, stands,

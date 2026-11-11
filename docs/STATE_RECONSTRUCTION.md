@@ -45,3 +45,9 @@ The signed contribution is (observed success minus probability) times the sum of
 Held-out public demos provide stand-up and carrier-movement acceptance using independent stdlib decoding. Demo1 checkpoints 143/3 and 144/3 bracket player 38 standing up and dodging with movement 3 → 2. Demo6 checkpoint 412/3 records the active team's turn 11 and player 42 holding the ball at [15,6]. Player 45 first dodges to [13,6], then the second Dodge3+ at 413/1 step 2 targets [14,7], next to the carrier. A changed future checkpoint cannot alter that explanation. Demo-goblins1 ends 2–1 after an uncontested turn-16 touchdown at 536/2. Its move emitted no dice and adds no luck.
 
 Remaining work includes actions beyond the standing ordinary-move subset, replay-specific omission defaults, kickoff and drive transitions, scoring orientation and calibrated tactical values for high-stakes situations. The held-out checks verify ordered state and explanation. Numeric context contributions still require complete availability and the terminal reroll policy.
+
+## Verified pickup and carried movement
+
+Mobility-possession-4 establishes possession from an observed unmodified successful Pickup immediately following the verified move to the recorded ball square. An omitted holder flag on that earlier board stays unknown until the pickup. A conflicting holder, movement or die clears the frame. The actor must match a recorded ordinary Move declaration. If the board omits the active side, a unique roster-backed Move declaration can preserve the actor's position, while the active side and turn remain unknown. The source-linked ball moves with its carrier until a later checkpoint or unverified mutation.
+
+Independent demo8 decoding links checkpoint 102/3 and pickup 103/1 step 1 to the Rush from [24,13] to [25,13] at step 9. Changing the later checkpoint leaves the earlier evidence unchanged. The same player's direct touchdown at 103/2 is reported separately as observed aftermath.

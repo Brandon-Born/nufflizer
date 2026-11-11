@@ -22,6 +22,45 @@ const fallAt = (
   )!;
 
 describe("observed movement fall, damage and turnover (NUF-018)", () => {
+  it("scores one failed Dodge after a verified skill reroll and self-fall", () => {
+    // Independent decode of demo-goblins1 280/1 step 2. Player 8 fails
+    // Dodge3+ on 1, uses Dodge (7), then fails on 2. Step 3 breaks
+    // armor8+ on [6,5] and records injury, casualty and removal.
+    const report = analyzeReplayLuck(replay("demo-goblins1.bbr"));
+    const [original, terminal] = report.events.filter(
+      (event) =>
+        event.metadata.locator?.replayStep === 280 &&
+        event.metadata.rollType === 2
+    );
+    expect(original).toMatchObject({
+      scoringStatus: "excluded",
+      metadata: { dice: [1], isRollCandidate: false }
+    });
+    expect(terminal).toMatchObject({
+      playerId: "8",
+      scoringStatus: "scored",
+      actualSuccess: false,
+      metadata: {
+        dice: [2],
+        rerollSkill: "Dodge",
+        rerollOriginalId: original!.metadata.sourceId,
+        teamRerollsSpent: 0,
+        movementFall: {
+          armorHeld: false,
+          unscoredDamageRolls: 2,
+          playerRemoved: true,
+          turnoverChildIndex: 2
+        }
+      }
+    });
+    expect(terminal!.probabilitySuccess).toBeCloseTo(8 / 9, 12);
+    expect(terminal!.metadata.movementFall!.diceContribution).toBeCloseTo(
+      (-1.1 * 8) / 9 - 21 / 36,
+      12
+    );
+    expect(LuckReportSchema.safeParse(report).success).toBe(true);
+  });
+
   it("links the full held-out Rush chain in demo8 and sums only verified chance", () => {
     const report = analyzeReplayLuck(replay("demo8.bbr"));
     // Independent stdlib decode of 463/1: step6 Rush2+ on 1, failure in

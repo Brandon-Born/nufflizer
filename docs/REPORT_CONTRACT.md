@@ -2,7 +2,7 @@
 
 Updated 2026-11-10. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.1` and model `dice-only-14`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.2` and model `dice-only-15`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -103,3 +103,9 @@ Independent checks include deliberately inconsistent schema/model versions, tota
 A fresh scored Dodge or Rush, or the verified resolution of its team-reroll question, can expose an observed fall when the same player's failed move summary is immediately followed by applied self-damage and a direct failure turnover in the same replay step. Dodge and Rush damage source codes are 0 and 9 respectively. The group points to the existing damage-step evidence, ordered move outcome and turnover. Its subtotal is the original movement contribution plus the existing damage dice subtotal. Injury and casualty with unknown odds remain unscored. A removal is reported as an observed consequence. A declined reroll counts the retained original once. A spent reroll uses the verified two-attempt chance. A different actor, intervening action, ambiguous replacement or contradictory summary prevents linkage.
 
 Mobility-possession-3 retains a corroborated ordinary stand-up and its recorded movement budget before later rolls. It reports a verified Dodge that crosses the adjacency boundary to a teammate explicitly holding the ball. This pre-roll observation and the movement-fall aftermath appear separately from the existing heuristic context contribution.
+
+## Schema 2.2 possession and observed touchdowns
+
+Dice-only-15 scores the terminal same-step Dodge-skill failure when the original, Dodge usage and replacement match the verified skill reroll contract and lead directly to the matching self-fall and failure turnover. The fresh pair is one check at two-attempt odds with zero team rerolls spent. Unlinked or contradictory responses remain outside this expanded contract.
+
+Mobility-possession-4 can establish held possession after a verified ordinary move onto the recorded ball square and an immediate fresh unmodified pickup success. The later carrier roll can link back to the original pickup with actor and source order preserved. In the narrow successful end-zone move path, the report can also link the direct touchdown for that same carrier and square. That observed consequence adds no tactical or dice weight. It is independent of the pre-roll evidence used to describe possession.

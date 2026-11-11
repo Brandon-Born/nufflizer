@@ -1337,3 +1337,13 @@ NUF-012/018 advance. Demo8 at 330/1 step 3 asks to reroll Dodge4+ on 2. At 331/1
 The preceding movement-context candidate ea9f9d8 returned HTTP 200 for demo1, demo6 and demo8 on the isolated Preview (1,163,866, 1,054,963 and 828,636 response bytes). Hosted checks confirmed the stand-up budget, carrier adjacency, held armor counterpart and the full Rush fall with two unscored damage rolls.
 
 GitHub CI 42929732586 passed on ea9f9d8. Local corepack pnpm verify for the team-reroll extension passed lint, typecheck, 353 unit tests in 42 suites, the real Redis integration, the production build and all five Chromium flows.
+
+## 2026-11-10 - Skill-rerolled falls and scoring-move evidence
+
+NUF-012/016/017/018/021/022 advance. Independent decoding at demo-goblins1 280/1 step 2 gives a failed Dodge3+ on 1, used Dodge (skill7), and a failed replacement on 2. Applied damage at step 3 breaks armor8+ on [6,5], followed by injury, casualty and removal. A direct failure turnover follows at 280/2. The report counts the two dice as one action at 8/9 success chance, with zero team rerolls spent. The damage-chain subtotal is −1.1 × 8/9 − 21/36. Unknown injury and casualty odds stay visible.
+
+Demo8 at 102/3 records the ball at [17,12] with holder fields omitted. At 103/1 step 1, player 8 moves there and rolls 4 for Pickup3+. The reducer carries the ball through seven moves to the Rush from [24,13] at step 9. Changing the future board leaves that pre-roll evidence unchanged. A conflicting pickup die stops the reducer. The direct touchdown at 103/2 records the same player at [25,13]. A different scorer breaks the link while the Rush retains its original 1/6 contribution. Schema 2.2 exports both source links and the real-upload timeline exercises them.
+
+Prior candidate 6eb8fd2 passed GitHub CI 42930329986. Its isolated Preview returned HTTP 200 for demo1, demo4, demo6 and demo8 and enforced a typed 429 under the shared quota probe. That is historical hosted acceptance for the prior candidate. Current work uses the zero-cost restriction and local verification. No account, Redis configuration or deployment was changed.
+
+Local corepack pnpm verify passed lint, typecheck, 355 unit tests in 42 suites, real Redis, the production build and six Chromium flows. The new demo8 browser flow opened the Rush explanation and verified the earlier pickup and immediate touchdown. GitHub lists the repository as public and its workflow uses a standard Ubuntu runner. The Vercel project inventory found no connection to this GitHub repository. Exact-candidate hosted verification is pending.

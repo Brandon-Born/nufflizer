@@ -682,3 +682,7 @@ Schema 2.1 links scoped Rush and Dodge failures to the same player's observed fa
 ## 2026-11-10 - Team reroll outcomes in movement falls
 
 The movement-fall report also links an ordered team-reroll decision when the terminal scored check independently matches that decision and its original question. The existing one- or two-attempt odds supply the movement part of the subtotal.
+
+## 2026-11-10 - Skill-rerolled falls and scoring-move evidence
+
+Dice-only-15 links a verified failed Dodge-skill replacement to the matching self-fall and turnover. Schema 2.2 and mobility-possession-4 carry a verified pickup through later movement and record a direct touchdown after a matched successful move. The report keeps the observed touchdown separate from pre-roll context and from the roll's dice contribution.

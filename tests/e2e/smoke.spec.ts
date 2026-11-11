@@ -4,6 +4,33 @@ import { readFileSync } from "node:fs";
 import { contextReplayXml } from "../helpers/contextReplay";
 
 const DEMO = path.resolve("demo-replays/demo1.bbr");
+
+test("real BBR explains the pickup and touchdown around a carrier's Rush", async ({
+  page
+}) => {
+  await page.goto("/nufflizier");
+  await page.setInputFiles(
+    'input[name="replay"]',
+    path.resolve("demo-replays/demo8.bbr")
+  );
+  await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Nuffle Match Report" })
+  ).toBeVisible();
+  await page
+    .getByLabel("Category", { exact: true })
+    .selectOption("movement_risk");
+  // Independently decoded demo8 step 103/1/9, the Rush after the Pickup.
+  const row = page.locator("tbody tr").filter({ hasText: "source-730" });
+  await row.getByText("Why", { exact: true }).click();
+  await expect(row).toContainText(
+    "The player was carrying the ball they picked up earlier in this activation."
+  );
+  await expect(row).toContainText(
+    "The replay records a touchdown immediately after this move."
+  );
+});
+
 test("real BBR upload exposes evidence, full filters, export and reset", async ({
   page
 }) => {
@@ -62,8 +89,8 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.1");
-  expect(report.modelVersion).toBe("dice-only-14");
+  expect(report.schemaVersion).toBe("2.2");
+  expect(report.modelVersion).toBe("dice-only-15");
   // Independent raw decode: sequence 6 step 4 offers Push/Stumbles; away
   // chooses Stumbles (7/0/0) and outcome 6 resolves at 9/0/1.
   const firstBlock = report.events.find(

@@ -14,7 +14,7 @@ import {
   formatPreRollPosition,
   explainPreRollEvidence,
   explainContextImpact,
-  explainMovementFall
+  explainMovementOutcome
 } from "@/domain/nufflizer/presentation";
 import { readAnalysisResponse } from "@/lib/readAnalysisResponse";
 import { REPLAY_LIMITS } from "@/domain/replay/limits";
@@ -650,14 +650,15 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                               </p>
                             ) : null}
                             {moment.metadata.preRoll?.actorStandUpSourceIndex !== undefined ||
+                            moment.metadata.preRoll?.actorPickupSourceId ||
                             moment.metadata.preRoll?.teammateCarrierMove ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainPreRollEvidence(moment.metadata.preRoll)}
                               </p>
                             ) : null}
-                            {moment.metadata.movementFall ? (
+                            {moment.metadata.movementFall || moment.metadata.movementTouchdown ? (
                               <p className="mt-1 text-xs text-amber-100/80">
-                                {explainMovementFall(moment.metadata.movementFall)}
+                                {explainMovementOutcome(moment.metadata)}
                               </p>
                             ) : null}
                             {moment.explainability.formulaSummary ? (

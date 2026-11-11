@@ -319,7 +319,8 @@ export function linkObservedSkillRerolls(
   events: ReplayEvent[],
   replayVersion: string | undefined,
   playerToTeam: ReadonlyMap<string, string>,
-  links: Map<number, RerollLink>
+  links: Map<number, RerollLink>,
+  terminalDodgeSourceId?: string
 ): void {
   if (replayVersion !== "1-4-0-0") return;
   const records = new Map<string, number>();
@@ -411,9 +412,13 @@ export function linkObservedSkillRerolls(
       replacement.Outcome !== Number(face >= Number(replacement.Difficulty))
     )
       continue;
-    if (replacement.Outcome === 0) {
+    if (
+      replacement.Outcome === 0 &&
+      !(family === 2 && final.id === terminalDodgeSourceId)
+    ) {
       // A failed replacement alone does not establish that there was no
-      // further choice. UI-002 links a failed Pickup to the following bounce.
+      // further choice. A Dodge must reach the verified fall and turnover.
+      // UI-002 links the other supported failed check to its Pickup bounce.
       const bounce = events[index + 3];
       const direction = events[index + 4];
       if (
