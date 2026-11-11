@@ -75,6 +75,11 @@ export function explainPreRollEvidence(
   context: LuckReport["events"][number]["metadata"]["preRoll"]
 ): string | null {
   const details: string[] = [];
+  const ended = context?.endedActivationSourceIds?.length ?? 0;
+  if (ended)
+    details.push(
+      `${ended} earlier player activation${ended === 1 ? " had" : "s had"} already ended after Foul Appearance in this team turn.`
+    );
   const traitNames = new Map([
     [30, "Block"],
     [7, "Dodge"],
@@ -188,6 +193,15 @@ export function explainProGate(
 ): string | null {
   return gate
     ? `Pro ${gate.passed ? "passed" : "failed"} its recorded 3+ test. Four of six faces pass this test.`
+    : null;
+}
+
+export function explainActivationLoss(
+  event: LuckReport["events"][number]
+): string | null {
+  const loss = event.metadata.activationLoss;
+  return loss
+    ? `Player ${loss.actorId} lost the declared Block activation after Foul Appearance failed. Player ${loss.followingPlayerId} then acted in the same recorded team turn ${loss.teamTurn}. The tactical cost of the lost activation remains unquantified.`
     : null;
 }
 

@@ -1,10 +1,58 @@
 import { test, expect } from "@playwright/test";
 import path from "node:path";
 import { readFileSync } from "node:fs";
+import { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
 import { contextReplayXml } from "../helpers/contextReplay";
 import { playbackFragmentXml } from "../helpers/playback";
+import {
+  foulAppearancePlaybackXml,
+  foulAppearanceContextXml
+} from "../helpers/foulAppearanceReplay";
 
 const DEMO = path.resolve("demo-replays/demo1.bbr");
+
+test("Foul Appearance losses preserve the team turn and reduce later available moves", async ({
+  page
+}) => {
+  await page.goto("/nufflizier");
+  await page.setInputFiles('input[name="replay"]', {
+    name: "sanitized-activation-loss.xml",
+    mimeType: "application/xml",
+    buffer: Buffer.from(foulAppearancePlaybackXml())
+  });
+  await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Nuffle Match Report" })
+  ).toBeVisible();
+  await page.getByLabel("Scoring status").selectOption("excluded");
+  const row = page
+    .locator("tbody tr")
+    .filter({ hasText: "Foul Appearance failed; activation lost" })
+    .filter({ hasText: "Player 42" });
+  await row.locator("summary").click();
+  await expect(row).toContainText(
+    "Player 44 then acted in the same recorded team turn 8"
+  );
+  await expect(row).toContainText(
+    "tactical cost of the lost activation remains unquantified"
+  );
+  await page.getByRole("button", { name: "Upload Another Replay" }).click();
+  await page.setInputFiles('input[name="replay"]', {
+    name: "activation-context.xml",
+    mimeType: "application/xml",
+    buffer: Buffer.from(foulAppearanceContextXml())
+  });
+  await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
+  await expect(
+    page.getByText(/Context: -0\.83 context units across 1 estimate/)
+  ).toBeVisible();
+  const later = page.locator("tbody tr").filter({ hasText: "Dodge failed" });
+  await later.locator("summary").click();
+  await expect(later).toContainText(
+    "1 earlier player activation had already ended after Foul Appearance"
+  );
+  await expect(later).toContainText("1 other standing teammate");
+});
 
 test("replacement purchases retain separate source-backed trait lists", async ({
   page
@@ -219,8 +267,9 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.9");
+  expect(report.schemaVersion).toBe("2.10");
   expect(report.modelVersion).toBe("dice-only-18");
+  expect(report.contextModelVersion).toBe("mobility-possession-6");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
     report.coverage.rollCandidates.scoredCount +
@@ -460,22 +509,16 @@ test("invalid replay and hosting-generated text errors are understandable", asyn
 });
 
 test("inconsistent success reports and upstream timeouts stay readable", async ({
-  page,
-  request
+  page
 }) => {
-  const response = await request.post("/api/nufflizier/analyze", {
-    multipart: {
-      replay: {
-        name: "reference.xml",
-        mimeType: "application/xml",
-        buffer: readFileSync(
-          path.resolve("tests/fixtures/replays/sample-basic.xml")
-        )
-      }
-    }
-  });
-  expect(response.ok()).toBe(true);
-  const report = await response.json();
+  // This flow mocks malformed responses. Build its valid reference through
+  // the production service without consuming another upload-quota slot.
+  const report = analyzeNufflizerInput(
+    readFileSync(
+      path.resolve("tests/fixtures/replays/sample-basic.xml"),
+      "utf8"
+    )
+  );
   report.teams[0].luckScore = 42;
   let timeout = false;
   await page.route("**/api/nufflizier/analyze", (route) =>

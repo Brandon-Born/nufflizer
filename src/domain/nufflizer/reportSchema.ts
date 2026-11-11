@@ -37,6 +37,14 @@ const playerTraits = z.strictObject({
   acquiredSkills: z.array(z.number().int().nonnegative()).max(64).nullable()
 });
 export const LuckEventMetadataSchema = z.strictObject({
+  skillUsage: z.strictObject({ skillId: z.number().int().nonnegative(), used: z.boolean() }).optional(),
+  activationLoss: z.strictObject({
+    rollSourceId: text, rollSourceIndex: count, declarationSourceId: text, skillSourceId: text,
+    followingActivationSourceId: text, followingSourceIndex: count, followingPlayerId: text,
+    actorId: text, subjectId: text, teamId: text, teamTurn: z.number().int().positive(),
+    rosterIndex: z.number().int().min(0).max(1), periodCode: z.number().int().nonnegative().nullable(),
+    actorCell: pitchCell, beforeCheckpointAfter: count, afterCheckpointAfter: count
+  }).optional(),
   mercenary: z.strictObject({ operation: z.enum(["purchase", "removal_record"]), playerId: text,
     playerTypeId: z.number().int().nonnegative(), gamerId: z.number().int().min(0).max(1) }).optional(),
   ballTravel: z.strictObject({ from: pitchCell, to: pitchCell }).optional(),
@@ -86,6 +94,7 @@ export const LuckEventMetadataSchema = z.strictObject({
   preRoll: z
     .strictObject({
       checkpointAfter: count,
+      endedActivationSourceIds: z.array(text).max(64).optional(),
       actorRosterTeamId: text.optional(),
       actorTraits: playerTraits.optional(),
       targetTraits: playerTraits.optional(),
@@ -549,6 +558,43 @@ export const LuckReportSchema = z
           event.teamId
         ), "Reported evidence must have a known or unresolved team.");
       const context = event.metadata.preRoll;
+      const ended = context?.endedActivationSourceIds;
+      if (ended) require(new Set(ended).size === ended.length && ended.every(id => {
+        const loss = sources.get(id)?.metadata.activationLoss;
+        return loss && loss.teamId === context.actorRosterTeamId &&
+          loss.teamTurn === context.teamTurn &&
+          context.period === (loss.periodCode === 0 ? "first_half" : loss.periodCode === 1 ? "second_half" : loss.periodCode === 2 ? "extra_time" : null) &&
+          loss.followingSourceIndex <= (event.metadata.sourceIndex ?? -1);
+      }), "Known ended activations require earlier confirmed same-team, same-turn evidence.");
+      const activationLoss = event.metadata.activationLoss;
+      if (activationLoss) {
+        const declaration = sources.get(activationLoss.declarationSourceId);
+        const skill = sources.get(activationLoss.skillSourceId);
+        const following = sources.get(activationLoss.followingActivationSourceId);
+        require(event.metadata.sourceTag === "ResultRoll" && event.metadata.rollType === 37 &&
+          event.metadata.sourceId === activationLoss.rollSourceId &&
+          event.metadata.sourceIndex === activationLoss.rollSourceIndex &&
+          event.metadata.dice?.length === 1 && event.metadata.dice[0] === 1 && event.metadata.dieTypes?.[0] === 0 &&
+          event.metadata.difficulty === 2 && event.metadata.outcomeCode === 0 &&
+          event.teamId === activationLoss.teamId && event.playerId === activationLoss.actorId &&
+          event.metadata.targetId === activationLoss.subjectId && event.actualSuccess === false &&
+          event.scoringStatus === "excluded" && event.probabilitySuccess === null &&
+          declaration?.metadata.sourceTag === "ResultUseAction" && declaration.metadata.actionCode === 2 &&
+          declaration.playerId === activationLoss.actorId && declaration.metadata.actionId === event.metadata.actionId &&
+          (declaration.metadata.sourceIndex ?? Infinity) < activationLoss.rollSourceIndex &&
+          skill?.metadata.sourceTag === "ResultSkillUsage" && skill.playerId === activationLoss.subjectId &&
+          skill.metadata.skillUsage?.skillId === 10 && skill.metadata.skillUsage.used === true &&
+          skill.metadata.actionId === event.metadata.actionId &&
+          (skill.metadata.sourceIndex ?? Infinity) < activationLoss.rollSourceIndex &&
+          following?.metadata.sourceTag === "ResultUseAction" && following.playerId === activationLoss.followingPlayerId &&
+          following.playerId !== activationLoss.actorId && following.teamId === activationLoss.teamId &&
+          following.metadata.sourceIndex === activationLoss.followingSourceIndex &&
+          (following.metadata.actionCode ?? 0) >= 1 && (following.metadata.actionCode ?? 0) <= 6 &&
+          activationLoss.beforeCheckpointAfter < activationLoss.rollSourceIndex &&
+          activationLoss.afterCheckpointAfter >= activationLoss.rollSourceIndex &&
+          activationLoss.afterCheckpointAfter < activationLoss.followingSourceIndex,
+          "An activation loss requires the failed gate, opposing skill, following teammate and ordered checkpoints.");
+      }
       if (event.scoringStatus === "scored" && context?.actorRosterTeamId !== undefined)
         require(context.actorRosterTeamId === event.teamId,
           "Scored ownership must agree with the current observed roster.");

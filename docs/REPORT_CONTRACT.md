@@ -2,7 +2,7 @@
 
 Updated 2026-11-10. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.9` and model `dice-only-18`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.10` and model `dice-only-18`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -165,3 +165,13 @@ Recruitments records a valid EventBuyMercenary header and its uniquely selected 
 Source008 UI-087 selects type1455 for instance48, with innate[7,44,49,55,77], then records removal and a new purchase of type1121 with innate[25,44,50,54,17]. Board7/3 and9/3 independently place48 on roster1; the first explicitly corroborates type1455, while the second omits current Data. The acquired list is unknown in both candidate records. The selected replacement data is now available separately from current snapshot traits; it is not carried into current skill eligibility.
 
 Dice-only-18 admits ownership from a fresh, valid, unique pre-roll roster for an actor missing from the initial roster. This can replace absent or weaker turn-inferred ownership, but explicit event conflicts, ambiguous IDs and initial-roster contradictions remain unresolved. Future snapshots and unverified intervening mutations cannot supply this proof. The numeric roll contract still applies independently, and resolved ownership alone does not establish a tactical continuation policy. Context model mobility-possession-5 is unchanged.
+
+## Schema 2.10 confirmed activation losses
+
+GR-003 and UI-099 distinguish a player losing an ordinary Block activation from the team turn ending. The implemented path requires an explicit ordinary Block declaration (Action2, Skill0), the opposing target's Foul Appearance use, a fresh2+ D6 failure on1, and an immediately following different teammate's declaration. Ordered before/after checkpoints must agree on phase, active roster, cumulative turn and unchanged actor cell. Before-state CanAct must be true; after-state must not contradict a spent activation. A new team turn, reroll choice, intervening unknown message, same actor, conflicting owner or contradictory die withholds this confirmation. Blitz and special-action variants remain outside this slice.
+
+The report links the original declaration, skill-use, failed-gate and following-activation sources. The gate retains unknown odds and zero contribution; the observed loss is not priced as a Block value. Source008 purchase records and current roster traits remain separate from this action-specific skill-use proof.
+
+Mobility-possession-6 applies the confirmed spent status only at or after the following declaration, never to the failed gate's pre-state. The current frame can then exclude that actor from later useful standing-move counts in the same recorded team turn. Explicit renewed availability, changed cell/clock/period/phase/active side, missing membership or unknown mutation clears the derived status. Snapshots remain immutable and their omitted flags remain null. Prefix-only skill/gate recognition does not depend on later confirmation.
+
+The exact UI-099 numeric records show away actors42 and44 failing separately, with home target10 owning the skill, followed by actors44 and43 in the same team turn8. Its source sequences254–257 and boards304–307 are replayed as a minimal ordered fragment with deliberately renumbered fragment locators; unrecorded moves are not invented. A separate synthetic complete-state continuation gives a later failed2+ Dodge one remaining useful teammate rather than two:−5/6 versus−5/3 context units. This tests availability arithmetic, not a calibrated estimate of the earlier lost Block's match value.

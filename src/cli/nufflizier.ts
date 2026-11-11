@@ -18,6 +18,7 @@ import {
   explainContextImpact,
   explainMovementOutcome,
   explainPickupBallChain,
+  explainActivationLoss,
   explainProGate,
   explainContextCoverage,
   explainRecruitmentEvidence
@@ -56,6 +57,9 @@ function formatTeamSummary(
 ): string {
   const [home, away] = report.teams;
   const topMoments = report.keyMoments.slice(0, 5);
+  const lostActivations = report.events.filter(
+    (event) => event.metadata.activationLoss
+  );
   const eventsById = new Map(report.events.map((event) => [event.id, event]));
   const scoredByType = Object.entries(report.coverage.scoredByType).map(
     ([type, count]) => {
@@ -80,6 +84,17 @@ function formatTeamSummary(
     `Roll-candidate coverage: ${(report.coverage.rollCandidates.scoredRate * 100).toFixed(1)}% scored (${report.coverage.rollCandidates.scoredCount} scored, ${report.coverage.rollCandidates.excludedCount} excluded)`,
     `All-event coverage: ${(report.coverage.allEvents.scoredRate * 100).toFixed(1)}% scored (${report.coverage.allEvents.scoredCount} scored, ${report.coverage.allEvents.excludedCount} excluded)`,
     explainContextCoverage(report.coverage.contextEvidence),
+    ...(lostActivations.length
+      ? [
+          `Observed player activation losses: ${lostActivations.length}`,
+          ...lostActivations
+            .slice(0, 20)
+            .map((event) => explainActivationLoss(event)!),
+          ...(lostActivations.length > 20
+            ? ["Further activation-loss evidence is retained in JSON."]
+            : [])
+        ]
+      : []),
     ...(report.recruitments.length
       ? [explainRecruitmentEvidence(report.recruitments)!]
       : []),

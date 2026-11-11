@@ -35,6 +35,7 @@ import {
 } from "@/domain/replay/attribution";
 import { summarizeRollFamilies } from "./rollCoverage";
 import { summarizeContextEvidence } from "./contextCoverage";
+import { findConfirmedActivationLosses } from "@/domain/replay/activationLosses";
 import {
   mercenaryIdentity,
   observeRecruitmentPurchases
@@ -1001,7 +1002,15 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   const movementFalls: NonNullable<ReturnType<typeof findMovementFall>>[] = [];
   const ownership = buildPlayerOwnershipIndex(replay);
   const { playerToTeam } = ownership;
-  const contextBySource = reconstructPreRollEvidence(replay);
+  const activationLosses = findConfirmedActivationLosses(replay);
+  const activationEvidenceSources = new Set(
+    activationLosses.flatMap((loss) => [
+      loss.declarationSourceId,
+      loss.skillSourceId,
+      loss.followingActivationSourceId
+    ])
+  );
+  const contextBySource = reconstructPreRollEvidence(replay, activationLosses);
   const koRecoveryChecks = countKoRecoveryChecks(replay.turns);
 
   for (const replayTurn of replay.turns) {
@@ -1069,6 +1078,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       if (
         !apothecary.has(eventIndex) &&
         !embeddedInjuries.has(eventIndex) &&
+        !activationEvidenceSources.has(event.id ?? "") &&
         !isRollCandidateEvent(event) &&
         !isDirectResultOrQuestion(event) &&
         ![
@@ -1171,6 +1181,34 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   );
   for (const turn of replay.turns)
     linkPickupBallConsequences(turn, ballSources);
+  for (const loss of activationLosses) {
+    const roll = ballSources.get(loss.rollSourceId),
+      skill = ballSources.get(loss.skillSourceId);
+    if (!roll || !skill) continue;
+    roll.metadata.activationLoss = loss;
+    skill.metadata.skillUsage = { skillId: 10, used: true };
+    skill.label = "Recorded Foul Appearance use";
+    skill.statusReason =
+      "Recorded skill use supplies context for the Foul Appearance test.";
+    for (const source of [
+      loss.declarationSourceId,
+      loss.followingActivationSourceId
+    ]) {
+      const declaration = ballSources.get(source);
+      if (declaration) {
+        declaration.label =
+          declaration.metadata.actionCode === 2
+            ? "Recorded Block declaration"
+            : "Recorded player activation";
+        declaration.statusReason =
+          "Recorded declaration supplies action context.";
+      }
+    }
+    roll.label = "Foul Appearance failed; activation lost";
+    roll.actualSuccess = false;
+    roll.statusReason =
+      "The failed Foul Appearance test ended this player's declared Block activation; a different teammate continued in the same recorded team turn.";
+  }
 
   const homeAggregate = initialAggregate(homeTeam.id, homeTeam.name);
   const awayAggregate = initialAggregate(awayTeam.id, awayTeam.name);

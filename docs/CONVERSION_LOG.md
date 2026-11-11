@@ -714,3 +714,7 @@ Schema2.8 retains numeric current-snapshot skill lists and player-type observati
 ## 2026-11-10 - Replacement purchase and actor ownership evidence
 
 Schema2.9 records selected mercenary data separately for each purchase, with strict first-roster and replacement/removal links. Source008's reused ID48 no longer hides the distinction between selected types1455 and1121. Dice-only-18 can attribute an unnamed new actor from fresh unique roster membership while preserving explicit/initial conflicts and unknown current eligibility. No contextual value or complete identity-persistence rule is inferred.
+
+## 2026-11-10 - Player activation loss in context state
+
+Schema2.10 and mobility-possession-6 distinguish a confirmed ordinary-Block Foul Appearance activation loss from a team turnover. Later same-turn availability can exclude the spent player using explicit source links, while snapshots and missing flags remain unchanged. Known position and tackle zone persist. The loss itself keeps unknown tactical value; later scoped mobility estimates account for the reduced useful-move set. UI and CLI expose these consequences, with all comparative verdicts still abstaining.

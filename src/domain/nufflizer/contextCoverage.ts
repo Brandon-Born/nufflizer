@@ -26,7 +26,8 @@ export function summarizeContextEvidence(events: readonly LuckEvent[]) {
     if (
       event.metadata.movementFall ||
       event.metadata.movementTouchdown ||
-      event.metadata.pickupBallChain
+      event.metadata.pickupBallChain ||
+      event.metadata.activationLoss
     )
       consequenceCount++;
   }

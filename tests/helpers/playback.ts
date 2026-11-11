@@ -70,3 +70,5 @@ export function playbackFragment(
 ) {
   return parseReplayXml(playbackFragmentXml(...args));
 }
+
+export { xml as projectionXml };

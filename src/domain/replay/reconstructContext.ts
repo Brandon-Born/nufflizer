@@ -5,9 +5,15 @@ import type {
   ReplayBoardCheckpoint
 } from "./boardState";
 import type { ReplayEvent, ReplayModel } from "./types";
+import {
+  applyKnownActivationLosses,
+  findConfirmedActivationLosses,
+  type ConfirmedActivationLoss
+} from "./activationLosses";
 
 type Cell = { x: number; y: number };
 export type PreRollEvidence = {
+  endedActivationSourceIds?: string[];
   actorRosterTeamId?: string;
   actorTraits?: NonNullable<ObservedPlayer["traits"]>;
   targetTraits?: NonNullable<ObservedPlayer["traits"]>;
@@ -422,7 +428,10 @@ function summarize(
 // Replay only verified transitions from ordered snapshots. Store compact
 // evidence per roll, not a copy of the board at every source event.
 export function reconstructPreRollEvidence(
-  replay: ReplayModel
+  replay: ReplayModel,
+  confirmedLosses: readonly ConfirmedActivationLoss[] = findConfirmedActivationLosses(
+    replay
+  )
 ): Map<string, PreRollEvidence> {
   const result = new Map<string, PreRollEvidence>();
   if (replay.replayVersion !== "1-4-0-0") return result;
@@ -439,14 +448,22 @@ export function reconstructPreRollEvidence(
   let standUpPending = false;
   let standUpSourceIndex: number | undefined;
   let pickupSourceId: string | undefined;
+  let blockDeclarationActionId: string | undefined;
+  let foulAppearanceActionId: string | undefined;
+  const lossesByConfirmation = new Map(
+    confirmedLosses.map((loss) => [loss.followingActivationSourceId, loss])
+  );
+  let activeLosses = new Map<string, ConfirmedActivationLoss>();
   for (const turn of replay.turns)
     for (const event of turn.events) {
       if (event.sourceIndex === undefined) continue;
+      let frameChanged = false;
       while (
         cursor < checkpoints.length &&
         checkpoints[cursor]!.afterSourceIndex < event.sourceIndex
       ) {
         checkpoint = checkpoints[cursor++]!;
+        frameChanged = true;
         const next = checkpoint.board;
         if (checkpoint.kind === "initial")
           standardPitch = next?.pitchLayout === "standard";
@@ -468,10 +485,25 @@ export function reconstructPreRollEvidence(
         standUpPending = false;
         standUpSourceIndex = undefined;
         pickupSourceId = undefined;
+        blockDeclarationActionId = undefined;
+        foulAppearanceActionId = undefined;
       }
+      const confirmed = event.id
+        ? lossesByConfirmation.get(event.id)
+        : undefined;
+      if (confirmed) activeLosses.set(confirmed.actorId, confirmed);
+      if (board && (frameChanged || confirmed)) {
+        const reduced = applyKnownActivationLosses(board, activeLosses);
+        board = reduced.board;
+        activeLosses = reduced.losses;
+      }
+      if (frameChanged && !board) activeLosses.clear();
       if (event.type === "step" || event.sourceTag === "BallStep") {
+        blockDeclarationActionId = undefined;
+        foulAppearanceActionId = undefined;
         if (standUpPending) {
           board = null;
+          activeLosses.clear();
           activationId = null;
         }
         standUpPending =
@@ -481,14 +513,20 @@ export function reconstructPreRollEvidence(
         moveOutcomeSourceIndex = undefined;
         continue;
       }
-      if (!board || !checkpoint) continue;
+      if (!board || !checkpoint) {
+        activeLosses.clear();
+        continue;
+      }
       const p = event.payload;
       if (
         event.id &&
-        ["ResultRoll", "QuestionTeamRerollUsage", "QuestionBlockDice"].includes(
-          event.sourceTag
-        )
-      )
+        [
+          "ResultRoll",
+          "QuestionTeamRerollUsage",
+          "QuestionBlockDice",
+          "ResultUseAction"
+        ].includes(event.sourceTag)
+      ) {
         result.set(
           event.id,
           summarize(
@@ -503,6 +541,17 @@ export function reconstructPreRollEvidence(
             pickupSourceId
           )
         );
+        const context = result.get(event.id)!;
+        const ended = [...activeLosses.values()]
+          .filter(
+            (loss) =>
+              loss.teamId === context.actorRosterTeamId &&
+              loss.teamTurn === context.teamTurn &&
+              loss.followingSourceIndex <= event.sourceIndex!
+          )
+          .map((loss) => loss.rollSourceId);
+        if (ended.length) context.endedActivationSourceIds = ended;
+      }
       if (
         [
           "QuestionTeamRerollUsage",
@@ -515,6 +564,62 @@ export function reconstructPreRollEvidence(
       // The snapshot already describes both the known holder and absence of
       // one. Its repeated markers are evidence, not another transition.
       if (event.sourceTag === "Carrier" && event.checkpointCarrier) continue;
+      const gateDie = (
+        p?.Dice as { Die?: { DieType?: number; Value?: number } } | undefined
+      )?.Die;
+      if (
+        event.sourceTag === "ResultRoll" &&
+        event.rollType === 37 &&
+        event.actionId === foulAppearanceActionId &&
+        foulAppearanceActionId !== undefined &&
+        p?.Status === 1 &&
+        p.NewRoll === 1 &&
+        p.Requirement === 2 &&
+        p.Difficulty === 2 &&
+        p.Outcome === 0 &&
+        gateDie?.DieType === 0 &&
+        gateDie.Value === 1 &&
+        event.playerId === step?.stepActorId &&
+        !event.attributionConflict
+      ) {
+        // Prefix evidence establishes the test, not its later policy or
+        // availability result. Preserve only earlier confirmed losses.
+        board = null;
+        activationId = null;
+        continue;
+      }
+      const blockActor = id(step?.stepActorId),
+        blockTarget = id(step?.stepTargetId);
+      const actorRoster = board.teams.find((t) =>
+        t.players.some((p) => p.id === blockActor)
+      );
+      const targetRoster = board.teams.find((t) =>
+        t.players.some((p) => p.id === blockTarget)
+      );
+      if (
+        event.sourceTag === "ResultSkillUsage" &&
+        event.payload?.Skill === 10 &&
+        event.payload.Used === 1 &&
+        step?.sourceTag === "PlayerStep" &&
+        step.stepType === 0 &&
+        blockDeclarationActionId !== undefined &&
+        event.actionId === blockDeclarationActionId &&
+        event.actionId === step.actionId &&
+        event.playerId === step.stepTargetId &&
+        String(event.payload.PlayerId) === event.playerId &&
+        !event.attributionConflict &&
+        actorRoster &&
+        targetRoster &&
+        actorRoster !== targetRoster &&
+        actorRoster.rosterIndex === board.activeTeamIndex &&
+        (event.actorTeamSource === "turn_inferred" ||
+          !event.actorTeamId ||
+          actorRoster.explicitTeamId === null ||
+          event.actorTeamId !== String(actorRoster.explicitTeamId))
+      ) {
+        foulAppearanceActionId = event.actionId;
+        continue;
+      }
       const actor = id(event.stepActorId);
       const inStep =
         step?.actionId !== undefined && step.actionId === event.actionId;
@@ -542,12 +647,14 @@ export function reconstructPreRollEvidence(
               (board!.activeTeamIndex === null &&
                 event.actionCode === 1 &&
                 event.actorTeamSource === "player_map")) &&
-            t.players.some((p) => p.id === actor)
+            t.players.some((p) => p.id === actor && p.canAct !== false)
         )
       ) {
         board = { ...board, activePlayerId: actor };
         activationId = event.id ?? null;
         activationActionCode = event.actionCode;
+        blockDeclarationActionId =
+          event.actionCode === 2 ? event.actionId : undefined;
         standUpSourceIndex = undefined;
         pickupSourceId = undefined;
         continue;
@@ -714,6 +821,9 @@ export function reconstructPreRollEvidence(
       }
       // For unverified mutations do not fill the gap from a future snapshot.
       board = null;
+      activeLosses.clear();
+      blockDeclarationActionId = undefined;
+      foulAppearanceActionId = undefined;
       activationId = null;
       standUpSourceIndex = undefined;
       pickupSourceId = undefined;
