@@ -8,6 +8,8 @@ import type { ReplayEvent, ReplayModel } from "./types";
 
 type Cell = { x: number; y: number };
 export type PreRollEvidence = {
+  actorTraits?: NonNullable<ObservedPlayer["traits"]>;
+  targetTraits?: NonNullable<ObservedPlayer["traits"]>;
   checkpointAfter: number;
   checkpointReplayStep?: number;
   phaseCode: number | null;
@@ -141,6 +143,17 @@ function summarize(
     (t) => actorId !== null && t.players.some((p) => p.id === actorId)
   );
   const actor = actorTeam?.players.find((p) => p.id === actorId);
+  const targetId = id(event.targetId);
+  const targetTeam = board.teams.find(
+    (t) => targetId !== null && t.players.some((p) => p.id === targetId)
+  );
+  const target = targetTeam?.players.find((p) => p.id === targetId);
+  const actorObserved =
+    actorTeam?.explicitTeamId !== null &&
+    actorTeam?.explicitTeamId !== undefined &&
+    String(actorTeam.explicitTeamId) === event.actorTeamId &&
+    !event.attributionConflict;
+  const actorTraits = actorObserved ? (actor?.traits ?? undefined) : undefined;
   const actorCell =
     actor?.pitchLocation === "on_pitch" ? cell(actor.cell) : null;
   const owned =
@@ -359,6 +372,13 @@ function summarize(
       };
   }
   return {
+    actorTraits,
+    targetTraits:
+      actorObserved &&
+      targetId !== actorId &&
+      targetTeam?.explicitTeamId !== null
+        ? (target?.traits ?? undefined)
+        : undefined,
     checkpointAfter: checkpoint.afterSourceIndex,
     checkpointReplayStep: checkpoint.replayStep ?? undefined,
     phaseCode: board.phaseCode,

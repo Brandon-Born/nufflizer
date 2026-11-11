@@ -706,3 +706,7 @@ Schema2.6 preserves explicitly historical initial-roster names on uniquely attri
 ## 2026-11-10 - Pickup ball-chain evidence
 
 Schema2.7 links scoped failed pickups to recorded standard-ball bounces and verified catches. Exact directions, source ordering, landing cells and retained-original decisions are checked. The grouped dice subtotal references existing contributions by team and adds no tactical weight. Unknown successor policies and possession/turn value stay explicit.
+
+## 2026-11-10 - Current player-trait data
+
+Schema2.8 retains numeric current-snapshot skill lists and player-type observations with separate actor/target roles and strict pre-roll provenance. Omitted lists, malformed data, ownership conflicts, recruitment/ID reuse and future observations cannot supply a fabricated complete trait set. Human-readable trait names describe recorded data without changing odds or implying eligibility. Complete persistence/mutation policies and trait-conditioned tactical models remain open.

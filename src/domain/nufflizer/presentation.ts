@@ -67,6 +67,28 @@ export function explainPreRollEvidence(
   context: LuckReport["events"][number]["metadata"]["preRoll"]
 ): string | null {
   const details: string[] = [];
+  const traitNames = new Map([
+    [30, "Block"],
+    [7, "Dodge"],
+    [57, "Tackle"],
+    [63, "Thick Skull"],
+    [59, "Stunty"]
+  ]);
+  for (const [role, traits] of [
+    ["actor", context?.actorTraits],
+    ["target", context?.targetTraits]
+  ] as const) {
+    const listed = [
+      ...new Set([
+        ...(traits?.innateSkills ?? []),
+        ...(traits?.acquiredSkills ?? [])
+      ])
+    ].flatMap((code) => (traitNames.has(code) ? [traitNames.get(code)!] : []));
+    if (listed.length)
+      details.push(
+        `The ${role}'s recorded player data lists ${listed.join(", ")}. Skill use needs its own action evidence.`
+      );
+  }
   if (context?.actorStandUpSourceIndex !== undefined) {
     details.push(
       context.actorMovementRemaining === undefined

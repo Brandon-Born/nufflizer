@@ -1,8 +1,10 @@
 // Observed checkpoints, not a simulator. Each snapshot replaces the previous
 // observation: omitted fields are unknown, never defaults or carry-forwards.
+import { observePlayerTraits, type ObservedPlayerTraits } from "./playerTraits";
 type RecordLike = Record<string, unknown>;
 export type ObservedCell = { x: number | null; y: number | null };
 export type ObservedPlayer = {
+  traits: ObservedPlayerTraits | null;
   id: number | null;
   cell: ObservedCell;
   pitchLocation: "on_pitch" | "off_pitch" | "unknown";
@@ -127,6 +129,11 @@ export function observeBoardCheckpoint(
                   const p = record(entry);
                   const position = cell(p.Cell);
                   return {
+                    traits: observePlayerTraits(
+                      p.Data,
+                      nonnegative(p.Id),
+                      nonnegative(record(team.Data).TeamId)
+                    ),
                     id: nonnegative(p.Id),
                     cell: position,
                     pitchLocation: pitchLocation(position),

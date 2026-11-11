@@ -2,7 +2,7 @@
 
 Updated 2026-11-10. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.7` and model `dice-only-17`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.8` and model `dice-only-17`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -149,3 +149,11 @@ A stationary Catch step at that landing can link its verified scored result, inc
 Each per-team dice subtotal equals the existing failed-pickup contribution plus that team's linked catch contributions. The group adds no new contribution and does not combine opponents' luck under the pickup team's perspective. Catch-dependent opportunities retain their own conditional distributions. This observed chain is separate from a counterfactual possession or lost-turn value. The consequence coverage count now includes these linked pickup branches as well as movement falls and touchdowns. Dice-only-17 and mobility-possession-5 stay unchanged.
 
 Independent examples: demo11 sequence186 has Pickup3+ on2, bounce3 to[20,8], then player9 Catch4+ on4; its same-team subtotal is−11/60. Demo3 sequence415 has Pickup6+ on5, bounce2 to[15,10], then player45 Catch6+ on6; its subtotal is11/15. Demo1 sequence61 preserves Pickup4+ on3 after declining, bounce2 to[4,5], Catch5+ on3 retained at62/0 after declining, then bounce4 to[3,5]. Its subtotal is−11/12. These values describe recorded dice, not whether the resulting action helped the match.
+
+## Schema 2.8 current trait provenance
+
+Numeric player Data now survives the compact board projection: Data.Id, IdPlayerTypes, InnateSkills and AcquiredSkills. Names, account data and arbitrary player fields are not copied. Each skill list is independently null when omitted or malformed; explicit empty lists are empty arrays. Duplicate/nonfinite/fractional/negative codes, unknown list children and more than64 entries withhold that list. A mismatched Data.Id or an explicit player Data.TeamId conflicting with its enclosing roster withholds the whole trait observation. The ordered XML projection preserves nested selected list shapes so malformed children cannot become a fabricated empty list.
+
+The existing conservative pre-roll reducer can expose actorTraits and targetTraits from its exact current frame, with the checkpoint boundary already present in the contract. Actor ownership must match current roster evidence; target data is separate and does not require the actor's list to exist. Unsupported intervening mutations and a newer snapshot replace the frame. No initial roster list or future observation supplies omitted current Data. Known listed Block, Dodge, Tackle, Thick Skull and Stunty can be explained as recorded traits; eligibility and skill use still need action evidence.
+
+UI-087 source008 board7/3 records player48 Data.Id48, type1455 and innate codes[49,55,44,77,7], with the acquired list omitted. After removal and a new purchase of ID48, board9/3 omits Data. Its traits remain unknown. The stale playback portrait is not identity evidence. Demo1's initial player1 has innate[61,63] and acquired[30,7], but later snapshots omit Data; no pre-roll trait claim is filled from that initial list. This supplies bounded provenance, not complete trait persistence, a skill-conditioned block model or an injury table. Dice-only-17 and mobility-possession-5 remain unchanged.

@@ -88,6 +88,26 @@ function synthetic(overrides: Record<string, unknown> = {}) {
 }
 
 describe("NUF-016 ordered, explicitly observed board checkpoints", () => {
+  it("preserves current mercenary traits and clears them after ID48 is reused with Data omitted", () => {
+    // UI-087 source008: first purchase's board7/3 supplies Data for48;
+    // after removal and repurchase, board9/3 omits it. Playback keeps an
+    // earlier portrait, so it cannot fill this missing current data.
+    const replay = playback("008", "UI-087");
+    const observations = replay
+      .boardCheckpoints!.filter((c) => c.board)
+      .map(
+        (c) =>
+          c.board!.teams.flatMap((t) => t.players).find((p) => p.id === 48)
+            ?.traits
+      );
+    expect(observations[0]).toMatchObject({
+      dataPlayerId: 48,
+      playerTypeId: 1455,
+      innateSkills: [49, 55, 44, 77, 7],
+      acquiredSkills: null
+    });
+    expect(observations[1]).toBeNull();
+  });
   it("does not mistake Bomb markers or repeated snapshots for possession changes and clears Ball carrier -1", () => {
     const held = xml({
       BoardState: { ...synthetic(), Bomb: { Carrier: 40 } }

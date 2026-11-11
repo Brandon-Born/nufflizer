@@ -181,7 +181,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.7");
+  expect(report.schemaVersion).toBe("2.8");
   expect(report.modelVersion).toBe("dice-only-17");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
@@ -356,9 +356,9 @@ test("complete pre-roll evidence explains the cost of an exposed pickup", async 
     name: "context.xml",
     mimeType: "application/xml",
     buffer: Buffer.from(
-      contextReplayXml({ type: 4, exposed: true }).replace(
+      contextReplayXml({ type: 4, exposed: true }).replaceAll(
         "<Id>10</Id>",
-        "<Id>10</Id><Data><Name>Initial Runner</Name></Data>"
+        "<Id>10</Id><Data><Id>10</Id><Name>Initial Runner</Name><InnateSkills><InnateSkillsItem>30</InnateSkillsItem><InnateSkillsItem>63</InnateSkillsItem></InnateSkills><AcquiredSkills/></Data>"
       )
     )
   });
@@ -382,6 +382,9 @@ test("complete pre-roll evidence explains the cost of an exposed pickup", async 
     row.getByText(/38% of eligible bounce squares are marked/)
   ).toBeVisible();
   await expect(row).toContainText("Player 10 (initial roster: Initial Runner)");
+  await expect(row).toContainText(
+    "recorded player data lists Block, Thick Skull"
+  );
   await page.getByLabel("Player ID or initial roster name").fill("runner");
   await page.getByLabel("Half", { exact: true }).selectOption("first_half");
   await page.getByLabel("Team turn", { exact: true }).fill("1");

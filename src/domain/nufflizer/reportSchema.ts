@@ -30,6 +30,12 @@ const pitchCell = z.strictObject({
   x: z.number().int().min(0).max(25),
   y: z.number().int().min(0).max(14)
 });
+const playerTraits = z.strictObject({
+  dataPlayerId: z.number().int().nonnegative().nullable(),
+  playerTypeId: z.number().int().nonnegative().nullable(),
+  innateSkills: z.array(z.number().int().nonnegative()).max(64).nullable(),
+  acquiredSkills: z.array(z.number().int().nonnegative()).max(64).nullable()
+});
 export const LuckEventMetadataSchema = z.strictObject({
   ballTravel: z.strictObject({ from: pitchCell, to: pitchCell }).optional(),
   ballCatchCell: pitchCell.optional(),
@@ -78,6 +84,8 @@ export const LuckEventMetadataSchema = z.strictObject({
   preRoll: z
     .strictObject({
       checkpointAfter: count,
+      actorTraits: playerTraits.optional(),
+      targetTraits: playerTraits.optional(),
       checkpointReplayStep: z.number().int().positive().optional(),
       phaseCode: z.number().int().nonnegative().nullable(),
       period: z.enum(["first_half", "second_half", "extra_time"]).nullable(),
@@ -496,6 +504,16 @@ export const LuckReportSchema = z
           event.teamId
         ), "Reported evidence must have a known or unresolved team.");
       const context = event.metadata.preRoll;
+      for (const traits of [context?.actorTraits, context?.targetTraits])
+        for (const list of [traits?.innateSkills, traits?.acquiredSkills])
+          if (list) require(new Set(list).size === list.length,
+            "Observed skill lists cannot contain repeated codes.");
+      if (context?.actorTraits?.dataPlayerId !== null && context?.actorTraits?.dataPlayerId !== undefined)
+        require(String(context.actorTraits.dataPlayerId) === event.playerId,
+          "Actor trait data must match the observed player ID.");
+      if (context?.targetTraits?.dataPlayerId !== null && context?.targetTraits?.dataPlayerId !== undefined)
+        require(String(context.targetTraits.dataPlayerId) === event.metadata.targetId,
+          "Target trait data must match the observed target ID.");
       if (context && event.metadata.sourceIndex !== undefined)
         require(context.checkpointAfter <
           event.metadata

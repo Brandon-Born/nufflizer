@@ -121,6 +121,13 @@ const boardProjection = {
       ListPitchPlayers: {
         PlayerState: {
           Id: true,
+          Data: {
+            Id: true,
+            TeamId: true,
+            IdPlayerTypes: true,
+            InnateSkills: true,
+            AcquiredSkills: true
+          },
           Cell: cellProjection,
           CanAct: true,
           TackleZone: true,
@@ -147,8 +154,8 @@ function asObject(
     const inner = children(node, tag);
     const fieldProjection = projection?.[tag];
     const value =
-      fieldProjection !== true && inner.some((n) => !tagOf(n).startsWith("#"))
-        ? asObject(inner, fieldProjection)
+      inner.some((n) => !tagOf(n).startsWith("#"))
+        ? asObject(inner, fieldProjection === true ? undefined : fieldProjection)
         : textOf(inner);
     const previous = out[tag];
     if (Array.isArray(previous)) previous.push(value);

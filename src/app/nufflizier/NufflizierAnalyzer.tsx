@@ -774,11 +774,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                                 {explainContextImpact(moment)}
                               </p>
                             ) : null}
-                            {moment.metadata.preRoll
-                              ?.actorStandUpSourceIndex !== undefined ||
-                            moment.metadata.preRoll?.actorPickupSourceId ||
-                            moment.metadata.preRoll?.scoringAttempt ||
-                            moment.metadata.preRoll?.teammateCarrierMove ? (
+                            {explainPreRollEvidence(moment.metadata.preRoll) ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainPreRollEvidence(
                                   moment.metadata.preRoll
