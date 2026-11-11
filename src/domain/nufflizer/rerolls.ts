@@ -1,3 +1,4 @@
+import { verifyLonerTest } from "@/domain/replay/loner";
 import type { ReplayEvent } from "@/domain/replay/types";
 import { numericCheckExclusion } from "./numericCheckContract";
 
@@ -15,7 +16,13 @@ export type RerollLink = {
   decisionId?: string;
   mergedIntoId?: string;
   policy?: string;
-  lonerGate?: { passed: boolean; gamerId: 0 | 1; skillSourceId: string };
+  lonerGate?: {
+    passed: boolean;
+    gamerId: 0 | 1;
+    skillSourceId: string;
+    threshold: 3 | 4;
+    skillId: 44 | 1008;
+  };
   proGate?: { passed: boolean; successChance: number; skillSourceId: string };
 };
 function singleD6(roll: Record<string, unknown>): number | undefined {
@@ -73,7 +80,6 @@ export function linkLonerGates(
     const choice = events[index - 2];
     const skill = events[index - 1];
     const gamerId = choice?.payload?.GamerId;
-    const p = roll.payload;
     if (
       !owner ||
       !choice?.id ||
@@ -82,14 +88,9 @@ export function linkLonerGates(
       choice.payload?.Used !== 1 ||
       (gamerId !== 0 && gamerId !== 1) ||
       skill.sourceTag !== "ResultSkillUsage" ||
-      skill.payload?.Skill !== 44 ||
-      skill.payload.Used !== 1 ||
-      String(skill.payload.PlayerId) !== actor ||
-      p?.Status !== 1 ||
-      p.NewRoll !== 1 ||
-      p.Requirement !== 4 ||
-      p.Difficulty !== 4 ||
-      (p.Modifiers !== undefined && p.Modifiers !== "")
+      skill.payload?.Used !== 1 ||
+      String(skill.payload?.PlayerId) !== actor ||
+      !verifyLonerTest(skill, roll)
     )
       continue;
     if (
@@ -105,16 +106,15 @@ export function linkLonerGates(
       )
     )
       continue;
-    const die = singleD6(p);
-    if (die === undefined || p.Outcome !== Number(die >= 4)) continue;
-    const passed = die >= 4;
+    const verified = verifyLonerTest(skill, roll)!;
+    const passed = verified.passed;
     links.set(index, {
       rerollAvailable: false,
       rerollUsed: false,
       resource: "team",
       teamRerollsSpent: 1,
       decisionId: choice.id,
-      lonerGate: { passed, gamerId, skillSourceId: skill.id },
+      lonerGate: { ...verified, gamerId, skillSourceId: skill.id },
       exclusionReason: passed
         ? "Loner passed after one team reroll was spent. The replacement requires its own dice evidence."
         : "Loner failed after one team reroll was spent. The gate granted no replacement dice."

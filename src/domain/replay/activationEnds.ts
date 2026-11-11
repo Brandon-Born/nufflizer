@@ -1,6 +1,8 @@
+import { verifyLonerTest } from "./loner";
 import { mentalTraitTest, recordedMentalEffect } from "./mentalEffects";
 import {
   checkpointClockEpochs,
+  consistentNormalStandBy,
   lastBoardCheckpointBefore,
   type ObservedBoard
 } from "./boardState";
@@ -93,18 +95,6 @@ export function applyActivationEnds(
   return { board: current, ends: remaining };
 }
 
-function face(p: Record<string, unknown> | undefined) {
-  const d = (
-    p?.Dice as { Die?: { DieType?: unknown; Value?: unknown } } | undefined
-  )?.Die;
-  return d?.DieType === 0 &&
-    typeof d.Value === "number" &&
-    Number.isInteger(d.Value) &&
-    d.Value >= 1 &&
-    d.Value <= 6
-    ? d.Value
-    : undefined;
-}
 function failed(
   p: Record<string, unknown> | undefined,
   type: number,
@@ -215,24 +205,14 @@ export function findMentalActivationEnds(replay: ReplayModel): ActivationEnd[] {
           lonerSkill = events[i - 3];
           loner = events[i - 2];
           if (
-            lonerSkill?.sourceTag !== "ResultSkillUsage" ||
-            lonerSkill.payload?.Skill !== 44 ||
-            lonerSkill.payload.Used !== 1 ||
+            !lonerSkill ||
+            !loner ||
+            !verifyLonerTest(lonerSkill, loner) ||
+            verifyLonerTest(lonerSkill, loner)!.passed !== replacement ||
             lonerSkill.playerId !== roll.playerId ||
             lonerSkill.actionId !== roll.actionId ||
-            loner?.rollType !== 71 ||
-            loner.sourceTag !== "ResultRoll" ||
             loner.actionId !== roll.actionId ||
-            loner.payload?.Status !== 1 ||
-            loner.payload.NewRoll !== 1 ||
-            loner.payload.Outcome !== Number(replacement) ||
-            loner.payload.Requirement !== 4 ||
-            loner.payload.Difficulty !== 4 ||
-            loner.playerId !== roll.playerId ||
-            (loner.payload.Modifiers !== undefined &&
-              loner.payload.Modifiers !== "") ||
-            face(loner.payload) === undefined ||
-            face(loner.payload)! >= 4 !== replacement
+            loner.playerId !== roll.playerId
           )
             continue;
         }
@@ -274,8 +254,13 @@ export function findMentalActivationEnds(replay: ReplayModel): ActivationEnd[] {
         effect.sourceIndex === undefined
       )
         continue;
-      const nextStep = events[i + 1],
-        following = events[i + 2];
+      const standBy =
+        events[i + 1]?.sourceTag === "EventRulesEngineStandBy"
+          ? events[i + 1]
+          : undefined;
+      const nextIndex = i + (standBy ? 2 : 1);
+      const nextStep = events[nextIndex],
+        following = events[nextIndex + 1];
       if (
         nextStep?.sourceTag !== "PlayerStep" ||
         nextStep.stepType !== 0 ||
@@ -304,6 +289,7 @@ export function findMentalActivationEnds(replay: ReplayModel): ActivationEnd[] {
       if (
         !a ||
         !b ||
+        (standBy && !consistentNormalStandBy(standBy, a, b)) ||
         a.issues.length ||
         b.issues.length ||
         a.stable !== true ||

@@ -1,3 +1,4 @@
+import { enumerateBlockPool } from "./blockPools";
 import { z } from "zod";
 import { VERDICT_SUMMARIES } from "./explainabilityCopy";
 import { CONTEXT_MODEL_VERSION } from "./contextImpact";
@@ -62,6 +63,11 @@ const activationEnd = z.strictObject({
     .optional()
 });
 export const LuckEventMetadataSchema = z.strictObject({
+  setupPhase: z.strictObject({code:z.literal(3)}).optional(),
+  driveEffectExpiry: z.strictObject({playerId:text,teamId:text,providerSkillId:z.union([z.literal(31),z.literal(51)]),phaseSourceId:text,
+    beforeCheckpointAfter:count,afterCheckpointAfter:count,afterReplayStep:z.number().int().positive(),afterChildIndex:z.number().int().nonnegative(),
+    afterPitchLocation:z.enum(["on_pitch","off_pitch","unknown"]),afterRecordedCanAct:z.boolean().nullable(),afterRecordedTackleZone:z.boolean().nullable()}).optional(),
+  teamRerollDecision: z.strictObject({ gamerId: z.union([z.literal(0),z.literal(1)]), used: z.literal(true) }).optional(),
   mentalTraitResolution: z.strictObject({ providerSkillId: z.union([z.literal(31), z.literal(51)]), effectEndSourceId: text, skillSourceId: text }).optional(),
   mentalEffectEnd: z.strictObject({ providerSkillId: z.union([z.literal(31),z.literal(51)]), declarationSourceId: text, playerId: text }).optional(),
   activationEnd: activationEnd.optional(),
@@ -104,6 +110,8 @@ export const LuckEventMetadataSchema = z.strictObject({
   lonerGate: z
     .strictObject({
       passed: z.boolean(),
+      threshold: z.union([z.literal(3), z.literal(4)]),
+      skillId: z.union([z.literal(44), z.literal(1008)]),
       gamerId: z.union([z.literal(0), z.literal(1)]),
       skillSourceId: text
     })
@@ -190,8 +198,9 @@ export const LuckEventMetadataSchema = z.strictObject({
       selectedSourceId: text.optional(),
       finalOutcome: z.number().int().min(0).max(6).optional(),
       finalSourceId: text.optional(),
-      reroll: z.enum(["initial", "team", "brawler", "pro"]),
+      reroll: z.enum(["initial", "team", "brawler", "pro", "loner"]),
       proGateSourceId: text.optional(),
+      lonerGateSourceId: text.optional(),
       previousPoolSourceId: text.optional(),
       distribution: z.array(probability).length(5),
       rankedSymbol: z.number().int().min(0).max(4)
@@ -572,6 +581,14 @@ export const LuckReportSchema = z
       }
       const gate = event.metadata.lonerGate;
       if (gate) {
+        const skill = sources.get(gate.skillSourceId), choice = event.metadata.rerollDecisionId ? sources.get(event.metadata.rerollDecisionId) : undefined;
+        require(skill?.metadata.sourceTag === "ResultSkillUsage" && skill.metadata.skillUsage?.skillId === gate.skillId && skill.metadata.skillUsage.used &&
+          skill.playerId === event.playerId && skill.teamId === event.teamId && skill.metadata.actionId === event.metadata.actionId &&
+          choice?.metadata.sourceTag === "ResultTeamRerollUsage" && choice.playerId === event.playerId && choice.teamId === event.teamId &&
+          choice.metadata.actionId === event.metadata.actionId && choice.metadata.teamRerollDecision?.gamerId === gate.gamerId &&
+          choice.metadata.teamRerollDecision.used && event.metadata.rerollResource === "team" &&
+          (choice.metadata.sourceIndex ?? Infinity) < (skill.metadata.sourceIndex ?? -1) && (skill.metadata.sourceIndex ?? Infinity) < (event.metadata.sourceIndex ?? -1),
+          "A Loner gate requires its own ordered actor/skill/spend sources.");
         const {
           rollType,
           dice,
@@ -580,13 +597,17 @@ export const LuckReportSchema = z
           rerollDecisionId,
           teamRerollsSpent
         } = event.metadata;
-        require(rollType === 71 &&
+        require(event.metadata.sourceTag === "ResultRoll" && event.metadata.isRollCandidate === true && rollType === 71 &&
           dice?.length === 1 &&
-          dieTypes?.[0] === 0 &&
+          dieTypes?.length === 1 && dieTypes[0] === 0 && event.teamId !== "unresolved" &&
+          (event.metadata.modifiers?.length ?? 0) === 0 && event.metadata.modifiersSum === 0 &&
           Number.isInteger(dice[0]) &&
           dice[0]! >= 1 &&
           dice[0]! <= 6 &&
-          gate.passed === dice[0]! >= 4 &&
+          gate.passed === (dice[0]! >= gate.threshold) &&
+          gate.threshold === (gate.skillId === 1008 ? 3 : 4) &&
+          event.metadata.requirement === gate.threshold && event.metadata.difficulty === gate.threshold &&
+          event.actualSuccess === gate.passed &&
           outcomeCode === Number(gate.passed) &&
           Boolean(rerollDecisionId) &&
           teamRerollsSpent === 1 &&
@@ -610,6 +631,21 @@ export const LuckReportSchema = z
           context.period === (loss.periodCode === 0 ? "first_half" : loss.periodCode === 1 ? "second_half" : loss.periodCode === 2 ? "extra_time" : null) &&
           loss.followingSourceIndex <= (event.metadata.sourceIndex ?? -1);
       }), "Known ended activations require earlier confirmed same-team, same-turn evidence.");
+      const expiry = event.metadata.driveEffectExpiry;
+      if (expiry) {
+        const phase = sources.get(expiry.phaseSourceId);
+        require(event.metadata.sourceTag === "EventEndPlayerEffect" && event.playerId === expiry.playerId && event.teamId === expiry.teamId &&
+          teamIds.has(expiry.teamId) && event.metadata.recordedEffect?.providerId === expiry.providerSkillId &&
+          phase?.metadata.sourceTag === "EventNewGamePhase" && phase.metadata.setupPhase?.code === 3 &&
+          phase.metadata.locator?.replayStep === expiry.afterReplayStep && event.metadata.locator?.replayStep === expiry.afterReplayStep &&
+          (event.metadata.locator?.childIndex ?? Infinity) < (phase.metadata.locator?.childIndex ?? -1) &&
+          (phase.metadata.locator?.childIndex ?? Infinity) < expiry.afterChildIndex &&
+          expiry.beforeCheckpointAfter < (event.metadata.sourceIndex ?? -1) && (event.metadata.sourceIndex ?? Infinity) < (phase.metadata.sourceIndex ?? -1) &&
+          (phase.metadata.sourceIndex ?? Infinity) <= expiry.afterCheckpointAfter && expiry.afterCheckpointAfter <= report.coverage.sourceRecordCount &&
+          event.scoringStatus === "excluded" && event.probabilitySuccess === null,
+          "Drive effect expiry requires the explicit ordered end, setup phase and first same-step observation.");
+      }
+      if (event.metadata.setupPhase) require(event.metadata.sourceTag === "EventNewGamePhase", "Setup-phase context requires a recorded phase transition.");
       const suppressed = context?.suppressedTackleZones;
       if (suppressed) require(new Set(suppressed.map(p=>p.playerId)).size === suppressed.length &&
         suppressed.every(p=>(p.teamId === null || teamIds.has(p.teamId)) && (p.playerId !== event.playerId || context?.actorTackleZone === false)), "Tackle-zone effect observations require unique players and observed team identities.");
@@ -735,7 +771,7 @@ export const LuckReportSchema = z
                 lonerSkill = linked(end.lonerSkillSourceId, "ResultSkillUsage");
               require(loner?.metadata.rollType === 71 &&
                 loner.metadata.lonerGate?.passed === (end.policy === "team_loner_replacement") &&
-                lonerSkill?.metadata.skillUsage?.skillId === 44 &&
+                lonerSkill?.metadata.skillUsage?.skillId === loner.metadata.lonerGate?.skillId &&
                 lonerSkill.metadata.skillUsage.used &&
                 loner.metadata.lonerGate.skillSourceId ===
                   end.lonerSkillSourceId &&
@@ -1023,6 +1059,22 @@ export const LuckReportSchema = z
               (face, i) => i === index || face === prior.pool.faces[i]
             ), "Pro replacement odds require the passed gate and the unchanged kept dice.");
         }
+        if (block.reroll === "loner") {
+          const expected = enumerateBlockPool(block.pool);
+          require(block.distribution.every((p,i)=>near(p,expected.distribution[i]!)) && block.rankedSymbol === expected.favoredSymbol,
+            "A conditional Loner pool must use the fair fresh block-dice distribution.");
+          require(block.pool.sourceId === event.metadata.sourceId, "A conditional pool must refer to its own fresh source.");
+          const gate = block.lonerGateSourceId ? sources.get(block.lonerGateSourceId) : undefined;
+          const previous = block.previousPoolSourceId ? sources.get(block.previousPoolSourceId) : undefined;
+          const prior = previous?.metadata.block;
+          require(gate?.metadata.lonerGate?.passed === true && gate.playerId === block.attackerId && gate.teamId === event.teamId &&
+            gate.metadata.targetId === block.defenderId && prior?.attackerId === block.attackerId && prior.defenderId === block.defenderId &&
+            prior.pool.faces.length === block.pool.faces.length && prior.pool.attackerChooses === block.pool.attackerChooses &&
+            block.pool.rolledIndexes.length === block.pool.faces.length && !block.proGateSourceId &&
+            (previous?.metadata.sourceIndex ?? Infinity) < (gate.metadata.sourceIndex ?? -1) &&
+            (gate.metadata.sourceIndex ?? Infinity) < (event.metadata.sourceIndex ?? -1),
+            "A conditional Loner pool requires the passed gate, prior pool and newly rolled full pool in order.");
+        } else require(!block.lonerGateSourceId, "Only a conditional Loner pool can claim a Loner gate.");
         if (event.scoringStatus === "scored")
           require(event.probabilitySuccess !== null &&
             near(

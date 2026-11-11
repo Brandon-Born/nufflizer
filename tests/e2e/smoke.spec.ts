@@ -1,3 +1,4 @@
+import { lonerDriveXml } from "../helpers/lonerDrive";
 import { activationContextXml } from "../helpers/activationReplay";
 import { test, expect } from "@playwright/test";
 import path from "node:path";
@@ -58,6 +59,66 @@ test("Foul Appearance and terminal mental failures retain distinct activation co
   await expect(terminal).toContainText(
     "lost the declared activation and tackle zone after Really Stupid failed"
   );
+});
+
+test("source-backed3+ gates and drive ends explain their distinct evidence", async ({
+  page
+}) => {
+  await page.goto("/nufflizier");
+  const cases = [
+    {
+      id: "loner3_block_pass",
+      label: "Loner 3+ test passed",
+      copy: "One team reroll was spent"
+    },
+    {
+      id: "two_effects_drive_end",
+      label: "Recorded drive-end mental effect expiry",
+      copy: "setup flags add no luck score"
+    }
+  ];
+  for (const [index, example] of cases.entries()) {
+    if (index)
+      await page.getByRole("button", { name: "Upload Another Replay" }).click();
+    const xml = lonerDriveXml(example.id),
+      report = analyzeNufflizerInput(xml);
+    await page.route(
+      "**/api/nufflizier/analyze",
+      (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(report)
+        }),
+      { times: 1 }
+    );
+    await page.setInputFiles('input[name="replay"]', {
+      name: "source-fragment.xml",
+      mimeType: "application/xml",
+      buffer: Buffer.from(xml)
+    });
+    await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Nuffle Match Report" })
+    ).toBeVisible();
+    await page.getByLabel("Scoring status").selectOption("excluded");
+    const row = page
+      .locator("tbody tr")
+      .filter({ hasText: example.label })
+      .first();
+    await row.locator("summary").click();
+    await expect(row).toContainText(example.copy);
+    if (!index) {
+      await page.getByLabel("Scoring status").selectOption("scored");
+      const replacement = page
+        .locator("tbody tr")
+        .filter({ hasText: "Block pool: Push opportunity" });
+      await replacement.locator("summary").click();
+      await expect(replacement).toContainText(
+        "conditional on the recorded Loner pass"
+      );
+    }
+  }
 });
 
 test("replacement purchases retain separate source-backed trait lists", async ({
@@ -273,8 +334,8 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.12");
-  expect(report.modelVersion).toBe("dice-only-18");
+  expect(report.schemaVersion).toBe("2.13");
+  expect(report.modelVersion).toBe("dice-only-19");
   expect(
     report.events.some(
       (event: {
@@ -299,7 +360,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
     )
   ).toBe(true);
 
-  expect(report.contextModelVersion).toBe("mobility-possession-8");
+  expect(report.contextModelVersion).toBe("mobility-possession-9");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
     report.coverage.rollCandidates.scoredCount +

@@ -19,6 +19,8 @@ import {
   explainPickupBallChain,
   explainActivationLoss,
   explainProGate,
+  explainLonerGate,
+  explainDriveEffectExpiry,
   explainContextCoverage,
   explainRecruitmentEvidence
 } from "@/domain/nufflizer/presentation";
@@ -807,6 +809,16 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                             moment.metadata.activationEnd ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainActivationLoss(moment)}
+                              </p>
+                            ) : null}
+                            {moment.metadata.driveEffectExpiry ? (
+                              <p className="mt-1 text-xs text-amber-100/80">
+                                {explainDriveEffectExpiry(moment)}
+                              </p>
+                            ) : null}
+                            {moment.metadata.lonerGate ? (
+                              <p className="mt-1 text-xs text-amber-100/80">
+                                {explainLonerGate(moment.metadata.lonerGate)}
                               </p>
                             ) : null}
                             {moment.metadata.proGate ? (

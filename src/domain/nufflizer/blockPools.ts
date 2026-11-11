@@ -27,8 +27,9 @@ export type BlockEvidence = {
   selectedSourceId?: string;
   finalOutcome?: number;
   finalSourceId?: string;
-  reroll: "initial" | "team" | "brawler" | "pro";
+  reroll: "initial" | "team" | "brawler" | "pro" | "loner";
   proGateSourceId?: string;
+  lonerGateSourceId?: string;
   previousPoolSourceId?: string;
 };
 export type BlockRecord =
@@ -135,7 +136,9 @@ export function explainBlockEvidence(block: BlockEvidence): string {
       : "Applied outcome " + block.finalOutcome + ".",
     block.reroll === "pro"
       ? "The replacement distribution is conditional on the recorded Pro pass."
-      : null,
+      : block.reroll === "loner"
+        ? "The fresh full-pool distribution is conditional on the recorded Loner pass. The gate itself adds no score."
+        : null,
     "The score measures raw symbols before skills and the coach's choice."
   ]
     .filter(Boolean)
@@ -169,6 +172,7 @@ export function linkBlockPools(
     pool: BlockPool;
     reroll: BlockEvidence["reroll"];
     proGateSourceId?: string;
+    lonerGateSourceId?: string;
     previousPoolSourceId?: string;
   };
   let chain:
@@ -178,9 +182,12 @@ export function linkBlockPools(
         pools: Anchor[];
         gamer?: number;
         chooser?: number;
-        choice?: "team" | "brawler" | "pro";
+        choice?: "team" | "brawler" | "pro" | "loner";
+        teamOffered: boolean;
+        lonerStage: "choice" | "skill" | "gate" | "pool" | "broken";
         proSkillSourceId?: string;
         proGateSourceId?: string;
+        lonerGateSourceId?: string;
         gated: boolean;
         selected?: { face: number; outcome: number; sourceId?: string };
       }
@@ -188,7 +195,10 @@ export function linkBlockPools(
   for (const [index, event] of events.entries()) {
     // A BoardState carrier observation sits between split block sequences.
     // The action messages, not this repeated snapshot field, decide linkage.
-    if (event.sourceTag === "Carrier") continue;
+    if (event.sourceTag === "Carrier") {
+      if (chain && !event.checkpointCarrier) chain.lonerStage = "broken";
+      continue;
+    }
     const p = event.payload;
     const sameBlock =
       chain &&
@@ -235,7 +245,9 @@ export function linkBlockPools(
           pools: [{ index, pool, reroll: "initial" }],
           gamer,
           chooser: p.CanChoseDie === 1 ? gamer : undefined,
-          gated: false
+          gated: false,
+          teamOffered: p.CanUseTeamReroll === 1,
+          lonerStage: "choice"
         };
         continue;
       }
@@ -277,14 +289,21 @@ export function linkBlockPools(
           (value, i) =>
             pool.rolledIndexes.includes(i) || value === last.faces[i]
         ) &&
-        (chain.choice === "team"
-          ? pool.rolledIndexes.length === pool.faces.length
+        (chain.choice === "team" || chain.choice === "loner"
+          ? pool.rolledIndexes.length === pool.faces.length &&
+            (chain.choice !== "loner" ||
+              (chain.lonerStage === "pool" &&
+                !!chain.lonerGateSourceId &&
+                !!last.sourceId &&
+                !!event.id))
           : chain.choice === "brawler"
             ? pool.rolledIndexes.length === 1 &&
               last.faces[pool.rolledIndexes[0]!] === 1
             : pool.rolledIndexes.length === 1 &&
               last.proEligibleIndexes?.includes(pool.rolledIndexes[0]!))
       ) {
+        const lonerGateSourceId =
+          chain.choice === "loner" ? chain.lonerGateSourceId : undefined;
         const proGateSourceId =
           chain.choice === "pro" ? chain.proGateSourceId : undefined;
         records.set(index, {
@@ -296,6 +315,7 @@ export function linkBlockPools(
             chooserGamerId: p.CanChoseDie === 1 ? gamer : undefined,
             reroll: chain.choice,
             proGateSourceId,
+            lonerGateSourceId,
             previousPoolSourceId: last.sourceId
           }
         });
@@ -304,10 +324,14 @@ export function linkBlockPools(
           pool,
           reroll: chain.choice,
           proGateSourceId,
+          lonerGateSourceId,
           previousPoolSourceId: last.sourceId
         });
         chain.choice = undefined;
         chain.proGateSourceId = undefined;
+        chain.lonerGateSourceId = undefined;
+        chain.lonerStage = "broken";
+        chain.teamOffered = p.CanUseTeamReroll === 1;
         if (p.CanChoseDie === 1 && gamer !== undefined) chain.chooser = gamer;
         continue;
       }
@@ -317,31 +341,62 @@ export function linkBlockPools(
       continue;
     }
     if (!chain) continue;
+    if (event.sourceTag === "PlayerStep") {
+      if (chain.lonerStage !== "choice") chain.lonerStage = "broken";
+    } else if (
+      !["ResultTeamRerollUsage", "ResultSkillUsage", "ResultRoll"].includes(
+        event.sourceTag
+      )
+    ) {
+      chain.lonerStage = "broken";
+    }
     if (
       event.sourceTag === "ResultTeamRerollUsage" &&
       p?.Used === 1 &&
       p.GamerId === chain.gamer
-    )
+    ) {
       chain.choice = "team";
+      chain.lonerStage =
+        chain.lonerStage === "choice" && chain.teamOffered ? "skill" : "broken";
+    }
     if (event.sourceTag === "ResultSkillUsage" && p?.Used === 1) {
       if (p.Skill === 96 && String(p.PlayerId) === chain.attacker)
         chain.choice = "brawler";
       if (p.Skill === 50 && String(p.PlayerId) === chain.attacker)
         chain.proSkillSourceId = event.id;
-      // Skill 44 is Loner(4+); an actual type-71 result is handled below.
+      if (
+        (p.Skill === 44 || p.Skill === 1008) &&
+        String(p.PlayerId) === chain.attacker &&
+        chain.lonerStage === "skill"
+      )
+        chain.lonerStage = "gate";
+      else chain.lonerStage = "broken";
     }
     if (event.sourceTag === "ResultRoll") {
+      const loner = rerollLinks.get(index)?.lonerGate;
       const gate = rerollLinks.get(index)?.proGate;
-      const allowed =
+      const allowedLoner =
+        loner?.passed === true &&
+        chain.lonerStage === "gate" &&
+        chain.choice === "team" &&
+        loner.gamerId === chain.gamer &&
+        event.id !== undefined;
+      const allowedPro =
         gate?.passed === true &&
         event.id !== undefined &&
         gate.skillSourceId === chain.proSkillSourceId;
-      chain.gated = !allowed;
-      if (allowed) {
+      chain.gated = !(allowedLoner || allowedPro);
+      if (allowedLoner) {
+        chain.choice = "loner";
+        chain.lonerGateSourceId = event.id;
+        chain.lonerStage = "pool";
+      } else if (allowedPro) {
         chain.choice = "pro";
         chain.proGateSourceId = event.id;
+        chain.lonerStage = "broken";
       } else {
         chain.choice = undefined;
+        chain.lonerStage = "broken";
       }
       chain.proSkillSourceId = undefined;
     }
@@ -396,6 +451,7 @@ export function linkBlockPools(
               finalSourceId: event.id,
               reroll: anchor.reroll,
               proGateSourceId: anchor.proGateSourceId,
+              lonerGateSourceId: anchor.lonerGateSourceId,
               previousPoolSourceId: anchor.previousPoolSourceId
             }
           });

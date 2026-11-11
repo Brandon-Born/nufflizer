@@ -196,6 +196,23 @@ export function explainMovementOutcome(
   return `${aftermath} Dice subtotal for the movement check and scored damage: ${fall.diceContribution.toFixed(2)}.${unknown}`;
 }
 
+export function explainDriveEffectExpiry(
+  event: LuckReport["events"][number]
+): string | null {
+  const expiry = event.metadata.driveEffectExpiry;
+  return expiry
+    ? `Player ${expiry.playerId}'s old ${expiry.providerSkillId === 51 ? "Really Stupid" : "Bone Head"} effect explicitly ended as setup began.${expiry.afterPitchLocation === "off_pitch" ? " The following setup snapshot places the player off the pitch." : ""} Playable availability and defensive coverage require their own evidence; setup flags add no luck score.`
+    : null;
+}
+
+export function explainLonerGate(
+  gate: LuckReport["events"][number]["metadata"]["lonerGate"]
+): string | null {
+  return gate
+    ? `Loner ${gate.threshold}+ ${gate.passed ? "passed" : "failed"}. One team reroll was spent. ${gate.passed ? "Replacement dice need their own recorded evidence." : "The original result was kept; the gate granted no replacement dice."} The gate itself is unscored.`
+    : null;
+}
+
 export function explainProGate(
   gate: LuckReport["events"][number]["metadata"]["proGate"]
 ): string | null {

@@ -1,6 +1,7 @@
 import { buildPlayerOwnershipIndex } from "./attribution";
 import {
   checkpointClockEpochs,
+  consistentNormalStandBy,
   lastBoardCheckpointBefore,
   type ObservedBoard
 } from "./boardState";
@@ -119,6 +120,15 @@ export function findConfirmedActivationLosses(
         events[next]?.checkpointCarrier
       )
         next++;
+      const standBy =
+        events[next]?.sourceTag === "EventRulesEngineStandBy"
+          ? events[next++]
+          : undefined;
+      while (
+        events[next]?.sourceTag === "Carrier" &&
+        events[next]?.checkpointCarrier
+      )
+        next++;
       const followingStep = events[next],
         following = events[next + 1];
       if (
@@ -153,6 +163,7 @@ export function findConfirmedActivationLosses(
         !after ||
         !a ||
         !b ||
+        (standBy && !consistentNormalStandBy(standBy, a, b)) ||
         a.issues.length ||
         b.issues.length ||
         a.stable !== true ||

@@ -154,10 +154,9 @@ function asObject(
     if (projection && !Object.hasOwn(projection, tag)) continue;
     const inner = children(node, tag);
     const fieldProjection = projection?.[tag];
-    const value =
-      inner.some((n) => !tagOf(n).startsWith("#"))
-        ? asObject(inner, fieldProjection === true ? undefined : fieldProjection)
-        : textOf(inner);
+    const value = inner.some((n) => !tagOf(n).startsWith("#"))
+      ? asObject(inner, fieldProjection === true ? undefined : fieldProjection)
+      : textOf(inner);
     const previous = out[tag];
     if (Array.isArray(previous)) previous.push(value);
     else if (tag in out) out[tag] = [previous, value];
@@ -538,11 +537,13 @@ export function extractStructuredTurnsFromReplayXml(
             tag === "EventBuyMercenary" || tag === "EventRemoveMercenary"
               ? str(payload.MercenaryId)
               : roll ||
-            tag === "QuestionBribeUsage" ||
-            tag === "ResultPlayerRemoval" ||
-            tag === "ResultPlayerSentOff"
-              ? str(payload.PlayerId)
-              : undefined,
+                  tag === "QuestionBribeUsage" ||
+                  tag === "ResultPlayerRemoval" ||
+                  tag === "ResultPlayerSentOff" ||
+                  tag === "EventEndPlayerEffect" ||
+                  tag === "EventAddPlayerEffect"
+                ? str(payload.PlayerId)
+                : undefined,
           teamId: roll ? str(roll.TeamId) : undefined,
           rollType,
           rollLabel: labelForCode(ROLL_TYPE_MAP, rollType, "roll"),

@@ -1,3 +1,4 @@
+import { findDriveEffectExpiries } from "@/domain/replay/driveEffects";
 import { VERDICT_SUMMARIES } from "./explainabilityCopy";
 import { formatDiceContribution, scoredEvidenceForTeam } from "./presentation";
 import {
@@ -684,6 +685,7 @@ function buildNormalizedEvent(
       type: eventType,
       probabilitySuccess: null,
       actualSuccess:
+        rerollLink?.lonerGate?.passed ??
         rerollLink?.proGate?.passed ??
         (!contractExclusion && resolvedActual.deterministic
           ? resolvedActual.actualSuccess
@@ -694,14 +696,16 @@ function buildNormalizedEvent(
         ? embeddedInjury.observed
           ? "Observed injury dice"
           : "Unverified staff-choice evidence"
-        : rerollLink?.proGate
-          ? `Pro test ${rerollLink.proGate.passed ? "passed" : "failed"}`
-          : buildMomentLabel(
-              eventType,
-              resolvedActual.actualSuccess,
-              undefined,
-              difficulty ?? requirement
-            ),
+        : rerollLink?.lonerGate
+          ? `Loner ${rerollLink.lonerGate.threshold}+ test ${rerollLink.lonerGate.passed ? "passed" : "failed"}`
+          : rerollLink?.proGate
+            ? `Pro test ${rerollLink.proGate.passed ? "passed" : "failed"}`
+            : buildMomentLabel(
+                eventType,
+                resolvedActual.actualSuccess,
+                undefined,
+                difficulty ?? requirement
+              ),
       tags: [],
       scoringStatus: "excluded",
       statusReason: exclusionReason,
@@ -999,10 +1003,13 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   );
 
   const events: LuckEvent[] = [];
+  const lonerSkills = new Map<string, 44 | 1008>();
+  const lonerChoices = new Map<string, 0 | 1>();
   const movementFalls: NonNullable<ReturnType<typeof findMovementFall>>[] = [];
   const ownership = buildPlayerOwnershipIndex(replay);
   const { playerToTeam } = ownership;
   const activationLosses = findConfirmedActivationLosses(replay);
+  const driveExpiries = findDriveEffectExpiries(replay);
   const activationEvidenceSources = new Set(
     activationLosses.flatMap((loss) => [
       loss.declarationSourceId,
@@ -1038,6 +1045,10 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   }
   for (const source of mentalSkillUses.keys())
     activationEvidenceSources.add(source);
+  for (const [source, expiry] of driveExpiries) {
+    activationEvidenceSources.add(source);
+    activationEvidenceSources.add(expiry.phaseSourceId);
+  }
   const koRecoveryChecks = countKoRecoveryChecks(replay.turns);
 
   for (const replayTurn of replay.turns) {
@@ -1076,6 +1087,15 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       playerToTeam,
       rerollLinks
     );
+    for (const link of rerollLinks.values())
+      if (link.lonerGate) {
+        activationEvidenceSources.add(link.lonerGate.skillSourceId);
+        if (link.decisionId) {
+          activationEvidenceSources.add(link.decisionId);
+          lonerChoices.set(link.decisionId, link.lonerGate.gamerId);
+        }
+        lonerSkills.set(link.lonerGate.skillSourceId, link.lonerGate.skillId);
+      }
     linkProGates(
       replayTurn.events,
       replay.replayVersion,
@@ -1264,7 +1284,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         ? ballSources.get(end.lonerSkillSourceId)
         : undefined;
       if (lonerSkill) {
-        lonerSkill.metadata.skillUsage = { skillId: 44, used: true };
+        const skillId = lonerSkills.get(end.lonerSkillSourceId!);
+        if (skillId) lonerSkill.metadata.skillUsage = { skillId, used: true };
         lonerSkill.label = "Recorded Loner use";
       }
       const effect = end.effectSourceId
@@ -1319,6 +1340,40 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       event.metadata.mentalTraitResolution = proof;
       event.actualSuccess = success;
       event.label = `${proof.providerSkillId === 51 ? "Really Stupid" : "Bone Head"} ${success ? "passed" : "failed"} its recorded activation test`;
+    }
+  }
+
+  for (const [source, gamerId] of lonerChoices) {
+    const event = ballSources.get(source);
+    if (event) {
+      event.metadata.teamRerollDecision = { gamerId, used: true };
+      event.label = "Recorded team reroll spend";
+    }
+  }
+  for (const [source, skillId] of lonerSkills) {
+    const event = ballSources.get(source);
+    if (event) {
+      event.metadata.skillUsage = { skillId, used: true };
+      event.label = `Recorded Loner ${skillId === 1008 ? 3 : 4}+ use`;
+    }
+  }
+
+  for (const [source, expiry] of driveExpiries) {
+    const event = ballSources.get(source),
+      phase = ballSources.get(expiry.phaseSourceId);
+    if (event && event.teamId === expiry.teamId && phase) {
+      event.metadata.driveEffectExpiry = expiry;
+      event.metadata.recordedEffect = {
+        effectId: 44,
+        providerType: 4,
+        providerId: expiry.providerSkillId,
+        durations: [6, 1]
+      };
+      event.label = "Recorded drive-end mental effect expiry";
+      event.statusReason =
+        "The old effect explicitly ended before setup. Setup flags do not establish playable-state availability or defensive coverage.";
+      phase.metadata.setupPhase = { code: 3 };
+      phase.label = "Recorded setup phase";
     }
   }
 

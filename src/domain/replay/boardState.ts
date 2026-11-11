@@ -1,3 +1,4 @@
+import type { ReplayEvent } from "./types";
 import { observeMentalEffect, type MentalTraitEffect } from "./mentalEffects";
 // Observed checkpoints, not a simulator. Each snapshot replaces the previous
 // observation: omitted fields are unknown, never defaults or carry-forwards.
@@ -261,4 +262,35 @@ export function checkpointClockEpochs(
     epochs.set(checkpoint, epoch);
   }
   return epochs;
+}
+
+// The sampled wait marker reports only phase/controller, not a board mutation.
+// Keep unknown fields and contradictory/missing controller evidence unsupported.
+export function consistentNormalStandBy(
+  event: ReplayEvent,
+  before: ObservedBoard,
+  after: ObservedBoard
+): boolean {
+  const p = event.payload;
+  const phase =
+    typeof p?.Phase === "string" && /^\d+$/.test(p.Phase)
+      ? Number(p.Phase)
+      : p?.Phase;
+  const gamer =
+    typeof p?.ActiveGamer === "string" && /^\d+$/.test(p.ActiveGamer)
+      ? Number(p.ActiveGamer)
+      : p?.ActiveGamer;
+  return (
+    event.sourceTag === "EventRulesEngineStandBy" &&
+    !!p &&
+    Object.keys(p).every((k) => k === "Phase" || k === "ActiveGamer") &&
+    phase === 5 &&
+    before.phaseCode === 5 &&
+    after.phaseCode === 5 &&
+    (gamer === undefined
+      ? before.activeGamerId === after.activeGamerId
+      : (gamer === 0 || gamer === 1) &&
+        before.activeGamerId === gamer &&
+        after.activeGamerId === gamer)
+  );
 }

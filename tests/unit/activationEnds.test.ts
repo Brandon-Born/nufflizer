@@ -118,12 +118,20 @@ describe("terminal mental traits and ordinary Move completion", () => {
       expect(partial.events.some((e) => e.metadata.activationEnd)).toBe(false);
     }
   );
-  it("keeps the sampled Loner3+ failure outside the 4+ replacement policy", () => {
-    expect(
-      findMentalActivationEnds(
-        parseReplayXml(activationAftermathFragment("failed_loner_unsupported"))
-      )
-    ).toHaveLength(0);
+  it("keeps the sampled3+ identity distinct from4+ and confirms its failed original", () => {
+    const replay = parseReplayXml(
+      activationAftermathFragment("failed_loner_unsupported")
+    );
+    expect(findMentalActivationEnds(replay)[0]?.policy).toBe(
+      "failed_loner_kept_original"
+    );
+    const skill = replay.turns
+      .flatMap((t) => t.events)
+      .find(
+        (e) => e.sourceTag === "ResultSkillUsage" && e.payload?.Skill === 1008
+      )!;
+    skill.payload!.Skill = 44;
+    expect(findMentalActivationEnds(replay)).toHaveLength(0);
   });
 
   it.each([
