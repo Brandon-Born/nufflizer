@@ -1,3 +1,5 @@
+// pnpm test runs this real-worker acceptance file after the parallel corpus
+// suite, preserving the production4s deadline without unrelated CPU contention.
 import { LuckReportSchema } from "@/domain/nufflizer/reportSchema";
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -122,6 +124,8 @@ describe("POST /api/nufflizier/analyze", () => {
       99, 306
     ]);
     expect(ranges[0]!.possessionBounds!.upper).toBeCloseTo(7 / 8, 12);
+    expect(ranges[0]!.metadata.pickupResolution).toMatchObject({cell:{x:11,y:10},movementRemaining:4});
+    expect(ranges[1]!.metadata.pickupResolution).toBeUndefined();
     expect(ranges[1]!.possessionBounds!.lower).toBeCloseTo(-4 / 3, 12);
     expect(
       ranges.every(

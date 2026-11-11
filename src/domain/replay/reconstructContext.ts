@@ -1,3 +1,4 @@
+import { unmodifiedD6Check } from "./numericCheck";
 import {
   pickupBounceSuccessors,
   plainPickupMoveOutcome,
@@ -87,6 +88,7 @@ export type PreRollEvidence = {
     effect: "approach" | "leave";
   };
   actorCarriesBall: boolean | null;
+  carriedBallCell?: Cell;
   movementCheckLinked: boolean;
   otherUsefulActivations: number | null;
   pickupBounceExposure: number | null;
@@ -562,6 +564,12 @@ function summarize(
         : undefined,
     scoringAttempt,
     teammateCarrierMove,
+    carriedBallCell:
+      board.ball.possession === "held" &&
+      board.ball.carrierId === actorId &&
+      same(cell(board.ball.cell), actorCell)
+        ? cell(board.ball.cell)!
+        : undefined,
     actorCarriesBall:
       board.ball.possession === "unknown"
         ? null
@@ -582,6 +590,16 @@ export function reconstructReplayContext(
 ) {
   const result = new Map<string, PreRollEvidence>();
   const dodgeMovements = new Map<string, ObservedDodgeMovement>();
+  const pickupResolutions = new Map<
+    string,
+    {
+      declarationSourceId: string;
+      moveOutcomeSourceId: string;
+      cell: Cell;
+      movementRemaining: number | null;
+      checkpointAfter: number;
+    }
+  >();
   const activationEnds = new Map<string, ActivationEnd>();
   const mentalEffectEnds = new Map<string, MentalEffectEnd>();
   const mentalSkillUses = new Map<string, 31 | 51>();
@@ -598,6 +616,7 @@ export function reconstructReplayContext(
     return {
       preRollEvidence: result,
       dodgeMovements,
+      pickupResolutions,
       activationEnds,
       mentalEffectEnds,
       mentalSkillUses,
@@ -646,6 +665,18 @@ export function reconstructReplayContext(
   let activeEnds = new Map<string, ActivationEnd>();
   let previousMove: { end: ActivationEnd; moved: boolean } | undefined;
   let actorDodgeMoveSourceId: string | undefined;
+  let pendingPickup:
+    | {
+        board: ObservedBoard;
+        original: ReplayEvent;
+        threshold: number;
+        lastIndex: number;
+        stage: "skill" | "replacement";
+        declarationSourceId: string;
+        moveOutcomeSourceId: string;
+        checkpointAfter: number;
+      }
+    | undefined;
   let pendingDodge:
     | {
         board: ObservedBoard;
@@ -672,11 +703,12 @@ export function reconstructReplayContext(
       ) {
         checkpoint = checkpoints[cursor++]!;
         frameChanged = true;
-        if (pendingDodge) {
+        if (pendingDodge || pendingPickup) {
           previousMove = undefined;
           activationId = null;
         }
         pendingDodge = undefined;
+        pendingPickup = undefined;
         actorDodgeMoveSourceId = undefined;
         const next = checkpoint.board;
         if (checkpoint.kind === "initial")
@@ -735,6 +767,83 @@ export function reconstructReplayContext(
         activeLosses.clear();
         activeEnds.clear();
         previousMove = undefined;
+      }
+      if (pendingPickup) {
+        const pending = pendingPickup,
+          original = pending.original,
+          p = event.payload;
+        const sameChain =
+          event.id &&
+          event.sourceIndex === pending.lastIndex + 1 &&
+          event.actionId === original.actionId &&
+          event.sequenceId === original.sequenceId &&
+          event.playerId === original.playerId &&
+          event.stepActorId === original.stepActorId &&
+          event.stepTargetId === original.stepTargetId &&
+          event.targetId === original.targetId &&
+          event.stepType === original.stepType &&
+          event.stepTag === original.stepTag &&
+          !event.attributionConflict &&
+          event.actorTeamSource !== "turn_inferred" &&
+          event.actorTeamId === original.actorTeamId &&
+          (!event.teamId || event.teamId === original.actorTeamId);
+        if (
+          sameChain &&
+          pending.stage === "skill" &&
+          event.sourceTag === "ResultSkillUsage" &&
+          p?.Skill === 61 &&
+          p.Used === 1 &&
+          String(p.PlayerId) === original.playerId &&
+          Object.keys(p).every((k) => ["Skill", "Used", "PlayerId"].includes(k))
+        ) {
+          pending.stage = "replacement";
+          pending.lastIndex = event.sourceIndex;
+          continue;
+        }
+        if (
+          sameChain &&
+          pending.stage === "replacement" &&
+          unmodifiedD6Check(event, 4, 2, true) === pending.threshold
+        ) {
+          const actor = Number(original.playerId),
+            owner = pending.board.teams.find((t) =>
+              t.players.some((p) => p.id === actor)
+            )!;
+          const player = owner.players.find((p) => p.id === actor)!;
+          const position = { x: player.cell.x!, y: player.cell.y! };
+          board = {
+            ...pending.board,
+            ball: {
+              cell: position,
+              carrierId: actor,
+              holderRosterIndex: owner.rosterIndex,
+              isHeld: true,
+              possession: "held"
+            }
+          };
+          pickupSourceId = event.id;
+          pickupResolutions.set(event.id!, {
+            declarationSourceId: pending.declarationSourceId,
+            moveOutcomeSourceId: pending.moveOutcomeSourceId,
+            cell: position,
+            movementRemaining: player.movementRemaining,
+            checkpointAfter: pending.checkpointAfter
+          });
+          pendingPickup = undefined;
+          continue;
+        }
+        pendingPickup = undefined;
+        board = null;
+        previousMove = undefined;
+        activationId = null;
+        activeEnds.clear();
+        activeLosses.clear();
+        actorDodgeMoveSourceId = undefined;
+        pickupSourceId = undefined;
+        actorEffectEnd = undefined;
+        mentalActivationPending = false;
+        pickupGeometryTrusted = false;
+        continue;
       }
       if (pendingDodge) {
         const pending = pendingDodge;
@@ -925,7 +1034,8 @@ export function reconstructReplayContext(
               activationEpoch === epochs.get(checkpoint)
               ? previousMove.end.declarationSourceId
               : undefined,
-            activationActionCode === 1 && activationCheckpointAfter === checkpoint.afterSourceIndex
+            activationActionCode === 1 &&
+              activationCheckpointAfter === checkpoint.afterSourceIndex
               ? (activationId ?? undefined)
               : undefined,
             moveOutcomeSourceIndex !== undefined && moveOutcomeSourceId
@@ -1350,6 +1460,34 @@ export function reconstructReplayContext(
         standUpSourceIndex = undefined;
         continue;
       }
+      const pickupCandidate = event.id
+        ? result.get(event.id)?.pickupSuccessors
+        : undefined;
+      const failedPickupTarget = unmodifiedD6Check(event, 4, 1, false);
+      if (pickupCandidate && failedPickupTarget && event.id) {
+        const player = board.teams
+          .flatMap((t) => t.players)
+          .find((p) => String(p.id) === event.playerId)!;
+        if (
+          player.movementRemaining === null ||
+          (Number.isInteger(player.movementRemaining) &&
+            player.movementRemaining >= 0 &&
+            player.movementRemaining <= 16)
+        ) {
+          pendingPickup = {
+            board,
+            original: event,
+            threshold: failedPickupTarget,
+            lastIndex: event.sourceIndex,
+            stage: "skill",
+            declarationSourceId: pickupCandidate.declarationSourceId,
+            moveOutcomeSourceId: pickupCandidate.moveOutcomeSourceId,
+            checkpointAfter: checkpoint.afterSourceIndex
+          };
+          board = null;
+          continue;
+        }
+      }
       const failedDodgeTarget = unmodifiedDodgeDie(event, 1, false);
       if (
         failedDodgeTarget &&
@@ -1556,6 +1694,7 @@ export function reconstructReplayContext(
   return {
     preRollEvidence: result,
     dodgeMovements,
+    pickupResolutions,
     activationEnds,
     mentalEffectEnds,
     mentalSkillUses,

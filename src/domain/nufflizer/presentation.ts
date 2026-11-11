@@ -221,12 +221,16 @@ export function explainContextBounds(
 export function explainMovementOutcome(
   metadata: Pick<
     LuckReport["events"][number]["metadata"],
-    "movementFall" | "movementTouchdown" | "dodgeMovement"
+    "movementFall" | "movementTouchdown" | "dodgeMovement" | "pickupResolution"
   >
 ): string | null {
   const { movementFall: fall, movementTouchdown } = metadata;
   if (movementTouchdown)
     return "The replay records a touchdown immediately after this move.";
+  if(metadata.pickupResolution) {
+    const r=metadata.pickupResolution;
+    return `The successful Sure Hands replacement secured the ball at [${r.cell.x}, ${r.cell.y}]. ${r.movementRemaining === null ? "Remaining movement is unknown." : `The post-move budget stays at ${r.movementRemaining} movement points.`} Later verified movement follows this carrier. This observed possession adds no luck score.`;
+  }
   if (metadata.dodgeMovement) {
     const move = metadata.dodgeMovement;
     const budget = move.movementAfter === null ? "Remaining movement is unknown." : `${move.movementAfter} movement points remained after this step.`;
@@ -366,5 +370,5 @@ export function explainPickupBallChain(
         `${teams.find((team) => team.teamId === id)?.teamName ?? `Team ${id}`}: ${value.toFixed(2)}`
     )
     .join(", ");
-  return `The failed pickup led to ${chain.bounceSourceIds.length} recorded bounce${chain.bounceSourceIds.length === 1 ? "" : "s"} and ${chain.catchEventIds.length} linked catch check${chain.catchEventIds.length === 1 ? "" : "s"}. ${catches ? catches + " " : ""}The last recorded landing was [${chain.endingCell.x}, ${chain.endingCell.y}]. Existing dice subtotals by team: ${totals}. These dice contributions are already included in the team totals. The cost of losing possession or the turn remains unquantified.`;
+  return `The failed pickup led to ${chain.bounceSourceIds.length} recorded bounce${chain.bounceSourceIds.length === 1 ? "" : "s"} and ${chain.catchEventIds.length} linked catch check${chain.catchEventIds.length === 1 ? "" : "s"}. ${catches ? catches + " " : ""}The last recorded landing was [${chain.endingCell.x}, ${chain.endingCell.y}]. Existing dice subtotals by team: ${totals}. These dice contributions are already included in the team totals. The full tactical cost of possession or the turn remains unquantified.`;
 }

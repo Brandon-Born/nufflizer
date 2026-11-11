@@ -1065,7 +1065,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     mentalEffectEnds,
     mentalSkillUses,
     mentalTraitResults,
-    dodgeMovements
+    dodgeMovements,
+    pickupResolutions
   } = reconstructReplayContext(replay, activationLosses);
   for (const move of dodgeMovements.values())
     for (const source of [move.declarationSourceId, move.doMoveSourceId, move.outcomeSourceId])
@@ -1317,6 +1318,9 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     const moveSource=event.metadata.preRoll?.pickupSuccessors?.moveOutcomeSourceId;
     const move=moveSource ? ballSources.get(moveSource) : undefined;
     if(move) {move.label="Recorded move to the pickup square";move.statusReason="The ordinary move reached the recorded ball square before the pickup attempt; no random outcome is added.";}
+  }
+  for(const [source,resolution] of pickupResolutions) {
+    const roll=ballSources.get(source);if(roll) roll.metadata.pickupResolution=resolution;
   }
   for (const [source, movement] of dodgeMovements) {
     const roll = ballSources.get(source);

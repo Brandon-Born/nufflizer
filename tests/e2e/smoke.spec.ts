@@ -334,7 +334,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.18");
+  expect(report.schemaVersion).toBe("2.19");
   expect(report.modelVersion).toBe("dice-only-19");
   expect(
     report.events.some(
@@ -360,7 +360,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
     )
   ).toBe(true);
 
-  expect(report.contextModelVersion).toBe("mobility-possession-13");
+  expect(report.contextModelVersion).toBe("mobility-possession-14");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
     report.coverage.rollCandidates.scoredCount +
@@ -411,7 +411,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   );
   await expect(pickupRow).toContainText("last recorded landing was [3, 5]");
   await expect(pickupRow).toContainText(
-    "The cost of losing possession or the turn remains unquantified"
+    "The full tactical cost of possession or the turn remains unquantified"
   );
   // Independent raw decode at 86/1/messages 2–4: Pickup3+ die1, Sure Hands,
   // fresh die4. Retain both dice and score the single successful check.
@@ -878,6 +878,11 @@ test("source-backed Sure Hands bounds preserve pending catch and reaction uncert
     await expect(row).toHaveCount(1);await row.locator("summary").click();
     await expect(row).toContainText("Sure Hands already committed");await expect(row).toContainText("terminal die had 66.7% success");
     await expect(row).toContainText(c.branches);await expect(row).toContainText(c.range);
+    if(c.id === "pickup_terminal_success") {
+      await expect(row).toContainText("Sure Hands replacement secured the ball at [11, 10]");
+      await expect(row).toContainText("post-move budget stays at 4 movement points");
+      await expect(row).toContainText("observed possession adds no luck score");
+    }
     await expect(row).toContainText("reaction skills or effects are incomplete");await expect(row).toContainText("later catch/return dice");
     await expect(row).toContainText("No midpoint or range endpoint enters point totals");await expect(row).toContainText("88.9%");
     await expect(page.getByText("Context: Not scored")).toHaveCount(2);

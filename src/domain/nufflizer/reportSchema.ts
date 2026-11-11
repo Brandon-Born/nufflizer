@@ -80,6 +80,7 @@ const activationEnd = z.strictObject({
     .optional()
 });
 export const LuckEventMetadataSchema = z.strictObject({
+  pickupResolution:z.strictObject({declarationSourceId:text,moveOutcomeSourceId:text,cell:pitchCell,movementRemaining:z.number().int().min(0).max(16).nullable(),checkpointAfter:count}).optional(),
   dodgeMovement: z.strictObject({declarationSourceId:text,doMoveSourceId:text,outcomeSourceId:text,
     from:pitchCell,to:pitchCell,movementBefore:z.number().int().min(1).max(16).nullable(),
     movementAfter:z.number().int().min(0).max(15).nullable(),carriesBall:z.boolean(),checkpointAfter:count}).optional(),
@@ -201,6 +202,7 @@ export const LuckEventMetadataSchema = z.strictObject({
         effect: z.enum(["approach", "leave"])
       }).optional(),
       actorCarriesBall: z.boolean().nullable(),
+      carriedBallCell:pitchCell.optional(),
       movementCheckLinked: z.boolean(),
       otherUsefulActivations: z.number().int().min(0).max(64).nullable(),
       pickupBounceExposure: probability.nullable()
@@ -923,6 +925,14 @@ export const LuckReportSchema = z
           near(possession.lower,expected.lower) && near(possession.upper,expected.upper),
           "Pickup possession endpoints must use the conditional terminal die and all eight successor bounds, outside point totals.");
       }
+      if(context?.carriedBallCell) require(context.actorCarriesBall === true && context.actorCell?.x === context.carriedBallCell.x && context.actorCell.y === context.carriedBallCell.y,
+        "A known carried-ball cell must match its observed carrier's current position.");
+      const pickupResolution=event.metadata.pickupResolution;
+      if(pickupResolution) require(!!successors && !!possession && event.actualSuccess === true &&
+        pickupResolution.declarationSourceId === successors.declarationSourceId && pickupResolution.moveOutcomeSourceId === successors.moveOutcomeSourceId &&
+        pickupResolution.cell.x === successors.origin.x && pickupResolution.cell.y === successors.origin.y &&
+        pickupResolution.checkpointAfter === context?.checkpointAfter && pickupResolution.movementRemaining === (context?.actorMovementRemaining ?? null),
+        "Observed pickup possession needs the successful committed Sure Hands chain and unchanged post-move budget.");
       const dodgeMove = event.metadata.dodgeMovement;
       if (dodgeMove) {
         const declaration = sources.get(dodgeMove.declarationSourceId);
