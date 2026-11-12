@@ -1,3 +1,4 @@
+import { recordedInjuryName } from "./injuryObservation";
 import type { LuckEventType, LuckReport } from "./types";
 import { LuckEventTypeSchema } from "./reportSchema";
 
@@ -19,10 +20,17 @@ export function explainRerollCounter(
 export function formatActualOutcome(
   event: LuckReport["events"][number]
 ): string {
+  if(event.metadata.injuryObservation) return `${recordedInjuryName(event.metadata.injuryObservation.outcome)} (recorded)`;
   if (event.actualSuccess === null) return "Unknown";
   if (event.metadata.block)
     return event.actualSuccess ? "Raw target met" : "Raw target missed";
   return event.actualSuccess ? "Success" : "Fail";
+}
+
+export function explainInjuryObservation(event:LuckReport["events"][number]):string|null {
+  const observation=event.metadata.injuryObservation;
+  if(!observation)return null;
+  return `The recorded injury result for player ${observation.subjectId} is ${recordedInjuryName(observation.outcome)}. This is a categorical observation, not a success or failure check. Its odds depend on the applicable injury table, current traits and modifiers; those are not verified here, so no luck contribution is assigned. This result does not establish final posture, removal, recovery or availability after treatment. Later mitigation and state observations remain separate evidence.`;
 }
 
 export function scoredEvidenceForTeam(

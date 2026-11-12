@@ -24,6 +24,7 @@ import {
   explainLonerGate,
   explainBlockResolution,
   formatActualOutcome,
+  explainInjuryObservation,
   explainDriveEffectExpiry,
   explainContextCoverage,
   explainRecruitmentEvidence
@@ -798,6 +799,9 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                                 : "n/a"}
                               , weight {moment.explainability.weight}.
                             </p>
+                            {moment.metadata.injuryObservation ? (
+                              <p className="mt-1 text-xs text-amber-100/80">{explainInjuryObservation(moment)}</p>
+                            ) : null}
                             {moment.contextualImpact ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainContextImpact(moment)}
@@ -891,7 +895,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                           {formatActualOutcome(moment)}
                         </td>
                         <td className="px-2 py-3">
-                          {moment.weightedDelta.toFixed(3)}
+                          {formatDiceContribution(moment.weightedDelta, moment.scoringStatus === "scored" ? 1 : 0, 3)}
                         </td>
                         <td className="px-2 py-3">{moment.scoringStatus}</td>
                         <td className="px-2 py-3">

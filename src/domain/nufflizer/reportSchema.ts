@@ -1,3 +1,4 @@
+import { directInjuryOutcome } from "./injuryObservation";
 import { validReportedBlockCrowd } from "./blockCrowd";
 import { bounceDestination } from "@/domain/replay/pickupSuccessors";
 import { continuationOptionBounds } from "@/domain/replay/activeMoveContinuation";
@@ -108,6 +109,7 @@ export const LuckEventMetadataSchema = z.strictObject({
     from:pitchCell,to:pitchCell,movementBefore:z.number().int().min(1).max(16).nullable(),
     movementAfter:z.number().int().min(0).max(15).nullable(),carriesBall:z.boolean().nullable(),checkpointAfter:count}).optional(),
   blockSelection:z.strictObject({face:z.number().int().min(0).max(4)}).optional(),
+  injuryObservation:z.strictObject({outcome:z.enum(["stunned","ko","casualty"]),recordKind:z.enum(["direct","embedded_ko"]),subjectId:text,subjectTeamId:text,sourceCode:z.number().int().min(0).max(64),damageStepSourceIndex:count}).optional(),
   crowdPush:z.strictObject({playerId:text,from:pitchCell,to:z.strictObject({x:z.number().int().min(-1).max(26),y:z.number().int().min(-1).max(15)}),resolution:z.literal(3)}).optional(),
   crowdRemoval:z.strictObject({reason:z.union([z.literal(0),z.literal(1)]),situation:z.union([z.literal(1),z.literal(2)]),status:z.union([z.literal(0),z.literal(3)])}).optional(),
   blockCrowd:z.strictObject({pushSourceId:text,initialRemovalSourceId:text,finalRemovalSourceId:text,injurySourceId:text,subjectId:text,subjectTeamId:text,
@@ -273,6 +275,7 @@ export const LuckEventMetadataSchema = z.strictObject({
       subjectId: text,
       subjectTeamId: text,
       sourceCode: finite.optional(),
+      observedInjury:z.literal(true).optional(),
       crowd:z.strictObject({poolSourceId:text}).optional(),
       chainActionId: text.optional(),
       koRecovery: z
@@ -1431,6 +1434,18 @@ export const LuckReportSchema = z
         );
       }
       if (event.metadata.blockSelection) require(event.metadata.sourceTag === "ResultBlockRoll" && !event.metadata.isRollCandidate && event.scoringStatus === "excluded", "An observed selected block face is a deterministic summary of a linked pool.");
+      const injuryObservation=event.metadata.injuryObservation;
+      if(injuryObservation)require(event.type === "injury" && event.scoringStatus === "excluded" && event.metadata.isRollCandidate === true &&
+        event.probabilitySuccess === null && event.actualSuccess === null && event.delta === 0 && event.weightedDelta === 0 &&
+        !event.contextualImpact && !event.contextualBounds && !event.possessionBounds && !event.catchPossessionBounds &&
+        event.metadata.rollType === 11 && event.metadata.stepType === 2 && event.playerId === injuryObservation.subjectId && event.teamId === injuryObservation.subjectTeamId &&
+        teamIds.has(event.teamId) && event.metadata.targetId === event.playerId && !!event.metadata.actionId && !!event.metadata.sequenceId &&
+        event.metadata.sourceIndex !== undefined && injuryObservation.damageStepSourceIndex < event.metadata.sourceIndex &&
+        event.metadata.dice?.length === 2 && event.metadata.dice.every(d=>Number.isInteger(d)&&d>=1&&d<=6) && event.metadata.dieTypes?.join() === "0,0" &&
+        directInjuryOutcome(event.metadata.outcomeCode) === injuryObservation.outcome && !event.metadata.embeddedDamageOriginalId && !event.metadata.mergedRerollAnchorId &&
+        (injuryObservation.recordKind === "direct" ? event.metadata.sourceTag === "ResultInjuryRoll" : event.metadata.sourceTag === "QuestionKORecovery" && injuryObservation.outcome === "ko") &&
+        event.metadata.damage?.observedInjury === true && event.metadata.damage.sourceCode === injuryObservation.sourceCode,
+        "A recorded injury outcome needs its supported direct/embedded source namespace, uniquely affected player, ordered damage step and two D6; it supplies no odds, final posture or luck contribution.");
       if(event.metadata.blockCrowd)
         require(validReportedBlockCrowd(event,sources,report.coverage.sourceRecordCount),"Crowd damage requires one direct defender push, ordered removal/injury stages, confirmed off-pitch observation and no invented odds or armor.");
       if(event.metadata.crowdPush || event.metadata.crowdRemoval)
@@ -1439,6 +1454,9 @@ export const LuckReportSchema = z
           return !!c && (event.metadata.crowdPush ? c.pushSourceId === event.metadata.sourceId :
             c.initialRemovalSourceId === event.metadata.sourceId || c.finalRemovalSourceId === event.metadata.sourceId);
         }),"Crowd push/removal receipts must be referenced non-random evidence, not extra outcomes.");
+      if(event.metadata.damage?.observedInjury)
+        require(!!event.metadata.injuryObservation && event.metadata.rollType === 11 && !event.metadata.damage.regeneration && !event.metadata.damage.koRecovery,
+          "Observed injury subject evidence must retain its own categorical observation, without a recovery or binary-odds claim.");
       if(event.metadata.damage?.crowd) {
         const pool=sources.get(event.metadata.damage.crowd.poolSourceId);
         require(pool?.metadata.blockCrowd?.injurySourceId === event.metadata.sourceId && event.scoringStatus === "excluded" && event.metadata.isRollCandidate === true &&
@@ -1638,7 +1656,7 @@ export const LuckReportSchema = z
       }
       if (damage) {
         require(event.type ===
-          (damage.regeneration || damage.koRecovery || damage.crowd
+          (damage.regeneration || damage.koRecovery || damage.crowd || damage.observedInjury
             ? "injury"
             : "armor_break") &&
           damage.subjectId === event.playerId &&

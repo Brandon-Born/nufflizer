@@ -106,6 +106,11 @@ describe("POST /api/nufflizier/analyze", () => {
     const crowd=report.events.find(e=>e.metadata.blockCrowd?.subjectId === "38")!,proof=crowd.metadata.blockCrowd!;
     expect(crowd.metadata.sourceId).toBe("source-3716");expect(proof.after).toMatchObject({checkpointAfter:3730,cell:{x:-1,y:-1},canAct:true,tackleZone:true,statusCode:null});
     expect(crowd.metadata.blockResolution!.unscoredDamageRolls).toBe(1);
+    const injuries=report.events.filter(e=>e.metadata.injuryObservation);
+    expect(injuries.some(e=>e.metadata.injuryObservation?.outcome === "casualty")).toBe(true);
+    expect(injuries.every(e=>e.scoringStatus === "excluded" && e.probabilitySuccess === null && e.actualSuccess === null && e.weightedDelta === 0)).toBe(true);
+    expect(report.events.find(e=>e.metadata.sourceId === "source-3729")?.metadata.injuryObservation).toMatchObject({outcome:"stunned",subjectId:"38",subjectTeamId:"1",sourceCode:2});
+
     expect(report.damageSteps.find(s=>s.actionId===proof.damageActionId)).toMatchObject({scoredRolls:0,unscoredRolls:1,diceContribution:0});
 
     expect(e.metadata.teamRerollMovement).toMatchObject({

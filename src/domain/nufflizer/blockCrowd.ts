@@ -367,6 +367,7 @@ export function attachBlockCrowd(
     lastReport.statusReason =
       "The same player's subsequent removal state is linked to the crowd injury and off-pitch checkpoint; no second injury is added.";
     injuryReport.metadata.damage = {
+      ...injuryReport.metadata.damage,
       subjectId: defenderId,
       subjectTeamId: defenderTeamId,
       sourceCode: 2,

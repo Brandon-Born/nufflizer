@@ -82,6 +82,7 @@ function formatTeamSummary(
       return `- ${type}: ${count} excluded`;
     }
   );
+  const injuryObservations=report.events.filter(event=>event.metadata.injuryObservation);
   const topExclusions = Object.entries(report.coverage.excludedByReason)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
@@ -95,6 +96,12 @@ function formatTeamSummary(
     `Roll-candidate coverage: ${(report.coverage.rollCandidates.scoredRate * 100).toFixed(1)}% scored (${report.coverage.rollCandidates.scoredCount} scored, ${report.coverage.rollCandidates.excludedCount} excluded)`,
     `All-event coverage: ${(report.coverage.allEvents.scoredRate * 100).toFixed(1)}% scored (${report.coverage.allEvents.scoredCount} scored, ${report.coverage.allEvents.excludedCount} excluded)`,
     explainContextCoverage(report.coverage.contextEvidence),
+    ...(injuryObservations.length ? [
+      `Recorded injury results: ${injuryObservations.length}. These observed labels have unverified odds and are not luck scores or final player availability.`,
+      ...injuryObservations.slice(0,20).map(event=>
+        `Player ${event.playerId}; source ${event.metadata.sourceId}: ${formatActualOutcome(event)}; Not scored.`),
+      ...(injuryObservations.length>20 ? ["Further recorded injury results are retained in JSON."] : [])
+    ] : []),
     ...report.events.filter((event) => event.metadata.teamRerollCounter).slice(0,20)
       .map((event) => `Player ${event.playerId ?? "unknown"}; source ${event.metadata.sourceId ?? event.id}: ${explainRerollCounter(event)}`),
     ...report.events

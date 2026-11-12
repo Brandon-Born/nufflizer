@@ -1,3 +1,4 @@
+import { attachInjuryObservations } from "./injuryObservation";
 import { attachBlockCrowd } from "./blockCrowd";
 import { attachRetainedCatchPossession } from "./retainedCatchPossession";
 import { teamDodgeContinuity } from "@/domain/replay/teamDodgeContinuity";
@@ -1297,6 +1298,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   }
 
   const ballSources=new Map(events.flatMap(e=>e.metadata.sourceId?[[e.metadata.sourceId,e] as const]:[]));
+  attachInjuryObservations(replay,ballSources);
   attachBlockCrowd(replay,ballSources,blockConsequences);
   const damageSteps = summarizeDamageSteps(events);
   if (movementFalls.length > 0) {
