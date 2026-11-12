@@ -14,7 +14,8 @@ export function teamDodgeContinuity(
   actorId: string,
   actorCell: { x: number; y: number } | null,
   candidates: { knownAvailablePlayerIds: string[]; unknownPlayerIds: string[] },
-  epochs: ReadonlyMap<ReplayBoardCheckpoint, number>
+  epochs: ReadonlyMap<ReplayBoardCheckpoint, number>,
+  completedMoves: ReadonlyMap<string, { x: number; y: number }> = new Map()
 ): number | undefined {
   const before = checkpoints.find(
     (c) => c.afterSourceIndex === originalCheckpointAfter
@@ -67,6 +68,28 @@ export function teamDodgeContinuity(
         player.pitchLocation !== current.pitchLocation
       )
         return;
+      const completed = completedMoves.get(String(player.id));
+      if (completed) {
+        if (
+          current.cell.x !== completed.x ||
+          current.cell.y !== completed.y ||
+          current.pitchLocation !== "on_pitch" ||
+          JSON.stringify({
+            ...player,
+            canAct: undefined,
+            movementRemaining: undefined
+          }) !==
+            JSON.stringify({
+              ...current,
+              canAct: undefined,
+              movementRemaining: undefined
+            })
+        )
+          return;
+        // Earlier prefix confirmation already spent this ordinary activation.
+        // Raw CanAct/MovePoint omissions cannot make it an unused teammate.
+        continue;
+      }
       // An uncertain candidate already spans0..1; changed eligibility cannot
       // escape that envelope. A known/excluded player may not change policy.
       if (

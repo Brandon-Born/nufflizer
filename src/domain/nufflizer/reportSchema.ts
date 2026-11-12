@@ -67,6 +67,7 @@ const activationEnd = z.strictObject({
   actorCell: pitchCell,
   followingPlayerId: text,
   checkpointAfter: count,
+  rosterCheckpointAfter: count.optional(),
   moveSourceId: text.optional(),
   skillSourceId: text.optional(),
   rollSourceId: text.optional(),
@@ -812,6 +813,11 @@ export const LuckReportSchema = z
           originIndex < end.sourceIndex &&
           end.checkpointAfter <
             end.sourceIndex, "An ended activation requires an earlier declaration and a different following teammate.");
+        if(end.rosterCheckpointAfter !== undefined) require(end.kind === "ordinary_move_completed" &&
+          declaration?.metadata.preRoll?.checkpointAfter === end.rosterCheckpointAfter && end.rosterCheckpointAfter < originIndex &&
+          declaration.metadata.preRoll.actorRosterTeamId === end.teamId && declaration.metadata.preRoll.activeTeamId === end.teamId &&
+          declaration.metadata.preRoll.teamTurn === end.teamTurn,
+          "Fresh-roster Move completion needs the original declaration's current roster, active side and clock checkpoint.");
         if (end.kind === "ordinary_move_completed") {
           require(declaration?.metadata.actionCode === 1 &&
             !!linked(end.moveSourceId, "ResultMoveOutcome") &&

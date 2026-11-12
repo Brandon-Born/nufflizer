@@ -1,0 +1,1391 @@
+{
+  "purpose": "Independent source facts, not game-value calibration. Initial omissions, current roster/clock, deterministic move cells and next declaration are preserved.",
+  "cases": [
+    {
+      "sourceFile": "demo11.bbr",
+      "sha256": "8d50653050cf2d25608e6c06ed4fed7b4aa5ebefb1bf1f0b5524d9d63c6525f9",
+      "startStep": 113,
+      "confirmationStep": 114,
+      "actorId": "47",
+      "followingPlayerId": "42",
+      "initialIds": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45"
+      ],
+      "before": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": null,
+        "teamId": "1",
+        "teamTurn": "2",
+        "actorCell": {
+          "x": 12,
+          "y": 11
+        },
+        "CanAct": "1",
+        "Status": null,
+        "MovePoint": "6"
+      },
+      "after": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": null,
+        "teamId": "1",
+        "teamTurn": "2",
+        "actorCell": {
+          "x": 13,
+          "y": 8
+        },
+        "CanAct": "1",
+        "Status": null,
+        "MovePoint": "3"
+      },
+      "ordinaryMoves": [
+        {
+          "from": {
+            "x": 12,
+            "y": 11
+          },
+          "to": {
+            "x": 12,
+            "y": 10
+          }
+        },
+        {
+          "from": {
+            "x": 12,
+            "y": 10
+          },
+          "to": {
+            "x": 12,
+            "y": 9
+          }
+        },
+        {
+          "from": {
+            "x": 12,
+            "y": 9
+          },
+          "to": {
+            "x": 13,
+            "y": 8
+          }
+        }
+      ],
+      "standUpObserved": false,
+      "rawDeclaration": {
+        "Action": [
+          "1"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      },
+      "nextDeclaration": {
+        "Action": [
+          "1"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo11.bbr",
+      "sha256": "8d50653050cf2d25608e6c06ed4fed7b4aa5ebefb1bf1f0b5524d9d63c6525f9",
+      "startStep": 157,
+      "confirmationStep": 158,
+      "actorId": "47",
+      "followingPlayerId": "46",
+      "initialIds": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45"
+      ],
+      "before": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": null,
+        "teamId": "1",
+        "teamTurn": "3",
+        "actorCell": {
+          "x": 12,
+          "y": 8
+        },
+        "CanAct": "1",
+        "Status": "1",
+        "MovePoint": "3"
+      },
+      "after": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": null,
+        "teamId": "1",
+        "teamTurn": "3",
+        "actorCell": {
+          "x": 13,
+          "y": 5
+        },
+        "CanAct": "1",
+        "Status": null,
+        "MovePoint": null
+      },
+      "ordinaryMoves": [
+        {
+          "from": {
+            "x": 12,
+            "y": 8
+          },
+          "to": {
+            "x": 12,
+            "y": 7
+          }
+        },
+        {
+          "from": {
+            "x": 12,
+            "y": 7
+          },
+          "to": {
+            "x": 12,
+            "y": 6
+          }
+        },
+        {
+          "from": {
+            "x": 12,
+            "y": 6
+          },
+          "to": {
+            "x": 13,
+            "y": 5
+          }
+        }
+      ],
+      "standUpObserved": true,
+      "rawDeclaration": {
+        "Action": [
+          "1"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      },
+      "nextDeclaration": {
+        "Action": [
+          "1"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo11.bbr",
+      "sha256": "8d50653050cf2d25608e6c06ed4fed7b4aa5ebefb1bf1f0b5524d9d63c6525f9",
+      "startStep": 158,
+      "confirmationStep": 159,
+      "actorId": "46",
+      "followingPlayerId": "45",
+      "initialIds": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45"
+      ],
+      "before": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": null,
+        "teamId": "1",
+        "teamTurn": "3",
+        "actorCell": {
+          "x": 19,
+          "y": 10
+        },
+        "CanAct": "1",
+        "Status": null,
+        "MovePoint": "6"
+      },
+      "after": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": null,
+        "teamId": "1",
+        "teamTurn": "3",
+        "actorCell": {
+          "x": 18,
+          "y": 5
+        },
+        "CanAct": "1",
+        "Status": null,
+        "MovePoint": "1"
+      },
+      "ordinaryMoves": [
+        {
+          "from": {
+            "x": 19,
+            "y": 10
+          },
+          "to": {
+            "x": 19,
+            "y": 9
+          }
+        },
+        {
+          "from": {
+            "x": 19,
+            "y": 9
+          },
+          "to": {
+            "x": 19,
+            "y": 8
+          }
+        },
+        {
+          "from": {
+            "x": 19,
+            "y": 8
+          },
+          "to": {
+            "x": 19,
+            "y": 7
+          }
+        },
+        {
+          "from": {
+            "x": 19,
+            "y": 7
+          },
+          "to": {
+            "x": 19,
+            "y": 6
+          }
+        },
+        {
+          "from": {
+            "x": 19,
+            "y": 6
+          },
+          "to": {
+            "x": 18,
+            "y": 5
+          }
+        }
+      ],
+      "standUpObserved": false,
+      "rawDeclaration": {
+        "Action": [
+          "1"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      },
+      "nextDeclaration": {
+        "Action": [
+          "1"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo11.bbr",
+      "sha256": "8d50653050cf2d25608e6c06ed4fed7b4aa5ebefb1bf1f0b5524d9d63c6525f9",
+      "startStep": 197,
+      "confirmationStep": 198,
+      "actorId": "46",
+      "followingPlayerId": "43",
+      "initialIds": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45"
+      ],
+      "before": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": null,
+        "teamId": "1",
+        "teamTurn": "4",
+        "actorCell": {
+          "x": 18,
+          "y": 5
+        },
+        "CanAct": "1",
+        "Status": null,
+        "MovePoint": "6"
+      },
+      "after": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": null,
+        "teamId": "1",
+        "teamTurn": "4",
+        "actorCell": {
+          "x": 20,
+          "y": 11
+        },
+        "CanAct": "1",
+        "Status": null,
+        "MovePoint": null
+      },
+      "ordinaryMoves": [
+        {
+          "from": {
+            "x": 18,
+            "y": 5
+          },
+          "to": {
+            "x": 19,
+            "y": 6
+          }
+        },
+        {
+          "from": {
+            "x": 19,
+            "y": 6
+          },
+          "to": {
+            "x": 20,
+            "y": 7
+          }
+        },
+        {
+          "from": {
+            "x": 20,
+            "y": 7
+          },
+          "to": {
+            "x": 21,
+            "y": 8
+          }
+        },
+        {
+          "from": {
+            "x": 21,
+            "y": 8
+          },
+          "to": {
+            "x": 21,
+            "y": 9
+          }
+        },
+        {
+          "from": {
+            "x": 21,
+            "y": 9
+          },
+          "to": {
+            "x": 20,
+            "y": 10
+          }
+        },
+        {
+          "from": {
+            "x": 20,
+            "y": 10
+          },
+          "to": {
+            "x": 20,
+            "y": 11
+          }
+        }
+      ],
+      "standUpObserved": false,
+      "rawDeclaration": {
+        "Action": [
+          "1"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      },
+      "nextDeclaration": {
+        "Action": [
+          "3"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo11.bbr",
+      "sha256": "8d50653050cf2d25608e6c06ed4fed7b4aa5ebefb1bf1f0b5524d9d63c6525f9",
+      "startStep": 230,
+      "confirmationStep": 231,
+      "actorId": "46",
+      "followingPlayerId": "45",
+      "initialIds": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45"
+      ],
+      "before": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": null,
+        "teamId": "1",
+        "teamTurn": "5",
+        "actorCell": {
+          "x": 20,
+          "y": 11
+        },
+        "CanAct": "1",
+        "Status": null,
+        "MovePoint": "6"
+      },
+      "after": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": null,
+        "teamId": "1",
+        "teamTurn": "5",
+        "actorCell": {
+          "x": 22,
+          "y": 8
+        },
+        "CanAct": "1",
+        "Status": null,
+        "MovePoint": "2"
+      },
+      "ordinaryMoves": [
+        {
+          "from": {
+            "x": 20,
+            "y": 11
+          },
+          "to": {
+            "x": 21,
+            "y": 11
+          }
+        },
+        {
+          "from": {
+            "x": 21,
+            "y": 11
+          },
+          "to": {
+            "x": 22,
+            "y": 10
+          }
+        },
+        {
+          "from": {
+            "x": 22,
+            "y": 10
+          },
+          "to": {
+            "x": 22,
+            "y": 9
+          }
+        },
+        {
+          "from": {
+            "x": 22,
+            "y": 9
+          },
+          "to": {
+            "x": 22,
+            "y": 8
+          }
+        }
+      ],
+      "standUpObserved": false,
+      "rawDeclaration": {
+        "Action": [
+          "1"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      },
+      "nextDeclaration": {
+        "Action": [
+          "3"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo11.bbr",
+      "sha256": "8d50653050cf2d25608e6c06ed4fed7b4aa5ebefb1bf1f0b5524d9d63c6525f9",
+      "startStep": 247,
+      "confirmationStep": 248,
+      "actorId": "46",
+      "followingPlayerId": "39",
+      "initialIds": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45"
+      ],
+      "before": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": null,
+        "teamId": "1",
+        "teamTurn": "6",
+        "actorCell": {
+          "x": 23,
+          "y": 7
+        },
+        "CanAct": "1",
+        "Status": "1",
+        "MovePoint": "3"
+      },
+      "after": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": null,
+        "teamId": "1",
+        "teamTurn": "6",
+        "actorCell": {
+          "x": 21,
+          "y": 9
+        },
+        "CanAct": "1",
+        "Status": null,
+        "MovePoint": "1"
+      },
+      "ordinaryMoves": [
+        {
+          "from": {
+            "x": 23,
+            "y": 7
+          },
+          "to": {
+            "x": 22,
+            "y": 8
+          }
+        },
+        {
+          "from": {
+            "x": 22,
+            "y": 8
+          },
+          "to": {
+            "x": 21,
+            "y": 9
+          }
+        }
+      ],
+      "standUpObserved": true,
+      "rawDeclaration": {
+        "Action": [
+          "1"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      },
+      "nextDeclaration": {
+        "Action": [
+          "3"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo11.bbr",
+      "sha256": "8d50653050cf2d25608e6c06ed4fed7b4aa5ebefb1bf1f0b5524d9d63c6525f9",
+      "startStep": 286,
+      "confirmationStep": 287,
+      "actorId": "47",
+      "followingPlayerId": "42",
+      "initialIds": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45"
+      ],
+      "before": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": null,
+        "teamId": "1",
+        "teamTurn": "8",
+        "actorCell": {
+          "x": 18,
+          "y": 7
+        },
+        "CanAct": "1",
+        "Status": null,
+        "MovePoint": "6"
+      },
+      "after": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": null,
+        "teamId": "1",
+        "teamTurn": "8",
+        "actorCell": {
+          "x": 14,
+          "y": 6
+        },
+        "CanAct": "1",
+        "Status": null,
+        "MovePoint": "2"
+      },
+      "ordinaryMoves": [
+        {
+          "from": {
+            "x": 18,
+            "y": 7
+          },
+          "to": {
+            "x": 17,
+            "y": 6
+          }
+        },
+        {
+          "from": {
+            "x": 17,
+            "y": 6
+          },
+          "to": {
+            "x": 16,
+            "y": 6
+          }
+        },
+        {
+          "from": {
+            "x": 16,
+            "y": 6
+          },
+          "to": {
+            "x": 15,
+            "y": 6
+          }
+        },
+        {
+          "from": {
+            "x": 15,
+            "y": 6
+          },
+          "to": {
+            "x": 14,
+            "y": 6
+          }
+        }
+      ],
+      "standUpObserved": false,
+      "rawDeclaration": {
+        "Action": [
+          "1"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      },
+      "nextDeclaration": {
+        "Action": [
+          "1"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo11.bbr",
+      "sha256": "8d50653050cf2d25608e6c06ed4fed7b4aa5ebefb1bf1f0b5524d9d63c6525f9",
+      "startStep": 312,
+      "confirmationStep": 313,
+      "actorId": "46",
+      "followingPlayerId": "47",
+      "initialIds": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45"
+      ],
+      "before": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": "1",
+        "teamId": "1",
+        "teamTurn": "9",
+        "actorCell": {
+          "x": 13,
+          "y": 4
+        },
+        "CanAct": "1",
+        "Status": null,
+        "MovePoint": "6"
+      },
+      "after": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": "1",
+        "teamId": "1",
+        "teamTurn": "9",
+        "actorCell": {
+          "x": 18,
+          "y": 7
+        },
+        "CanAct": "1",
+        "Status": null,
+        "MovePoint": "1"
+      },
+      "ordinaryMoves": [
+        {
+          "from": {
+            "x": 13,
+            "y": 4
+          },
+          "to": {
+            "x": 14,
+            "y": 5
+          }
+        },
+        {
+          "from": {
+            "x": 14,
+            "y": 5
+          },
+          "to": {
+            "x": 15,
+            "y": 6
+          }
+        },
+        {
+          "from": {
+            "x": 15,
+            "y": 6
+          },
+          "to": {
+            "x": 16,
+            "y": 7
+          }
+        },
+        {
+          "from": {
+            "x": 16,
+            "y": 7
+          },
+          "to": {
+            "x": 17,
+            "y": 7
+          }
+        },
+        {
+          "from": {
+            "x": 17,
+            "y": 7
+          },
+          "to": {
+            "x": 18,
+            "y": 7
+          }
+        }
+      ],
+      "standUpObserved": false,
+      "rawDeclaration": {
+        "Action": [
+          "1"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      },
+      "nextDeclaration": {
+        "Action": [
+          "1"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo11.bbr",
+      "sha256": "8d50653050cf2d25608e6c06ed4fed7b4aa5ebefb1bf1f0b5524d9d63c6525f9",
+      "startStep": 313,
+      "confirmationStep": 314,
+      "actorId": "47",
+      "followingPlayerId": "43",
+      "initialIds": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45"
+      ],
+      "before": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": "1",
+        "teamId": "1",
+        "teamTurn": "9",
+        "actorCell": {
+          "x": 16,
+          "y": 2
+        },
+        "CanAct": "1",
+        "Status": null,
+        "MovePoint": "6"
+      },
+      "after": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": "1",
+        "teamId": "1",
+        "teamTurn": "9",
+        "actorCell": {
+          "x": 17,
+          "y": 7
+        },
+        "CanAct": "1",
+        "Status": null,
+        "MovePoint": "1"
+      },
+      "ordinaryMoves": [
+        {
+          "from": {
+            "x": 16,
+            "y": 2
+          },
+          "to": {
+            "x": 17,
+            "y": 3
+          }
+        },
+        {
+          "from": {
+            "x": 17,
+            "y": 3
+          },
+          "to": {
+            "x": 17,
+            "y": 4
+          }
+        },
+        {
+          "from": {
+            "x": 17,
+            "y": 4
+          },
+          "to": {
+            "x": 17,
+            "y": 5
+          }
+        },
+        {
+          "from": {
+            "x": 17,
+            "y": 5
+          },
+          "to": {
+            "x": 17,
+            "y": 6
+          }
+        },
+        {
+          "from": {
+            "x": 17,
+            "y": 6
+          },
+          "to": {
+            "x": 17,
+            "y": 7
+          }
+        }
+      ],
+      "standUpObserved": false,
+      "rawDeclaration": {
+        "Action": [
+          "1"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      },
+      "nextDeclaration": {
+        "Action": [
+          "1"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo11.bbr",
+      "sha256": "8d50653050cf2d25608e6c06ed4fed7b4aa5ebefb1bf1f0b5524d9d63c6525f9",
+      "startStep": 332,
+      "confirmationStep": 333,
+      "actorId": "46",
+      "followingPlayerId": "43",
+      "initialIds": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45"
+      ],
+      "before": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": "1",
+        "teamId": "1",
+        "teamTurn": "10",
+        "actorCell": {
+          "x": 18,
+          "y": 7
+        },
+        "CanAct": "1",
+        "Status": null,
+        "MovePoint": "6"
+      },
+      "after": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": "1",
+        "teamId": "1",
+        "teamTurn": "10",
+        "actorCell": {
+          "x": 15,
+          "y": 12
+        },
+        "CanAct": "1",
+        "Status": null,
+        "MovePoint": null
+      },
+      "ordinaryMoves": [
+        {
+          "from": {
+            "x": 18,
+            "y": 7
+          },
+          "to": {
+            "x": 19,
+            "y": 8
+          }
+        },
+        {
+          "from": {
+            "x": 19,
+            "y": 8
+          },
+          "to": {
+            "x": 19,
+            "y": 9
+          }
+        },
+        {
+          "from": {
+            "x": 19,
+            "y": 9
+          },
+          "to": {
+            "x": 18,
+            "y": 10
+          }
+        },
+        {
+          "from": {
+            "x": 18,
+            "y": 10
+          },
+          "to": {
+            "x": 17,
+            "y": 11
+          }
+        },
+        {
+          "from": {
+            "x": 17,
+            "y": 11
+          },
+          "to": {
+            "x": 16,
+            "y": 11
+          }
+        },
+        {
+          "from": {
+            "x": 16,
+            "y": 11
+          },
+          "to": {
+            "x": 15,
+            "y": 12
+          }
+        }
+      ],
+      "standUpObserved": false,
+      "rawDeclaration": {
+        "Action": [
+          "1"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      },
+      "nextDeclaration": {
+        "Action": [
+          "1"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo6.bbr",
+      "sha256": "e42180aa79c226ce003b5453a16c9cef30e1dd7d49039e7d50e24347434d3ff9",
+      "startStep": 232,
+      "confirmationStep": 233,
+      "actorId": "51",
+      "followingPlayerId": "38",
+      "initialIds": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45",
+        "46",
+        "47",
+        "48",
+        "49",
+        "50"
+      ],
+      "before": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": null,
+        "teamId": "1",
+        "teamTurn": "5",
+        "actorCell": {
+          "x": 14,
+          "y": 11
+        },
+        "CanAct": "1",
+        "Status": "1",
+        "MovePoint": "3"
+      },
+      "after": {
+        "CurrentPhase": "5",
+        "IsStable": "1",
+        "ActiveTeam": "1",
+        "ActiveGamer": "1",
+        "Period": null,
+        "teamId": "1",
+        "teamTurn": "5",
+        "actorCell": {
+          "x": 11,
+          "y": 12
+        },
+        "CanAct": "1",
+        "Status": null,
+        "MovePoint": null
+      },
+      "ordinaryMoves": [
+        {
+          "from": {
+            "x": 14,
+            "y": 11
+          },
+          "to": {
+            "x": 13,
+            "y": 12
+          }
+        },
+        {
+          "from": {
+            "x": 13,
+            "y": 12
+          },
+          "to": {
+            "x": 12,
+            "y": 12
+          }
+        },
+        {
+          "from": {
+            "x": 12,
+            "y": 12
+          },
+          "to": {
+            "x": 11,
+            "y": 12
+          }
+        }
+      ],
+      "standUpObserved": true,
+      "rawDeclaration": {
+        "Action": [
+          "1"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      },
+      "nextDeclaration": {
+        "Action": [
+          "3"
+        ],
+        "TeamId": [
+          "0"
+        ]
+      }
+    }
+  ]
+}

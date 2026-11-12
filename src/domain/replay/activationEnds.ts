@@ -22,6 +22,7 @@ export type ActivationEnd = {
   actorCell: { x: number; y: number };
   followingPlayerId: string;
   checkpointAfter: number;
+  rosterCheckpointAfter?: number;
   moveSourceId?: string;
   skillSourceId?: string;
   rollSourceId?: string;

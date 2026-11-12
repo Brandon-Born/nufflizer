@@ -334,7 +334,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.28");
+  expect(report.schemaVersion).toBe("2.29");
   expect(report.modelVersion).toBe("dice-only-20");
   expect(report.events.filter((e:{metadata:{combinedMovement?:unknown}})=>e.metadata.combinedMovement)).toHaveLength(2);
   expect(
@@ -361,7 +361,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
     )
   ).toBe(true);
 
-  expect(report.contextModelVersion).toBe("mobility-possession-22");
+  expect(report.contextModelVersion).toBe("mobility-possession-23");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
     report.coverage.rollCandidates.scoredCount +
@@ -1092,10 +1092,38 @@ test("committed team Dodge bounds keep terminal turn cost separate from compound
     if(index===0)await page.screenshot({path:"/tmp/nufflizier-terminal-team-dodge-desktop.png",fullPage:true});
     const download=page.waitForEvent("download");await page.getByRole("button",{name:"Download JSON"}).click();
     const result=await download;const saved=JSON.parse(readFileSync((await result.path())!,"utf8"));
-    expect(saved.schemaVersion).toBe("2.28");expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);
+    expect(saved.schemaVersion).toBe("2.29");expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);
     expect(saved.events.find((e:{contextualBounds?:{policy:string}})=>e.contextualBounds?.policy==="team_reroll_terminal_moves").probabilitySuccess).toBeCloseTo(8/9,12);
     if(index===0)await page.getByRole("button",{name:"Upload Another Replay"}).click();
     await page.unroute("**/api/nufflizier/analyze");
   }
   expect(errors).toEqual([]);
+});
+
+test("current roster completion excludes a spent player from later Dodge opportunities",async({page})=>{
+  const errors:string[]=[];page.on("pageerror",e=>errors.push(e.message));page.on("console",m=>{if(m.type()==="error")errors.push(m.text());});
+  const input=readFileSync("demo-replays/demo11.bbr","utf8"),report=analyzeNufflizerInput(input);
+  await page.route("**/api/nufflizier/analyze",route=>route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(report)}));
+  await page.setViewportSize({width:1280,height:720});await page.goto("/nufflizier");await expect(page).toHaveTitle("Nufflizier");
+  await page.setInputFiles('input[name="replay"]',{name:"source11.bbr",mimeType:"application/octet-stream",buffer:Buffer.from(input)});
+  await page.getByRole("button",{name:"Analyze Nuffle Luck"}).click();await expect(page.getByRole("heading",{name:"Nuffle Match Report"})).toBeVisible();
+  await page.getByLabel("Player ID or initial roster name").fill("39");await page.getByLabel("Team turn",{exact:true}).fill("6");
+  await page.getByLabel("Scoring status").selectOption("excluded");
+  const table=page.getByRole("table").filter({has:page.getByRole("columnheader",{name:"Replay segment"})});
+  const completed=table.locator("tbody tr").filter({hasText:"Player 46's ordinary Move activation ended"});
+  await expect(completed).toHaveCount(1);await completed.locator("summary").click();
+  await expect(completed).toContainText("Ownership was verified from the current roster checkpoint");
+  await expect(completed).toContainText("Later move opportunities exclude this spent activation");
+  await page.getByLabel("Scoring status").selectOption("bounded");
+  const dodge=table.locator("tbody tr").filter({has:page.locator("summary")});await expect(dodge).toHaveCount(1);await dodge.locator("summary").click();
+  await expect(dodge).toContainText("0 to 3 other players");await expect(dodge).toContainText("-2.00 to 0.00 provisional context units");
+  await expect(dodge).toContainText("88.9%");await expect(dodge).toContainText("66.7% success");
+  await page.getByText(/With the team reroll already spent/).scrollIntoViewIfNeeded();
+  await page.screenshot({path:"/tmp/nufflizier-current-roster-move-desktop.png",fullPage:false});
+  const download=page.waitForEvent("download");await page.getByRole("button",{name:"Download JSON"}).click();const file=await download;
+  const saved=JSON.parse(readFileSync((await file.path())!,"utf8"));expect(saved.schemaVersion).toBe("2.29");
+  expect(saved.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-1960").contextualBounds.maximumMoves).toBe(3);
+  expect(saved.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-1942").metadata.initialRosterName).toBeUndefined();
+  expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);
+  await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);expect(errors).toEqual([]);
 });

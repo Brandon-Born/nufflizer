@@ -1,6 +1,6 @@
 import type { PreRollEvidence } from "@/domain/replay/reconstructContext";
 
-export const CONTEXT_MODEL_VERSION = "mobility-possession-22";
+export const CONTEXT_MODEL_VERSION = "mobility-possession-23";
 export type ContextPolicy =
   | "declined_team_reroll"
   | "full_team_reroll"

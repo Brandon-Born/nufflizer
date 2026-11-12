@@ -1,3 +1,5 @@
+import { currentMoveActor, isDeterministicMoveResult, preservesCurrentMoveEnd } from "./currentMoveActor";
+import { buildPlayerOwnershipIndex } from "./attribution";
 import { unmodifiedD6Check } from "./numericCheck";
 import {
   findCombinedMovements,
@@ -657,6 +659,8 @@ export function reconstructReplayContext(
       mentalTraitResults
     };
   const checkpoints = replay.boardCheckpoints ?? [];
+  const initialOwnership = buildPlayerOwnershipIndex(replay);
+  const replayTeamIds = replay.teams.map(t=>t.id);
   const epochs = checkpointClockEpochs(checkpoints);
   let activationEpoch: number | undefined;
   let activationCheckpointAfter: number | undefined;
@@ -698,7 +702,7 @@ export function reconstructReplayContext(
     findMentalActivationEnds(replay).map((end) => [end.sourceId, end])
   );
   let activeEnds = new Map<string, ActivationEnd>();
-  let previousMove: { end: ActivationEnd; moved: boolean } | undefined;
+  let previousMove: { end: ActivationEnd; moved: boolean; waitCheckpoint?: ReplayBoardCheckpoint } | undefined;
   let actorDodgeMoveSourceId: string | undefined;
   let lastTeamMovement:
     | {
@@ -767,7 +771,8 @@ export function reconstructReplayContext(
     | undefined;
   let activeLosses = new Map<string, ConfirmedActivationLoss>();
   for (const turn of replay.turns)
-    for (const event of turn.events) {
+    for (const originalEvent of turn.events) {
+      let event=originalEvent;
       if (event.sourceIndex === undefined) continue;
       let frameChanged = false;
       while (
@@ -775,6 +780,10 @@ export function reconstructReplayContext(
         checkpoints[cursor]!.afterSourceIndex < event.sourceIndex
       ) {
         checkpoint = checkpoints[cursor++]!;
+        if(previousMove?.end.rosterCheckpointAfter !== undefined) {
+          if(previousMove.waitCheckpoint !== checkpoint)previousMove=undefined;
+          else previousMove.waitCheckpoint=undefined;
+        }
         frameChanged = true;
         if (pendingDodge || pendingPickup || pendingTeamMove) {
           previousMove = undefined;
@@ -1250,6 +1259,11 @@ export function reconstructReplayContext(
         continue;
       }
       if (event.type === "step" || event.sourceTag === "BallStep") {
+        if(previousMove?.end.rosterCheckpointAfter !== undefined &&
+          (event.sourceTag !== "PlayerStep" || ![0,1,7].includes(event.stepType ?? -1) ||
+            event.payload?.Skill !== 0 || event.payload.IsEvaluation !== 0)) {
+          previousMove=undefined;activationId=null;activationActionCode=undefined;
+        }
         if (
           event.sourceTag === "PlayerStep" &&
           event.stepType !== 0 &&
@@ -1301,7 +1315,23 @@ export function reconstructReplayContext(
         previousMove = undefined;
         continue;
       }
+      event=currentMoveActor(event,board,initialOwnership,replayTeamIds,activationActionCode === 1 && !!activationId);
+      if(event.sourceIndex === undefined)continue;
+      const currentRosterQualified = event !== originalEvent;
       const p = event.payload;
+      if(preservesCurrentMoveEnd(event,board,checkpoint,checkpoints[cursor],previousMove,epochs)) {
+        // Preserve only the candidate's source provenance through this verified
+        // wait marker. The next iteration still replaces all observed state.
+        if(previousMove)previousMove.waitCheckpoint=checkpoints[cursor];
+        activationId=null;
+        activationActionCode=undefined;
+        continue;
+      }
+      if(previousMove?.end.rosterCheckpointAfter !== undefined &&
+        event.sourceTag !== "ResultUseAction" && !(event.sourceTag === "Carrier" && event.checkpointCarrier) &&
+        !isDeterministicMoveResult(event)) {
+        previousMove=undefined;activationId=null;activationActionCode=undefined;
+      }
       if (teamOffer && event.sourceTag === "ResultTeamRerollUsage") {
         const offer = teamOffer;
         teamOffer = undefined;
@@ -1391,12 +1421,12 @@ export function reconstructReplayContext(
       }
       if (
         event.id &&
-        [
+        ([
           "ResultRoll",
           "QuestionTeamRerollUsage",
           "QuestionBlockDice",
           "ResultUseAction"
-        ].includes(event.sourceTag)
+        ].includes(event.sourceTag) || currentRosterQualified)
       ) {
         result.set(
           event.id,
@@ -1797,6 +1827,7 @@ export function reconstructReplayContext(
         }
         if (
           declarationOwned &&
+          event.actorTeamSource !== "turn_inferred" &&
           previousMove?.moved &&
           previousMove.end.actorId !== String(actor) &&
           event.id &&
@@ -1836,6 +1867,8 @@ export function reconstructReplayContext(
         previousMove = undefined;
         if (
           declarationOwned &&
+          event.actorTeamSource !== "turn_inferred" &&
+          event.actorTeamId === String(activeTeam?.explicitTeamId) &&
           event.actionCode === 1 &&
           event.id &&
           activeTeam?.explicitTeamId != null &&
@@ -1851,6 +1884,7 @@ export function reconstructReplayContext(
             moved: false,
             end: {
               kind: "ordinary_move_completed",
+              ...(currentRosterQualified ? {rosterCheckpointAfter:checkpoint.afterSourceIndex} : {}),
               sourceId: event.id,
               sourceIndex: event.sourceIndex,
               declarationSourceId: event.id,

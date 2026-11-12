@@ -1403,8 +1403,14 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       (event.actualSuccess ? !!m.teamRerollMovement && !m.teamRerollMovement.zonePenalty :
         !!m.movementFall && !m.movementFall.combinedRushSourceId)) {
       const question=ballSources.get(m.rerollQuestionId ?? ""),choice=ballSources.get(m.rerollDecisionId ?? "");
+      const completedMoves=new Map((m.preRoll.endedActivationSourceIds ?? []).flatMap(id=>{
+        const end=activationEnds.get(id);
+        return end?.kind === "ordinary_move_completed" && end.teamId===event.teamId && end.teamTurn===m.preRoll?.teamTurn &&
+          end.checkpointAfter<=m.preRoll.checkpointAfter && end.sourceIndex<(question?.metadata.sourceIndex ?? -1)
+          ? [[end.actorId,end.actorCell] as const] : [];
+      }));
       const terminalCheckpointAfter=m.preRoll.ordinaryMoveAvailability && question?.metadata.sourceIndex!==undefined && choice?.metadata.sourceIndex!==undefined ?
-        teamDodgeContinuity(replay.boardCheckpoints ?? [],m.preRoll.checkpointAfter,question.metadata.sourceIndex,choice.metadata.sourceIndex,event.playerId!,m.preRoll.actorCell,m.preRoll.ordinaryMoveAvailability,epochs) : undefined;
+        teamDodgeContinuity(replay.boardCheckpoints ?? [],m.preRoll.checkpointAfter,question.metadata.sourceIndex,choice.metadata.sourceIndex,event.playerId!,m.preRoll.actorCell,m.preRoll.ordinaryMoveAvailability,epochs,completedMoves) : undefined;
       if(terminalCheckpointAfter!==undefined)
         event.contextualBounds = estimateTeamDodgeMoveBounds(m.preRoll,event.actualSuccess,(7-m.difficulty)/6,terminalCheckpointAfter);
     }

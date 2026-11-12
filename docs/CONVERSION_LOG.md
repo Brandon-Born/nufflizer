@@ -874,3 +874,8 @@ The exact parser checkpoint1f1f7f7 passes public CI43162561925 and bounded Previ
 ## 2026-11-12 - Waiting actor origin guard
 
 The conditional team-Dodge gate now also requires the waiting actor to remain at its reconstructed pre-offer origin, preserving already verified prefix movement while rejecting contradictory snapshots.22 focused cases and final1227 unit/API tests, real Redis/build and20 browser flows pass at unchanged budgets. All four public components,18 ranges/zero points and11 closed/17 open remain; no new hosted or broad semantic acceptance is claimed.
+
+
+## 2026-11-12 - Current-roster ownership preserves completed Move cost
+
+Schema2.29/context23 qualifies an unnamed actor from a fresh explicit roster only for deterministic ordinary Move/stand-up records, preserving original parser attribution and unknown skills. A strictly matched wait carries completion provenance to the next owned teammate declaration; new checkpoints, rolls, skills and contradictions terminate this scope. Independent extraction corroborates11 real chains across demo11/demo6. Known spent46 is now excluded from demo11/249's possible teammate moves, tightening−8/3–0 to−2–0 without changing any12-demo scored result/odds/contribution.34 new regressions, original demo11 worker/API and a twenty-first rendered explanation/export flow pass.18 partial ranges/zero points and11 closed/17 open remain. No new deployment, resource, paid/billing or broad calibrated acceptance.
