@@ -12,7 +12,12 @@ import {
   labelForCode
 } from "./mappings";
 import { labelForRollType } from "./rollTypeContracts";
-import type { ReplayEvent, ReplayTurn, ReplayUnknownCode } from "./types";
+import type {
+  ReplayEvent,
+  ReplayTurn,
+  ReplayUnknownCode,
+  ReplayModel
+} from "./types";
 import {
   SAFE_XML_OPTIONS,
   createSafeXmlParser,
@@ -25,6 +30,24 @@ import { ReplayValidationError } from "@/lib/errors";
 
 type RecordLike = Record<string, unknown>;
 type OrderedNode = { [key: string]: OrderedNode[] | unknown };
+const nonRollControls = new Set([
+  "Clock",
+  "EventGamersAreReady",
+  "EventStartActiveTimer",
+  "EventRulesEngineStandBy",
+  "EventActiveGamerChanged",
+  "EventPauseActiveTimer",
+  "EventActiveTimerChanged"
+]);
+function containsDiceField(value: unknown): boolean {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    Object.entries(value).some(
+      ([key, v]) => key === "Dice" || key === "Die" || containsDiceField(v)
+    )
+  );
+}
 const code = z.number().int().min(-1).max(1_000_000);
 const RollSchema = z
   .object({
@@ -169,6 +192,71 @@ function asObject(
   return out;
 }
 
+// Keep only dice-bearing branches and roll flags. Empty repeated siblings keep
+// their original array positions; names/appearance data are not copied.
+function snapshotDiceTree(nodes: OrderedNode[]): RecordLike | undefined {
+  const grouped = new Map<string, { value: unknown; dice: boolean }[]>();
+  let hasDice = false;
+  for (const node of nodes) {
+    const tag = tagOf(node);
+    if (!tag || tag.startsWith("#") || tag.startsWith("?")) continue;
+    const inner = children(node, tag),
+      isDice = tag === "Dice" || tag === "Die";
+    const nested = isDice ? undefined : snapshotDiceTree(inner);
+    const dice = isDice || nested !== undefined;
+    const value = isDice
+      ? inner.some((n) => !tagOf(n).startsWith("#"))
+        ? asObject(inner)
+        : textOf(inner)
+      : (nested ??
+        (inner.some((n) => !tagOf(n).startsWith("#")) ? {} : textOf(inner)));
+    const list = grouped.get(tag) ?? [];
+    list.push({ value, dice });
+    grouped.set(tag, list);
+    hasDice ||= dice;
+  }
+  if (!hasDice) return;
+  const out: RecordLike = Object.create(null) as RecordLike;
+  for (const [tag, values] of grouped) {
+    if (
+      !values.some((v) => v.dice) &&
+      ![
+        "RollType",
+        "Status",
+        "NewRoll",
+        "RollStatus",
+        "RolledDiceIndexes"
+      ].includes(tag)
+    )
+      continue;
+    out[tag] =
+      values.length === 1 ? values[0]!.value : values.map((v) => v.value);
+  }
+  return out;
+}
+
+function snapshotDiceKey(value: unknown): string | undefined {
+  const dice = Array.isArray(value) ? value : [value];
+  if (dice.length !== 2) return;
+  const result = [];
+  for (const item of dice) {
+    const die = record(item),
+      face = Number(die.Value),
+      type = die.DieType === undefined ? null : Number(die.DieType);
+    if (
+      Object.keys(die).some((k) => !["Value", "DieType"].includes(k)) ||
+      !/^\d{1,2}$/.test(String(die.Value)) ||
+      !Number.isInteger(face) ||
+      face < 1 ||
+      face > 6 ||
+      (type !== null && (!/^\d{1,9}$/.test(String(die.DieType)) || type !== 0))
+    )
+      return;
+    result.push([face, type]);
+  }
+  return JSON.stringify(result);
+}
+
 export function extractStructuredTurnsFromReplayXml(
   xml: ValidatedXml,
   replayVersion?: string,
@@ -177,15 +265,18 @@ export function extractStructuredTurnsFromReplayXml(
   turns: ReplayTurn[];
   unknownCodes: ReplayUnknownCode[];
   boardCheckpoints: ReplayBoardCheckpoint[];
+  endDiceSnapshots: NonNullable<ReplayModel["endDiceSnapshots"]>;
 } {
   const tree = new XMLParser({
     ...SAFE_XML_OPTIONS,
     preserveOrder: true
   }).parse(
-    projectSnapshots ? projectReplayBoards(xml, boardProjection) : xml
+    projectSnapshots ? projectReplayBoards(xml, boardProjection, true) : xml
   ) as OrderedNode[];
   const turns: ReplayTurn[] = [];
   const boardCheckpoints: ReplayBoardCheckpoint[] = [];
+  const endDiceSnapshots: NonNullable<ReplayModel["endDiceSnapshots"]> = [];
+  const lastSnapshotDice = new Map<string, unknown>();
   let replayStep = 0;
   const unknown = new Map<string, ReplayUnknownCode>();
   let sequence = 0;
@@ -257,6 +348,10 @@ export function extractStructuredTurnsFromReplayXml(
       );
     const tag = keys[0]!;
     const payload = record(parsed[tag]);
+    if (nonRollControls.has(tag) && containsDiceField(payload))
+      throw new ReplayValidationError(
+        "Unexpected dice in a non-roll control message."
+      );
     for (const key of [
       "PlayerId",
       "TargetId",
@@ -406,6 +501,10 @@ export function extractStructuredTurnsFromReplayXml(
     carrierObject?: ReplayEvent["carrierObject"],
     checkpointCarrier = false
   ) {
+    if (nodes.some((n) => !tagOf(n).startsWith("#")))
+      throw new ReplayValidationError(
+        "Carrier requires a scalar player reference."
+      );
     const carrier = textOf(nodes);
     const playerId = /^\d+$/.test(carrier) ? carrier : undefined;
     if (carrierObject === "ball") turn.ballCarrierPlayerId = playerId;
@@ -421,19 +520,59 @@ export function extractStructuredTurnsFromReplayXml(
   function walk(
     nodes: OrderedNode[],
     directReplayStep?: number,
-    joinedNotification = false
+    joinedNotification = false,
+    parentPath: (string | number)[] = []
   ) {
     let childIndex = -1;
+    const totals = new Map<string, number>(),
+      offsets = new Map<string, number>();
+    for (const node of nodes) {
+      const tag = tagOf(node);
+      totals.set(tag, (totals.get(tag) ?? 0) + 1);
+    }
     for (const node of nodes) {
       const tag = tagOf(node);
       const inner = children(node, tag);
+      const offset = offsets.get(tag) ?? 0;
+      offsets.set(tag, offset + 1);
+      const path = parentPath.concat(
+        tag,
+        ...((totals.get(tag) ?? 0) > 1 ? [offset] : [])
+      );
+      if (
+        nonRollControls.has(tag) &&
+        (find(inner, "Dice").length || find(inner, "Die").length)
+      )
+        throw new ReplayValidationError(
+          "Unexpected dice in a non-roll control message."
+        );
       if (!tag.startsWith("#")) childIndex++;
       if (tag === "ReplayStep") {
-        walk(inner, ++replayStep);
+        walk(inner, ++replayStep, false, path);
         continue;
       }
       if (tag === "NotificationGameJoined") {
-        walk(inner, undefined, true);
+        walk(inner, undefined, true, path);
+        continue;
+      }
+      const finalSnapshot =
+        tag === "BoardState" &&
+        parentPath.filter((v) => typeof v === "string").at(-1) === "EndGame";
+      if (finalSnapshot) {
+        const payload = snapshotDiceTree(inner);
+        if (payload) {
+          if (endDiceSnapshots.length >= REPLAY_LIMITS.events)
+            throw new ReplayValidationError(
+              "End snapshot dice limit exceeded."
+            );
+          endDiceSnapshots.push({
+            afterSourceIndex: eventCount,
+            xmlPath: path,
+            payload
+          });
+        }
+        for (const node of find(inner, "Carrier"))
+          retainCarrier(children(node, "Carrier"));
         continue;
       }
       if (
@@ -456,6 +595,26 @@ export function extractStructuredTurnsFromReplayXml(
             }
           )
         );
+        const checkpoint = boardCheckpoints.at(-1)!;
+        checkpoint.dicePayload = snapshotDiceTree(inner);
+        if (
+          checkpoint.board &&
+          checkpoint.dicePayload &&
+          (replayVersion !== "1-4-0-0" ||
+            Object.entries(checkpoint.dicePayload).some(([key, value]) => {
+              const r = record(value);
+              return (
+                !["LastWeatherRoll", "LastKickOffEventRoll"].includes(key) ||
+                Object.keys(r).some((k) => k !== "Die") ||
+                !r.Die ||
+                snapshotDiceKey(r.Die) === undefined ||
+                (lastSnapshotDice.has(key) &&
+                  snapshotDiceKey(r.Die) !==
+                    snapshotDiceKey(lastSnapshotDice.get(key)))
+              );
+            }))
+        )
+          checkpoint.board.issues.push("unresolved_snapshot_dice");
         // Retain the ordered legacy carrier markers without traversing the
         // entire roster, statistics and appearance data at every snapshot.
         // A new snapshot with no Ball/Carrier no longer establishes a holder.
@@ -474,10 +633,18 @@ export function extractStructuredTurnsFromReplayXml(
         continue;
       }
       if (tag === "EventExecuteSequence") {
+        if (find(inner, "Dice").length || find(inner, "Die").length)
+          throw new ReplayValidationError(
+            "Sequence dice must be inside encoded messages."
+          );
         sequenceEvents(inner, directReplayStep, childIndex);
         continue;
       }
       if (tag === "EventActiveGamerChanged") {
+        if (find(inner, "Dice").length || find(inner, "Die").length)
+          throw new ReplayValidationError(
+            "Unexpected dice in a controller notification."
+          );
         activeGamer = field(inner, "NewActiveGamer");
         turn.gamerId = activeGamer;
         push({
@@ -524,6 +691,13 @@ export function extractStructuredTurnsFromReplayXml(
         (tag.startsWith("Question") || tag.startsWith("Result"));
       if (tag.startsWith("Event") || directMessage) {
         const payload = asObject(inner);
+        if (tag === "EventWeatherRoll" || tag === "EventKickOffTable")
+          lastSnapshotDice.set(
+            tag === "EventWeatherRoll"
+              ? "LastWeatherRoll"
+              : "LastKickOffEventRoll",
+            record(payload.Dice).Die
+          );
         // Direct roll messages use string fields and can omit DieType and
         // Outcome. Their locators distinguish them from encoded steps.
         const roll =
@@ -560,7 +734,53 @@ export function extractStructuredTurnsFromReplayXml(
         });
         continue;
       }
-      walk(inner);
+      const configurationPath = path
+        .filter((v) => typeof v === "string")
+        .join("/")
+        .replace(/^MatchReplay\//, "Replay/");
+      const cosmetic = inner.filter((n) => tagOf(n) === "Dice");
+      if (
+        replayVersion === "1-4-0-0" &&
+        tag === "Customization" &&
+        [
+          "Replay/NotificationGameJoined/GameInfos/GamersInfos/GamerInfos/Roster/Customization",
+          "Replay/Rosters/TeamRoster/Customization"
+        ].includes(configurationPath) &&
+        cosmetic.length === 1 &&
+        !children(cosmetic[0]!, "Dice").some((n) => !tagOf(n).startsWith("#"))
+      ) {
+        walk(
+          inner.filter((n) => n !== cosmetic[0]),
+          directReplayStep,
+          joinedNotification,
+          path
+        );
+        continue;
+      }
+      if (inner.some((n) => ["Dice", "Die"].includes(tagOf(n)))) {
+        if (
+          path.length > REPLAY_LIMITS.xmlDepth * 2 ||
+          path.some((v) => typeof v === "string" && v.length > 128)
+        )
+          throw new ReplayValidationError(
+            "Unclassified dice source path exceeds its limit."
+          );
+        push({
+          type: "unknown",
+          sourceTag: tag,
+          unclassifiedDice: true,
+          locator: {
+            replayStep: directReplayStep,
+            childIndex: directReplayStep === undefined ? undefined : childIndex,
+            xmlPath: path
+          },
+          payload: snapshotDiceTree(inner)
+        });
+        continue;
+      }
+      // An incidental nested BoardState is not a fresh game checkpoint.
+      // Keep its XML path for unknown dice without promoting wrapper state.
+      walk(inner, undefined, false, path);
     }
   }
   walk(tree);
@@ -568,6 +788,7 @@ export function extractStructuredTurnsFromReplayXml(
   return {
     turns,
     boardCheckpoints,
+    endDiceSnapshots,
     unknownCodes: [...unknown.values()].sort(
       (a, b) => b.occurrences - a.occurrences
     )

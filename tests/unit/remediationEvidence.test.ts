@@ -97,7 +97,7 @@ describe("NUF-007/012/013/014/015/019 evidence regressions", () => {
         rollType: 7,
         scoredCount: 1,
         unscoredCount: 0,
-        unattributedCount: 0
+        unattributedCount: 0, malformedCount: 0, unresolvedIdentityCount: 0
       },
       {
         teamId: "0",
@@ -105,7 +105,7 @@ describe("NUF-007/012/013/014/015/019 evidence regressions", () => {
         rollType: 999,
         scoredCount: 0,
         unscoredCount: 100,
-        unattributedCount: 0
+        unattributedCount: 0, malformedCount: 0, unresolvedIdentityCount: 0
       },
       {
         teamId: "unresolved",
@@ -113,7 +113,7 @@ describe("NUF-007/012/013/014/015/019 evidence regressions", () => {
         rollType: 7,
         scoredCount: 0,
         unscoredCount: 0,
-        unattributedCount: 1
+        unattributedCount: 1, malformedCount: 0, unresolvedIdentityCount: 0
       }
     ]);
     expect(report.verdict).toMatchObject({

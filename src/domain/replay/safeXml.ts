@@ -190,13 +190,81 @@ export type XmlProjection = { readonly [field: string]: true | XmlProjection };
 // retain every sibling, so replay step/message locators stay exact.
 export function projectReplayBoards(
   xml: ValidatedXml,
-  fields: XmlProjection
+  fields: XmlProjection,
+  preserveDice = false
 ): ValidatedXml {
   // Numeric references must still reach the parser's codepoint checks even
   // when they occur in otherwise unused data.
   if (!xml.includes("<BoardState") || xml.includes("&#")) return xml;
   const tokens =
     /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<(\/?)([^\s<>"'!?/]+)(?:[^"'<>]|"[^"]*"|'[^']*')*>/g;
+  // Preserve dice-bearing unknown branches without restoring all snapshot
+  // appearance/statistics data. Propagate the marker on close: linear work,
+  // rather than rescanning every ancestor for every die.
+  const diceBranches = new Set<number>();
+  if (preserveDice) {
+    type Branch = {
+      name: string;
+      start: number;
+      board: boolean;
+      dice: boolean;
+      siblings: Map<string, { starts: number[]; dice: boolean }>;
+    };
+    const stack: Branch[] = [];
+    const finish = (node: Branch) => {
+      for (const group of node.siblings.values())
+        if (group.dice)
+          for (const start of group.starts) diceBranches.add(start);
+      const parent = stack.at(-1);
+      if (node.dice) {
+        diceBranches.add(node.start);
+        if (parent) parent.dice = true;
+      }
+      if (parent?.board) {
+        const group = parent.siblings.get(node.name) ?? {
+          starts: [],
+          dice: false
+        };
+        group.starts.push(node.start);
+        group.dice ||= node.dice;
+        parent.siblings.set(node.name, group);
+      }
+    };
+    for (const match of xml.matchAll(tokens)) {
+      const [tag, closing, name] = match;
+      if (!name) continue;
+      if (closing) {
+        const node = stack.pop();
+        if (node) finish(node);
+      } else {
+        const board =
+          stack.at(-1)?.board === true ||
+          (stack.length === 2 &&
+            ["Replay", "MatchReplay"].includes(stack[0]!.name) &&
+            stack[1]!.name === "ReplayStep" &&
+            name === "BoardState");
+        const dice = board && (name === "Dice" || name === "Die");
+        const branch = {
+          name,
+          start: match.index,
+          board,
+          dice,
+          siblings: new Map()
+        };
+        if (tag!.endsWith("/>")) finish(branch);
+        else stack.push(branch);
+      }
+    }
+  }
+  const diceFields: XmlProjection = {
+    Dice: true,
+    Die: true,
+    RollType: true,
+    Status: true,
+    NewRoll: true,
+    RollStatus: true,
+    RolledDiceIndexes: true
+  };
   const names: string[] = [];
   const rules: (true | XmlProjection | undefined)[] = [];
   const parts: string[] = [];
@@ -222,6 +290,8 @@ export function projectReplayBoards(
     if (skipDepth < 0 && parent && parent !== true) {
       if (Object.hasOwn(parent, name)) {
         rule = parent[name];
+      } else if (diceBranches.has(match.index)) {
+        rule = name === "Dice" || name === "Die" ? true : diceFields;
       } else {
         parts.push(xml.slice(keepFrom, match.index));
         if (empty) keepFrom = match.index + tag!.length;

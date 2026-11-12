@@ -30,11 +30,13 @@ export type ReplayEvent = {
   damageSource?: number;
   carrierObject?: "ball" | "bomb";
   checkpointCarrier?: boolean;
+  unclassifiedDice?: boolean;
   locator?: {
     replayStep?: number;
     childIndex?: number;
     stepIndex?: number;
     messageIndex?: number;
+    xmlPath?: (string | number)[];
   };
   type: ReplayEventType;
   sourceTag: string;
@@ -114,6 +116,7 @@ export type ReplayModel = {
   unknownCodes: ReplayUnknownCode[];
   parserDiagnostics?: ReplayParserDiagnostics;
   boardCheckpoints?: ReplayBoardCheckpoint[];
+  endDiceSnapshots?: { afterSourceIndex: number; xmlPath: (string | number)[]; payload: Record<string,unknown> }[];
   raw: unknown;
 };
 

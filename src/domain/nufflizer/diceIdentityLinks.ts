@@ -194,6 +194,138 @@ export type TeamDiceIdentity = {
   gateSkill?: ReplayEvent;
   gatePassed?: boolean;
 };
+
+function pitchCell(value: unknown) {
+  const cell = obj(value);
+  return cell &&
+    Number.isInteger(cell.X) &&
+    Number.isInteger(cell.Y) &&
+    Number(cell.X) >= 0 &&
+    Number(cell.X) <= 25 &&
+    Number(cell.Y) >= 0 &&
+    Number(cell.Y) <= 14
+    ? [Number(cell.X), Number(cell.Y)]
+    : undefined;
+}
+
+// Source7 casualty questions have explicit copied originals even though that
+// damage source is outside the accepted treatment/resource policy. Retain only
+// copy identity; this cannot authorize or apply an Apothecary treatment.
+export function linkApothecaryDiceCopies(
+  replay: ReplayModel,
+  links: DiceLinks
+) {
+  if (replay.replayVersion !== "1-4-0-0") return;
+  const events = replay.turns.flatMap((t) => t.events);
+  const steps = new Map(
+    events.filter((e) => e.type === "step").map((e) => [e.actionId, e])
+  );
+  const clocks = clockBySource(replay);
+  const rollKey = (value: unknown) => {
+    const r = obj(value),
+      die = obj(obj(r?.Dice)?.Die);
+    if (
+      !r ||
+      !die ||
+      r.Status !== 1 ||
+      r.Source !== 7 ||
+      r.RollType !== 12 ||
+      !Number.isInteger(r.Outcome) ||
+      Number(r.Outcome) < 0 ||
+      Number(r.Outcome) > 10 ||
+      die.DieType !== 4 ||
+      !Number.isInteger(die.Value) ||
+      Number(die.Value) < 1 ||
+      Number(die.Value) > 16 ||
+      Object.keys(r).some(
+        (k) =>
+          ![
+            "Status",
+            "Source",
+            "RollType",
+            "Outcome",
+            "Dice",
+            "Modifiers"
+          ].includes(k)
+      )
+    )
+      return;
+    return JSON.stringify([
+      r.Status,
+      r.Source,
+      r.RollType,
+      r.Dice,
+      r.Modifiers ?? null
+    ]);
+  };
+  const header = (e: ReplayEvent) => {
+    const step = steps.get(e.actionId),
+      p = step?.payload;
+    const from = pitchCell(p?.CellFrom),
+      to = pitchCell(p?.CellTo);
+    if (
+      !p ||
+      !from ||
+      JSON.stringify(from) !== JSON.stringify(to) ||
+      e.stepTag !== "DamageStep" ||
+      e.stepType !== 2 ||
+      e.damageSource !== 7 ||
+      p.IsEvaluation !== 0 ||
+      p.Applied !== 1 ||
+      !e.stepActorId ||
+      e.stepActorId !== e.stepTargetId ||
+      e.playerId !== e.stepActorId ||
+      e.targetId !== e.stepActorId ||
+      !e.actorTeamId ||
+      e.actorTeamSource === "turn_inferred" ||
+      e.attributionConflict
+    )
+      return;
+    return JSON.stringify([e.stepActorId, e.actorTeamId, from]);
+  };
+  for (let i = 0; i < events.length; i++) {
+    const q = events[i]!,
+      key = header(q),
+      original = rollKey(q.payload?.RollInfos);
+    if (
+      q.sourceTag !== "QuestionApothecaryCasualtyUsage" ||
+      !q.id ||
+      !key ||
+      !original ||
+      ![0, 1].includes(Number(q.payload?.GamerId)) ||
+      String(q.payload?.GamerId) !== q.actorTeamId
+    )
+      continue;
+    for (let j = i + 1; j < Math.min(events.length, i + 25); j++) {
+      const e = events[j]!;
+      if (clocks.get(e.sourceIndex ?? -1) !== clocks.get(q.sourceIndex ?? -1))
+        break;
+      if (
+        e.checkpointCarrier ||
+        ["EventGamersAreReady", "EventStartActiveTimer"].includes(e.sourceTag)
+      )
+        continue;
+      if (e.type === "step" && header(e) === key) continue;
+      if (
+        e.sourceTag === "QuestionApothecaryCasualtyChoice" &&
+        e.id &&
+        header(e) === key &&
+        e.actionId !== q.actionId &&
+        e.payload?.GamerId === q.payload?.GamerId &&
+        rollKey(e.payload?.OriginalRoll) === original
+      )
+        addDiceLink(
+          links,
+          e.id,
+          ["OriginalRoll", "Dice"],
+          q.id,
+          ["RollInfos", "Dice"],
+          "summary"
+        );
+      break;
+    }
+  }
+}
 // A transaction can identify observed dice without identifying the actor or
 // proving a scoring policy. E.g. ThrowTeamMateStep retains opaque thrower/mate
 // IDs here, rather than guessing an actor from the active team.
@@ -205,11 +337,18 @@ export function findTeamDiceIdentities(replay: ReplayModel) {
       es.filter((e) => e.type === "step").map((e) => [e.actionId, e])
     ),
     clocks = clockBySource(replay);
-  const header = (e: ReplayEvent) => {
+  const header = (e: ReplayEvent, retainedAccuracy = false) => {
     const p = steps.get(e.actionId)?.payload;
     if (!p || p.IsEvaluation !== 0 || Object.keys(p).length > 32) return;
     const fields = Object.entries(p)
-      .filter(([k]) => !["Probability", "State", "CellTo"].includes(k))
+      .filter(
+        ([k]) =>
+          !(
+            retainedAccuracy
+              ? ["Probability", "State", "FinalCell"]
+              : ["Probability", "State", "CellTo"]
+          ).includes(k)
+      )
       .sort(([a], [b]) => a.localeCompare(b));
     const encoded = JSON.stringify(fields);
     return encoded.length <= 4096 ? encoded : undefined;
@@ -218,7 +357,11 @@ export function findTeamDiceIdentities(replay: ReplayModel) {
     const q = es[i]!,
       original = obj(q.payload?.RollInfos),
       first = d6(original),
-      key = header(q),
+      retainedAccuracy =
+        q.stepTag === "AccuracyStep" &&
+        q.stepType === 17 &&
+        original?.RollType === 45,
+      key = header(q, retainedAccuracy),
       gamer = q.payload?.GamerId;
     if (
       q.sourceTag !== "QuestionTeamRerollUsage" ||
@@ -241,7 +384,7 @@ export function findTeamDiceIdentities(replay: ReplayModel) {
       e.stepActorId === q.stepActorId &&
       e.stepTargetId === q.stepTargetId &&
       !e.attributionConflict &&
-      header(e) === key;
+      header(e, retainedAccuracy) === key;
     const next = (from: number) => {
       for (let j = from + 1; j < Math.min(es.length, from + 25); j++) {
         const e = es[j]!;
@@ -297,6 +440,51 @@ export function findTeamDiceIdentities(replay: ReplayModel) {
     const final = es[fi]!,
       last = d6(final.payload),
       replacementRolled = passed ?? used;
+    // This source-qualified retained result resolves FinalCell from the
+    // declared target square to the actor's unchanged starting square. It is
+    // not permission to ignore geometry on other accuracy or movement rolls.
+    if (retainedAccuracy) {
+      const before = steps.get(q.actionId)?.payload,
+        after = steps.get(final.actionId)?.payload;
+      const from = pitchCell(before?.CellFrom),
+        to = pitchCell(before?.CellTo);
+      if (
+        used ||
+        gate ||
+        !from ||
+        !to ||
+        before?.State !== 1 ||
+        after?.State !== 3 ||
+        original.Requirement !== 2 ||
+        original.Difficulty !== 2 ||
+        (original.Modifiers !== undefined && original.Modifiers !== "") ||
+        [before, after].some(
+          (p) =>
+            !p ||
+            Object.keys(p).some(
+              (k) =>
+                ![
+                  "FinalCell",
+                  "Probability",
+                  "PlayerId",
+                  "TargetId",
+                  "IsEvaluation",
+                  "StepType",
+                  "CellTo",
+                  "State",
+                  "CellFrom",
+                  "Skill"
+                ].includes(k)
+            )
+        ) ||
+        JSON.stringify(from) === JSON.stringify(to) ||
+        JSON.stringify(pitchCell(before?.FinalCell)) !== JSON.stringify(to) ||
+        JSON.stringify(pitchCell(after?.FinalCell)) !== JSON.stringify(from) ||
+        original.Outcome !== 0 ||
+        final.payload?.Outcome !== 0
+      )
+        continue;
+    }
     if (
       !final.id ||
       !final.payload ||
@@ -304,6 +492,16 @@ export function findTeamDiceIdentities(replay: ReplayModel) {
       final.sourceTag !== "ResultRoll" ||
       last === undefined ||
       final.payload?.RollType !== original.RollType ||
+      JSON.stringify([
+        final.payload.Requirement,
+        final.payload.Difficulty,
+        final.payload.Modifiers ?? null
+      ]) !==
+        JSON.stringify([
+          original.Requirement,
+          original.Difficulty,
+          original.Modifiers ?? null
+        ]) ||
       final.payload.Status !== (replacementRolled ? 2 : 1) ||
       final.payload.NewRoll !== (replacementRolled ? 1 : 0) ||
       (!replacementRolled && last !== first) ||

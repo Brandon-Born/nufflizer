@@ -1,5 +1,5 @@
 {
-  "scope": "Public event-payload Dice/leaf Die census, including copies and placeholders. Repeated BoardState last-roll fields are audited separately and are not new random emissions. No probability, beneficiary or outcome-value claim; this does not claim arbitrary snapshot-field coverage.",
+  "scope": "Public event-payload Dice/leaf Die census, including copies and placeholders. Repeated BoardState last-roll fields are audited separately and are not new random emissions. No probability, beneficiary or outcome-value claim; snapshot dice are independently hashed and linked to the latest matching named emission, including empty pre-kickoff fields outside the dice count.",
   "files": [
     {
       "file": "demo-goblins1.bbr",
@@ -126,11 +126,16 @@
           ]
         ]
       ],
-      "snapshotFieldCount": 2310,
+      "snapshotFieldCount": 1157,
       "snapshotPaths": {
-        "[\"BoardState\",\"LastWeatherRoll\"]": 1172,
-        "[\"BoardState\",\"LastKickOffEventRoll\"]": 1138
-      }
+        "[\"BoardState\",\"LastWeatherRoll\"]": 587,
+        "[\"BoardState\",\"LastKickOffEventRoll\"]": 570
+      },
+      "snapshotRecordsSha256": "f4238826be720349cf092c7e5d42e1f2b4b97e9579f14a1c4c160af4d3221fc0",
+      "snapshotLinksSha256": "f3745e77fd442558b4184724997490cf20689cd98b158fd3b25042f93ffdc5b9",
+      "snapshotMatchedCount": 1157,
+      "emptyLastFieldCount": 17,
+      "nonrandomConfigurationCount": 4
     },
     {
       "file": "demo1.bbr",
@@ -231,11 +236,16 @@
           ]
         ]
       ],
-      "snapshotFieldCount": 2668,
+      "snapshotFieldCount": 1336,
       "snapshotPaths": {
-        "[\"BoardState\",\"LastWeatherRoll\"]": 1354,
-        "[\"BoardState\",\"LastKickOffEventRoll\"]": 1314
-      }
+        "[\"BoardState\",\"LastWeatherRoll\"]": 678,
+        "[\"BoardState\",\"LastKickOffEventRoll\"]": 658
+      },
+      "snapshotRecordsSha256": "7ca230884c832c1e417bb61aa72c3eb9519e1d5d1bb0c8468a8296310be55a60",
+      "snapshotLinksSha256": "ed555f4392a5e68adb3da4d5cb375cf183f596d15f7a02033e7ac7d6815d45a5",
+      "snapshotMatchedCount": 1336,
+      "emptyLastFieldCount": 20,
+      "nonrandomConfigurationCount": 4
     },
     {
       "file": "demo10.bbr",
@@ -422,11 +432,16 @@
           ]
         ]
       ],
-      "snapshotFieldCount": 1992,
+      "snapshotFieldCount": 998,
       "snapshotPaths": {
-        "[\"BoardState\",\"LastWeatherRoll\"]": 1012,
-        "[\"BoardState\",\"LastKickOffEventRoll\"]": 980
-      }
+        "[\"BoardState\",\"LastWeatherRoll\"]": 507,
+        "[\"BoardState\",\"LastKickOffEventRoll\"]": 491
+      },
+      "snapshotRecordsSha256": "2862666c5d7856df36427cd13ac7076bce410b010cfedbedc4bb0e26eb07debb",
+      "snapshotLinksSha256": "551f61578e28666a95f4e02ef4cdf125bfbdae258a31865d8519fb9115d5883f",
+      "snapshotMatchedCount": 998,
+      "emptyLastFieldCount": 16,
+      "nonrandomConfigurationCount": 4
     },
     {
       "file": "demo11.bbr",
@@ -570,11 +585,16 @@
           ]
         ]
       ],
-      "snapshotFieldCount": 2046,
+      "snapshotFieldCount": 1025,
       "snapshotPaths": {
-        "[\"BoardState\",\"LastWeatherRoll\"]": 1052,
-        "[\"BoardState\",\"LastKickOffEventRoll\"]": 994
-      }
+        "[\"BoardState\",\"LastWeatherRoll\"]": 527,
+        "[\"BoardState\",\"LastKickOffEventRoll\"]": 498
+      },
+      "snapshotRecordsSha256": "fdd5a12151a05250a5be2bd8180105d8ed11b215614e106ad39f1f401e931fef",
+      "snapshotLinksSha256": "d51a2946e370c2b9468cf81d4821cc8b4f9dff82ea8639d46054585713ca14cb",
+      "snapshotMatchedCount": 1025,
+      "emptyLastFieldCount": 29,
+      "nonrandomConfigurationCount": 4
     },
     {
       "file": "demo2.bbr",
@@ -718,11 +738,16 @@
           ]
         ]
       ],
-      "snapshotFieldCount": 1962,
+      "snapshotFieldCount": 983,
       "snapshotPaths": {
-        "[\"BoardState\",\"LastWeatherRoll\"]": 1000,
-        "[\"BoardState\",\"LastKickOffEventRoll\"]": 962
-      }
+        "[\"BoardState\",\"LastWeatherRoll\"]": 501,
+        "[\"BoardState\",\"LastKickOffEventRoll\"]": 482
+      },
+      "snapshotRecordsSha256": "699681439e84fe44dc617d7f840a8a6f5901bfba8466a27bff71bf7b24e9f2bb",
+      "snapshotLinksSha256": "58ad68b472c3e4746cc77c80dc2c71b06900eed3c8bee897626e0d0a13002dda",
+      "snapshotMatchedCount": 983,
+      "emptyLastFieldCount": 19,
+      "nonrandomConfigurationCount": 4
     },
     {
       "file": "demo3.bbr",
@@ -868,11 +893,16 @@
           ]
         ]
       ],
-      "snapshotFieldCount": 2164,
+      "snapshotFieldCount": 1084,
       "snapshotPaths": {
-        "[\"BoardState\",\"LastWeatherRoll\"]": 1098,
-        "[\"BoardState\",\"LastKickOffEventRoll\"]": 1066
-      }
+        "[\"BoardState\",\"LastWeatherRoll\"]": 550,
+        "[\"BoardState\",\"LastKickOffEventRoll\"]": 534
+      },
+      "snapshotRecordsSha256": "835f7691bde58ba4bef016a93c0c794fff5864e72f06278435cf5437111d85d2",
+      "snapshotLinksSha256": "c66441bc66dfccd39e56b8c5f952eb5b791e49cb4f51add92c23198fb021ba10",
+      "snapshotMatchedCount": 1084,
+      "emptyLastFieldCount": 16,
+      "nonrandomConfigurationCount": 4
     },
     {
       "file": "demo4.bbr",
@@ -996,11 +1026,16 @@
           ]
         ]
       ],
-      "snapshotFieldCount": 2460,
+      "snapshotFieldCount": 1232,
       "snapshotPaths": {
-        "[\"BoardState\",\"LastWeatherRoll\"]": 1256,
-        "[\"BoardState\",\"LastKickOffEventRoll\"]": 1204
-      }
+        "[\"BoardState\",\"LastWeatherRoll\"]": 629,
+        "[\"BoardState\",\"LastKickOffEventRoll\"]": 603
+      },
+      "snapshotRecordsSha256": "98920fa68a6967948a8226f8f11c104512a6641ce3a788a61168cff8c7991d65",
+      "snapshotLinksSha256": "d55a0fbdfcaac227043e0f850d8c0367865450b6c387293d156b676dcdf28b2c",
+      "snapshotMatchedCount": 1232,
+      "emptyLastFieldCount": 26,
+      "nonrandomConfigurationCount": 4
     },
     {
       "file": "demo5.bbr",
@@ -1123,11 +1158,16 @@
           ]
         ]
       ],
-      "snapshotFieldCount": 2206,
+      "snapshotFieldCount": 1105,
       "snapshotPaths": {
-        "[\"BoardState\",\"LastWeatherRoll\"]": 1126,
-        "[\"BoardState\",\"LastKickOffEventRoll\"]": 1080
-      }
+        "[\"BoardState\",\"LastWeatherRoll\"]": 564,
+        "[\"BoardState\",\"LastKickOffEventRoll\"]": 541
+      },
+      "snapshotRecordsSha256": "f94c17e285ced85e1fbe9efcd40266cf6d15d49ce34510ccb0c6e67b4daff639",
+      "snapshotLinksSha256": "adf98cd2021b8b5a5e795c5b4d1163a8f162e7f785689b9321c0c346a6d4eeaa",
+      "snapshotMatchedCount": 1105,
+      "emptyLastFieldCount": 23,
+      "nonrandomConfigurationCount": 4
     },
     {
       "file": "demo6.bbr",
@@ -1267,11 +1307,16 @@
           ]
         ]
       ],
-      "snapshotFieldCount": 2212,
+      "snapshotFieldCount": 1108,
       "snapshotPaths": {
-        "[\"BoardState\",\"LastWeatherRoll\"]": 1136,
-        "[\"BoardState\",\"LastKickOffEventRoll\"]": 1076
-      }
+        "[\"BoardState\",\"LastWeatherRoll\"]": 569,
+        "[\"BoardState\",\"LastKickOffEventRoll\"]": 539
+      },
+      "snapshotRecordsSha256": "3a6c6932da6ead71912c79dbaf890722f46fab564c3723a9fd39866fad9e2f70",
+      "snapshotLinksSha256": "e7226011b4297500902c04a4d2ec838cb7aeb3f1d6d66983fb1fefbd4434fec4",
+      "snapshotMatchedCount": 1108,
+      "emptyLastFieldCount": 30,
+      "nonrandomConfigurationCount": 4
     },
     {
       "file": "demo7.bbr",
@@ -1522,11 +1567,16 @@
           ]
         ]
       ],
-      "snapshotFieldCount": 2524,
+      "snapshotFieldCount": 1264,
       "snapshotPaths": {
-        "[\"BoardState\",\"LastWeatherRoll\"]": 1294,
-        "[\"BoardState\",\"LastKickOffEventRoll\"]": 1230
-      }
+        "[\"BoardState\",\"LastWeatherRoll\"]": 648,
+        "[\"BoardState\",\"LastKickOffEventRoll\"]": 616
+      },
+      "snapshotRecordsSha256": "c0bc9d43de2c80e2874ddceda81947f5e827bf1fc7a58b8ca4fd23d5b7ac3bd8",
+      "snapshotLinksSha256": "8420b28b9cd58c222a4f193a8efd3524f272259842be6a9caa84bea68a507009",
+      "snapshotMatchedCount": 1264,
+      "emptyLastFieldCount": 32,
+      "nonrandomConfigurationCount": 4
     },
     {
       "file": "demo8.bbr",
@@ -1648,11 +1698,16 @@
           ]
         ]
       ],
-      "snapshotFieldCount": 1820,
+      "snapshotFieldCount": 912,
       "snapshotPaths": {
-        "[\"BoardState\",\"LastWeatherRoll\"]": 930,
-        "[\"BoardState\",\"LastKickOffEventRoll\"]": 890
-      }
+        "[\"BoardState\",\"LastWeatherRoll\"]": 466,
+        "[\"BoardState\",\"LastKickOffEventRoll\"]": 446
+      },
+      "snapshotRecordsSha256": "ed5062dc962a6a0990f45819d5df45b88df7a7417982dbe2d29db86de558c1ae",
+      "snapshotLinksSha256": "2e95d43b93155c65ccc56fbefae3ea2e3ef37b69f68f592078f4d4103fe82902",
+      "snapshotMatchedCount": 912,
+      "emptyLastFieldCount": 20,
+      "nonrandomConfigurationCount": 4
     },
     {
       "file": "demo9.bbr",
@@ -1816,11 +1871,16 @@
           ]
         ]
       ],
-      "snapshotFieldCount": 2246,
+      "snapshotFieldCount": 1125,
       "snapshotPaths": {
-        "[\"BoardState\",\"LastWeatherRoll\"]": 1142,
-        "[\"BoardState\",\"LastKickOffEventRoll\"]": 1104
-      }
+        "[\"BoardState\",\"LastWeatherRoll\"]": 572,
+        "[\"BoardState\",\"LastKickOffEventRoll\"]": 553
+      },
+      "snapshotRecordsSha256": "b36cdb8ba5d3072c4e0bbc06dc171b32c2bc8e7782e122115e743636ff2dfb52",
+      "snapshotLinksSha256": "fac2294075e34a54a5e69d9381041f2ed5466180258a0891bbf9a10d868d7629",
+      "snapshotMatchedCount": 1125,
+      "emptyLastFieldCount": 19,
+      "nonrandomConfigurationCount": 4
     }
   ]
 }

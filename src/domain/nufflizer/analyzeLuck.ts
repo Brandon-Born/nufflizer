@@ -1,6 +1,7 @@
 import {
   findTeamDiceIdentities,
   linkBlockDiceCopies,
+  linkApothecaryDiceCopies,
   type TeamDiceIdentity
 } from "./diceIdentityLinks";
 import { findObservedRerollDice } from "./observedRerollDice";
@@ -8,7 +9,8 @@ import {
   addDiceLink,
   reconcileDiceEvidence,
   summarizeDiceRecords,
-  type DiceLinks
+  type DiceLinks,
+  inventoryDiceRecords
 } from "./diceEvidence";
 import { findBlockTraitEvidence } from "@/domain/replay/traitContinuity";
 import { enumerateSkillBlock } from "./blockSkillModel";
@@ -1069,6 +1071,8 @@ function buildHowScoredSummary(
 }
 
 export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
+  // Inventory and bound all observed fields before probability admission.
+  const diceInventory = inventoryDiceRecords(replay);
   const [homeTeam, awayTeam] = selectMatchTeams(replay);
   const teamNameById = new Map<string, string>(
     replay.teams.map((team) => [team.id, team.name] satisfies [string, string])
@@ -1083,6 +1087,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   );
   const newTeamDiceIdentities: TeamDiceIdentity[] = [];
   linkBlockDiceCopies(replay, diceLinks);
+  linkApothecaryDiceCopies(replay, diceLinks);
   const lonerSkills = new Map<string, 44 | 1008>();
   const lonerChoices = new Map<string, 0 | 1>();
   const blockConsequences: ObservedBlockConsequence[] = [];
@@ -1445,6 +1450,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       )
         continue;
 
+      if (event.unclassifiedDice) continue;
       const normalized = buildNormalizedEvent(
         replay.replayVersion,
         replayTurn,
@@ -1795,7 +1801,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     replay,
     events,
     normalizedByRaw,
-    diceLinks
+    diceLinks,
+    diceInventory
   );
   const diceByParentPath = new Map(
     diceRecords.map((r) => [JSON.stringify([r.parentSourceId, r.path]), r])
@@ -1969,6 +1976,13 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   const rollCandidateTotalCount =
     rollCandidateScoredCount + rollCandidateExcludedCount;
   const coverage = {
+    diceParentCount:
+      replay.turns.reduce((n, t) => n + t.events.length, 0) +
+      new Set(
+        diceRecords
+          .filter((r) => r.parentKind === "snapshot")
+          .map((r) => r.parentSourceId)
+      ).size,
     sourceRecordCount: replay.turns.reduce(
       (count, turn) => count + turn.events.length,
       0
@@ -1976,7 +1990,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     denominatorDescription:
       "Roll candidates include unsupported outcomes and randomizers after known summary/policy grouping. Raw dice records are separately reconciled; unresolved identities are disclosed. Neither percentage is whole-match confidence.",
     diceRecords: summarizeDiceRecords(diceRecords),
-    modelVersion: "dice-evidence-1" as const,
+    modelVersion: "dice-evidence-2" as const,
     allEvents: {
       scoredCount: allScoredCount,
       excludedCount: allExcludedCount,
@@ -1991,7 +2005,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
           ? rollCandidateScoredCount / rollCandidateTotalCount
           : 0
     },
-    rollFamilies: summarizeRollFamilies(events),
+    rollFamilies: summarizeRollFamilies(events, diceRecords),
     contextEvidence: summarizeContextEvidence(events),
     scoredByType,
     excludedByType,

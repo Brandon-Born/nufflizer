@@ -66,10 +66,13 @@ export type BoardCheckpointSource = {
   afterSourceIndex: number;
   replayStep: number | null;
   childIndex: number | null;
+  xmlPath?: (string | number)[];
 };
 export type ReplayBoardCheckpoint = BoardCheckpointSource & {
   status: "observed" | "unsupported_version";
   board: ObservedBoard | null;
+  // Sparse raw dice tree; independent of playable-state normalization.
+  dicePayload?: Record<string, unknown>;
 };
 function record(value: unknown): RecordLike {
   return typeof value === "object" && value !== null && !Array.isArray(value)

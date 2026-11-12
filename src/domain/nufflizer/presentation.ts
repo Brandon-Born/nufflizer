@@ -41,7 +41,7 @@ export function formatActualOutcome(
 export function explainDiceCensus(
   evidence: LuckReport["coverage"]["diceRecords"]
 ): string {
-  return `Dice-field coverage: ${evidence.coveredCount} covered, ${evidence.unscoredCount} unscored, ${evidence.unresolvedCount} with unresolved identity, ${evidence.summaryCount} linked copies and ${evidence.nonrandomCount} no-roll placeholders (${evidence.recordCount} fields; ${evidence.malformedCount} malformed). This counts recorded dice groups, not individual dice, independent opportunities or confidence in the match verdict.`;
+  return `Dice-field coverage: ${evidence.coveredCount} covered, ${evidence.unscoredCount} unscored, ${evidence.unresolvedCount} with unresolved identity, ${evidence.summaryCount} linked copies and ${evidence.nonrandomCount} no-roll placeholders (${evidence.eventRecordCount} event fields + ${evidence.snapshotRecordCount} snapshot fields; ${evidence.recordCount} total; ${evidence.malformedCount} malformed). This counts recorded dice groups, not individual dice, independent opportunities or confidence in the match verdict.`;
 }
 export function explainObservedDice(
   event: LuckReport["events"][number],
@@ -49,7 +49,7 @@ export function explainObservedDice(
 ): string | null {
   const record = records.get(event.metadata.diceEvidenceId ?? "");
   if (record)
-    return `Recorded dice field ${record.path.join(".")}: ${record.dice.map((d) => d.value ?? "unknown").join(", ") || "empty"}. Evidence is ${record.quality}; ${record.disposition === "unresolved" ? "whether this is a new outcome or a copy remains unresolved" : "this observed roll has no accepted probability or value model"}. Actual success and luck remain unknown.`;
+    return `Recorded dice field ${record.path.join(".")}: ${record.dice.map((d) => d.value ?? "unknown").join(", ") || "empty"}. ${record.quality === "complete" ? "A value and type are recorded for every die" : record.quality === "incomplete" ? "Some dice fields are missing" : "Some recorded dice fields are invalid"}; ${record.disposition === "unresolved" ? "whether this is a new outcome or a copy remains unresolved" : "this observed roll has no accepted probability or value model"}. Actual success and luck remain unknown.`;
   const r = event.metadata.observedReroll,
     team = event.metadata.teamDiceIdentity;
   if (r)

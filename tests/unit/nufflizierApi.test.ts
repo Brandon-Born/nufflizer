@@ -6,6 +6,7 @@ import path from "node:path";
 
 import { describe, expect, it, vi } from "vitest";
 
+import { envelope, sequence, rollXml } from "../helpers/replay";
 import { POST } from "@/app/api/nufflizier/analyze/route";
 
 function readFixture(name: string): string {
@@ -31,12 +32,16 @@ describe("POST /api/nufflizier/analyze", () => {
     const log = vi.spyOn(console, "info").mockImplementation(() => {});
     try {
       const data = new FormData();
-      data.set("replay", new File([readFixture("sample-basic.xml")], "private-input.xml"));
+      const hidden=Array.from({length:100},(_,i)=>`<Unknown${i}><Dice><Die><DieType>0</DieType><Value>3</Value></Die></Dice></Unknown${i}>`).join("");
+      data.set("replay",new File([envelope(`<ReplayStep>${sequence([rollXml(7,6,2)])}<BoardState>${hidden}</BoardState></ReplayStep>`)],"private-input.xml"));
       const response = await POST(new Request("http://localhost/api/nufflizier/analyze", {
         method: "POST", body: data
       }));
       expect(response.status).toBe(200);
       const report = LuckReportSchema.parse(await response.json());
+      expect(report.coverage.rollCandidates).toMatchObject({scoredCount:1,excludedCount:100,scoredRate:1/101});
+      expect(report.coverage.diceRecords).toMatchObject({eventRecordCount:1,snapshotRecordCount:100,unresolvedCount:100});
+      expect(report.coverage.rollFamilies.find(f=>f.sourceTag==="BoardState")).toMatchObject({unattributedCount:100,unresolvedIdentityCount:100,malformedCount:0});
       const records = log.mock.calls.map(([s]) => JSON.parse(s));
       expect(records.map(r => r.stage)).toEqual([
         "worker_start", "worker_ready", "decode", "parse", "analyze", "validate", "serialize"
@@ -427,7 +432,7 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(e.contextualBounds?.maximumMoves).toBe(3);expect(e.contextualBounds?.upper).toBeCloseTo(1/2,12);
     expect(report.events.find(e=>e.metadata.sourceId==="source-3065")?.metadata.activationEnd?.completionCheckpointAfter).toBe(3062);
     expect(report.events.find(e=>e.metadata.sourceId==="source-3090")?.metadata.activationEnd?.completionCheckpointAfter).toBe(3087);
-    expect(report.coverage.modelVersion).toBe("dice-evidence-1");expect(report.diceRecords).toHaveLength(478);
+    expect(report.coverage.modelVersion).toBe("dice-evidence-2");expect(report.diceRecords.filter(d=>d.parentKind==="event")).toHaveLength(478);expect(report.coverage.diceRecords.snapshotRecordCount).toBe(1264);
     expect(report.events.filter(e=>e.metadata.observedReroll)).toHaveLength(8);
     const direction=report.events.find(e=>e.metadata.sourceId==="source-4802")!;expect(direction.metadata.observedReroll).toMatchObject({used:true,originalDie:6,finalDie:6});expect(direction.scoringStatus).toBe("excluded");expect(direction.probabilitySuccess).toBeNull();
     expect(report.diceRecords.find(d=>d.parentSourceId==="source-4802")?.aliasOf).toBeUndefined();

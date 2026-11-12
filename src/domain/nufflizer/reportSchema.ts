@@ -68,11 +68,13 @@ const dicePath = z
   .max(REPLAY_LIMITS.xmlDepth * 2);
 const diceLocator = z.strictObject({
   replayStep: z.number().int().positive().optional(),
-  childIndex: count.optional(),
-  stepIndex: count.optional(),
-  messageIndex: count.optional()
+  childIndex: z.number().int().min(0).max(REPLAY_LIMITS.xmlNodes).optional(),
+  stepIndex: z.number().int().min(0).max(REPLAY_LIMITS.xmlNodes).optional(),
+  messageIndex: z.number().int().min(0).max(REPLAY_LIMITS.xmlNodes).optional(),
+  xmlPath: dicePath.optional()
 });
 const diceRecord = z.strictObject({
+  parentKind: z.enum(["event", "snapshot"]),
   locator: diceLocator.optional(),
   id: text,
   parentOrdinal: count,
@@ -169,7 +171,7 @@ export const LuckEventMetadataSchema = z.strictObject({
     zonePenalty:z.strictObject({baseTarget:z.number().int().min(2).max(6),markers:z.array(z.strictObject({playerId:text,cell:pitchCell})).min(1).max(8)}).optional()}).optional(),
   rerollOffer:z.strictObject({gamerId:z.union([z.literal(0),z.literal(1)]),canUseTeamReroll:z.boolean(),decisionSourceId:text}).optional(),
   teamRerollCounter:z.strictObject({questionSourceId:text,spent:z.union([z.literal(0),z.literal(1)]),before:rerollCounterObservation,after:rerollCounterObservation.optional(),reconciliation:z.enum(["matched","mismatch","after_unavailable"])}).optional(),
-  turnEndReason:z.literal(2).optional(),
+  turnEndReason: z.literal(2).optional(),
   pickupTurnEnd:z.strictObject({catchSourceId:text,endSourceId:text,ordinaryMoves:z.strictObject({knownAvailablePlayerIds:z.array(text).max(64),unknownPlayerIds:z.array(text).max(64)}).optional()}).optional(),
   retainedRushContext:z.strictObject({declarationSourceId:text,declarationCheckpointAfter:count,resumeCheckpointAfter:count,
     successRushSourceId:text,doMoveSourceId:text,moveOutcomeSourceId:text,questionSourceId:text,decisionSourceId:text,waitingCheckpointAfter:count,
@@ -317,7 +319,8 @@ export const LuckEventMetadataSchema = z.strictObject({
       replayStep: z.number().int().positive().optional(),
       childIndex: z.number().int().min(0).optional(),
       stepIndex: z.number().int().min(0).optional(),
-      messageIndex: z.number().int().min(0).optional()
+      messageIndex: z.number().int().min(0).optional(),
+      xmlPath: dicePath.optional()
     })
     .optional(),
   preRoll: z
@@ -601,9 +604,11 @@ export const LuckReportSchema = z
     verdict: LuckVerdictSchema,
     diceRecords: z.array(diceRecord).max(REPLAY_LIMITS.events),
     coverage: z.strictObject({
-      modelVersion: z.literal("dice-evidence-1"),
+      modelVersion: z.literal("dice-evidence-2"),
       diceRecords: z.strictObject({
         recordCount: count,
+        eventRecordCount: count,
+        snapshotRecordCount: count,
         coveredCount: count,
         unscoredCount: count,
         summaryCount: count,
@@ -613,6 +618,7 @@ export const LuckReportSchema = z
         scoredRate: probability
       }),
       sourceRecordCount: count,
+      diceParentCount: count,
       denominatorDescription: text.min(1),
       allEvents: coverageBucket,
       rollCandidates: coverageBucket,
@@ -624,7 +630,9 @@ export const LuckReportSchema = z
             rollType: finite.optional(),
             scoredCount: count,
             unscoredCount: count,
-            unattributedCount: count
+            unattributedCount: count,
+            malformedCount: count,
+            unresolvedIdentityCount: count
           })
         )
         .max(REPLAY_LIMITS.events),
@@ -748,7 +756,7 @@ export const LuckReportSchema = z
     const linkedBlockFinals = new Set<string>();
     const linkedDamageActions = new Set<string>();
     const linkedBallCatches = new Set<string>();
-    const families = summarizeRollFamilies(candidates);
+    const families = summarizeRollFamilies(candidates, report.diceRecords);
     const expectedComponents = summarizeContextComponents(
       report.events,
       report.teams.map((t) => t.teamId)
@@ -833,7 +841,9 @@ export const LuckReportSchema = z
           row.rollType === expected.rollType &&
           row.scoredCount === expected.scoredCount &&
           row.unscoredCount === expected.unscoredCount &&
-          row.unattributedCount === expected.unattributedCount
+          row.unattributedCount === expected.unattributedCount &&
+          row.malformedCount === expected.malformedCount &&
+          row.unresolvedIdentityCount === expected.unresolvedIdentityCount
         );
       }), "Roll-family coverage must match the reported candidate evidence.");
     const rawDiceById = new Map(report.diceRecords.map((r) => [r.id, r]));
@@ -845,7 +855,7 @@ export const LuckReportSchema = z
         return r ? (r.parentEventId ?? `raw-${r.parentOrdinal}`) : e.id;
       })
     );
-    require(report.coverage.sourceRecordCount >=
+    require(report.coverage.diceParentCount >=
       parentKeys.size, "Expanded outcome rows must reconcile with their original source parents.");
     require(JSON.stringify(report.coverage.diceRecords) ===
       JSON.stringify(
@@ -870,15 +880,32 @@ export const LuckReportSchema = z
         .filter((r) => r.path.length === 1 && r.path[0] === "Dice")
         .map((r) => [r.parentSourceId, r])
     );
+    require(report.coverage.diceParentCount ===
+      report.coverage.sourceRecordCount +
+        new Set(
+          report.diceRecords
+            .filter((r) => r.parentKind === "snapshot")
+            .map((r) => r.parentSourceId)
+        )
+          .size, "Dice parent counts must reconcile original events and separately retained snapshots.");
     const rawPaths = new Set<string>();
+    const lastSnapshotDice = new Map<
+      string,
+      (typeof report.diceRecords)[number]
+    >();
+    const namedEmissions=report.events.filter(e=>["EventWeatherRoll","EventKickOffTable"].includes(e.metadata.sourceTag)&&e.metadata.sourceIndex!==undefined).sort((a,b)=>a.metadata.sourceIndex!-b.metadata.sourceIndex!);
+    const latestNamedIndex=new Map<string,number>();let emissionCursor=0;
     for (const [index, r] of report.diceRecords.entries()) {
+      while(emissionCursor<namedEmissions.length&&namedEmissions[emissionCursor]!.metadata.sourceIndex!<=(r.parentSourceIndex??-1)) {
+        const e=namedEmissions[emissionCursor++]!;latestNamedIndex.set(e.metadata.sourceTag==="EventWeatherRoll"?"LastWeatherRoll":"LastKickOffEventRoll",e.metadata.sourceIndex!);
+      }
       const pathKey = JSON.stringify([r.parentOrdinal, r.path]);
       require(r.id === `dice-${index}` &&
         !rawPaths.has(
           pathKey
         ), "Dice evidence identities and parent/path membership must be unique and source ordered.");
       rawPaths.add(pathKey);
-      require(r.parentOrdinal < report.coverage.sourceRecordCount &&
+      require(r.parentOrdinal < report.coverage.diceParentCount &&
         (!index ||
           r.parentOrdinal >=
             report.diceRecords[index - 1]!
@@ -902,6 +929,30 @@ export const LuckReportSchema = z
                 (d) => d.dieType !== null
               )), "Dice quality cannot conceal invalid faces, missing types or a nonrandom sentinel.");
       const parent = r.parentEventId ? ids.get(r.parentEventId) : undefined;
+      if (
+        r.parentKind === "event" &&
+        r.path.length === 1 &&
+        r.path[0] === "Dice" &&
+        ["EventWeatherRoll", "EventKickOffTable"].includes(r.parentSourceTag)
+      )
+        lastSnapshotDice.set(
+          r.parentSourceTag === "EventWeatherRoll"
+            ? "LastWeatherRoll"
+            : "LastKickOffEventRoll",
+          r
+        );
+      if (r.parentKind === "snapshot")
+        require(["BoardState", "InitialBoardState"].includes(
+          r.parentSourceTag
+        ) &&
+          /^snapshot-(?:end-)?\d+$/.test(r.parentSourceId ?? "") &&
+          !r.parentEventId &&
+          !r.actionId &&
+          r.parentSourceIndex !== undefined &&
+          r.parentSourceIndex <= report.coverage.sourceRecordCount &&
+          ["summary", "unresolved"].includes(
+            r.disposition
+          ), "Snapshot dice retain separate source parents and cannot assert fresh scored outcomes.");
       if (r.parentEventId)
         require(!!parent &&
           !parent.metadata.diceEvidenceId &&
@@ -1002,13 +1053,22 @@ export const LuckReportSchema = z
             r.damageSource === target.damageSource &&
             r.rollType === target.rollType &&
             equal;
+          const copiedSnapshot =
+            r.parentKind === "snapshot" &&
+            target.parentKind === "event" &&
+            r.path.length === 2 &&
+            r.path[1] === "Die" &&
+            lastSnapshotDice.get(String(r.path[0]))?.id === target.id &&
+            latestNamedIndex.get(String(r.path[0]))===target.parentSourceIndex &&
+            equal;
           require(r.quality !== "malformed" &&
             target.quality !== "malformed" &&
             (block ||
               copiedKept ||
               repeatedTerminal ||
               copiedOriginal ||
-              copiedTreatment), "Dice copies need a compatible source namespace, participants and an explicit pool/choice relationship; equal faces alone do not identify a summary.");
+              copiedTreatment ||
+              copiedSnapshot), "Dice copies need a compatible source namespace, participants and an explicit pool/choice relationship; equal faces alone do not identify a summary.");
         }
       } else {
         const e = r.eventId ? ids.get(r.eventId) : undefined;

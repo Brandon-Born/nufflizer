@@ -786,6 +786,7 @@ export function parseReplayXml(
     unknownCodes: structured.unknownCodes,
     parserDiagnostics,
     boardCheckpoints: structured.boardCheckpoints,
+    endDiceSnapshots: structured.endDiceSnapshots,
     raw: rootNode
   };
 }

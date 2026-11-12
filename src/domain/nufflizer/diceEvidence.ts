@@ -5,6 +5,7 @@ import type { LuckEvent } from "./types";
 export type DicePath = (string | number)[];
 export type DiceRecord = {
   id: string;
+  parentKind: "event" | "snapshot";
   parentOrdinal: number;
   parentSourceId?: string;
   parentSourceIndex?: number;
@@ -73,13 +74,63 @@ export function inventoryDiceRecords(replay: ReplayModel) {
     rawByRecord = new Map<string, ReplayEvent>();
   let visited = 0,
     ordinal = 0;
+  const sourceEvents = replay.turns.flatMap((t) => t.events);
+  const items = sourceEvents.map((raw, index) => ({
+    raw,
+    snapshot: false,
+    order: (raw.sourceIndex ?? index + 1) * 2,
+    tie: index
+  }));
+  for (const [index, cp] of (replay.boardCheckpoints ?? []).entries()) {
+    if (!cp.dicePayload) continue;
+    items.push({
+      snapshot: true,
+      order: cp.afterSourceIndex * 2 + 1,
+      tie: index,
+      raw: {
+        id: `snapshot-${index}`,
+        sourceIndex: cp.afterSourceIndex,
+        sourceTag: cp.kind === "initial" ? "InitialBoardState" : "BoardState",
+        type: "unknown",
+        locator: {
+          replayStep: cp.replayStep ?? undefined,
+          childIndex: cp.childIndex ?? undefined,
+          xmlPath: cp.xmlPath
+        },
+        payload: cp.dicePayload
+      }
+    });
+  }
+  for (const [index, snapshot] of (replay.endDiceSnapshots ?? []).entries())
+    items.push({
+      snapshot: true,
+      order: snapshot.afterSourceIndex * 2 + 1,
+      tie: (replay.boardCheckpoints?.length ?? 0) + index,
+      raw: {
+        id: `snapshot-end-${index}`,
+        sourceIndex: snapshot.afterSourceIndex,
+        sourceTag: "BoardState",
+        type: "unknown",
+        locator: { xmlPath: snapshot.xmlPath },
+        payload: snapshot.payload
+      }
+    });
+  if (items.length > REPLAY_LIMITS.events)
+    throw new ReplayValidationError("Replay dice parent limit exceeded.");
+  items.sort(
+    (a, b) =>
+      a.order - b.order ||
+      Number(a.snapshot) - Number(b.snapshot) ||
+      a.tie - b.tie
+  );
   const append = (
     raw: ReplayEvent,
     parentOrdinal: number,
     path: DicePath,
     entries: unknown,
     rollType: number | undefined,
-    flags: Record<string, unknown>
+    flags: Record<string, unknown>,
+    snapshot: boolean
   ) => {
     if (path.length > REPLAY_LIMITS.xmlDepth * 2)
       throw new ReplayValidationError(
@@ -100,6 +151,15 @@ export function inventoryDiceRecords(replay: ReplayModel) {
       const d = obj(value),
         v = integer(d?.Value, 0, 100),
         t = integer(d?.DieType);
+      if (
+        d &&
+        Object.values(d).some(
+          (value) => value !== null && typeof value === "object"
+        )
+      )
+        throw new ReplayValidationError(
+          "Structured data inside an atomic die is unsupported."
+        );
       if (!d || v === undefined) malformed = true;
       if (d?.DieType === undefined) incomplete = true;
       else if (t === undefined) malformed = true;
@@ -137,6 +197,7 @@ export function inventoryDiceRecords(replay: ReplayModel) {
     const id = `dice-${records.length}`;
     records.push({
       id,
+      parentKind: snapshot ? "snapshot" : "event",
       parentOrdinal,
       parentSourceId: raw.id,
       parentSourceIndex: raw.sourceIndex,
@@ -166,80 +227,79 @@ export function inventoryDiceRecords(replay: ReplayModel) {
     });
     rawByRecord.set(id, raw);
   };
-  for (const turn of replay.turns)
-    for (const raw of turn.events) {
-      const parentOrdinal = ordinal++;
-      const walk = (
-        value: unknown,
-        path: DicePath,
-        inheritedType: number | undefined
-      ) => {
-        if (
-          ++visited > REPLAY_LIMITS.xmlNodes ||
-          path.length > REPLAY_LIMITS.xmlDepth * 2
-        )
+  for (const { raw, snapshot } of items) {
+    const parentOrdinal = ordinal++;
+    const walk = (
+      value: unknown,
+      path: DicePath,
+      inheritedType: number | undefined
+    ) => {
+      if (
+        ++visited > REPLAY_LIMITS.xmlNodes ||
+        path.length > REPLAY_LIMITS.xmlDepth * 2
+      )
+        throw new ReplayValidationError(
+          "Replay dice-evidence work limit exceeded."
+        );
+      if (Array.isArray(value)) {
+        for (let i = 0; i < value.length; i++)
+          walk(value[i], path.concat(i), inheritedType);
+        return;
+      }
+      const node = obj(value);
+      if (!node) return;
+      const rollType = integer(node.RollType) ?? inheritedType;
+      for (const [key, child] of Object.entries(node)) {
+        if (key.length > 128)
           throw new ReplayValidationError(
-            "Replay dice-evidence work limit exceeded."
+            "Replay dice-evidence field name exceeds its limit."
           );
-        if (Array.isArray(value)) {
-          for (let i = 0; i < value.length; i++)
-            walk(value[i], path.concat(i), inheritedType);
-          return;
-        }
-        const node = obj(value);
-        if (!node) return;
-        const rollType = integer(node.RollType) ?? inheritedType;
-        for (const [key, child] of Object.entries(node)) {
-          if (key.length > 128)
-            throw new ReplayValidationError(
-              "Replay dice-evidence field name exceeds its limit."
+        if (key === "Dice") {
+          const containers = Array.isArray(child) ? child : [child];
+          for (let i = 0; i < containers.length; i++) {
+            const container = obj(containers[i]),
+              location = path.concat(key, ...(Array.isArray(child) ? [i] : []));
+            append(
+              raw,
+              parentOrdinal,
+              location,
+              container?.Die,
+              rollType,
+              node,
+              snapshot
             );
-          if (key === "Dice") {
-            const containers = Array.isArray(child) ? child : [child];
-            for (let i = 0; i < containers.length; i++) {
-              const container = obj(containers[i]),
-                location = path.concat(
-                  key,
-                  ...(Array.isArray(child) ? [i] : [])
-                );
-              append(
-                raw,
-                parentOrdinal,
-                location,
-                container?.Die,
-                rollType,
-                node
-              );
-              if (container)
-                for (const [k, v] of Object.entries(container))
-                  if (k !== "Die") walk(v, location.concat(k), rollType);
-            }
-          } else if (key === "Die") {
-            const container = obj(child);
-            if (container && Object.hasOwn(container, "Die"))
-              append(
-                raw,
-                parentOrdinal,
-                path.concat(key),
-                container.Die,
-                rollType,
-                node
-              );
-            else
-              append(
-                raw,
-                parentOrdinal,
-                path.concat(key),
-                child,
-                rollType,
-                node
-              );
-          } else walk(child, path.concat(key), rollType);
-        }
-      };
-      walk(raw.payload, [], integer(raw.rollType));
-    }
-  return { records, rawByRecord };
+            if (container)
+              for (const [k, v] of Object.entries(container))
+                if (k !== "Die") walk(v, location.concat(k), rollType);
+          }
+        } else if (key === "Die") {
+          const container = obj(child);
+          if (container && Object.hasOwn(container, "Die"))
+            append(
+              raw,
+              parentOrdinal,
+              path.concat(key),
+              container.Die,
+              rollType,
+              node,
+              snapshot
+            );
+          else
+            append(
+              raw,
+              parentOrdinal,
+              path.concat(key),
+              child,
+              rollType,
+              node,
+              snapshot
+            );
+        } else walk(child, path.concat(key), rollType);
+      }
+    };
+    walk(raw.payload, [], integer(raw.rollType));
+  }
+  return { records, rawByRecord, orderedSources: items.map((i) => i.raw) };
 }
 const direct = (path: DicePath) =>
   path.length === 1 && (path[0] === "Dice" || path[0] === "Die");
@@ -360,6 +420,9 @@ export function summarizeDiceRecords(records: readonly DiceRecord[]) {
     denominator = coveredCount + unscoredCount + unresolvedCount;
   return {
     recordCount: records.length,
+    eventRecordCount: records.filter((r) => r.parentKind === "event").length,
+    snapshotRecordCount: records.filter((r) => r.parentKind === "snapshot")
+      .length,
     coveredCount,
     unscoredCount,
     summaryCount,
@@ -375,9 +438,10 @@ export function reconcileDiceEvidence(
   replay: ReplayModel,
   events: LuckEvent[],
   normalized: ReadonlyMap<ReplayEvent, LuckEvent>,
-  links: DiceLinks
+  links: DiceLinks,
+  inventory = inventoryDiceRecords(replay)
 ) {
-  const { records, rawByRecord } = inventoryDiceRecords(replay),
+  const { records, rawByRecord, orderedSources } = inventory,
     bySource = new Map<string, DiceRecord>(),
     byRaw = new Map<ReplayEvent, DiceRecord[]>();
   const eventById = new Map(events.map((e) => [e.id, e])),
@@ -410,78 +474,125 @@ export function reconcileDiceEvidence(
         e.metadata.block.selectedSourceId,
         e.metadata.block.pool.sourceId
       );
-  for (const turn of replay.turns)
-    for (const raw of turn.events) {
-      for (const r of byRaw.get(raw) ?? []) {
-        const parent = normalized.get(raw),
-          p = pathKey(r.path);
-        const explicit = links
-          .get(raw.id ?? "")
-          ?.find((l) => pathKey(l.path) === p);
-        if (explicit) {
-          const target = targetRecord(
-            explicit.target.sourceId,
-            explicit.target.path
-          );
-          if (target) {
-            if (explicit.kind === "summary") r.aliasOf = target.id;
-            else {
-              const e = eventForRawRecord(target);
-              if (e) r.eventId = e.id;
-            }
+  const latestSnapshotRoll = new Map<string, DiceRecord>();
+  for (const raw of orderedSources) {
+    if (
+      raw.sourceTag === "EventWeatherRoll" ||
+      raw.sourceTag === "EventKickOffTable"
+    )
+      latestSnapshotRoll.delete(
+        raw.sourceTag === "EventWeatherRoll"
+          ? "LastWeatherRoll"
+          : "LastKickOffEventRoll"
+      );
+    for (const r of byRaw.get(raw) ?? []) {
+      if (
+        r.parentKind === "event" &&
+        pathKey(r.path) === pathKey(["Dice"]) &&
+        ["EventWeatherRoll", "EventKickOffTable"].includes(raw.sourceTag)
+      )
+        latestSnapshotRoll.set(
+          raw.sourceTag === "EventWeatherRoll"
+            ? "LastWeatherRoll"
+            : "LastKickOffEventRoll",
+          r
+        );
+      if (
+        replay.replayVersion === "1-4-0-0" &&
+        r.parentKind === "snapshot" &&
+        r.path.length === 2 &&
+        r.path[1] === "Die" &&
+        ["LastWeatherRoll", "LastKickOffEventRoll"].includes(String(r.path[0]))
+      ) {
+        const target = latestSnapshotRoll.get(String(r.path[0]));
+        if (
+          target &&
+          r.quality !== "malformed" &&
+          target.quality !== "malformed" &&
+          JSON.stringify(r.dice) === JSON.stringify(target.dice)
+        )
+          r.aliasOf = target.id;
+      }
+      const parent = normalized.get(raw),
+        p = pathKey(r.path);
+      const explicit = links
+        .get(raw.id ?? "")
+        ?.find((l) => pathKey(l.path) === p);
+      if (explicit) {
+        const target = targetRecord(
+          explicit.target.sourceId,
+          explicit.target.path
+        );
+        if (target) {
+          if (explicit.kind === "summary") r.aliasOf = target.id;
+          else {
+            const e = eventForRawRecord(target);
+            if (e) r.eventId = e.id;
           }
         }
-        if (r.disposition === "nonrandom") continue;
-        if (
-          !r.aliasOf &&
-          !r.eventId &&
-          direct(r.path) &&
-          parent &&
-          (parent.metadata.isRollCandidate ||
-            parent.metadata.mergedRerollAnchorId)
-        ) {
-          const blockTarget = selectedPools.get(raw.id ?? "");
-          if (blockTarget) {
-            const target = primary(blockTarget);
-            if (target) r.aliasOf = target.id;
-          } else if (parent.metadata.mergedRerollAnchorId) {
-            const anchor=eventBySource.get(parent.metadata.mergedRerollAnchorId);
-            const target=primary(parent.metadata.mergedRerollAnchorId);
-            if(r.status===1 && r.newRoll===0 && target &&
-               raw.actionId===anchor?.metadata.actionId &&
-               JSON.stringify(r.dice)===JSON.stringify(target.dice))
-              r.aliasOf=target.id;
-            else r.eventId=anchor?.id;
-          } else r.eventId = parent.id;
-        }
-        if (
-          !r.aliasOf &&
-          !r.eventId &&
-          [
-            "QuestionKORecovery",
-            "QuestionApothecaryCasualtyUsage",
-            "QuestionApothecaryCasualtyChoice"
-          ].includes(raw.sourceTag) &&
-          parent &&
-          parent.metadata.isRollCandidate &&
-          (raw.sourceTag === "QuestionApothecaryCasualtyChoice"
-            ? p === pathKey(["NewRoll", "Dice"])
-            : p === pathKey(["RollInfos", "Dice"]))
-        ) {
-          const duplicate = parent.metadata.embeddedDamageOriginalId;
-          if (duplicate) {
-            const target = primary(duplicate);
-            if (target) r.aliasOf = target.id;
-          } else r.eventId = parent.id;
-        }
+      }
+      if (r.disposition === "nonrandom") continue;
+      if (
+        !r.aliasOf &&
+        !r.eventId &&
+        direct(r.path) &&
+        parent &&
+        (parent.metadata.isRollCandidate ||
+          parent.metadata.mergedRerollAnchorId)
+      ) {
+        const blockTarget = selectedPools.get(raw.id ?? "");
+        if (blockTarget) {
+          const target = primary(blockTarget);
+          if (target) r.aliasOf = target.id;
+        } else if (parent.metadata.mergedRerollAnchorId) {
+          const anchor = eventBySource.get(
+            parent.metadata.mergedRerollAnchorId
+          );
+          const target = primary(parent.metadata.mergedRerollAnchorId);
+          if (
+            r.status === 1 &&
+            r.newRoll === 0 &&
+            target &&
+            raw.actionId === anchor?.metadata.actionId &&
+            JSON.stringify(r.dice) === JSON.stringify(target.dice)
+          )
+            r.aliasOf = target.id;
+          else r.eventId = anchor?.id;
+        } else r.eventId = parent.id;
+      }
+      if (
+        !r.aliasOf &&
+        !r.eventId &&
+        [
+          "QuestionKORecovery",
+          "QuestionApothecaryCasualtyUsage",
+          "QuestionApothecaryCasualtyChoice"
+        ].includes(raw.sourceTag) &&
+        parent &&
+        parent.metadata.isRollCandidate &&
+        (raw.sourceTag === "QuestionApothecaryCasualtyChoice"
+          ? p === pathKey(["NewRoll", "Dice"])
+          : p === pathKey(["RollInfos", "Dice"]))
+      ) {
+        const duplicate = parent.metadata.embeddedDamageOriginalId;
+        if (duplicate) {
+          const target = primary(duplicate);
+          if (target) r.aliasOf = target.id;
+        } else r.eventId = parent.id;
       }
     }
+  }
   const added = new Map<ReplayEvent, LuckEvent[]>(),
     turnByRaw = new Map(
       replay.turns.flatMap((t) =>
         t.events.map((e) => [e, t.turnNumber] as const)
       )
     );
+  let previousTurn = replay.turns[0]?.turnNumber ?? 1;
+  for (const raw of orderedSources) {
+    if (turnByRaw.has(raw)) previousTurn = turnByRaw.get(raw)!;
+    else turnByRaw.set(raw, previousTurn);
+  }
   let addedCount = 0;
   for (const r of records) {
     if (r.disposition === "nonrandom") continue;
@@ -510,7 +621,9 @@ export function reconcileDiceEvidence(
       event.scoringStatus === "scored"
         ? "covered_roll"
         : r.quality !== "malformed" &&
-            (direct(r.path) ||
+            ((r.parentKind === "event" &&
+              !raw.unclassifiedDice &&
+              direct(r.path)) ||
               (event.metadata.isRollCandidate === true &&
                 event === normalized.get(raw)) ||
               knownNested(raw, r.path) ||
@@ -540,12 +653,11 @@ export function reconcileDiceEvidence(
     }
   // Stable source order, including multiple observations from one parent.
   const ordered: LuckEvent[] = [];
-  for (const turn of replay.turns)
-    for (const raw of turn.events) {
-      const e = normalized.get(raw);
-      if (e) ordered.push(e);
-      for (const extra of added.get(raw) ?? []) ordered.push(extra);
-    }
+  for (const raw of orderedSources) {
+    const e = normalized.get(raw);
+    if (e) ordered.push(e);
+    for (const extra of added.get(raw) ?? []) ordered.push(extra);
+  }
   events.length = 0;
   for (const e of ordered) events.push(e);
   return records;
