@@ -24,7 +24,7 @@ function same(a: Cell | undefined, b: Cell | undefined) {
   return a !== undefined && b !== undefined && a.x === b.x && a.y === b.y;
 }
 
-function bounceAt(events: readonly ReplayEvent[], index: number, from: Cell) {
+export function bounceAt(events: readonly ReplayEvent[], index: number, from: Cell) {
   const step = events[index],
     roll = events[index + 1];
   const start = cell(step?.payload?.CellFrom),

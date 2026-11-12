@@ -440,7 +440,7 @@ describe("occupied-bounce fresh catch possession envelope", () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
-  it("reconciles the twelve public demos with two catch envelopes and no fabricated point estimate", () => {
+  it("reconciles the twelve public demos with two fresh catch envelopes and no fabricated point estimate", () => {
     let count = 0;
     for (const file of readdirSync("demo-replays").filter((f) =>
       f.endsWith(".bbr")
@@ -448,7 +448,7 @@ describe("occupied-bounce fresh catch possession envelope", () => {
       const r = analyzeNufflizerInput(
         readFileSync(`demo-replays/${file}`, "utf8")
       );
-      count += r.events.filter((e) => e.catchPossessionBounds).length;
+      count += r.events.filter((e) => e.catchPossessionBounds?.policy === "fresh_catch_failure_envelope").length;
       expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
       expect(r.verdict.luckierTeam).toBe("unknown");
     }

@@ -1,6 +1,6 @@
 import { bounceDestination } from "@/domain/replay/pickupSuccessors";
 import { continuationOptionBounds } from "@/domain/replay/activeMoveContinuation";
-import { estimateDodgeImpactBounds, estimateTeamDodgeMoveBounds, estimateNumericImpact, estimatePickupPossessionBounds, estimateFreshCatchPossession } from "./contextImpact";
+import { estimateDodgeImpactBounds, estimateTeamDodgeMoveBounds, estimateNumericImpact, estimatePickupPossessionBounds, estimateFreshCatchPossession, estimateKeptCatchPossession } from "./contextImpact";
 import { blockOutcomeName, consistentBlockResolution, knockedDownSubjects, summarizeBlockConsequence } from "./blockConsequences";
 import { enumerateBlockPool } from "./blockPools";
 import { z } from "zod";
@@ -100,6 +100,7 @@ export const LuckEventMetadataSchema = z.strictObject({
   teamRerollCounter:z.strictObject({questionSourceId:text,spent:z.union([z.literal(0),z.literal(1)]),before:rerollCounterObservation,after:rerollCounterObservation.optional(),reconciliation:z.enum(["matched","mismatch","after_unavailable"])}).optional(),
   turnEndReason:z.literal(2).optional(),
   pickupTurnEnd:z.strictObject({catchSourceId:text,endSourceId:text,ordinaryMoves:z.strictObject({knownAvailablePlayerIds:z.array(text).max(64),unknownPlayerIds:z.array(text).max(64)}).optional()}).optional(),
+  retainedCatchReaction:z.strictObject({pickupSourceId:text,bounceSourceId:text,questionSourceId:text,decisionSourceId:text,followingBounceSourceId:text,beforeCheckpointAfter:count,waitingCheckpointAfter:count}).optional(),
   bounceCatchReaction:z.strictObject({pickupSourceId:text,bounceSourceId:text,declarationSourceId:text,moveOutcomeSourceId:text,checkpointAfter:count}).optional(),
   pickupResolution:z.strictObject({declarationSourceId:text,moveOutcomeSourceId:text,cell:pitchCell,movementRemaining:z.number().int().min(0).max(16).nullable(),checkpointAfter:count}).optional(),
   dodgeMovement: z.strictObject({declarationSourceId:text,doMoveSourceId:text,outcomeSourceId:text,
@@ -343,7 +344,10 @@ export const LuckEventSchema = z.strictObject({
   actualSuccess: z.boolean().nullable(),
   delta: finite,
   weightedDelta: finite,
-  catchPossessionBounds:z.strictObject({policy:z.literal("fresh_catch_failure_envelope"),successChance:probability,minimumDifference:z.literal(0),maximumDifference:z.literal(2),lower:z.literal(0),upper:finite}).optional(),
+  catchPossessionBounds:z.discriminatedUnion("policy", [
+    z.strictObject({policy:z.literal("fresh_catch_failure_envelope"),successChance:probability,minimumDifference:z.literal(0),maximumDifference:z.literal(2),lower:z.literal(0),upper:finite}),
+    z.strictObject({policy:z.literal("kept_catch_failure_envelope"),successChance:probability,minimumDifference:z.literal(0),maximumDifference:z.literal(2),lower:finite,upper:z.literal(0)})
+  ]).optional(),
   possessionBounds:z.strictObject({policy:z.literal("sure_hands_reroll"),successChance:probability,minimumDifference:finite.min(0).max(3),maximumDifference:finite.min(0).max(3),lower:finite,upper:finite}).optional(),
   contextualBounds:z.strictObject({policy:z.enum(["dodge_skill_reroll","team_reroll_terminal_moves"]),terminalCheckpointAfter:count.optional(),minimumMoves:count,maximumMoves:count,successChance:probability,activeContinuation:z.strictObject({minimum:z.union([z.literal(0),z.literal(1)]),maximum:z.union([z.literal(0),z.literal(1)])}).optional(),lower:finite,upper:finite}).optional(),
   contextualImpact: z
@@ -1001,7 +1005,7 @@ export const LuckReportSchema = z
         require(event.metadata.sourceTag === "EventEndTurn" && event.scoringStatus === "excluded" && event.metadata.isRollCandidate === false &&
           pickupTurnEndSources.has(event.metadata.sourceId ?? ""),
           "A recorded turn-end reason needs a linked pickup aftermath, not another scored random outcome.");
-      if(reaction || catchBound) {
+      if(reaction || catchBound?.policy === "fresh_catch_failure_envelope") {
         const pickup=sources.get(reaction?.pickupSourceId ?? ""),bounce=sources.get(reaction?.bounceSourceId ?? "");
         const declaration=sources.get(reaction?.declarationSourceId ?? ""),move=sources.get(reaction?.moveOutcomeSourceId ?? "");
         const cell=event.metadata.ballCatchCell,travel=bounce?.metadata.ballTravel,target=event.metadata.difficulty;
@@ -1020,6 +1024,39 @@ export const LuckReportSchema = z
           reaction.checkpointAfter<(declaration.metadata.sourceIndex??-1) && (declaration.metadata.sourceIndex??Infinity)<move.metadata.sourceIndex! &&
           Number.isInteger(target) && target!>=2 && target!<=6 && event.probabilitySuccess !== null && near(event.probabilitySuccess,(7-target!)/6) && near(catchBound.successChance,event.probabilitySuccess) && near(catchBound.upper,expectedCatch.upper),
           "A fresh catch envelope needs its verified occupied first bounce, failed pickup and ordinary-move prefix, with conditional odds and no point contribution.");
+      }
+      const keptReaction=event.metadata.retainedCatchReaction;
+      if(keptReaction || catchBound?.policy === "kept_catch_failure_envelope") {
+        const pickup=sources.get(keptReaction?.pickupSourceId ?? ""),bounce=sources.get(keptReaction?.bounceSourceId ?? ""),
+          next=sources.get(keptReaction?.followingBounceSourceId ?? ""),question=sources.get(keptReaction?.questionSourceId ?? ""),
+          decision=sources.get(keptReaction?.decisionSourceId ?? "");
+        const expected=estimateKeptCatchPossession(event.probabilitySuccess ?? 0),at=event.metadata.ballCatchCell,travel=bounce?.metadata.ballTravel;
+        const original=event.metadata.originalDice as {Die?: {DieType?:number;Value?:number}} | undefined;
+        const retained=(e:typeof event|undefined,type:number)=>e?.scoringStatus === "scored" && e.actualSuccess === false &&
+          e.metadata.probabilityPolicy === "single_attempt" && e.metadata.rollType === type && e.metadata.rerollUsed === false &&
+          e.metadata.teamRerollsSpent === 0 && e.metadata.rerollResource === undefined;
+        require(!!keptReaction && catchBound?.policy === "kept_catch_failure_envelope" && retained(event,7) && retained(pickup,4) &&
+          !reaction && !event.contextualImpact && !event.contextualBounds && !event.possessionBounds &&
+          pickup?.teamId === event.teamId && pickup?.metadata.pickupBallChain?.bounceSourceIds[0] === keptReaction.bounceSourceId &&
+          pickup.metadata.pickupBallChain.bounceSourceIds[1] === keptReaction.followingBounceSourceId && pickup.metadata.pickupBallChain.catchEventIds[0] === event.id &&
+          event.metadata.rerollQuestionId === keptReaction.questionSourceId && event.metadata.rerollDecisionId === keptReaction.decisionSourceId &&
+          question?.metadata.sourceTag === "QuestionTeamRerollUsage" && decision?.metadata.sourceTag === "ResultTeamRerollUsage" &&
+          question.scoringStatus === "excluded" && question.metadata.isRollCandidate === false && decision.scoringStatus === "excluded" && decision.metadata.isRollCandidate === false &&
+          [question,decision].every(e=>e?.playerId === event.playerId && e?.teamId === event.teamId && e?.metadata.stepType === 4 && e?.metadata.targetId === "-1") &&
+          event.metadata.stepType === 4 && event.metadata.targetId === "-1" &&
+          !!event.metadata.sequenceId && question.metadata.sequenceId === pickup.metadata.sequenceId && bounce?.metadata.sequenceId === question.metadata.sequenceId &&
+          decision.metadata.sequenceId === event.metadata.sequenceId && decision.metadata.actionId === event.metadata.actionId && next?.metadata.sequenceId === event.metadata.sequenceId &&
+          event.metadata.sequenceId !== question.metadata.sequenceId && event.metadata.sourceIndex === (pickup.metadata.sourceIndex ?? -9)+7 &&
+          question.metadata.sourceIndex === (pickup.metadata.sourceIndex ?? -9)+4 && decision.metadata.sourceIndex === event.metadata.sourceIndex-1 &&
+          bounce?.metadata.sourceIndex === (pickup.metadata.sourceIndex ?? -9)+2 && next?.metadata.sourceIndex === event.metadata.sourceIndex+2 &&
+          keptReaction.waitingCheckpointAfter === question.metadata.sourceIndex && keptReaction.beforeCheckpointAfter< (pickup.metadata.sourceIndex ?? -1) &&
+          keptReaction.beforeCheckpointAfter === sources.get(pickup.metadata.rerollQuestionId ?? "")?.metadata.sourceIndex &&
+          bounce?.metadata.rollType === 25 && next?.metadata.rollType === 25 && bounce.scoringStatus === "excluded" && next.scoringStatus === "excluded" &&
+          !!at && !!travel && travel.to.x === at.x && travel.to.y === at.y && next.metadata.ballTravel?.from.x === at.x && next.metadata.ballTravel.from.y === at.y &&
+          event.metadata.dice?.length === 1 && event.metadata.dieTypes?.[0] === 0 && original?.Die?.DieType === 0 && original.Die.Value === event.metadata.dice[0] &&
+          event.metadata.difficulty !== undefined && near(event.probabilitySuccess ?? -1,(7-event.metadata.difficulty)/6) &&
+          near(catchBound.successChance,event.probabilitySuccess ?? -1) && near(catchBound.lower,expected.lower) && catchBound.upper === 0,
+          "A retained Catch envelope needs its first-bounce pickup chain, original offer and decline, matching kept die, adjacent further bounce and ordered physical checkpoints; no new random stage or point value.");
       }
       const successors=context?.pickupSuccessors;
       const possession=event.possessionBounds;

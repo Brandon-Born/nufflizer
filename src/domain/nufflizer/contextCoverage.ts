@@ -22,7 +22,7 @@ export function summarizeContextEvidence(events: readonly LuckEvent[]) {
     if (!event.metadata.isRollCandidate) continue;
     rollCount++;
     const preRoll = event.metadata.preRoll;
-    if (preRoll?.actorCell || event.metadata.bounceCatchReaction || event.metadata.combinedMovement) positionCount++;
+    if (preRoll?.actorCell || event.metadata.bounceCatchReaction || event.metadata.retainedCatchReaction || event.metadata.combinedMovement) positionCount++;
     if ((preRoll && preRoll.actorCarriesBall !== null) || event.metadata.bounceCatchReaction || (event.metadata.combinedMovement && event.metadata.combinedMovement.carriedBallBefore !== null)) possessionCount++;
     if (
       preRoll?.period &&
@@ -40,7 +40,7 @@ export function summarizeContextEvidence(events: readonly LuckEvent[]) {
       event.metadata.combinedMovement ||
       event.metadata.pickupResolution ||
       event.metadata.pickupAfterMovement ||
-      event.metadata.bounceCatchReaction ||
+      event.metadata.bounceCatchReaction || event.metadata.retainedCatchReaction ||
       event.metadata.movementTouchdown ||
       event.metadata.pickupBallChain ||
       event.metadata.activationLoss ||

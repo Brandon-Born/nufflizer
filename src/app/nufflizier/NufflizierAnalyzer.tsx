@@ -739,7 +739,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                   <tr className="border-b border-amber-300/20 text-left">
                     <th className="px-2 py-2">Replay segment</th>
                     <th className="px-2 py-2">Team</th>
-                    <th className="px-2 py-2">Moment</th>
+                    <th className="min-w-64 px-2 py-2">Moment</th>
                     <th className="px-2 py-2">Expected</th>
                     <th className="px-2 py-2">Actual</th>
                     <th className="px-2 py-2">Weighted Delta</th>

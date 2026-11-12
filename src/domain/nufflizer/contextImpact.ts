@@ -1,6 +1,6 @@
 import type { PreRollEvidence } from "@/domain/replay/reconstructContext";
 
-export const CONTEXT_MODEL_VERSION = "mobility-possession-24";
+export const CONTEXT_MODEL_VERSION = "mobility-possession-25";
 export type ContextPolicy =
   | "declined_team_reroll"
   | "full_team_reroll"
@@ -172,6 +172,20 @@ export function estimateFreshCatchPossession(successChance: number) {
     maximumDifference: 2,
     lower: 0,
     upper: POSSESSION_VALUE * (1 - successChance)
+  } as const;
+}
+
+// Before the original Catch die, holding the recorded decline-on-failure
+// policy fixed. The kept summary is not a fresh random stage at the decision.
+// Later failure continuations remain anywhere in [0,2] own-possession units.
+export function estimateKeptCatchPossession(successChance: number) {
+  return {
+    policy: "kept_catch_failure_envelope",
+    successChance,
+    minimumDifference: 0,
+    maximumDifference: 2,
+    lower: -POSSESSION_VALUE * successChance,
+    upper: 0
   } as const;
 }
 

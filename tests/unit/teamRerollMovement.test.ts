@@ -355,7 +355,7 @@ describe("actual movement after a direct committed team-rerolled Rush", () => {
       used: 37,
       kept: 12,
       moves: 15,
-      ranges: 18
+      ranges: 19
     });
   }, 60000);
   it.each([

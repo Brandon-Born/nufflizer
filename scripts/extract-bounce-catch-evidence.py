@@ -44,35 +44,40 @@ def board(node):
     return result
 
 
-cases = []
-selections = [
-    ('demo3.bbr', 'pickup_bounce_catch', [530, 531, 532]),
-    ('demo11.bbr', 'standup_pickup_bounce_catch', [244, 245, 246]),
-]
-for filename, identifier, selected in selections:
-    source = Path('demo-replays') / filename
-    root = inventory.parse_xml(inventory.decode_replay(source))
-    records = []
-    sequence = 0
-    for number, outer in enumerate(root.findall('ReplayStep'), 1):
-        for child_index, child in enumerate(outer):
-            if child.tag == 'EventExecuteSequence':
-                sequence += 1
-                if number not in selected:
-                    continue
-                rows = []
-                for step_index, result in enumerate(child.iter('StepResult')):
-                    step = inventory.decode_message(result.findtext('./Step/MessageData'))
-                    messages = [inventory.decode_message(x.findtext('MessageData')) for x in result.iter('StringMessage')]
-                    rows.append({'stepIndex': step_index, 'step': {step.tag: projection(step)},
-                                 'messages': [{x.tag: projection(x)} for x in messages]})
-                records.append({'replayStep': number, 'childIndex': child_index, 'sequence': sequence, 'steps': rows})
-            elif number in selected:
-                value = board(child) if child.tag == 'BoardState' else projection(child)
-                records.append({'replayStep': number, 'childIndex': child_index, 'projection': {child.tag: value if value is not None else {}}})
-    cases.append({'id': identifier, 'sourceFile': filename, 'sha256': hashlib.sha256(source.read_bytes()).hexdigest(), 'records': records})
+def extract_cases(selections):
+    cases = []
+    for filename, identifier, selected in selections:
+        source = Path('demo-replays') / filename
+        root = inventory.parse_xml(inventory.decode_replay(source))
+        records = []
+        sequence = 0
+        for number, outer in enumerate(root.findall('ReplayStep'), 1):
+            for child_index, child in enumerate(outer):
+                if child.tag == 'EventExecuteSequence':
+                    sequence += 1
+                    if number not in selected:
+                        continue
+                    rows = []
+                    for step_index, result in enumerate(child.iter('StepResult')):
+                        step = inventory.decode_message(result.findtext('./Step/MessageData'))
+                        messages = [inventory.decode_message(x.findtext('MessageData')) for x in result.iter('StringMessage')]
+                        rows.append({'stepIndex': step_index, 'step': {step.tag: projection(step)},
+                                     'messages': [{x.tag: projection(x)} for x in messages]})
+                    records.append({'replayStep': number, 'childIndex': child_index, 'sequence': sequence, 'steps': rows})
+                elif number in selected:
+                    value = board(child) if child.tag == 'BoardState' else projection(child)
+                    records.append({'replayStep': number, 'childIndex': child_index, 'projection': {child.tag: value if value is not None else {}}})
+        cases.append({'id': identifier, 'sourceFile': filename, 'sha256': hashlib.sha256(source.read_bytes()).hexdigest(), 'records': records})
+    return cases
 
-output = {'purpose': 'Numeric and known-empty observations only. Original locators retained; test ReplaySteps/sequences are renumbered while direct child order is preserved. Public-source extracts are not new UI annotations or proof of full policies.',
-          'replayVersion': '1-4-0-0', 'cases': cases}
-Path('tests/fixtures/evidence/bb3-bounce-catch-reactions.json').write_text(json.dumps(output, indent=2) + '\n')
-print([(case['id'], len(case['records'])) for case in cases])
+
+if __name__ == "__main__":
+    selections = [
+        ('demo3.bbr', 'pickup_bounce_catch', [530, 531, 532]),
+        ('demo11.bbr', 'standup_pickup_bounce_catch', [244, 245, 246]),
+    ]
+    cases = extract_cases(selections)
+    output = {'purpose': 'Numeric and known-empty observations only. Original locators retained; test ReplaySteps/sequences are renumbered while direct child order is preserved. Public-source extracts are not new UI annotations or proof of full policies.',
+              'replayVersion': '1-4-0-0', 'cases': cases}
+    Path('tests/fixtures/evidence/bb3-bounce-catch-reactions.json').write_text(json.dumps(output, indent=2) + '\n')
+    print([(case['id'], len(case['records'])) for case in cases])

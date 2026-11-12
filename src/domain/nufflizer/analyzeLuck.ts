@@ -1,3 +1,4 @@
+import { attachRetainedCatchPossession } from "./retainedCatchPossession";
 import { teamDodgeContinuity } from "@/domain/replay/teamDodgeContinuity";
 import { findBounceCatchReactions, attachBounceCatchReactions } from "./catchPossession";
 import { findPickupTurnEnds, attachPickupTurnEnds } from "./pickupTurnEnd";
@@ -1222,6 +1223,13 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       replay.replayVersion,
       playerToTeam
     );
+    // Keep the source offer/decline beside retained Pickup/Catch originals.
+    // These are non-random receipts, not new dice or inferred counter values.
+    for (const [index, link] of rerollLinks)
+      if (link.retainedOriginal && [4, 7].includes(replayTurn.events[index]?.rollType ?? -1)) {
+        if (link.questionId) activationEvidenceSources.add(link.questionId);
+        if (link.decisionId) activationEvidenceSources.add(link.decisionId);
+      }
     for (const [eventIndex, event] of replayTurn.events.entries()) {
       if (
         !apothecary.has(eventIndex) &&
@@ -1336,6 +1344,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   for (const turn of replay.turns)
     linkPickupBallConsequences(turn, ballSources);
   attachBounceCatchReactions(bounceCatchReactions,ballSources);
+  attachRetainedCatchPossession(replay,ballSources);
   attachPickupTurnEnds(pickupTurnEnds,ballSources);
   attachRerollCounterEvidence(rerollCounters,ballSources);
   for(const [source,proof] of combinedMovements) {

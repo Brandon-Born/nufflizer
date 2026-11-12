@@ -16,6 +16,16 @@ function readFixture(name: string): string {
 }
 
 describe("POST /api/nufflizier/analyze", () => {
+  it("exports demo1's original failed Catch envelope through the real bounded worker", async () => {
+    const data=new FormData();data.append("replay",new File([readFileSync("demo-replays/demo1.bbr")],"source.bbr"));
+    const response=await POST(new Request("http://localhost/api/nufflizier/analyze",{method:"POST",body:data}));
+    const payload=await response.json();expect(response.status,JSON.stringify(payload).slice(0,200)).toBe(200);
+    const report=LuckReportSchema.parse(payload),e=report.events.find(e=>e.metadata.retainedCatchReaction)!;
+    expect(e.metadata.sourceId).toBe("source-548");expect(e.metadata.retainedCatchReaction).toMatchObject({beforeCheckpointAfter:538,waitingCheckpointAfter:545});
+    expect(e.catchPossessionBounds).toMatchObject({policy:"kept_catch_failure_envelope",lower:-2/3,upper:0});
+    expect(e.probabilitySuccess).toBe(1/3);expect(e.weightedDelta).toBeCloseTo(-11/30,12);
+    expect(e.metadata.preRoll).toBeUndefined();expect(report.teams.every(t=>t.impactCount===0)).toBe(true);
+  },20000);
   it("keeps opt-in worker stage diagnostics separate from report data", async () => {
     vi.stubEnv("NUFFLIZIER_ANALYZER_TIMING", "1");
     const log = vi.spyOn(console, "info").mockImplementation(() => {});
