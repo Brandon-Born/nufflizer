@@ -79,12 +79,13 @@ export function preservesCurrentMoveEnd(
   board: ObservedBoard,
   checkpoint: ReplayBoardCheckpoint,
   following: ReplayBoardCheckpoint | undefined,
-  previous: { moved: boolean; end: ActivationEnd } | undefined,
+  previous:
+    { moved: boolean; end: ActivationEnd; deterministic?: boolean } | undefined,
   epochs: ReadonlyMap<ReplayBoardCheckpoint, number>
 ): boolean {
   if (
     !previous?.moved ||
-    previous.end.rosterCheckpointAfter === undefined ||
+    previous.deterministic !== true ||
     event.sourceTag !== "EventRulesEngineStandBy" ||
     following?.kind !== "board" ||
     !following.board ||

@@ -369,7 +369,7 @@ export function explainActivationLoss(
   const end = event.metadata.activationEnd;
   if (end)
     return end.kind === "ordinary_move_completed"
-      ? `Player ${end.actorId}'s ordinary Move activation ended when player ${end.followingPlayerId} started acting in recorded team turn ${end.teamTurn}. Its position and tackle zone are preserved.${end.rosterCheckpointAfter !== undefined ? " Ownership was verified from the current roster checkpoint; missing initial membership was not inferred from the turn. Later move opportunities exclude this spent activation." : ""}`
+      ? `Player ${end.actorId}'s ordinary Move activation ended when player ${end.followingPlayerId} started acting in recorded team turn ${end.teamTurn}. Its position and tackle zone are preserved.${end.completionCheckpointAfter !== undefined ? " The completed position was confirmed by the following stable checkpoint; no dice were needed for this movement." : ""}${end.rosterCheckpointAfter !== undefined ? " Ownership was verified from the current roster checkpoint; missing initial membership was not inferred from the turn. Later move opportunities exclude this spent activation." : ""}`
       : `Player ${end.actorId} lost the declared activation and tackle zone after ${end.kind === "bone_head" ? "Bone Head" : "Really Stupid"} failed. Player ${end.followingPlayerId} then acted in recorded team turn ${end.teamTurn}. The lost activation's tactical value remains unquantified.`;
   const loss = event.metadata.activationLoss;
   return loss

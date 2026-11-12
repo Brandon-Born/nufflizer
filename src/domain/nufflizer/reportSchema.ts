@@ -68,6 +68,7 @@ const activationEnd = z.strictObject({
   followingPlayerId: text,
   checkpointAfter: count,
   rosterCheckpointAfter: count.optional(),
+  completionCheckpointAfter: count.optional(),
   moveSourceId: text.optional(),
   skillSourceId: text.optional(),
   rollSourceId: text.optional(),
@@ -818,6 +819,15 @@ export const LuckReportSchema = z
           declaration.metadata.preRoll.actorRosterTeamId === end.teamId && declaration.metadata.preRoll.activeTeamId === end.teamId &&
           declaration.metadata.preRoll.teamTurn === end.teamTurn,
           "Fresh-roster Move completion needs the original declaration's current roster, active side and clock checkpoint.");
+        if(end.completionCheckpointAfter !== undefined) {
+          const move=linked(end.moveSourceId,"ResultMoveOutcome");
+          require(end.kind === "ordinary_move_completed" && !!move &&
+            (move.metadata.sourceIndex ?? Infinity)<end.completionCheckpointAfter && end.completionCheckpointAfter<end.sourceIndex &&
+            end.checkpointAfter===end.completionCheckpointAfter && event.metadata.preRoll?.checkpointAfter===end.completionCheckpointAfter &&
+            event.metadata.preRoll.phaseCode===5 && event.metadata.preRoll.activeTeamId===end.teamId &&
+            event.metadata.preRoll.teamTurn===end.teamTurn,
+            "A deterministic Move wait needs the later stable-position checkpoint before the next same-team declaration; no dice or value is added.");
+        }
         if (end.kind === "ordinary_move_completed") {
           require(declaration?.metadata.actionCode === 1 &&
             !!linked(end.moveSourceId, "ResultMoveOutcome") &&

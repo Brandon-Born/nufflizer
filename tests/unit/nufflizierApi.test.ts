@@ -367,4 +367,17 @@ describe("POST /api/nufflizier/analyze", () => {
     ).toBe(2);
     expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
   }, 20000);
+  it("exports completed initial-member Moves through the original demo7 worker",async()=>{
+    const form=new FormData();form.set("replay",new File([readFileSync("demo-replays/demo7.bbr")],"source7.bbr"));
+    const response=await POST(new Request("http://localhost/api/nufflizier/analyze",{method:"POST",body:form}));
+    const body=await response.json();expect(response.status,JSON.stringify(body).slice(0,200)).toBe(200);
+    const report=LuckReportSchema.parse(body),e=report.events.find(e=>e.metadata.sourceId==="source-3098")!;
+    expect(e.metadata.preRoll?.ordinaryMoveAvailability?.unknownPlayerIds).toEqual(["41","42","44"]);
+    expect(e.metadata.preRoll?.endedActivationSourceIds).toEqual(["source-3065","source-3090"]);
+    expect(e.contextualBounds?.maximumMoves).toBe(3);expect(e.contextualBounds?.upper).toBeCloseTo(1/2,12);
+    expect(report.events.find(e=>e.metadata.sourceId==="source-3065")?.metadata.activationEnd?.completionCheckpointAfter).toBe(3062);
+    expect(report.events.find(e=>e.metadata.sourceId==="source-3090")?.metadata.activationEnd?.completionCheckpointAfter).toBe(3087);
+    expect(e.probabilitySuccess).toBeCloseTo(35/36,12);expect(report.teams.every(t=>t.impactCount===0)).toBe(true);
+  },20000);
+
 });

@@ -702,7 +702,7 @@ export function reconstructReplayContext(
     findMentalActivationEnds(replay).map((end) => [end.sourceId, end])
   );
   let activeEnds = new Map<string, ActivationEnd>();
-  let previousMove: { end: ActivationEnd; moved: boolean; waitCheckpoint?: ReplayBoardCheckpoint } | undefined;
+  let previousMove: { end: ActivationEnd; moved: boolean; deterministic?: boolean; waitCheckpoint?: ReplayBoardCheckpoint } | undefined;
   let actorDodgeMoveSourceId: string | undefined;
   let lastTeamMovement:
     | {
@@ -780,10 +780,10 @@ export function reconstructReplayContext(
         checkpoints[cursor]!.afterSourceIndex < event.sourceIndex
       ) {
         checkpoint = checkpoints[cursor++]!;
-        if(previousMove?.end.rosterCheckpointAfter !== undefined) {
+        if(previousMove && (previousMove.end.rosterCheckpointAfter !== undefined || previousMove.end.completionCheckpointAfter !== undefined)) {
           if(previousMove.waitCheckpoint !== checkpoint)previousMove=undefined;
           else previousMove.waitCheckpoint=undefined;
-        }
+        } else if(previousMove)previousMove.deterministic=false;
         frameChanged = true;
         if (pendingDodge || pendingPickup || pendingTeamMove) {
           previousMove = undefined;
@@ -1259,7 +1259,9 @@ export function reconstructReplayContext(
         continue;
       }
       if (event.type === "step" || event.sourceTag === "BallStep") {
-        if(previousMove?.end.rosterCheckpointAfter !== undefined &&
+        if(previousMove && (event.sourceTag !== "PlayerStep" || ![0,1,7].includes(event.stepType ?? -1) ||
+          event.payload?.Skill !== 0 || event.payload.IsEvaluation !== 0))previousMove.deterministic=false;
+        if(previousMove && (previousMove.end.rosterCheckpointAfter !== undefined || previousMove.end.completionCheckpointAfter !== undefined) &&
           (event.sourceTag !== "PlayerStep" || ![0,1,7].includes(event.stepType ?? -1) ||
             event.payload?.Skill !== 0 || event.payload.IsEvaluation !== 0)) {
           previousMove=undefined;activationId=null;activationActionCode=undefined;
@@ -1322,16 +1324,21 @@ export function reconstructReplayContext(
       if(preservesCurrentMoveEnd(event,board,checkpoint,checkpoints[cursor],previousMove,epochs)) {
         // Preserve only the candidate's source provenance through this verified
         // wait marker. The next iteration still replaces all observed state.
-        if(previousMove)previousMove.waitCheckpoint=checkpoints[cursor];
+        if(previousMove) {
+          previousMove.waitCheckpoint=checkpoints[cursor];
+          previousMove.end.completionCheckpointAfter=checkpoints[cursor]!.afterSourceIndex;
+        }
         activationId=null;
         activationActionCode=undefined;
         continue;
       }
-      if(previousMove?.end.rosterCheckpointAfter !== undefined &&
+      if(previousMove && (previousMove.end.rosterCheckpointAfter !== undefined || previousMove.end.completionCheckpointAfter !== undefined) &&
         event.sourceTag !== "ResultUseAction" && !(event.sourceTag === "Carrier" && event.checkpointCarrier) &&
         !isDeterministicMoveResult(event)) {
         previousMove=undefined;activationId=null;activationActionCode=undefined;
       }
+      if(previousMove && event.sourceTag !== "ResultUseAction" &&
+        !(event.sourceTag === "Carrier" && event.checkpointCarrier) && !isDeterministicMoveResult(event))previousMove.deterministic=false;
       if (teamOffer && event.sourceTag === "ResultTeamRerollUsage") {
         const offer = teamOffer;
         teamOffer = undefined;
@@ -1882,6 +1889,7 @@ export function reconstructReplayContext(
         ) {
           previousMove = {
             moved: false,
+            deterministic: true,
             end: {
               kind: "ordinary_move_completed",
               ...(currentRosterQualified ? {rosterCheckpointAfter:checkpoint.afterSourceIndex} : {}),

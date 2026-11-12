@@ -23,6 +23,7 @@ export type ActivationEnd = {
   followingPlayerId: string;
   checkpointAfter: number;
   rosterCheckpointAfter?: number;
+  completionCheckpointAfter?: number;
   moveSourceId?: string;
   skillSourceId?: string;
   rollSourceId?: string;
