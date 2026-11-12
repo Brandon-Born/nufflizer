@@ -252,6 +252,25 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(caught.playerId).toBe("45");
     expect(caught.catchPossessionBounds!.upper).toBeCloseTo(5 / 3, 12);
     expect(caught.metadata.preRoll).toBeUndefined();
+    const reached = r.events.find((e) => e.metadata.pickupAfterMovement)!;
+    expect(reached.metadata.locator?.replayStep).toBe(401);
+    expect(reached.metadata.pickupAfterMovement).toMatchObject({
+      cell: { x: 17, y: 6 },
+      movementRemaining: 0,
+      check: { threshold: 3, baseTarget: 2, markerPlayerIds: ["42"] }
+    });
+    expect(reached.metadata.preRoll).toMatchObject({
+      actorCarriesBall: null,
+      activeTeamId: null,
+      actorMovementRemaining: 0
+    });
+    expect(reached.probabilitySuccess).toBeCloseTo(8 / 9, 12);
+    expect(reached.possessionBounds).toBeUndefined();
+    expect(
+      r.events
+        .filter((e) => e.metadata.teamRerollMovement?.zonePenalty)
+        .map((e) => e.metadata.locator?.replayStep)
+    ).toEqual([273, 401]);
     const pickup = r.events.find((e) => e.metadata.pickupTurnEnd)!;
     expect(pickup.metadata.pickupTurnEnd!.ordinaryMoves).toEqual({
       knownAvailablePlayerIds: [],

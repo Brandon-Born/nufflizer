@@ -82,9 +82,13 @@ const activationEnd = z.strictObject({
 const rerollCounterObservation=z.strictObject({checkpointAfter:count,replayStep:z.number().int().positive(),childIndex:count,
   teamId:text,teamTurn:z.number().int().positive(),periodCode:z.number().int().min(0).max(2).nullable(),count:z.number().int().min(0).max(16)});
 export const LuckEventMetadataSchema = z.strictObject({
+  pickupAfterMovement:z.strictObject({movementSourceId:text,originalSourceId:text,skillSourceId:text,declarationSourceId:text,moveOutcomeSourceId:text,
+    checkpointAfter:count,cell:pitchCell,movementRemaining:z.number().int().min(0).max(16).nullable(),
+    check:z.strictObject({threshold:z.number().int().min(2).max(6),baseTarget:z.number().int().min(2).max(6),markerPlayerIds:z.array(text).max(8)})}).optional(),
   teamRerollMovement:z.strictObject({rollType:z.union([z.literal(1),z.literal(2)]),gamerId:z.union([z.literal(0),z.literal(1)]),questionSourceId:text,decisionSourceId:text,
     declarationSourceId:text,doMoveSourceId:text,outcomeSourceId:text,originalCheckpointAfter:count,checkpointAfter:count,from:pitchCell,to:pitchCell,
-    movementBefore:z.number().int().min(0).max(16).nullable(),movementAfter:z.number().int().min(0).max(16).nullable(),carriesBall:z.boolean()}).optional(),
+    movementBefore:z.number().int().min(0).max(16).nullable(),movementAfter:z.number().int().min(0).max(16).nullable(),carriesBall:z.boolean().nullable(),
+    zonePenalty:z.strictObject({baseTarget:z.number().int().min(2).max(6),markers:z.array(z.strictObject({playerId:text,cell:pitchCell})).min(1).max(8)}).optional()}).optional(),
   rerollOffer:z.strictObject({gamerId:z.union([z.literal(0),z.literal(1)]),canUseTeamReroll:z.boolean(),decisionSourceId:text}).optional(),
   teamRerollCounter:z.strictObject({questionSourceId:text,spent:z.union([z.literal(0),z.literal(1)]),before:rerollCounterObservation,after:rerollCounterObservation.optional(),reconciliation:z.enum(["matched","mismatch","after_unavailable"])}).optional(),
   turnEndReason:z.literal(2).optional(),
@@ -93,7 +97,7 @@ export const LuckEventMetadataSchema = z.strictObject({
   pickupResolution:z.strictObject({declarationSourceId:text,moveOutcomeSourceId:text,cell:pitchCell,movementRemaining:z.number().int().min(0).max(16).nullable(),checkpointAfter:count}).optional(),
   dodgeMovement: z.strictObject({declarationSourceId:text,doMoveSourceId:text,outcomeSourceId:text,
     from:pitchCell,to:pitchCell,movementBefore:z.number().int().min(1).max(16).nullable(),
-    movementAfter:z.number().int().min(0).max(15).nullable(),carriesBall:z.boolean(),checkpointAfter:count}).optional(),
+    movementAfter:z.number().int().min(0).max(15).nullable(),carriesBall:z.boolean().nullable(),checkpointAfter:count}).optional(),
   blockSelection:z.strictObject({face:z.number().int().min(0).max(4)}).optional(),
   blockResolution: z.strictObject({
     outcome:z.enum(["attacker_down","both_down","wrestled_prone","both_stay_up","push","defender_down","defender_pushed_down"]),
@@ -1009,6 +1013,28 @@ export const LuckReportSchema = z
       }
       if(context?.carriedBallCell) require(context.actorCarriesBall === true && context.actorCell?.x === context.carriedBallCell.x && context.actorCell.y === context.carriedBallCell.y,
         "A known carried-ball cell must match its observed carrier's current position.");
+      const reachedPickup=event.metadata.pickupAfterMovement;
+      if(reachedPickup) {
+        const moveEvent=sources.get(reachedPickup.movementSourceId),move=moveEvent?.metadata.teamRerollMovement;
+        const original=sources.get(reachedPickup.originalSourceId),skill=sources.get(reachedPickup.skillSourceId),outcome=sources.get(reachedPickup.moveOutcomeSourceId);
+        const same=(e:typeof event|undefined)=>!!e&&e.playerId===event.playerId&&e.teamId===event.teamId&&e.metadata.actionId===event.metadata.actionId&&e.metadata.sequenceId===event.metadata.sequenceId;
+        const check=reachedPickup.check,mods=event.metadata.modifiers??[];
+        require(event.scoringStatus==="scored"&&event.actualSuccess===true&&event.metadata.rollType===4&&event.metadata.rerollSkill==="Sure Hands"&&
+          !event.contextualImpact&&!event.possessionBounds&&!event.contextualBounds&&!!move&&same(moveEvent)&&
+          move.declarationSourceId===reachedPickup.declarationSourceId&&move.outcomeSourceId===reachedPickup.moveOutcomeSourceId&&move.checkpointAfter===reachedPickup.checkpointAfter&&
+          move.to.x===reachedPickup.cell.x&&move.to.y===reachedPickup.cell.y&&move.movementAfter===reachedPickup.movementRemaining&&
+          same(original)&&original?.metadata.rollType===4&&original.metadata.outcomeCode===0&&original.metadata.mergedRerollAnchorId===event.metadata.sourceId&&
+          event.metadata.rerollOriginalId===reachedPickup.originalSourceId&&event.metadata.rerollDecisionId===reachedPickup.skillSourceId&&
+          same(skill)&&skill?.metadata.skillUsage?.skillId===61&&skill.metadata.skillUsage.used&&same(outcome)&&outcome?.metadata.sourceTag==="ResultMoveOutcome"&&
+          event.metadata.sourceIndex!==undefined&&original.metadata.sourceIndex===event.metadata.sourceIndex-2&&skill.metadata.sourceIndex===event.metadata.sourceIndex-1&&outcome.metadata.sourceIndex===event.metadata.sourceIndex-3&&
+          context?.checkpointAfter===reachedPickup.checkpointAfter&&context.activationId===reachedPickup.declarationSourceId&&context.actorCell?.x===reachedPickup.cell.x&&context.actorCell.y===reachedPickup.cell.y&&
+          (context.actorMovementRemaining??null)===reachedPickup.movementRemaining&&context.actorCarriesBall!==true&&
+          check.threshold===event.metadata.difficulty&&check.baseTarget===event.metadata.requirement&&check.threshold===check.baseTarget+check.markerPlayerIds.length&&
+          original.metadata.difficulty===check.threshold&&original.metadata.requirement===check.baseTarget&&
+          mods.length===check.markerPlayerIds.length&&mods.every(m=>m===-1)&&event.metadata.modifiersSum===-mods.length&&JSON.stringify(original.metadata.modifiers)===JSON.stringify(mods)&&
+          JSON.stringify(check.markerPlayerIds)===JSON.stringify(move.zonePenalty?.markers.map(m=>m.playerId)??[]),
+          "Observed pickup after movement needs the adjacent owned Sure Hands chain, verified reached square, same fixed markers and unchanged post-move budget; no failed-alternative value is implied.");
+      }
       const pickupResolution=event.metadata.pickupResolution;
       if(pickupResolution) require(!!successors && !!possession && event.actualSuccess === true &&
         pickupResolution.declarationSourceId === successors.declarationSourceId && pickupResolution.moveOutcomeSourceId === successors.moveOutcomeSourceId &&
@@ -1039,6 +1065,16 @@ export const LuckReportSchema = z
             teamMove.rollType===1?teamMove.movementBefore===0&&teamMove.movementAfter===0:
             teamMove.movementBefore>=1&&teamMove.movementAfter===teamMove.movementBefore-1),
           "Observed team-rerolled Rush/Dodge movement needs its original offer, owned ordinary declaration, committed direct replacement and adjacent confirmed move; fresh budget omissions stay unknown.");
+      }
+      if(teamMove) {
+        const zone=teamMove.zonePenalty,mods=event.metadata.modifiers??[];
+        require(zone ? teamMove.rollType===2 && event.metadata.requirement===zone.baseTarget &&
+          event.metadata.difficulty===zone.baseTarget+zone.markers.length &&
+          mods.length===zone.markers.length && mods.every(m=>m===-1) && event.metadata.modifiersSum===-mods.length &&
+          new Set(zone.markers.map(m=>m.playerId)).size===zone.markers.length &&
+          zone.markers.every(m=>m.playerId!==event.playerId&&Math.max(Math.abs(m.cell.x-teamMove.to.x),Math.abs(m.cell.y-teamMove.to.y))===1)
+          : mods.length===0&&event.metadata.modifiersSum===0&&event.metadata.requirement===event.metadata.difficulty,
+          "Observed team movement must reconcile its fixed opposing-zone penalty or its unmodified check.");
       }
       if (dodgeMove) {
         const declaration = sources.get(dodgeMove.declarationSourceId);

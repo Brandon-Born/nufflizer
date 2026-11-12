@@ -150,7 +150,8 @@ describe("actual movement after a direct committed team-rerolled Rush", () => {
     }
   );
   it.each([
-    ["team_rush_move", 17, 9, 17, 10, false],
+    ["team_rush_move", 17, 9, 17, 10, null],
+    ["team_rush_unknown_ball_after_dodge", 20, 12, 19, 13, null],
     ["team_rush_second_move", 16, 8, 16, 9, false],
     ["team_rush_third_move", 13, 12, 14, 12, false],
     ["team_rush_away_move", 8, 8, 8, 9, false],
@@ -353,7 +354,7 @@ describe("actual movement after a direct committed team-rerolled Rush", () => {
     expect({ used, kept, moves, ranges }).toEqual({
       used: 37,
       kept: 12,
-      moves: 12,
+      moves: 15,
       ranges: 14
     });
   }, 60000);

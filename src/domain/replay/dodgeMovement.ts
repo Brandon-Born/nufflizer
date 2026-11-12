@@ -9,7 +9,7 @@ export type ObservedDodgeMovement = {
   to: { x: number; y: number };
   movementBefore: number | null;
   movementAfter: number | null;
-  carriesBall: boolean;
+  carriesBall: boolean | null;
   checkpointAfter: number;
 };
 

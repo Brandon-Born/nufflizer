@@ -334,7 +334,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.24");
+  expect(report.schemaVersion).toBe("2.25");
   expect(report.modelVersion).toBe("dice-only-20");
   expect(
     report.events.some(
@@ -360,7 +360,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
     )
   ).toBe(true);
 
-  expect(report.contextModelVersion).toBe("mobility-possession-19");
+  expect(report.contextModelVersion).toBe("mobility-possession-20");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
     report.coverage.rollCandidates.scoredCount +
@@ -1003,4 +1003,27 @@ test("team-rerolled movement separates actual cells from missing context",async(
     await page.unroute("**/api/nufflizier/analyze");
   }
   expect(errors).toEqual([]);
+});
+
+test("fixed-zone Dodge reaches the pickup square and Sure Hands secures possession",async({page})=>{
+  const errors:string[]=[];page.on("pageerror",e=>errors.push(e.message));page.on("console",m=>{if(m.type()==="error")errors.push(m.text());});
+  const xml=lonerDriveXml("team_dodge_zone_pickup","tests/fixtures/evidence/bb3-team-reroll-movement.json"),report=analyzeNufflizerInput(xml);
+  await page.route("**/api/nufflizier/analyze",route=>route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(report)}));
+  await page.goto("/nufflizier");await expect(page).toHaveTitle("Nufflizier");
+  await page.setInputFiles('input[name="replay"]',{name:"source-zone-pickup.xml",mimeType:"application/xml",buffer:Buffer.from(xml)});
+  await page.getByRole("button",{name:"Analyze Nuffle Luck"}).click();await expect(page.getByRole("heading",{name:"Nuffle Match Report"})).toBeVisible();
+  const table=page.getByRole("table").filter({has:page.getByRole("columnheader",{name:"Replay segment"})});
+  const movement=table.locator("tbody tr").filter({hasText:"successful team-rerolled Dodge"});
+  await expect(movement).toHaveCount(1);await movement.locator("summary").click();
+  await expect(movement).toContainText("1 opposing tackle-zone penalty point");await expect(movement).toContainText("[17, 5] to [17, 6]");
+  await expect(movement).toContainText("0 movement points remained");await expect(movement).toContainText("Ball possession in the waiting snapshot remains unknown");
+  const pickup=table.locator("tbody tr").filter({hasText:"pickup consumes no second movement point"});
+  await expect(pickup).toHaveCount(1);await pickup.locator("summary").click();
+  await expect(pickup).toContainText("successful Sure Hands replacement secured the ball there");await expect(pickup).toContainText("post-move budget stays at 0");
+  await expect(pickup).toContainText("Earlier unknown possession is not changed");await expect(pickup).toContainText("failed-pickup alternatives remain unquantified");
+  await expect(pickup).toContainText("88.9%");await expect(page.getByText("Context: Not scored")).toHaveCount(2);
+  await page.screenshot({path:"/tmp/nufflizier-zone-pickup-desktop.png",fullPage:true});
+  await page.getByLabel("Scoring status").selectOption("bounded");await expect(table.locator("tbody tr").filter({has:page.locator("summary")})).toHaveCount(0);
+  await page.getByRole("button",{name:"Reset filters",exact:true}).click();await expect(movement).toHaveCount(1);await expect(pickup).toHaveCount(1);
+  await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);expect(errors).toEqual([]);
 });

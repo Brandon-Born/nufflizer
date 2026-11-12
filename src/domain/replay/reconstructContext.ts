@@ -1,8 +1,15 @@
 import { unmodifiedD6Check } from "./numericCheck";
+import type { ObservedPickupAfterMovement } from "./pickupAfterMovement";
+import {
+  recordedZoneD6Check,
+  observedZoneMarkers,
+  type RecordedZoneCheck
+} from "./zoneD6Check";
 import { observedActorRoster } from "./observedActorRoster";
 import {
   failedMovementOffer,
   sameMovementActor,
+  actualMoveGeometry,
   type ObservedTeamRerollMovement
 } from "./teamRerollMovement";
 import {
@@ -607,6 +614,7 @@ export function reconstructReplayContext(
   const result = new Map<string, PreRollEvidence>();
   const dodgeMovements = new Map<string, ObservedDodgeMovement>();
   const teamRerollMovements = new Map<string, ObservedTeamRerollMovement>();
+  const pickupsAfterMovement = new Map<string, ObservedPickupAfterMovement>();
   const pickupResolutions = new Map<
     string,
     {
@@ -634,6 +642,7 @@ export function reconstructReplayContext(
       preRollEvidence: result,
       dodgeMovements,
       teamRerollMovements,
+      pickupsAfterMovement,
       pickupResolutions,
       activationEnds,
       mentalEffectEnds,
@@ -684,11 +693,19 @@ export function reconstructReplayContext(
   let activeEnds = new Map<string, ActivationEnd>();
   let previousMove: { end: ActivationEnd; moved: boolean } | undefined;
   let actorDodgeMoveSourceId: string | undefined;
+  let lastTeamMovement:
+    | {
+        sourceId: string;
+        outcome: ReplayEvent;
+        movement: ObservedTeamRerollMovement;
+      }
+    | undefined;
   let teamOffer:
     | {
         question: ReplayEvent;
         threshold: number;
         family: 1 | 2;
+        check: RecordedZoneCheck;
         from: Cell;
         to: Cell;
         declarationSourceId: string;
@@ -706,6 +723,7 @@ export function reconstructReplayContext(
         stage: "replacement" | "do_move" | "outcome";
         replacementSourceId?: string;
         doMoveSourceId?: string;
+        zonePenalty?: ObservedTeamRerollMovement["zonePenalty"];
       }
     | undefined;
   let pendingPickup:
@@ -718,6 +736,11 @@ export function reconstructReplayContext(
         declarationSourceId: string;
         moveOutcomeSourceId: string;
         checkpointAfter: number;
+        afterMovement?: {
+          movementSourceId: string;
+          check: RecordedZoneCheck;
+          skillSourceId?: string;
+        };
       }
     | undefined;
   let pendingDodge:
@@ -753,6 +776,7 @@ export function reconstructReplayContext(
         pendingDodge = undefined;
         pendingPickup = undefined;
         pendingTeamMove = undefined;
+        lastTeamMovement = undefined;
         actorDodgeMoveSourceId = undefined;
         const next = checkpoint.board;
         if (checkpoint.kind === "initial")
@@ -828,7 +852,10 @@ export function reconstructReplayContext(
         if (
           sameChain &&
           pending.stage === "replacement" &&
-          unmodifiedD6Check(event, offer.family, 2, true) === offer.threshold
+          (offer.family === 1
+            ? unmodifiedD6Check(event, 1, 2, true) === offer.threshold
+            : JSON.stringify(recordedZoneD6Check(event, 2, 2, true)) ===
+              JSON.stringify(offer.check))
         ) {
           pending.replacementSourceId = event.id;
           pending.stage = "do_move";
@@ -862,7 +889,10 @@ export function reconstructReplayContext(
             movementRemaining: movementAfter
           }));
           const carriesBall =
-            board.ball.possession === "held" && board.ball.carrierId === actor;
+            board.ball.possession === "unknown"
+              ? null
+              : board.ball.possession === "held" &&
+                board.ball.carrierId === actor;
           if (carriesBall)
             board = { ...board, ball: { ...board.ball, cell: offer.to } };
           teamRerollMovements.set(pending.replacementSourceId!, {
@@ -879,8 +909,14 @@ export function reconstructReplayContext(
             to: offer.to,
             movementBefore: budget,
             movementAfter,
-            carriesBall
+            carriesBall,
+            ...(pending.zonePenalty ? { zonePenalty: pending.zonePenalty } : {})
           });
+          lastTeamMovement = {
+            sourceId: pending.replacementSourceId!,
+            outcome: event,
+            movement: teamRerollMovements.get(pending.replacementSourceId!)!
+          };
           // Re-establish completion provenance only when its original clock and
           // current roster are known. This does not invent playable stability.
           if (
@@ -977,13 +1013,18 @@ export function reconstructReplayContext(
           Object.keys(p).every((k) => ["Skill", "Used", "PlayerId"].includes(k))
         ) {
           pending.stage = "replacement";
+          if (pending.afterMovement)
+            pending.afterMovement.skillSourceId = event.id;
           pending.lastIndex = event.sourceIndex;
           continue;
         }
         if (
           sameChain &&
           pending.stage === "replacement" &&
-          unmodifiedD6Check(event, 4, 2, true) === pending.threshold
+          (pending.afterMovement
+            ? JSON.stringify(recordedZoneD6Check(event, 4, 2, true)) ===
+              JSON.stringify(pending.afterMovement.check)
+            : unmodifiedD6Check(event, 4, 2, true) === pending.threshold)
         ) {
           const actor = Number(original.playerId),
             owner = pending.board.teams.find((t) =>
@@ -1002,13 +1043,26 @@ export function reconstructReplayContext(
             }
           };
           pickupSourceId = event.id;
-          pickupResolutions.set(event.id!, {
-            declarationSourceId: pending.declarationSourceId,
-            moveOutcomeSourceId: pending.moveOutcomeSourceId,
-            cell: position,
-            movementRemaining: player.movementRemaining,
-            checkpointAfter: pending.checkpointAfter
-          });
+          if (pending.afterMovement)
+            pickupsAfterMovement.set(event.id!, {
+              movementSourceId: pending.afterMovement.movementSourceId,
+              originalSourceId: original.id!,
+              skillSourceId: pending.afterMovement.skillSourceId!,
+              declarationSourceId: pending.declarationSourceId,
+              moveOutcomeSourceId: pending.moveOutcomeSourceId,
+              cell: position,
+              movementRemaining: player.movementRemaining,
+              checkpointAfter: pending.checkpointAfter,
+              check: pending.afterMovement.check
+            });
+          else
+            pickupResolutions.set(event.id!, {
+              declarationSourceId: pending.declarationSourceId,
+              moveOutcomeSourceId: pending.moveOutcomeSourceId,
+              cell: position,
+              movementRemaining: player.movementRemaining,
+              checkpointAfter: pending.checkpointAfter
+            });
           pendingPickup = undefined;
           continue;
         }
@@ -1028,8 +1082,11 @@ export function reconstructReplayContext(
       if (pendingDodge) {
         const pending = pendingDodge;
         const original = pending.original;
-        const owner = pending.board.teams.find(
-          (t) => t.rosterIndex === pending.board.activeTeamIndex
+        const owner = observedActorRoster(
+          pending.board,
+          Number(original.playerId),
+          original.actorTeamId!,
+          replay.teams.map((t) => t.id)
         );
         const sameChain =
           event.id &&
@@ -1044,7 +1101,8 @@ export function reconstructReplayContext(
           event.stepTag === original.stepTag &&
           !event.attributionConflict &&
           event.actorTeamSource !== "turn_inferred" &&
-          event.actorTeamId === String(owner!.explicitTeamId) &&
+          !!owner &&
+          event.actorTeamId === original.actorTeamId &&
           (!event.teamId || event.teamId === event.actorTeamId);
         const p = event.payload;
         let accepted = false;
@@ -1090,7 +1148,10 @@ export function reconstructReplayContext(
             movementRemaining: before === null ? null : before - 1
           }));
           const carriesBall =
-            board.ball.possession === "held" && board.ball.carrierId === actor;
+            board.ball.possession === "unknown"
+              ? null
+              : board.ball.possession === "held" &&
+                board.ball.carrierId === actor;
           if (carriesBall)
             board = { ...board, ball: { ...board.ball, cell: pending.to } };
           dodgeMovements.set(pending.replacementSourceId!, {
@@ -1198,6 +1259,15 @@ export function reconstructReplayContext(
             replay.teams.map((t) => t.id)
           );
         const player = owner?.players.find((p) => p.id === actor);
+        const markers = owner
+          ? observedZoneMarkers(
+              board,
+              String(actor),
+              owner.rosterIndex,
+              offer.check,
+              offer.to
+            )
+          : undefined;
         const players = board.teams.flatMap((t) => t.players),
           positions = players.filter((p) => p.pitchLocation === "on_pitch");
         if (
@@ -1211,6 +1281,7 @@ export function reconstructReplayContext(
           board.activePlayerId === actor &&
           board.phaseCode === 5 &&
           owner?.rosterIndex === p.GamerId &&
+          markers !== undefined &&
           (board.activeGamerId === null || board.activeGamerId === p.GamerId) &&
           !board.issues.length &&
           !smallPitchObserved &&
@@ -1255,7 +1326,10 @@ export function reconstructReplayContext(
             choice: event,
             lastIndex: event.sourceIndex,
             checkpointAfter: checkpoint.afterSourceIndex,
-            stage: "replacement"
+            stage: "replacement",
+            ...(markers.length
+              ? { zonePenalty: { baseTarget: offer.check.baseTarget, markers } }
+              : {})
           };
           board = null;
           continue;
@@ -1336,6 +1410,67 @@ export function reconstructReplayContext(
         if (ended.length) context.endedActivationSourceIds = ended;
       }
       if (
+        lastTeamMovement &&
+        event.sourceIndex === lastTeamMovement.outcome.sourceIndex! + 1 &&
+        sameMovementActor(lastTeamMovement.outcome, event) &&
+        event.actionId === lastTeamMovement.outcome.actionId &&
+        event.sequenceId === lastTeamMovement.outcome.sequenceId &&
+        board.phaseCode === 5 &&
+        board.activePlayerId === Number(event.playerId) &&
+        board.ball.carrierId === null &&
+        board.ball.isHeld !== true &&
+        same(cell(board.ball.cell), lastTeamMovement.movement.to)
+      ) {
+        const check = recordedZoneD6Check(event, 4, 1, false),
+          owner = observedActorRoster(
+            board,
+            Number(event.playerId),
+            event.actorTeamId!,
+            replay.teams.map((t) => t.id)
+          );
+        const markers =
+          check && owner
+            ? observedZoneMarkers(
+                board,
+                event.playerId!,
+                owner.rosterIndex,
+                check,
+                lastTeamMovement.movement.to
+              )
+            : undefined;
+        if (
+          check &&
+          markers &&
+          event.id &&
+          JSON.stringify(check.markerPlayerIds) ===
+            JSON.stringify(
+              lastTeamMovement.movement.zonePenalty?.markers.map(
+                (m) => m.playerId
+              ) ?? []
+            )
+        ) {
+          // The reached square is actual geometry. No stable availability,
+          // loose-ball flag or failed-pickup alternative policy is inferred.
+          pendingPickup = {
+            board,
+            original: event,
+            threshold: check.threshold,
+            lastIndex: event.sourceIndex,
+            stage: "skill",
+            declarationSourceId: lastTeamMovement.movement.declarationSourceId,
+            moveOutcomeSourceId: lastTeamMovement.movement.outcomeSourceId,
+            checkpointAfter: lastTeamMovement.movement.checkpointAfter,
+            afterMovement: {
+              movementSourceId: lastTeamMovement.sourceId,
+              check
+            }
+          };
+          lastTeamMovement = undefined;
+          board = null;
+          continue;
+        }
+      }
+      if (
         [
           "QuestionTeamRerollUsage",
           "QuestionBlockDice",
@@ -1370,6 +1505,11 @@ export function reconstructReplayContext(
               question: event,
               threshold: offerDie.threshold,
               family: offerDie.family,
+              check: {
+                threshold: offerDie.threshold,
+                baseTarget: offerDie.baseTarget,
+                markerPlayerIds: offerDie.markerPlayerIds
+              },
               from,
               to,
               declarationSourceId: activationId,
@@ -1834,13 +1974,23 @@ export function reconstructReplayContext(
         }
       }
       const failedDodgeTarget = unmodifiedDodgeDie(event, 1, false);
+      const dodgeOwner =
+        actor !== null && event.actorTeamId
+          ? observedActorRoster(
+              board,
+              actor,
+              event.actorTeamId,
+              replay.teams.map((t) => t.id)
+            )
+          : undefined;
+      const dodgeActor = dodgeOwner?.players.find((p) => p.id === actor);
       if (
         failedDodgeTarget &&
         event.id &&
-        result.get(event.id)?.actorCarriesBall !== null &&
         activationId &&
-        previousMove &&
-        previousMove.end.actorId === event.playerId &&
+        ((previousMove && previousMove.end.actorId === event.playerId) ||
+          (qualifiedMoveTeamId === event.actorTeamId &&
+            activationCheckpointAfter === checkpoint.afterSourceIndex)) &&
         activationEpoch === epochs.get(checkpoint) &&
         activationActionCode === 1 &&
         actor === board.activePlayerId &&
@@ -1854,28 +2004,21 @@ export function reconstructReplayContext(
         board.phaseCode === NORMAL_TURN &&
         board.stable === true &&
         !smallPitchObserved &&
-        currentActorTeam?.explicitTeamId != null &&
+        dodgeOwner &&
         event.actorTeamSource !== "turn_inferred" &&
-        event.actorTeamId === String(currentActorTeam.explicitTeamId) &&
-        currentActor?.pitchLocation === "on_pitch" &&
-        currentActor.canAct === true &&
-        !currentActor.mentalEffect &&
-        (currentActor.statusCode === null || currentActor.statusCode === 0) &&
-        (currentActor.situationCode === null ||
-          currentActor.situationCode === 0) &&
-        (currentActor.movementRemaining === null ||
-          (Number.isInteger(currentActor.movementRemaining) &&
-            currentActor.movementRemaining >= 1 &&
-            currentActor.movementRemaining <= 16))
+        dodgeActor?.pitchLocation === "on_pitch" &&
+        dodgeActor.canAct === true &&
+        !dodgeActor.mentalEffect &&
+        (dodgeActor.statusCode === null || dodgeActor.statusCode === 0) &&
+        (dodgeActor.situationCode === null || dodgeActor.situationCode === 0) &&
+        (dodgeActor.movementRemaining === null ||
+          (Number.isInteger(dodgeActor.movementRemaining) &&
+            dodgeActor.movementRemaining >= 1 &&
+            dodgeActor.movementRemaining <= 16))
       ) {
         const from = stepCell(step.payload.CellFrom),
           to = stepCell(step.payload.CellTo);
-        if (
-          from &&
-          to &&
-          same(from, cell(currentActor.cell)) &&
-          ordinaryMovesAfterSuccess(board, actor!, to)
-        ) {
+        if (from && to && actualMoveGeometry(board, actor!, from, to)) {
           pendingDodge = {
             board,
             original: event,
@@ -2040,6 +2183,7 @@ export function reconstructReplayContext(
     preRollEvidence: result,
     dodgeMovements,
     teamRerollMovements,
+    pickupsAfterMovement,
     pickupResolutions,
     activationEnds,
     mentalEffectEnds,

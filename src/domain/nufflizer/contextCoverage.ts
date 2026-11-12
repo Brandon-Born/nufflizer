@@ -38,6 +38,7 @@ export function summarizeContextEvidence(events: readonly LuckEvent[]) {
       event.metadata.dodgeMovement ||
       event.metadata.teamRerollMovement ||
       event.metadata.pickupResolution ||
+      event.metadata.pickupAfterMovement ||
       event.metadata.bounceCatchReaction ||
       event.metadata.movementTouchdown ||
       event.metadata.pickupBallChain ||

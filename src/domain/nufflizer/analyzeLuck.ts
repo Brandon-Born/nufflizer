@@ -1077,8 +1077,10 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     mentalTraitResults,
     dodgeMovements,
     teamRerollMovements,
-    pickupResolutions
+    pickupResolutions,
+    pickupsAfterMovement
   } = reconstructReplayContext(replay, activationLosses);
+  for(const proof of pickupsAfterMovement.values())for(const source of [proof.movementSourceId,proof.originalSourceId,proof.skillSourceId,proof.declarationSourceId,proof.moveOutcomeSourceId])activationEvidenceSources.add(source);
   const bounceCatchReactions=findBounceCatchReactions(replay,contextBySource);
   for(const movement of teamRerollMovements.values())for(const source of [movement.questionSourceId,movement.decisionSourceId,movement.declarationSourceId,movement.doMoveSourceId,movement.outcomeSourceId])activationEvidenceSources.add(source);
   const pickupTurnEnds=findPickupTurnEnds(replay,bounceCatchReactions,contextBySource);
@@ -1358,6 +1360,10 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   }
   for(const [source,resolution] of pickupResolutions) {
     const roll=ballSources.get(source);if(roll) roll.metadata.pickupResolution=resolution;
+  }
+  for(const [source,proof] of pickupsAfterMovement) {
+    const roll=ballSources.get(source);
+    if(roll?.scoringStatus==="scored"&&roll.actualSuccess===true&&roll.metadata.rerollSkill==="Sure Hands")roll.metadata.pickupAfterMovement=proof;
   }
   for (const [source, movement] of dodgeMovements) {
     const roll = ballSources.get(source);

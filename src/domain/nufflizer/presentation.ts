@@ -238,14 +238,18 @@ export function explainContextBounds(
 export function explainMovementOutcome(
   metadata: Pick<
     LuckReport["events"][number]["metadata"],
-    "movementFall" | "movementTouchdown" | "dodgeMovement" | "pickupResolution" | "teamRerollMovement"
+    "movementFall" | "movementTouchdown" | "dodgeMovement" | "pickupResolution" | "teamRerollMovement" | "pickupAfterMovement"
   >
 ): string | null {
   const { movementFall: fall, movementTouchdown } = metadata;
   const teamMove=metadata.teamRerollMovement;
-  if(teamMove) return `${movementTouchdown?"The replay records a touchdown immediately after this move. ":""}The successful team-rerolled ${teamMove.rollType===1?"Rush":"Dodge"} and its confirmed move advanced the player from [${teamMove.from.x}, ${teamMove.from.y}] to [${teamMove.to.x}, ${teamMove.to.y}]. ${teamMove.carriesBall?"The explicitly held ball followed the player. ":""}${teamMove.movementAfter===null?"The waiting snapshot omitted remaining movement; it stays unknown.":teamMove.rollType===1?"The observed ordinary movement budget stays at zero; remaining Rush attempts are not inferred.":`${teamMove.movementAfter} movement points remained after this step; the confirmed Dodge move used one point.`} Current player availability and omitted skills remain unknown. This actual movement adds no luck score; the existing two-attempt dice odds remain separate.`;
+  if(teamMove) return `${movementTouchdown?"The replay records a touchdown immediately after this move. ":""}The successful team-rerolled ${teamMove.rollType===1?"Rush":"Dodge"} and its confirmed move advanced the player from [${teamMove.from.x}, ${teamMove.from.y}] to [${teamMove.to.x}, ${teamMove.to.y}]. ${teamMove.carriesBall===null?"Ball possession in the waiting snapshot remains unknown. ":teamMove.carriesBall?"The explicitly held ball followed the player. ":""}${teamMove.movementAfter===null?"The waiting snapshot omitted remaining movement; it stays unknown.":teamMove.rollType===1?"The observed ordinary movement budget stays at zero; remaining Rush attempts are not inferred.":`${teamMove.movementAfter} movement points remained after this step; the confirmed Dodge move used one point.`} ${teamMove.zonePenalty?`The recorded base ${teamMove.zonePenalty.baseTarget}+ check had ${teamMove.zonePenalty.markers.length} opposing tackle-zone penalty point${teamMove.zonePenalty.markers.length===1?"":"s"}; each recorded marker was observed beside the destination. `:""}Current player availability and omitted skills remain unknown. This actual movement adds no luck score; the existing two-attempt dice odds remain separate.`;
   if (movementTouchdown)
     return "The replay records a touchdown immediately after this move.";
+  if(metadata.pickupAfterMovement) {
+    const p=metadata.pickupAfterMovement;
+    return `After the confirmed team-rerolled move reached [${p.cell.x}, ${p.cell.y}], the successful Sure Hands replacement secured the ball there. ${p.movementRemaining===null?"Remaining movement stays unknown.":`The post-move budget stays at ${p.movementRemaining}; the pickup consumes no second movement point.`} Earlier unknown possession is not changed. This observed possession adds no luck score or tactical value; failed-pickup alternatives remain unquantified.`;
+  }
   if(metadata.pickupResolution) {
     const r=metadata.pickupResolution;
     return `The successful Sure Hands replacement secured the ball at [${r.cell.x}, ${r.cell.y}]. ${r.movementRemaining === null ? "Remaining movement is unknown." : `The post-move budget stays at ${r.movementRemaining} movement points.`} Later verified movement follows this carrier. This observed possession adds no luck score.`;
@@ -253,7 +257,7 @@ export function explainMovementOutcome(
   if (metadata.dodgeMovement) {
     const move = metadata.dodgeMovement;
     const budget = move.movementAfter === null ? "Remaining movement is unknown." : `${move.movementAfter} movement points remained after this step.`;
-    return `The replay confirms this move after the successful Dodge skill reroll. ${budget}${move.carriesBall ? " The carried ball followed the player." : ""} This observed movement adds no luck score.`;
+    return `The replay confirms this move after the successful Dodge skill reroll. ${budget}${move.carriesBall===null ? " Ball possession remains unknown." : move.carriesBall ? " The carried ball followed the player." : ""} This observed movement adds no luck score.`;
   }
   if (!fall) return null;
   const aftermath = [

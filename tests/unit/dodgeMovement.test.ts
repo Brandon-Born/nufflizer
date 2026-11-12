@@ -396,7 +396,6 @@ describe("actual movement after a recorded own Dodge replacement", () => {
     "mental",
     "missing_availability",
     "occupied_destination",
-    "unknown_ball",
     "wrong_active"
   ] as const)("withholds a saved %s frame", (change) => {
     const r = replay(),
@@ -419,7 +418,6 @@ describe("actual movement after a recorded own Dodge replacement", () => {
       board.teams[0]!.players.find(
         (p) => p.pitchLocation === "on_pitch"
       )!.cell = { x: 13, y: 3 };
-    if (change === "unknown_ball") board.ball.possession = "unknown";
     if (change === "wrong_active") board.activeTeamIndex = 0;
     const result = reconstructReplayContext(r);
     expect(result.dodgeMovements.size).toBe(0);
