@@ -1,0 +1,6284 @@
+{
+  "scope": "Mapping/namespace audit, not full rule/choice/context support. Raw field counts include copies and placeholders; identity confidence is separate from scoring coverage.",
+  "version": "1-4-0-0",
+  "enumSnapshotSha256": "d30a5261b36f206b9eefa0b905ad6d8a5d1022f5a3554eb64f709c31e1636066",
+  "enumImageSha256": "590787b522ad4404b2e8a7570993375114a794fa4288d88a8595ab9dfbd7d6ae",
+  "rollNames": {
+    "0": "no_roll",
+    "1": "rush",
+    "2": "dodge",
+    "3": "block",
+    "4": "pick_up",
+    "5": "pass",
+    "6": "interfere",
+    "7": "catch",
+    "8": "scatter",
+    "9": "throw_in",
+    "10": "armor",
+    "11": "injury",
+    "12": "casualty",
+    "13": "ko_recovery",
+    "14": "halfling_chef",
+    "15": "pro",
+    "16": "tentacles",
+    "17": "scatter_player",
+    "18": "sweltering_heat",
+    "19": "penalty_shots",
+    "20": "stand_up",
+    "21": "bribe",
+    "22": "brilliant_coaching",
+    "23": "fan_factor",
+    "24": "meteo",
+    "25": "bounce",
+    "26": "deviate",
+    "27": "touch_back",
+    "28": "bad_habits",
+    "29": "jump_over",
+    "30": "argue_the_call",
+    "31": "dauntless",
+    "32": "jump_up",
+    "33": "bone_head",
+    "34": "really_stupid",
+    "35": "unchannelled_fury",
+    "36": "animal_savagery",
+    "37": "foul_appearance",
+    "38": "seismic_activity_trigger",
+    "39": "unstun",
+    "40": "geyser",
+    "41": "throw_team_mate",
+    "42": "land",
+    "43": "always_hungry",
+    "44": "escape_team_mate",
+    "45": "projectile_vomit",
+    "46": "regeneration",
+    "47": "blooming_garden",
+    "48": "fireball_hit",
+    "49": "thunderbolt_hit",
+    "50": "strange_fauna_hit",
+    "51": "zap",
+    "52": "kick_off_table",
+    "53": "cheering_fans",
+    "54": "officious_ref_roll_off",
+    "55": "officious_ref_attack",
+    "56": "seismic_activity_roll_off",
+    "57": "brawler",
+    "58": "lasting_injury",
+    "59": "pitch_invasion",
+    "60": "goblin_pitch",
+    "61": "treacherous_trap",
+    "62": "for_whom_the_bell_tolls",
+    "63": "assassination_attempt",
+    "64": "bad_burger",
+    "65": "the_protege",
+    "66": "hypnotic_gaze",
+    "67": "chainsaw",
+    "68": "take_root",
+    "69": "closed_scrutiny",
+    "70": "throw_a_rock",
+    "71": "loner",
+    "72": "warpstone_dust",
+    "73": "shadowing",
+    "74": "animosity",
+    "75": "swarming",
+    "76": "dedicated_fans_change",
+    "77": "dedicated_fans_concession_loss",
+    "78": "deviation_distance",
+    "79": "throw_in_distance",
+    "80": "activation_number",
+    "81": "pitch_invasion_number",
+    "82": "bad_habits_prayer",
+    "83": "sweltering_heat_number",
+    "84": "prayers_table",
+    "85": "swoop_direction",
+    "86": "swoop_distance",
+    "87": "ball_and_chain_direction",
+    "88": "bomb_hit",
+    "89": "bomb_explode_on_catch",
+    "90": "into_the_shadows",
+    "91": "all_you_can_eat",
+    "92": "pick_me_up",
+    "93": "baleful_hex",
+    "96": "bloodlust",
+    "97": "breathe_fire"
+  },
+  "stepNames": {
+    "0": "activation",
+    "1": "move",
+    "2": "damage",
+    "3": "ball",
+    "4": "catch",
+    "5": "hand_off",
+    "6": "block",
+    "7": "stand_up",
+    "8": "foul",
+    "9": "referee",
+    "10": "kickoff",
+    "11": "pass",
+    "12": "jump_over",
+    "13": "throw_team_mate",
+    "14": "land",
+    "15": "bounce_player",
+    "16": "stab",
+    "17": "vomit",
+    "18": "diving_catch",
+    "19": "fireball",
+    "20": "zap",
+    "21": "treacherous_trap",
+    "22": "geyser",
+    "23": "hypnotic_gaze",
+    "24": "chainsaw",
+    "25": "chainsaw_foul",
+    "26": "tentacles",
+    "27": "shadowing",
+    "28": "throw_a_rock",
+    "29": "interception",
+    "30": "multiple_block",
+    "31": "ball_and_chain",
+    "32": "throw_bomb",
+    "33": "bomb_explosion",
+    "34": "bite",
+    "35": "end_player_turn",
+    "36": "hit_and_run",
+    "37": "fumblerooskie",
+    "38": "breathe_fire"
+  },
+  "endReasonNames": {
+    "0": "no_turnover",
+    "1": "manual_end",
+    "2": "turnover",
+    "3": "time_out",
+    "4": "touchdown"
+  },
+  "declaredActions": {
+    "1": "move",
+    "2": "block",
+    "3": "blitz",
+    "4": "pass",
+    "5": "handoff",
+    "6": "foul"
+  },
+  "actionWitnesses": [
+    {
+      "code": 1,
+      "label": "move",
+      "fixture": "bb3-ui-playback-001.json",
+      "source": "001",
+      "caseId": "UI-006",
+      "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+      "uiLabels": [
+        "Dodge",
+        "Dodge"
+      ],
+      "locators": [
+        {
+          "sequence": 28,
+          "stepIndex": 0,
+          "messageIndex": 0
+        }
+      ]
+    },
+    {
+      "code": 2,
+      "label": "block",
+      "fixture": "bb3-ui-playback-025.json",
+      "source": "025",
+      "caseId": "UI-095",
+      "sourceSha256": "06f918e5e6f8b33497a231bd4f2d437fb960502dff09e5d25c101f5d20e6fa07",
+      "uiLabels": [
+        "Block action",
+        "Block dice pool",
+        "Block result: Defender Knocked down",
+        "Defender pushed across sideline and removed from pitch",
+        "Injury",
+        "Next home activation"
+      ],
+      "locators": [
+        {
+          "sequence": 286,
+          "stepIndex": 0,
+          "messageIndex": 0
+        }
+      ]
+    },
+    {
+      "code": 3,
+      "label": "blitz",
+      "fixture": "bb3-ui-playback-003.json",
+      "source": "003",
+      "caseId": "UI-030",
+      "sourceSha256": "9accc6dc8b8b243d61e2c8e403992bc5ad95d941c64bfe386f63114cadc0464a",
+      "uiLabels": [
+        "Blitz action",
+        "Foul Appearance Skill",
+        "Foul Appearance"
+      ],
+      "locators": [
+        {
+          "sequence": 240,
+          "stepIndex": 0,
+          "messageIndex": 0
+        }
+      ]
+    },
+    {
+      "code": 4,
+      "label": "pass",
+      "fixture": "bb3-ui-playback-001.json",
+      "source": "001",
+      "caseId": "UI-016",
+      "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+      "uiLabels": [
+        "Pass action",
+        "Quick pass",
+        "Team re-roll",
+        "Quick pass",
+        "Scatter",
+        "Bounce",
+        "Catch",
+        "Bounce",
+        "Turnover"
+      ],
+      "locators": [
+        {
+          "sequence": 324,
+          "stepIndex": 0,
+          "messageIndex": 0
+        }
+      ]
+    },
+    {
+      "code": 5,
+      "label": "handoff",
+      "fixture": "bb3-ui-playback-001.json",
+      "source": "001",
+      "caseId": "UI-014",
+      "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+      "uiLabels": [
+        "Hand-off action",
+        "Hand-off",
+        "Catch",
+        "Team re-roll",
+        "Catch",
+        "Has the Ball"
+      ],
+      "locators": [
+        {
+          "sequence": 319,
+          "stepIndex": 0,
+          "messageIndex": 0
+        }
+      ]
+    },
+    {
+      "code": 6,
+      "label": "foul",
+      "fixture": "bb3-ui-playback-001.json",
+      "source": "001",
+      "caseId": "UI-015",
+      "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+      "uiLabels": [
+        "Foul action",
+        "Armour Value (AV)",
+        "Injury"
+      ],
+      "locators": [
+        {
+          "sequence": 322,
+          "stepIndex": 0,
+          "messageIndex": 0
+        }
+      ]
+    }
+  ],
+  "contracts": [
+    {
+      "sourceTag": "QuestionKORecovery",
+      "rollType": 11,
+      "label": "injury",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-002.json",
+          "sourceSha256": "825efebbf7ed9ef2ff13ba0c71f5c68bbde86b29618d934d9118d11c1079e312",
+          "caseId": "UI-025",
+          "uiLabels": [
+            "Stunty Injury",
+            "Suffers"
+          ],
+          "locators": [
+            {
+              "sequence": 37,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed injury identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-002.json",
+          "caseId": "UI-025",
+          "locators": [
+            {
+              "sequence": 37,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "EventRoll",
+      "rollType": 13,
+      "label": "ko_recovery",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-007.json",
+          "sourceSha256": "07e755b81ad21e4c68f25bc4adf4c57e7b9bce1af463d99336cc7a442515e832",
+          "caseId": "UI-040",
+          "uiLabels": [
+            "KO recovery dice roll",
+            "KO recovery dice roll"
+          ],
+          "locators": [
+            {
+              "replayStep": 287,
+              "childIndex": 3
+            },
+            {
+              "replayStep": 287,
+              "childIndex": 4
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Direct KO recovery, including verified Kegs +1",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-007.json",
+          "caseId": "UI-040",
+          "locators": [
+            {
+              "replayStep": 287,
+              "childIndex": 3
+            },
+            {
+              "replayStep": 287,
+              "childIndex": 4
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "BB2020 conditional scoped policy in REPORT_CONTRACT.md",
+      "beneficiaryConvention": "affected subject team, explicit ID must match unique roster",
+      "positiveAndNegativeEvidence": "tests/unit/semanticContractAudit.test.ts; tests/unit/koRecovery.test.ts"
+    },
+    {
+      "sourceTag": "QuestionBlockDice",
+      "rollType": 3,
+      "label": "block_pool",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+          "caseId": "UI-003",
+          "uiLabels": [
+            "Block dice pool"
+          ],
+          "locators": [
+            {
+              "sequence": 5,
+              "stepIndex": 1,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-005.json",
+          "sourceSha256": "c7227e4bc477e3d0403e5a97833beca595877c03d428d13ef699b2a04db28695",
+          "caseId": "UI-059",
+          "uiLabels": [
+            "Block action",
+            "Block pool",
+            "Choose a result",
+            "Block result"
+          ],
+          "locators": [
+            {
+              "sequence": 58,
+              "stepIndex": 1,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 59,
+              "stepIndex": 0,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-002.json",
+          "sourceSha256": "825efebbf7ed9ef2ff13ba0c71f5c68bbde86b29618d934d9118d11c1079e312",
+          "caseId": "UI-020",
+          "uiLabels": [
+            "Block action",
+            "Animal Savagery skill used",
+            "Animal Savagery",
+            "Block dice pool",
+            "Team re-roll",
+            "Loner",
+            "Block result",
+            "Armour Value (AV)",
+            "Suffers",
+            "Turnover"
+          ],
+          "locators": [
+            {
+              "sequence": 80,
+              "stepIndex": 1,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 81,
+              "stepIndex": 0,
+              "messageIndex": 3
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Fresh categorical raw block pool",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "caseId": "UI-003",
+          "locators": [
+            {
+              "sequence": 5,
+              "stepIndex": 1,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-005.json",
+          "caseId": "UI-059",
+          "locators": [
+            {
+              "sequence": 58,
+              "stepIndex": 1,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 59,
+              "stepIndex": 0,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-002.json",
+          "caseId": "UI-020",
+          "locators": [
+            {
+              "sequence": 80,
+              "stepIndex": 1,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 81,
+              "stepIndex": 0,
+              "messageIndex": 3
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "BB2020 conditional scoped policy in REPORT_CONTRACT.md",
+      "beneficiaryConvention": "step attacker team; chooser and defender are separate roles",
+      "positiveAndNegativeEvidence": "tests/unit/semanticContractAudit.test.ts; tests/unit/blockAndArmorEvidence.test.ts"
+    },
+    {
+      "sourceTag": "ResultBlockRoll",
+      "rollType": 3,
+      "label": "selected_block_die",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-005.json",
+          "sourceSha256": "c7227e4bc477e3d0403e5a97833beca595877c03d428d13ef699b2a04db28695",
+          "caseId": "UI-059",
+          "uiLabels": [
+            "Block action",
+            "Block pool",
+            "Choose a result",
+            "Block result"
+          ],
+          "locators": [
+            {
+              "sequence": 60,
+              "stepIndex": 0,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-002.json",
+          "sourceSha256": "825efebbf7ed9ef2ff13ba0c71f5c68bbde86b29618d934d9118d11c1079e312",
+          "caseId": "UI-020",
+          "uiLabels": [
+            "Block action",
+            "Animal Savagery skill used",
+            "Animal Savagery",
+            "Block dice pool",
+            "Team re-roll",
+            "Loner",
+            "Block result",
+            "Armour Value (AV)",
+            "Suffers",
+            "Turnover"
+          ],
+          "locators": [
+            {
+              "sequence": 82,
+              "stepIndex": 0,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed selected block die identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-005.json",
+          "caseId": "UI-059",
+          "locators": [
+            {
+              "sequence": 60,
+              "stepIndex": 0,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-002.json",
+          "caseId": "UI-020",
+          "locators": [
+            {
+              "sequence": 82,
+              "stepIndex": 0,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultCasualtyRoll",
+      "rollType": 12,
+      "label": "casualty",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-004.json",
+          "sourceSha256": "a98deed825209103e148912939356ab81a7509b733c81af2a0faf1e381f993ab",
+          "caseId": "UI-035",
+          "uiLabels": [
+            "Thrown player bounces on player",
+            "Armour Value (AV)",
+            "Injury",
+            "Casualty",
+            "Thrown player bounces on player",
+            "Armour Value (AV)",
+            "Damage result",
+            "Thrown player bounces on player",
+            "Armour Value (AV)",
+            "Thick Skull Skill",
+            "Injury",
+            "Armour Value (AV)",
+            "Stunty Injury",
+            "Bounce",
+            "Catch",
+            "Possession"
+          ],
+          "locators": [
+            {
+              "sequence": 529,
+              "stepIndex": 2,
+              "messageIndex": 2
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed casualty identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-004.json",
+          "caseId": "UI-035",
+          "locators": [
+            {
+              "sequence": 529,
+              "stepIndex": 2,
+              "messageIndex": 2
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultInjuryRoll",
+      "rollType": 11,
+      "label": "injury",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+          "caseId": "UI-015",
+          "uiLabels": [
+            "Foul action",
+            "Armour Value (AV)",
+            "Injury"
+          ],
+          "locators": [
+            {
+              "sequence": 322,
+              "stepIndex": 4,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed injury identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "caseId": "UI-015",
+          "locators": [
+            {
+              "sequence": 322,
+              "stepIndex": 4,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 1,
+      "label": "rush",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+          "caseId": "UI-008",
+          "uiLabels": [
+            "Stand up",
+            "Dodge",
+            "Rush"
+          ],
+          "locators": [
+            {
+              "sequence": 125,
+              "stepIndex": 6,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+          "caseId": "UI-009",
+          "uiLabels": [
+            "Stand up",
+            "Dodge",
+            "Rush",
+            "Armour Value (AV)",
+            "Stunty Injury",
+            "Apothecary usage prompt"
+          ],
+          "locators": [
+            {
+              "sequence": 127,
+              "stepIndex": 5,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Rush: extra movement check",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "caseId": "UI-008",
+          "locators": [
+            {
+              "sequence": 125,
+              "stepIndex": 6,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "caseId": "UI-009",
+          "locators": [
+            {
+              "sequence": 127,
+              "stepIndex": 5,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "BB2020 conditional scoped policy in REPORT_CONTRACT.md",
+      "beneficiaryConvention": "roller team; success is favorable",
+      "positiveAndNegativeEvidence": "tests/unit/semanticContractAudit.test.ts; tests/unit/verifiedNumericChecks.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 2,
+      "label": "dodge",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+          "caseId": "UI-006",
+          "uiLabels": [
+            "Dodge",
+            "Dodge"
+          ],
+          "locators": [
+            {
+              "sequence": 28,
+              "stepIndex": 1,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 28,
+              "stepIndex": 2,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+          "caseId": "UI-008",
+          "uiLabels": [
+            "Stand up",
+            "Dodge",
+            "Rush"
+          ],
+          "locators": [
+            {
+              "sequence": 125,
+              "stepIndex": 2,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Dodge: leave a marked square",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "caseId": "UI-006",
+          "locators": [
+            {
+              "sequence": 28,
+              "stepIndex": 1,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 28,
+              "stepIndex": 2,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "caseId": "UI-008",
+          "locators": [
+            {
+              "sequence": 125,
+              "stepIndex": 2,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "BB2020 conditional scoped policy in REPORT_CONTRACT.md",
+      "beneficiaryConvention": "roller team; success is favorable",
+      "positiveAndNegativeEvidence": "tests/unit/semanticContractAudit.test.ts; tests/unit/verifiedNumericChecks.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 4,
+      "label": "pick_up",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+          "caseId": "UI-002",
+          "uiLabels": [
+            "Pick up",
+            "Sure Hands",
+            "Pick up",
+            "Bounce",
+            "Turnover"
+          ],
+          "locators": [
+            {
+              "sequence": 4,
+              "stepIndex": 3,
+              "messageIndex": 2
+            },
+            {
+              "sequence": 4,
+              "stepIndex": 3,
+              "messageIndex": 4
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-002.json",
+          "sourceSha256": "825efebbf7ed9ef2ff13ba0c71f5c68bbde86b29618d934d9118d11c1079e312",
+          "caseId": "UI-022",
+          "uiLabels": [
+            "Dodge",
+            "Rush",
+            "Pick up",
+            "Re-roll question kept result",
+            "Bounce"
+          ],
+          "locators": [
+            {
+              "sequence": 44,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Pick up: secure the ground ball",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "caseId": "UI-002",
+          "locators": [
+            {
+              "sequence": 4,
+              "stepIndex": 3,
+              "messageIndex": 2
+            },
+            {
+              "sequence": 4,
+              "stepIndex": 3,
+              "messageIndex": 4
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-002.json",
+          "caseId": "UI-022",
+          "locators": [
+            {
+              "sequence": 44,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "BB2020 conditional scoped policy in REPORT_CONTRACT.md",
+      "beneficiaryConvention": "roller team; success is favorable",
+      "positiveAndNegativeEvidence": "tests/unit/semanticContractAudit.test.ts; tests/unit/verifiedNumericChecks.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 5,
+      "label": "pass",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+          "caseId": "UI-016",
+          "uiLabels": [
+            "Pass action",
+            "Quick pass",
+            "Team re-roll",
+            "Quick pass",
+            "Scatter",
+            "Bounce",
+            "Catch",
+            "Bounce",
+            "Turnover"
+          ],
+          "locators": [
+            {
+              "sequence": 325,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed pass identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "caseId": "UI-016",
+          "locators": [
+            {
+              "sequence": 325,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 6,
+      "label": "interfere",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-003.json",
+          "sourceSha256": "9accc6dc8b8b243d61e2c8e403992bc5ad95d941c64bfe386f63114cadc0464a",
+          "caseId": "UI-028",
+          "uiLabels": [
+            "Dodge",
+            "Dodge",
+            "Dodge Skill",
+            "Dodge",
+            "Long pass",
+            "Passing interference",
+            "Interfere",
+            "Catch",
+            "Has the Ball"
+          ],
+          "locators": [
+            {
+              "sequence": 162,
+              "stepIndex": 0,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-015.json",
+          "sourceSha256": "b257b7f53378d143ea5ae33666ea8a9e01dca5fdb3dc246c4d982733b3b87ef9",
+          "caseId": "UI-069",
+          "uiLabels": [
+            "Pass action",
+            "Animosity",
+            "Quick pass",
+            "Pass Skill",
+            "Quick pass",
+            "Deviate",
+            "Passing interference",
+            "Interfere",
+            "Catch",
+            "Has the Ball",
+            "End of Turn"
+          ],
+          "locators": [
+            {
+              "sequence": 260,
+              "stepIndex": 0,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed interfere identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-003.json",
+          "caseId": "UI-028",
+          "locators": [
+            {
+              "sequence": 162,
+              "stepIndex": 0,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-015.json",
+          "caseId": "UI-069",
+          "locators": [
+            {
+              "sequence": 260,
+              "stepIndex": 0,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 7,
+      "label": "catch",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+          "caseId": "UI-014",
+          "uiLabels": [
+            "Hand-off action",
+            "Hand-off",
+            "Catch",
+            "Team re-roll",
+            "Catch",
+            "Has the Ball"
+          ],
+          "locators": [
+            {
+              "sequence": 320,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-011.json",
+          "sourceSha256": "3495be47615546c6f857eefff35198c283e3f18c70f9acfd07aefc8186e4aaf5",
+          "caseId": "UI-093",
+          "uiLabels": [
+            "Blitz action",
+            "Rush",
+            "Block pool",
+            "Uses Block",
+            "Block result",
+            "Armour Value (AV)",
+            "Suffers: Prone",
+            "Bounce",
+            "Bounce",
+            "The Ball is back on the Pitch",
+            "Bounce",
+            "Catch",
+            "Bounce",
+            "Catch",
+            "Has the Ball"
+          ],
+          "locators": [
+            {
+              "sequence": 54,
+              "stepIndex": 6,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 54,
+              "stepIndex": 8,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-025.json",
+          "sourceSha256": "06f918e5e6f8b33497a231bd4f2d437fb960502dff09e5d25c101f5d20e6fa07",
+          "caseId": "UI-097",
+          "uiLabels": [
+            "Pass action",
+            "Quick pass",
+            "Catch",
+            "Uses Catch",
+            "Catch",
+            "Has the Ball"
+          ],
+          "locators": [
+            {
+              "sequence": 444,
+              "stepIndex": 6,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 444,
+              "stepIndex": 6,
+              "messageIndex": 2
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Catch: recipient catches the ball",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "caseId": "UI-014",
+          "locators": [
+            {
+              "sequence": 320,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-011.json",
+          "caseId": "UI-093",
+          "locators": [
+            {
+              "sequence": 54,
+              "stepIndex": 6,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 54,
+              "stepIndex": 8,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-025.json",
+          "caseId": "UI-097",
+          "locators": [
+            {
+              "sequence": 444,
+              "stepIndex": 6,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 444,
+              "stepIndex": 6,
+              "messageIndex": 2
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "BB2020 conditional scoped policy in REPORT_CONTRACT.md",
+      "beneficiaryConvention": "recipient/roller team, separate from passer/hand-off initiator",
+      "positiveAndNegativeEvidence": "tests/unit/semanticContractAudit.test.ts; tests/unit/verifiedNumericChecks.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 8,
+      "label": "scatter",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+          "caseId": "UI-016",
+          "uiLabels": [
+            "Pass action",
+            "Quick pass",
+            "Team re-roll",
+            "Quick pass",
+            "Scatter",
+            "Bounce",
+            "Catch",
+            "Bounce",
+            "Turnover"
+          ],
+          "locators": [
+            {
+              "sequence": 325,
+              "stepIndex": 0,
+              "messageIndex": 2
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed scatter identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "caseId": "UI-016",
+          "locators": [
+            {
+              "sequence": 325,
+              "stepIndex": 0,
+              "messageIndex": 2
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 9,
+      "label": "throw_in",
+      "identityEvidence": "compiled_only",
+      "knowledgeStatus": "ambiguous",
+      "witnesses": [],
+      "semanticDefinition": "Compiled name only; replay dice roles and behavior unresolved",
+      "payloadVariants": [],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 10,
+      "label": "armor",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+          "caseId": "UI-009",
+          "uiLabels": [
+            "Stand up",
+            "Dodge",
+            "Rush",
+            "Armour Value (AV)",
+            "Stunty Injury",
+            "Apothecary usage prompt"
+          ],
+          "locators": [
+            {
+              "sequence": 127,
+              "stepIndex": 6,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+          "caseId": "UI-015",
+          "uiLabels": [
+            "Foul action",
+            "Armour Value (AV)",
+            "Injury"
+          ],
+          "locators": [
+            {
+              "sequence": 322,
+              "stepIndex": 4,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Armor holds: damage subject avoids a break",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "caseId": "UI-009",
+          "locators": [
+            {
+              "sequence": 127,
+              "stepIndex": 6,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "caseId": "UI-015",
+          "locators": [
+            {
+              "sequence": 322,
+              "stepIndex": 4,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "BB2020 conditional scoped policy in REPORT_CONTRACT.md",
+      "beneficiaryConvention": "damage subject team; invert the raw break success",
+      "positiveAndNegativeEvidence": "tests/unit/semanticContractAudit.test.ts; tests/unit/blockAndArmorEvidence.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 15,
+      "label": "pro",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-016.json",
+          "sourceSha256": "55ff6509f5f1b6a59c360c82ebf2ec82cb6200c96fdebb29afd93708578ea15c",
+          "caseId": "UI-047",
+          "uiLabels": [
+            "Foul Appearance",
+            "Block pool before Pro",
+            "Pro",
+            "Block pool after Pro",
+            "Block result"
+          ],
+          "locators": [
+            {
+              "sequence": 41,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-008.json",
+          "sourceSha256": "f67ac501a14fd8f9ca0bd7df3ad695b8cc9c62bbfdf454c65e96b7a01e5e5737",
+          "caseId": "UI-087",
+          "uiLabels": [
+            "Blitz action",
+            "Chainsaw",
+            "Pro",
+            "Chainsaw result repeated",
+            "Armour Value (AV)",
+            "Injury",
+            "Next team turn"
+          ],
+          "locators": [
+            {
+              "sequence": 106,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed pro identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-016.json",
+          "caseId": "UI-047",
+          "locators": [
+            {
+              "sequence": 41,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-008.json",
+          "caseId": "UI-087",
+          "locators": [
+            {
+              "sequence": 106,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 21,
+      "label": "bribe",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-013.json",
+          "sourceSha256": "9afbdd2773e14ac1f92d45a5e56caf0fa183684c51a435418f0b9525c214454e",
+          "caseId": "UI-045",
+          "uiLabels": [
+            "Foul action",
+            "Armour Value (AV)",
+            "Injury",
+            "Referee",
+            "Uses a Bribe",
+            "Bribe resource"
+          ],
+          "locators": [
+            {
+              "sequence": 418,
+              "stepIndex": 0,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed bribe identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-013.json",
+          "caseId": "UI-045",
+          "locators": [
+            {
+              "sequence": 418,
+              "stepIndex": 0,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 25,
+      "label": "bounce",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+          "caseId": "UI-002",
+          "uiLabels": [
+            "Pick up",
+            "Sure Hands",
+            "Pick up",
+            "Bounce",
+            "Turnover"
+          ],
+          "locators": [
+            {
+              "sequence": 4,
+              "stepIndex": 4,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+          "caseId": "UI-016",
+          "uiLabels": [
+            "Pass action",
+            "Quick pass",
+            "Team re-roll",
+            "Quick pass",
+            "Scatter",
+            "Bounce",
+            "Catch",
+            "Bounce",
+            "Turnover"
+          ],
+          "locators": [
+            {
+              "sequence": 325,
+              "stepIndex": 1,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 325,
+              "stepIndex": 3,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed bounce identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "caseId": "UI-002",
+          "locators": [
+            {
+              "sequence": 4,
+              "stepIndex": 4,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "caseId": "UI-016",
+          "locators": [
+            {
+              "sequence": 325,
+              "stepIndex": 1,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 325,
+              "stepIndex": 3,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 26,
+      "label": "deviate",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-003.json",
+          "sourceSha256": "9accc6dc8b8b243d61e2c8e403992bc5ad95d941c64bfe386f63114cadc0464a",
+          "caseId": "UI-031",
+          "uiLabels": [
+            "Deviate",
+            "Ball bounces"
+          ],
+          "locators": [
+            {
+              "sequence": 1,
+              "stepIndex": 0,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-004.json",
+          "sourceSha256": "a98deed825209103e148912939356ab81a7509b733c81af2a0faf1e381f993ab",
+          "caseId": "UI-034",
+          "uiLabels": [
+            "Really Stupid",
+            "Always Hungry",
+            "Throw Team-Mate Skill",
+            "Throw Team-Mate",
+            "Team reroll resource",
+            "Loner",
+            "Throw Team-Mate replacement",
+            "Deviate"
+          ],
+          "locators": [
+            {
+              "sequence": 529,
+              "stepIndex": 0,
+              "messageIndex": 4
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed deviate identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-003.json",
+          "caseId": "UI-031",
+          "locators": [
+            {
+              "sequence": 1,
+              "stepIndex": 0,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-004.json",
+          "caseId": "UI-034",
+          "locators": [
+            {
+              "sequence": 529,
+              "stepIndex": 0,
+              "messageIndex": 4
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 29,
+      "label": "jump_over",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-024.json",
+          "sourceSha256": "6e05cb9225442b6e7e73bca4fc6c2072b433d01bc8404e265e49fe2c941de72b",
+          "caseId": "UI-055",
+          "uiLabels": [
+            "Blitz action",
+            "Leap Skill",
+            "Jump over",
+            "Team re-roll used",
+            "Jump over",
+            "Armour Value",
+            "Injury"
+          ],
+          "locators": [
+            {
+              "sequence": 64,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-024.json",
+          "sourceSha256": "6e05cb9225442b6e7e73bca4fc6c2072b433d01bc8404e265e49fe2c941de72b",
+          "caseId": "UI-056",
+          "uiLabels": [
+            "Leap Skill",
+            "Jump over",
+            "Rush"
+          ],
+          "locators": [
+            {
+              "sequence": 307,
+              "stepIndex": 3,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed jump over identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-024.json",
+          "caseId": "UI-055",
+          "locators": [
+            {
+              "sequence": 64,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-024.json",
+          "caseId": "UI-056",
+          "locators": [
+            {
+              "sequence": 307,
+              "stepIndex": 3,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 30,
+      "label": "argue_the_call",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-007.json",
+          "sourceSha256": "07e755b81ad21e4c68f25bc4adf4c57e7b9bce1af463d99336cc7a442515e832",
+          "caseId": "UI-039",
+          "uiLabels": [
+            "Foul action",
+            "Armour Value (AV)",
+            "Injury",
+            "Referee",
+            "Argue the Call",
+            "Removal"
+          ],
+          "locators": [
+            {
+              "sequence": 206,
+              "stepIndex": 0,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-027.json",
+          "sourceSha256": "04445f58b61f529c09d957a6553d5972c778e9b9b38ba4a710a41ce563fdabb6",
+          "caseId": "UI-053",
+          "uiLabels": [
+            "Foul action",
+            "Chainsaw",
+            "Armour Value",
+            "Injury",
+            "Referee",
+            "Argue the Call"
+          ],
+          "locators": [
+            {
+              "sequence": 110,
+              "stepIndex": 0,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed argue the call identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-007.json",
+          "caseId": "UI-039",
+          "locators": [
+            {
+              "sequence": 206,
+              "stepIndex": 0,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-027.json",
+          "caseId": "UI-053",
+          "locators": [
+            {
+              "sequence": 110,
+              "stepIndex": 0,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 31,
+      "label": "dauntless",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-004.json",
+          "sourceSha256": "a98deed825209103e148912939356ab81a7509b733c81af2a0faf1e381f993ab",
+          "caseId": "UI-032",
+          "uiLabels": [
+            "Dauntless",
+            "Guard Skill",
+            "Guard Skill",
+            "Block pool",
+            "Block result",
+            "Armour Value (AV)",
+            "Suffers"
+          ],
+          "locators": [
+            {
+              "sequence": 323,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed dauntless identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-004.json",
+          "caseId": "UI-032",
+          "locators": [
+            {
+              "sequence": 323,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 33,
+      "label": "bone_head",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-002.json",
+          "sourceSha256": "825efebbf7ed9ef2ff13ba0c71f5c68bbde86b29618d934d9118d11c1079e312",
+          "caseId": "UI-019",
+          "uiLabels": [
+            "Block action",
+            "Bone Head skill used",
+            "Bone Head",
+            "Block dice pool"
+          ],
+          "locators": [
+            {
+              "sequence": 76,
+              "stepIndex": 0,
+              "messageIndex": 2
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-003.json",
+          "sourceSha256": "9accc6dc8b8b243d61e2c8e403992bc5ad95d941c64bfe386f63114cadc0464a",
+          "caseId": "UI-026",
+          "uiLabels": [
+            "Block action",
+            "Bone Head",
+            "Keep the result?",
+            "Bone Head"
+          ],
+          "locators": [
+            {
+              "sequence": 81,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed bone head identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-002.json",
+          "caseId": "UI-019",
+          "locators": [
+            {
+              "sequence": 76,
+              "stepIndex": 0,
+              "messageIndex": 2
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-003.json",
+          "caseId": "UI-026",
+          "locators": [
+            {
+              "sequence": 81,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 34,
+      "label": "really_stupid",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+          "caseId": "UI-001",
+          "uiLabels": [
+            "Really Stupid"
+          ],
+          "locators": [
+            {
+              "sequence": 3,
+              "stepIndex": 0,
+              "messageIndex": 2
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+          "caseId": "UI-007",
+          "uiLabels": [
+            "Really Stupid",
+            "Team re-roll",
+            "Loner",
+            "Really Stupid"
+          ],
+          "locators": [
+            {
+              "sequence": 30,
+              "stepIndex": 0,
+              "messageIndex": 3
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed really stupid identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "caseId": "UI-001",
+          "locators": [
+            {
+              "sequence": 3,
+              "stepIndex": 0,
+              "messageIndex": 2
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "caseId": "UI-007",
+          "locators": [
+            {
+              "sequence": 30,
+              "stepIndex": 0,
+              "messageIndex": 3
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 36,
+      "label": "animal_savagery",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-002.json",
+          "sourceSha256": "825efebbf7ed9ef2ff13ba0c71f5c68bbde86b29618d934d9118d11c1079e312",
+          "caseId": "UI-020",
+          "uiLabels": [
+            "Block action",
+            "Animal Savagery skill used",
+            "Animal Savagery",
+            "Block dice pool",
+            "Team re-roll",
+            "Loner",
+            "Block result",
+            "Armour Value (AV)",
+            "Suffers",
+            "Turnover"
+          ],
+          "locators": [
+            {
+              "sequence": 80,
+              "stepIndex": 0,
+              "messageIndex": 2
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-002.json",
+          "sourceSha256": "825efebbf7ed9ef2ff13ba0c71f5c68bbde86b29618d934d9118d11c1079e312",
+          "caseId": "UI-021",
+          "uiLabels": [
+            "Animal Savagery skill used",
+            "Animal Savagery",
+            "Failed test prompt",
+            "Select an adjacent player who will be the target of Animal Savagery",
+            "Friendly knockdown animation"
+          ],
+          "locators": [
+            {
+              "sequence": 35,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed animal savagery identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-002.json",
+          "caseId": "UI-020",
+          "locators": [
+            {
+              "sequence": 80,
+              "stepIndex": 0,
+              "messageIndex": 2
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-002.json",
+          "caseId": "UI-021",
+          "locators": [
+            {
+              "sequence": 35,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 37,
+      "label": "foul_appearance",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-002.json",
+          "sourceSha256": "825efebbf7ed9ef2ff13ba0c71f5c68bbde86b29618d934d9118d11c1079e312",
+          "caseId": "UI-017",
+          "uiLabels": [
+            "Block action",
+            "Foul Appearance skill used",
+            "Foul Appearance",
+            "Block dice pool"
+          ],
+          "locators": [
+            {
+              "sequence": 66,
+              "stepIndex": 0,
+              "messageIndex": 2
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-016.json",
+          "sourceSha256": "55ff6509f5f1b6a59c360c82ebf2ec82cb6200c96fdebb29afd93708578ea15c",
+          "caseId": "UI-099",
+          "uiLabels": [
+            "Block action",
+            "Uses Foul Appearance",
+            "Foul Appearance",
+            "Block action",
+            "Uses Foul Appearance",
+            "Foul Appearance",
+            "Next activation",
+            "Stand up"
+          ],
+          "locators": [
+            {
+              "sequence": 254,
+              "stepIndex": 0,
+              "messageIndex": 2
+            },
+            {
+              "sequence": 255,
+              "stepIndex": 0,
+              "messageIndex": 2
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed foul appearance identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-002.json",
+          "caseId": "UI-017",
+          "locators": [
+            {
+              "sequence": 66,
+              "stepIndex": 0,
+              "messageIndex": 2
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-016.json",
+          "caseId": "UI-099",
+          "locators": [
+            {
+              "sequence": 254,
+              "stepIndex": 0,
+              "messageIndex": 2
+            },
+            {
+              "sequence": 255,
+              "stepIndex": 0,
+              "messageIndex": 2
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 41,
+      "label": "throw_team_mate",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-004.json",
+          "sourceSha256": "a98deed825209103e148912939356ab81a7509b733c81af2a0faf1e381f993ab",
+          "caseId": "UI-034",
+          "uiLabels": [
+            "Really Stupid",
+            "Always Hungry",
+            "Throw Team-Mate Skill",
+            "Throw Team-Mate",
+            "Team reroll resource",
+            "Loner",
+            "Throw Team-Mate replacement",
+            "Deviate"
+          ],
+          "locators": [
+            {
+              "sequence": 529,
+              "stepIndex": 0,
+              "messageIndex": 3
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-007.json",
+          "sourceSha256": "07e755b81ad21e4c68f25bc4adf4c57e7b9bce1af463d99336cc7a442515e832",
+          "caseId": "UI-041",
+          "uiLabels": [
+            "Pass action",
+            "Really Stupid",
+            "Always Hungry",
+            "Throw Team-Mate Skill",
+            "Throw Team-Mate",
+            "Deviate",
+            "Land",
+            "Armour Value (AV)",
+            "Damage result",
+            "Bounce"
+          ],
+          "locators": [
+            {
+              "sequence": 421,
+              "stepIndex": 1,
+              "messageIndex": 3
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed throw team mate identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-004.json",
+          "caseId": "UI-034",
+          "locators": [
+            {
+              "sequence": 529,
+              "stepIndex": 0,
+              "messageIndex": 3
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-007.json",
+          "caseId": "UI-041",
+          "locators": [
+            {
+              "sequence": 421,
+              "stepIndex": 1,
+              "messageIndex": 3
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 42,
+      "label": "land",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-007.json",
+          "sourceSha256": "07e755b81ad21e4c68f25bc4adf4c57e7b9bce1af463d99336cc7a442515e832",
+          "caseId": "UI-041",
+          "uiLabels": [
+            "Pass action",
+            "Really Stupid",
+            "Always Hungry",
+            "Throw Team-Mate Skill",
+            "Throw Team-Mate",
+            "Deviate",
+            "Land",
+            "Armour Value (AV)",
+            "Damage result",
+            "Bounce"
+          ],
+          "locators": [
+            {
+              "sequence": 421,
+              "stepIndex": 2,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed land identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-007.json",
+          "caseId": "UI-041",
+          "locators": [
+            {
+              "sequence": 421,
+              "stepIndex": 2,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 43,
+      "label": "always_hungry",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-004.json",
+          "sourceSha256": "a98deed825209103e148912939356ab81a7509b733c81af2a0faf1e381f993ab",
+          "caseId": "UI-034",
+          "uiLabels": [
+            "Really Stupid",
+            "Always Hungry",
+            "Throw Team-Mate Skill",
+            "Throw Team-Mate",
+            "Team reroll resource",
+            "Loner",
+            "Throw Team-Mate replacement",
+            "Deviate"
+          ],
+          "locators": [
+            {
+              "sequence": 528,
+              "stepIndex": 1,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed always hungry identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-004.json",
+          "caseId": "UI-034",
+          "locators": [
+            {
+              "sequence": 528,
+              "stepIndex": 1,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 45,
+      "label": "projectile_vomit",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-007.json",
+          "sourceSha256": "07e755b81ad21e4c68f25bc4adf4c57e7b9bce1af463d99336cc7a442515e832",
+          "caseId": "UI-037",
+          "uiLabels": [
+            "Block action",
+            "Trait - End of effect",
+            "Really Stupid",
+            "Projectile Vomit Skill",
+            "Projectile Vomit",
+            "Armour Value (AV)",
+            "Injury"
+          ],
+          "locators": [
+            {
+              "sequence": 54,
+              "stepIndex": 1,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed projectile vomit identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-007.json",
+          "caseId": "UI-037",
+          "locators": [
+            {
+              "sequence": 54,
+              "stepIndex": 1,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 46,
+      "label": "regeneration",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-027.json",
+          "sourceSha256": "04445f58b61f529c09d957a6553d5972c778e9b9b38ba4a710a41ce563fdabb6",
+          "caseId": "UI-054",
+          "uiLabels": [
+            "Ball & Chain direction",
+            "Ball & Chain direction",
+            "Damage test",
+            "Armour Value",
+            "Injury",
+            "Casualty",
+            "Regeneration"
+          ],
+          "locators": [
+            {
+              "sequence": 151,
+              "stepIndex": 1,
+              "messageIndex": 5
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+          "caseId": "UI-068",
+          "uiLabels": [
+            "Block action",
+            "Block pool",
+            "Block result",
+            "Armour Value",
+            "Injury",
+            "Casualty",
+            "Regeneration Skill",
+            "Regeneration"
+          ],
+          "locators": [
+            {
+              "sequence": 259,
+              "stepIndex": 1,
+              "messageIndex": 6
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Regeneration after casualty",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-027.json",
+          "caseId": "UI-054",
+          "locators": [
+            {
+              "sequence": 151,
+              "stepIndex": 1,
+              "messageIndex": 5
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "caseId": "UI-068",
+          "locators": [
+            {
+              "sequence": 259,
+              "stepIndex": 1,
+              "messageIndex": 6
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "BB2020 conditional scoped policy in REPORT_CONTRACT.md",
+      "beneficiaryConvention": "affected subject team; recovery success is favorable",
+      "positiveAndNegativeEvidence": "tests/unit/semanticContractAudit.test.ts; tests/unit/blockAndArmorEvidence.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 48,
+      "label": "fireball_hit",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-013.json",
+          "sourceSha256": "9afbdd2773e14ac1f92d45a5e56caf0fa183684c51a435418f0b9525c214454e",
+          "caseId": "UI-044",
+          "uiLabels": [
+            "Uses card",
+            "Fireball hit!",
+            "Fireball hit!",
+            "Fireball hit!",
+            "Fireball hit!",
+            "Fireball hit!",
+            "Armour Value (AV)",
+            "Injury",
+            "Armour Value (AV)",
+            "Injury",
+            "Armour Value (AV)",
+            "Injury",
+            "Armour Value (AV)",
+            "Damage result",
+            "Bounce"
+          ],
+          "locators": [
+            {
+              "sequence": 344,
+              "stepIndex": 0,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 344,
+              "stepIndex": 1,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 344,
+              "stepIndex": 2,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 344,
+              "stepIndex": 3,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 344,
+              "stepIndex": 4,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-018.json",
+          "sourceSha256": "9a11658a05c64ecbf79379de24f4f6e0fa555421b9943504544730b5f1255fdf",
+          "caseId": "UI-089",
+          "uiLabels": [
+            "Uses card: Fireball",
+            "Fireball hit!",
+            "Fireball hit!",
+            "Fireball hit!",
+            "Armour Value (AV)",
+            "Injury",
+            "Suffers: KO",
+            "End of Turn",
+            "Next team turn"
+          ],
+          "locators": [
+            {
+              "sequence": 282,
+              "stepIndex": 0,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 282,
+              "stepIndex": 1,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 282,
+              "stepIndex": 2,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed fireball hit identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-013.json",
+          "caseId": "UI-044",
+          "locators": [
+            {
+              "sequence": 344,
+              "stepIndex": 0,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 344,
+              "stepIndex": 1,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 344,
+              "stepIndex": 2,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 344,
+              "stepIndex": 3,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 344,
+              "stepIndex": 4,
+              "messageIndex": 0
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-018.json",
+          "caseId": "UI-089",
+          "locators": [
+            {
+              "sequence": 282,
+              "stepIndex": 0,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 282,
+              "stepIndex": 1,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 282,
+              "stepIndex": 2,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 67,
+      "label": "chainsaw",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-027.json",
+          "sourceSha256": "04445f58b61f529c09d957a6553d5972c778e9b9b38ba4a710a41ce563fdabb6",
+          "caseId": "UI-053",
+          "uiLabels": [
+            "Foul action",
+            "Chainsaw",
+            "Armour Value",
+            "Injury",
+            "Referee",
+            "Argue the Call"
+          ],
+          "locators": [
+            {
+              "sequence": 109,
+              "stepIndex": 7,
+              "messageIndex": 1
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-008.json",
+          "sourceSha256": "f67ac501a14fd8f9ca0bd7df3ad695b8cc9c62bbfdf454c65e96b7a01e5e5737",
+          "caseId": "UI-087",
+          "uiLabels": [
+            "Blitz action",
+            "Chainsaw",
+            "Pro",
+            "Chainsaw result repeated",
+            "Armour Value (AV)",
+            "Injury",
+            "Next team turn"
+          ],
+          "locators": [
+            {
+              "sequence": 106,
+              "stepIndex": 0,
+              "messageIndex": 2
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed chainsaw identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-027.json",
+          "caseId": "UI-053",
+          "locators": [
+            {
+              "sequence": 109,
+              "stepIndex": 7,
+              "messageIndex": 1
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-008.json",
+          "caseId": "UI-087",
+          "locators": [
+            {
+              "sequence": 106,
+              "stepIndex": 0,
+              "messageIndex": 2
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 70,
+      "label": "throw_a_rock",
+      "identityEvidence": "compiled_only",
+      "knowledgeStatus": "ambiguous",
+      "witnesses": [],
+      "semanticDefinition": "Compiled name only; replay dice roles and behavior unresolved",
+      "payloadVariants": [],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 71,
+      "label": "loner",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "sourceSha256": "6e201a8485bec553f4a019bc02b4d381976202825817412bead003f178cbb867",
+          "caseId": "UI-007",
+          "uiLabels": [
+            "Really Stupid",
+            "Team re-roll",
+            "Loner",
+            "Really Stupid"
+          ],
+          "locators": [
+            {
+              "sequence": 30,
+              "stepIndex": 0,
+              "messageIndex": 2
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-002.json",
+          "sourceSha256": "825efebbf7ed9ef2ff13ba0c71f5c68bbde86b29618d934d9118d11c1079e312",
+          "caseId": "UI-020",
+          "uiLabels": [
+            "Block action",
+            "Animal Savagery skill used",
+            "Animal Savagery",
+            "Block dice pool",
+            "Team re-roll",
+            "Loner",
+            "Block result",
+            "Armour Value (AV)",
+            "Suffers",
+            "Turnover"
+          ],
+          "locators": [
+            {
+              "sequence": 81,
+              "stepIndex": 0,
+              "messageIndex": 2
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed loner identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-001.json",
+          "caseId": "UI-007",
+          "locators": [
+            {
+              "sequence": 30,
+              "stepIndex": 0,
+              "messageIndex": 2
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-002.json",
+          "caseId": "UI-020",
+          "locators": [
+            {
+              "sequence": 81,
+              "stepIndex": 0,
+              "messageIndex": 2
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 73,
+      "label": "shadowing",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-003.json",
+          "sourceSha256": "9accc6dc8b8b243d61e2c8e403992bc5ad95d941c64bfe386f63114cadc0464a",
+          "caseId": "UI-027",
+          "uiLabels": [
+            "Shadowing",
+            "Shadowing"
+          ],
+          "locators": [
+            {
+              "sequence": 93,
+              "stepIndex": 0,
+              "messageIndex": 1
+            },
+            {
+              "sequence": 95,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed shadowing identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-003.json",
+          "caseId": "UI-027",
+          "locators": [
+            {
+              "sequence": 93,
+              "stepIndex": 0,
+              "messageIndex": 1
+            },
+            {
+              "sequence": 95,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 74,
+      "label": "animosity",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-027.json",
+          "sourceSha256": "04445f58b61f529c09d957a6553d5972c778e9b9b38ba4a710a41ce563fdabb6",
+          "caseId": "UI-052",
+          "uiLabels": [
+            "Hand-off action",
+            "Animosity",
+            "Hand-off",
+            "Catch",
+            "Team re-roll used",
+            "Catch",
+            "Receiver has the Ball"
+          ],
+          "locators": [
+            {
+              "sequence": 53,
+              "stepIndex": 5,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed animosity identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-027.json",
+          "caseId": "UI-052",
+          "locators": [
+            {
+              "sequence": 53,
+              "stepIndex": 5,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 87,
+      "label": "ball_and_chain_direction",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-027.json",
+          "sourceSha256": "04445f58b61f529c09d957a6553d5972c778e9b9b38ba4a710a41ce563fdabb6",
+          "caseId": "UI-051",
+          "uiLabels": [
+            "Ball & Chain action",
+            "Ball & Chain direction"
+          ],
+          "locators": [
+            {
+              "sequence": 4,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed ball and chain direction identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-027.json",
+          "caseId": "UI-051",
+          "locators": [
+            {
+              "sequence": 4,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 88,
+      "label": "bomb_hit",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-016.json",
+          "sourceSha256": "55ff6509f5f1b6a59c360c82ebf2ec82cb6200c96fdebb29afd93708578ea15c",
+          "caseId": "UI-050",
+          "uiLabels": [
+            "Long bomb",
+            "Team re-roll used",
+            "Loner",
+            "Long bomb retained",
+            "Deviate",
+            "Bomb damage",
+            "Bomb damage",
+            "Armour Value",
+            "Bomb damage victim suffers"
+          ],
+          "locators": [
+            {
+              "sequence": 462,
+              "stepIndex": 1,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 462,
+              "stepIndex": 2,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed bomb hit identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-016.json",
+          "caseId": "UI-050",
+          "locators": [
+            {
+              "sequence": 462,
+              "stepIndex": 1,
+              "messageIndex": 0
+            },
+            {
+              "sequence": 462,
+              "stepIndex": 2,
+              "messageIndex": 0
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 89,
+      "label": "bomb_explode_on_catch",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-016.json",
+          "sourceSha256": "55ff6509f5f1b6a59c360c82ebf2ec82cb6200c96fdebb29afd93708578ea15c",
+          "caseId": "UI-049",
+          "uiLabels": [
+            "Throw Bomb action",
+            "Short pass",
+            "Deviate",
+            "Catch",
+            "Explosion",
+            "Armour Value",
+            "Injury"
+          ],
+          "locators": [
+            {
+              "sequence": 351,
+              "stepIndex": 1,
+              "messageIndex": 2
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed bomb explode on catch identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-016.json",
+          "caseId": "UI-049",
+          "locators": [
+            {
+              "sequence": 351,
+              "stepIndex": 1,
+              "messageIndex": 2
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 97,
+      "label": "breathe_fire",
+      "identityEvidence": "ui_paired",
+      "knowledgeStatus": "known",
+      "witnesses": [
+        {
+          "fixture": "bb3-ui-playback-016.json",
+          "sourceSha256": "55ff6509f5f1b6a59c360c82ebf2ec82cb6200c96fdebb29afd93708578ea15c",
+          "caseId": "UI-046",
+          "uiLabels": [
+            "Foul Appearance",
+            "Breathe fire",
+            "Breathe fire user suffers",
+            "Armour Value"
+          ],
+          "locators": [
+            {
+              "sequence": 10,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-016.json",
+          "sourceSha256": "55ff6509f5f1b6a59c360c82ebf2ec82cb6200c96fdebb29afd93708578ea15c",
+          "caseId": "UI-048",
+          "uiLabels": [
+            "Foul Appearance",
+            "Stand up",
+            "Breathe fire",
+            "Breathe fire target suffers"
+          ],
+          "locators": [
+            {
+              "sequence": 46,
+              "stepIndex": 2,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "semanticDefinition": "Observed breathe fire identity; no odds or applied consequence policy",
+      "payloadVariants": [
+        {
+          "fixture": "bb3-ui-playback-016.json",
+          "caseId": "UI-046",
+          "locators": [
+            {
+              "sequence": 10,
+              "stepIndex": 0,
+              "messageIndex": 1
+            }
+          ]
+        },
+        {
+          "fixture": "bb3-ui-playback-016.json",
+          "caseId": "UI-048",
+          "locators": [
+            {
+              "sequence": 46,
+              "stepIndex": 2,
+              "messageIndex": 1
+            }
+          ]
+        }
+      ],
+      "replayVersion": "1-4-0-0",
+      "ruleScope": "Identity only; no probability or game-rule policy is claimed",
+      "beneficiaryConvention": "No favorable beneficiary inferred; raw actor/subject/controller fields remain distinct and unsupported policy stays unscored",
+      "positiveAndNegativeEvidence": "Paired UI/numeric witness above, or explicit unresolved compiled name; generic favorable D6 must stay unscored in semanticContractAudit.test.ts"
+    }
+  ],
+  "scoredPolicyScope": [
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 1,
+      "definition": "Rush: extra movement check",
+      "beneficiaryConvention": "roller team; success is favorable",
+      "replayVersion": "1-4-0-0",
+      "rule": "BB2020",
+      "printedRulePage": 44,
+      "contractDoc": "REPORT_CONTRACT.md",
+      "positiveAndNegativeTest": "tests/unit/verifiedNumericChecks.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 2,
+      "definition": "Dodge: leave a marked square",
+      "beneficiaryConvention": "roller team; success is favorable",
+      "replayVersion": "1-4-0-0",
+      "rule": "BB2020",
+      "printedRulePage": 45,
+      "contractDoc": "REPORT_CONTRACT.md",
+      "positiveAndNegativeTest": "tests/unit/verifiedNumericChecks.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 4,
+      "definition": "Pick up: secure the ground ball",
+      "beneficiaryConvention": "roller team; success is favorable",
+      "replayVersion": "1-4-0-0",
+      "rule": "BB2020",
+      "printedRulePage": 46,
+      "contractDoc": "REPORT_CONTRACT.md",
+      "positiveAndNegativeTest": "tests/unit/verifiedNumericChecks.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 7,
+      "definition": "Catch: recipient catches the ball",
+      "beneficiaryConvention": "recipient/roller team, separate from passer/hand-off initiator",
+      "replayVersion": "1-4-0-0",
+      "rule": "BB2020",
+      "printedRulePage": 51,
+      "contractDoc": "REPORT_CONTRACT.md",
+      "positiveAndNegativeTest": "tests/unit/verifiedNumericChecks.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 10,
+      "definition": "Armor holds: damage subject avoids a break",
+      "beneficiaryConvention": "damage subject team; invert the raw break success",
+      "replayVersion": "1-4-0-0",
+      "rule": "BB2020",
+      "printedRulePage": 29,
+      "contractDoc": "REPORT_CONTRACT.md",
+      "positiveAndNegativeTest": "tests/unit/blockAndArmorEvidence.test.ts"
+    },
+    {
+      "sourceTag": "ResultRoll",
+      "rollType": 46,
+      "definition": "Regeneration after casualty",
+      "beneficiaryConvention": "affected subject team; recovery success is favorable",
+      "replayVersion": "1-4-0-0",
+      "rule": "BB2020",
+      "printedRulePage": 86,
+      "contractDoc": "REPORT_CONTRACT.md",
+      "positiveAndNegativeTest": "tests/unit/blockAndArmorEvidence.test.ts"
+    },
+    {
+      "sourceTag": "EventRoll",
+      "rollType": 13,
+      "definition": "Direct KO recovery, including verified Kegs +1",
+      "beneficiaryConvention": "affected subject team, explicit ID must match unique roster",
+      "replayVersion": "1-4-0-0",
+      "rule": "BB2020",
+      "printedRulePage": 66,
+      "contractDoc": "REPORT_CONTRACT.md",
+      "positiveAndNegativeTest": "tests/unit/koRecovery.test.ts"
+    },
+    {
+      "sourceTag": "QuestionBlockDice",
+      "rollType": 3,
+      "definition": "Fresh categorical raw block pool",
+      "beneficiaryConvention": "step attacker team; chooser and defender are separate roles",
+      "replayVersion": "1-4-0-0",
+      "rule": "BB2020",
+      "printedRulePage": 57,
+      "contractDoc": "REPORT_CONTRACT.md",
+      "positiveAndNegativeTest": "tests/unit/blockAndArmorEvidence.test.ts"
+    }
+  ],
+  "files": [
+    {
+      "file": "demo-goblins1.bbr",
+      "sourceSha256": "ea2ab9aa3a5b5ef91bf1fa09d1cf41199fd49d00530e5271174e47ba9c9da8f9",
+      "families": [
+        {
+          "sourceTag": "EventCheeringFans",
+          "rollType": 53,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventFanFactor",
+          "rollType": 23,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventKickOffTable",
+          "rollType": null,
+          "fieldCount": 5,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventPrayerTable",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventQuickSnap",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventRoll",
+          "rollType": 13,
+          "fieldCount": 13,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "EventWeatherRoll",
+          "rollType": null,
+          "fieldCount": 2,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionApothecaryCasualtyChoice",
+          "rollType": 12,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionApothecaryCasualtyUsage",
+          "rollType": 12,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionBlockDice",
+          "rollType": 3,
+          "fieldCount": 70,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "QuestionKORecovery",
+          "rollType": 11,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionPushBack",
+          "rollType": 0,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionPushBack",
+          "rollType": 3,
+          "fieldCount": 56,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 34,
+          "fieldCount": 3,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultBlockRoll",
+          "rollType": 3,
+          "fieldCount": 63,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultCasualtyRoll",
+          "rollType": 12,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultInjuryRoll",
+          "rollType": 11,
+          "fieldCount": 21,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 1,
+          "fieldCount": 26,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 10,
+          "fieldCount": 58,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 2,
+          "fieldCount": 34,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 25,
+          "fieldCount": 7,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 26,
+          "fieldCount": 5,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 30,
+          "fieldCount": 4,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 33,
+          "fieldCount": 5,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 34,
+          "fieldCount": 24,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 4,
+          "fieldCount": 5,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 45,
+          "fieldCount": 2,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 67,
+          "fieldCount": 4,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 7,
+          "fieldCount": 2,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 71,
+          "fieldCount": 3,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 8,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 87,
+          "fieldCount": 26,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        }
+      ],
+      "eventDiceFields": 451,
+      "snapshotDiceFields": 1157,
+      "stepFamilies": {
+        "AccuracyStep|17": 2,
+        "AccuracyStep|24": 3,
+        "BallStep|3": 10,
+        "DamageStep|2": 61,
+        "PlayerStep|0": 217,
+        "PlayerStep|1": 616,
+        "PlayerStep|10": 8,
+        "PlayerStep|24": 1,
+        "PlayerStep|31": 27,
+        "PlayerStep|4": 2,
+        "PlayerStep|6": 236,
+        "PlayerStep|7": 21,
+        "PlayerStep|8": 10,
+        "PlayerStep|9": 2
+      },
+      "declarationCodes": {
+        "1": 129,
+        "15": 8,
+        "2": 45,
+        "3": 21,
+        "6": 11
+      }
+    },
+    {
+      "file": "demo1.bbr",
+      "sourceSha256": "1e637c37bfa46907c4ee0ffa4492f54a862a0dd1b2b0c1e367ec9e2f3dc8bf18",
+      "families": [
+        {
+          "sourceTag": "EventFanFactor",
+          "rollType": 23,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventKickOffTable",
+          "rollType": null,
+          "fieldCount": 3,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventQuestionSolidDefence",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventQuickSnap",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventRoll",
+          "rollType": 13,
+          "fieldCount": 11,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "EventWeatherRoll",
+          "rollType": null,
+          "fieldCount": 2,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionApothecaryCasualtyChoice",
+          "rollType": 12,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionApothecaryCasualtyUsage",
+          "rollType": 11,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionApothecaryCasualtyUsage",
+          "rollType": 12,
+          "fieldCount": 3,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionBlockDice",
+          "rollType": 3,
+          "fieldCount": 84,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "QuestionKORecovery",
+          "rollType": 11,
+          "fieldCount": 10,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionPushBack",
+          "rollType": 3,
+          "fieldCount": 66,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 1,
+          "fieldCount": 6,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 2,
+          "fieldCount": 5,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 31,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 34,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 4,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 41,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 7,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultBlockRoll",
+          "rollType": 3,
+          "fieldCount": 81,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultCasualtyRoll",
+          "rollType": 12,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultInjuryRoll",
+          "rollType": 11,
+          "fieldCount": 18,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 1,
+          "fieldCount": 26,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 10,
+          "fieldCount": 67,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 2,
+          "fieldCount": 41,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 25,
+          "fieldCount": 14,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 26,
+          "fieldCount": 4,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 30,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 31,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 34,
+          "fieldCount": 13,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 37,
+          "fieldCount": 8,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 4,
+          "fieldCount": 8,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 41,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 43,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 7,
+          "fieldCount": 4,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 71,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 73,
+          "fieldCount": 7,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 8,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 9,
+          "fieldCount": 1,
+          "identityStatus": "ambiguous",
+          "directPolicyScope": "linked_or_unmodeled"
+        }
+      ],
+      "eventDiceFields": 503,
+      "snapshotDiceFields": 1336,
+      "stepFamilies": {
+        "BallStep|3": 15,
+        "DamageStep|2": 84,
+        "PlayerStep|0": 245,
+        "PlayerStep|1": 662,
+        "PlayerStep|10": 3,
+        "PlayerStep|15": 3,
+        "PlayerStep|27": 7,
+        "PlayerStep|4": 5,
+        "PlayerStep|5": 1,
+        "PlayerStep|6": 289,
+        "PlayerStep|7": 43,
+        "PlayerStep|8": 1,
+        "ThrowTeamMateStep|13": 2
+      },
+      "declarationCodes": {
+        "1": 161,
+        "2": 53,
+        "3": 26,
+        "4": 1,
+        "5": 1,
+        "6": 1
+      }
+    },
+    {
+      "file": "demo10.bbr",
+      "sourceSha256": "7895a4dfb4e8a69686336946171fadc5e3daf7bf8ecc8b720c7b8522f7744d8f",
+      "families": [
+        {
+          "sourceTag": "EventBlitz",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventCheeringFans",
+          "rollType": 53,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventFanFactor",
+          "rollType": 23,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventKickOffTable",
+          "rollType": null,
+          "fieldCount": 4,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventOfficiousRef",
+          "rollType": 54,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventOfficiousRef",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventPrayerTable",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventRoll",
+          "rollType": 13,
+          "fieldCount": 12,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "EventWeatherRoll",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionBlockDice",
+          "rollType": 3,
+          "fieldCount": 80,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "QuestionPushBack",
+          "rollType": 3,
+          "fieldCount": 63,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 1,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 33,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 4,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultBlockRoll",
+          "rollType": 3,
+          "fieldCount": 76,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultCasualtyRoll",
+          "rollType": 12,
+          "fieldCount": 3,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultInjuryRoll",
+          "rollType": 11,
+          "fieldCount": 16,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 1,
+          "fieldCount": 10,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 10,
+          "fieldCount": 54,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 2,
+          "fieldCount": 14,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 25,
+          "fieldCount": 16,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 26,
+          "fieldCount": 4,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 33,
+          "fieldCount": 12,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 4,
+          "fieldCount": 10,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 46,
+          "fieldCount": 2,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 5,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 7,
+          "fieldCount": 2,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 71,
+          "fieldCount": 2,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 8,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 9,
+          "fieldCount": 4,
+          "identityStatus": "ambiguous",
+          "directPolicyScope": "linked_or_unmodeled"
+        }
+      ],
+      "eventDiceFields": 400,
+      "snapshotDiceFields": 998,
+      "stepFamilies": {
+        "BallStep|3": 20,
+        "DamageStep|2": 55,
+        "PlayerStep|0": 190,
+        "PlayerStep|1": 436,
+        "PlayerStep|10": 4,
+        "PlayerStep|11": 1,
+        "PlayerStep|4": 2,
+        "PlayerStep|6": 280,
+        "PlayerStep|7": 33,
+        "PlayerStep|8": 1
+      },
+      "declarationCodes": {
+        "1": 109,
+        "2": 57,
+        "3": 21,
+        "4": 1,
+        "6": 1
+      }
+    },
+    {
+      "file": "demo11.bbr",
+      "sourceSha256": "8d50653050cf2d25608e6c06ed4fed7b4aa5ebefb1bf1f0b5524d9d63c6525f9",
+      "families": [
+        {
+          "sourceTag": "EventBlitz",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventFanFactor",
+          "rollType": 23,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventKickOffTable",
+          "rollType": null,
+          "fieldCount": 4,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventPitchInvasion",
+          "rollType": 59,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventPitchInvasion",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventQuestionSolidDefence",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventRoll",
+          "rollType": 13,
+          "fieldCount": 4,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "EventWeatherRoll",
+          "rollType": null,
+          "fieldCount": 2,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionApothecaryCasualtyUsage",
+          "rollType": 11,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionApothecaryCasualtyUsage",
+          "rollType": 12,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionBlockDice",
+          "rollType": 3,
+          "fieldCount": 56,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "QuestionBlockSkillUsage",
+          "rollType": 3,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionPushBack",
+          "rollType": 0,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionPushBack",
+          "rollType": 3,
+          "fieldCount": 46,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 1,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 2,
+          "fieldCount": 6,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 34,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 4,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultBlockRoll",
+          "rollType": 3,
+          "fieldCount": 49,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultCasualtyRoll",
+          "rollType": 12,
+          "fieldCount": 7,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultInjuryRoll",
+          "rollType": 11,
+          "fieldCount": 23,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 1,
+          "fieldCount": 19,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 10,
+          "fieldCount": 52,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 15,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 2,
+          "fieldCount": 33,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 25,
+          "fieldCount": 14,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 26,
+          "fieldCount": 4,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 30,
+          "fieldCount": 2,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 34,
+          "fieldCount": 29,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 4,
+          "fieldCount": 6,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 45,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 67,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 7,
+          "fieldCount": 5,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 71,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 8,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 87,
+          "fieldCount": 21,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        }
+      ],
+      "eventDiceFields": 403,
+      "snapshotDiceFields": 1025,
+      "stepFamilies": {
+        "AccuracyStep|17": 1,
+        "AccuracyStep|24": 1,
+        "BallStep|3": 17,
+        "DamageStep|2": 56,
+        "PlayerStep|0": 211,
+        "PlayerStep|1": 652,
+        "PlayerStep|10": 4,
+        "PlayerStep|31": 23,
+        "PlayerStep|4": 5,
+        "PlayerStep|5": 1,
+        "PlayerStep|6": 190,
+        "PlayerStep|7": 21,
+        "PlayerStep|8": 12,
+        "PlayerStep|9": 2
+      },
+      "declarationCodes": {
+        "1": 143,
+        "15": 5,
+        "2": 25,
+        "3": 23,
+        "5": 1,
+        "6": 12
+      }
+    },
+    {
+      "file": "demo2.bbr",
+      "sourceSha256": "70f663bdb35dcfbedfd596903c880dd45263ca4cd522091ee91cd0aa77c936e8",
+      "families": [
+        {
+          "sourceTag": "EventFanFactor",
+          "rollType": 23,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventKickOffTable",
+          "rollType": null,
+          "fieldCount": 3,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventOfficiousRef",
+          "rollType": 54,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventOfficiousRef",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventQuickSnap",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventRoll",
+          "rollType": 13,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "EventWeatherRoll",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionApothecaryCasualtyUsage",
+          "rollType": 12,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionBlockDice",
+          "rollType": 3,
+          "fieldCount": 45,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "QuestionKORecovery",
+          "rollType": 11,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionPushBack",
+          "rollType": 0,
+          "fieldCount": 5,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionPushBack",
+          "rollType": 3,
+          "fieldCount": 38,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 1,
+          "fieldCount": 6,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 2,
+          "fieldCount": 4,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 34,
+          "fieldCount": 6,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 4,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 5,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 67,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultBlockRoll",
+          "rollType": 3,
+          "fieldCount": 43,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultCasualtyRoll",
+          "rollType": 12,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultInjuryRoll",
+          "rollType": 11,
+          "fieldCount": 14,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 1,
+          "fieldCount": 29,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 10,
+          "fieldCount": 64,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 2,
+          "fieldCount": 28,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 21,
+          "fieldCount": 2,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 25,
+          "fieldCount": 8,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 26,
+          "fieldCount": 3,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 30,
+          "fieldCount": 3,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 34,
+          "fieldCount": 26,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 4,
+          "fieldCount": 5,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 45,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 5,
+          "fieldCount": 4,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 6,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 67,
+          "fieldCount": 7,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 7,
+          "fieldCount": 5,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 71,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 74,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 87,
+          "fieldCount": 26,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 88,
+          "fieldCount": 6,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 9,
+          "fieldCount": 4,
+          "identityStatus": "ambiguous",
+          "directPolicyScope": "linked_or_unmodeled"
+        }
+      ],
+      "eventDiceFields": 404,
+      "snapshotDiceFields": 983,
+      "stepFamilies": {
+        "AccuracyStep|17": 1,
+        "AccuracyStep|24": 7,
+        "BallStep|3": 12,
+        "DamageStep|2": 66,
+        "PlayerStep|0": 230,
+        "PlayerStep|1": 653,
+        "PlayerStep|10": 4,
+        "PlayerStep|11": 1,
+        "PlayerStep|25": 2,
+        "PlayerStep|29": 1,
+        "PlayerStep|31": 31,
+        "PlayerStep|32": 4,
+        "PlayerStep|33": 6,
+        "PlayerStep|4": 6,
+        "PlayerStep|5": 1,
+        "PlayerStep|6": 155,
+        "PlayerStep|7": 31,
+        "PlayerStep|8": 8
+      },
+      "declarationCodes": {
+        "1": 151,
+        "15": 8,
+        "16": 3,
+        "2": 25,
+        "3": 24,
+        "4": 1,
+        "5": 1,
+        "6": 11
+      }
+    },
+    {
+      "file": "demo3.bbr",
+      "sourceSha256": "51e38feb7067985f6ee7a6fb623b10607482706040c5cc74d3d646d4a8e77cef",
+      "families": [
+        {
+          "sourceTag": "EventFanFactor",
+          "rollType": 23,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventKickOffTable",
+          "rollType": null,
+          "fieldCount": 4,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventOfficiousRef",
+          "rollType": 54,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventOfficiousRef",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventQuickSnap",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventRoll",
+          "rollType": 13,
+          "fieldCount": 3,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "EventWeatherRoll",
+          "rollType": null,
+          "fieldCount": 3,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionApothecaryCasualtyChoice",
+          "rollType": 12,
+          "fieldCount": 4,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionApothecaryCasualtyUsage",
+          "rollType": 11,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionApothecaryCasualtyUsage",
+          "rollType": 12,
+          "fieldCount": 4,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionBlockDice",
+          "rollType": 3,
+          "fieldCount": 51,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "QuestionKORecovery",
+          "rollType": 11,
+          "fieldCount": 2,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionPushBack",
+          "rollType": 3,
+          "fieldCount": 43,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 1,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 2,
+          "fieldCount": 9,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 34,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 45,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultBlockRoll",
+          "rollType": 3,
+          "fieldCount": 49,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultCasualtyRoll",
+          "rollType": 12,
+          "fieldCount": 2,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultInjuryRoll",
+          "rollType": 11,
+          "fieldCount": 15,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 1,
+          "fieldCount": 18,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 10,
+          "fieldCount": 43,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 2,
+          "fieldCount": 44,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 25,
+          "fieldCount": 9,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 26,
+          "fieldCount": 4,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 34,
+          "fieldCount": 10,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 37,
+          "fieldCount": 2,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 4,
+          "fieldCount": 6,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 45,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 7,
+          "fieldCount": 3,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 8,
+          "fieldCount": 2,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        }
+      ],
+      "eventDiceFields": 343,
+      "snapshotDiceFields": 1084,
+      "stepFamilies": {
+        "AccuracyStep|17": 2,
+        "BallStep|3": 13,
+        "DamageStep|2": 53,
+        "PlayerStep|0": 239,
+        "PlayerStep|1": 699,
+        "PlayerStep|10": 4,
+        "PlayerStep|4": 3,
+        "PlayerStep|5": 1,
+        "PlayerStep|6": 187,
+        "PlayerStep|7": 24
+      },
+      "declarationCodes": {
+        "1": 182,
+        "2": 30,
+        "3": 24,
+        "5": 1
+      }
+    },
+    {
+      "file": "demo4.bbr",
+      "sourceSha256": "f30c868e4d5fcb8435270716234ba3d880df37096c5f89531f7cc8a6b1939819",
+      "families": [
+        {
+          "sourceTag": "EventCheeringFans",
+          "rollType": 53,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventFanFactor",
+          "rollType": 23,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventKickOffTable",
+          "rollType": null,
+          "fieldCount": 3,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventPrayerTable",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventQuickSnap",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventRoll",
+          "rollType": 13,
+          "fieldCount": 8,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "EventWeatherRoll",
+          "rollType": null,
+          "fieldCount": 2,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionBlockDice",
+          "rollType": 3,
+          "fieldCount": 81,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "QuestionPushBack",
+          "rollType": 3,
+          "fieldCount": 71,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionSkillUsage",
+          "rollType": 5,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 2,
+          "fieldCount": 3,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 34,
+          "fieldCount": 4,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 4,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 7,
+          "fieldCount": 4,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultBlockRoll",
+          "rollType": 3,
+          "fieldCount": 77,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultCasualtyRoll",
+          "rollType": 12,
+          "fieldCount": 7,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultInjuryRoll",
+          "rollType": 11,
+          "fieldCount": 23,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 1,
+          "fieldCount": 6,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 10,
+          "fieldCount": 56,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 2,
+          "fieldCount": 55,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 25,
+          "fieldCount": 14,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 26,
+          "fieldCount": 3,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 34,
+          "fieldCount": 13,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 4,
+          "fieldCount": 7,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 46,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 5,
+          "fieldCount": 2,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 6,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 7,
+          "fieldCount": 6,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 71,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 9,
+          "fieldCount": 2,
+          "identityStatus": "ambiguous",
+          "directPolicyScope": "linked_or_unmodeled"
+        }
+      ],
+      "eventDiceFields": 458,
+      "snapshotDiceFields": 1232,
+      "stepFamilies": {
+        "BallStep|3": 18,
+        "DamageStep|2": 56,
+        "PlayerStep|0": 229,
+        "PlayerStep|1": 574,
+        "PlayerStep|10": 3,
+        "PlayerStep|11": 3,
+        "PlayerStep|29": 1,
+        "PlayerStep|4": 10,
+        "PlayerStep|6": 301,
+        "PlayerStep|7": 30,
+        "PlayerStep|8": 2
+      },
+      "declarationCodes": {
+        "1": 138,
+        "2": 60,
+        "3": 22,
+        "4": 3,
+        "6": 2
+      }
+    },
+    {
+      "file": "demo5.bbr",
+      "sourceSha256": "e55514b2b7c24fe5a41a8955119e194d25197ad284230b9d25faca0827a457e0",
+      "families": [
+        {
+          "sourceTag": "EventBrilliantCoaching",
+          "rollType": 22,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventFanFactor",
+          "rollType": 23,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventKickOffTable",
+          "rollType": null,
+          "fieldCount": 5,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventQuickSnap",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventRoll",
+          "rollType": 13,
+          "fieldCount": 8,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "EventWeatherRoll",
+          "rollType": null,
+          "fieldCount": 2,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionBlockDice",
+          "rollType": 3,
+          "fieldCount": 83,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "QuestionBlockSkillUsage",
+          "rollType": 3,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionPushBack",
+          "rollType": 3,
+          "fieldCount": 68,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 1,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 36,
+          "fieldCount": 5,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 4,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultBlockRoll",
+          "rollType": 3,
+          "fieldCount": 77,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultCasualtyRoll",
+          "rollType": 12,
+          "fieldCount": 6,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultInjuryRoll",
+          "rollType": 11,
+          "fieldCount": 22,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 1,
+          "fieldCount": 11,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 10,
+          "fieldCount": 60,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 2,
+          "fieldCount": 17,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 25,
+          "fieldCount": 12,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 26,
+          "fieldCount": 5,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 33,
+          "fieldCount": 10,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 36,
+          "fieldCount": 13,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 4,
+          "fieldCount": 6,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 7,
+          "fieldCount": 6,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 71,
+          "fieldCount": 2,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        }
+      ],
+      "eventDiceFields": 427,
+      "snapshotDiceFields": 1105,
+      "stepFamilies": {
+        "BallStep|3": 12,
+        "DamageStep|2": 63,
+        "PlayerStep|0": 208,
+        "PlayerStep|1": 430,
+        "PlayerStep|10": 5,
+        "PlayerStep|4": 6,
+        "PlayerStep|6": 291,
+        "PlayerStep|7": 40,
+        "PlayerStep|8": 1
+      },
+      "declarationCodes": {
+        "1": 124,
+        "2": 56,
+        "3": 20,
+        "6": 1
+      }
+    },
+    {
+      "file": "demo6.bbr",
+      "sourceSha256": "e42180aa79c226ce003b5453a16c9cef30e1dd7d49039e7d50e24347434d3ff9",
+      "families": [
+        {
+          "sourceTag": "EventBlitz",
+          "rollType": null,
+          "fieldCount": 2,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventBrilliantCoaching",
+          "rollType": 22,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventFanFactor",
+          "rollType": 23,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventKickOffTable",
+          "rollType": null,
+          "fieldCount": 3,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventRoll",
+          "rollType": 13,
+          "fieldCount": 2,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "EventWeatherRoll",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionBlockDice",
+          "rollType": 3,
+          "fieldCount": 80,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "QuestionPushBack",
+          "rollType": 0,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionPushBack",
+          "rollType": 3,
+          "fieldCount": 60,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 1,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 2,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 31,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 34,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 5,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultBlockRoll",
+          "rollType": 3,
+          "fieldCount": 73,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultCasualtyRoll",
+          "rollType": 12,
+          "fieldCount": 4,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultInjuryRoll",
+          "rollType": 11,
+          "fieldCount": 23,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 1,
+          "fieldCount": 13,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 10,
+          "fieldCount": 74,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 2,
+          "fieldCount": 17,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 21,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 25,
+          "fieldCount": 11,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 26,
+          "fieldCount": 4,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 30,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 31,
+          "fieldCount": 3,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 34,
+          "fieldCount": 25,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 4,
+          "fieldCount": 5,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 41,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 43,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 5,
+          "fieldCount": 3,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 6,
+          "fieldCount": 3,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 67,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 7,
+          "fieldCount": 10,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 71,
+          "fieldCount": 4,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 87,
+          "fieldCount": 3,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 88,
+          "fieldCount": 12,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        }
+      ],
+      "eventDiceFields": 451,
+      "snapshotDiceFields": 1108,
+      "stepFamilies": {
+        "AccuracyStep|24": 1,
+        "BallStep|3": 9,
+        "DamageStep|2": 75,
+        "PlayerStep|0": 240,
+        "PlayerStep|1": 484,
+        "PlayerStep|10": 3,
+        "PlayerStep|15": 2,
+        "PlayerStep|29": 3,
+        "PlayerStep|31": 4,
+        "PlayerStep|32": 4,
+        "PlayerStep|33": 12,
+        "PlayerStep|4": 11,
+        "PlayerStep|5": 2,
+        "PlayerStep|6": 262,
+        "PlayerStep|7": 41,
+        "PlayerStep|8": 7,
+        "PlayerStep|9": 2,
+        "ThrowTeamMateStep|13": 1
+      },
+      "declarationCodes": {
+        "1": 152,
+        "15": 1,
+        "16": 3,
+        "2": 52,
+        "3": 20,
+        "4": 1,
+        "5": 2,
+        "6": 7
+      }
+    },
+    {
+      "file": "demo7.bbr",
+      "sourceSha256": "1af12b0bb733d279cb3364b5dabb88c0c59d1d15a308d1d6fd667403cfaeda56",
+      "families": [
+        {
+          "sourceTag": "EventBrilliantCoaching",
+          "rollType": 22,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventCheeringFans",
+          "rollType": 53,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventFanFactor",
+          "rollType": 23,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventKickOffTable",
+          "rollType": null,
+          "fieldCount": 5,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventOfficiousRef",
+          "rollType": 54,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventOfficiousRef",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventPrayerTable",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventQuickSnap",
+          "rollType": null,
+          "fieldCount": 2,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventRoll",
+          "rollType": 13,
+          "fieldCount": 10,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "EventWeatherRoll",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionBlockDice",
+          "rollType": 3,
+          "fieldCount": 62,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "QuestionBlockSkillUsage",
+          "rollType": 3,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionPushBack",
+          "rollType": 0,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionPushBack",
+          "rollType": 3,
+          "fieldCount": 59,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionStarSpecialRuleUsage",
+          "rollType": 87,
+          "fieldCount": 8,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 1,
+          "fieldCount": 3,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 34,
+          "fieldCount": 3,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 4,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 5,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 7,
+          "fieldCount": 3,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultBlockRoll",
+          "rollType": 3,
+          "fieldCount": 58,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultCasualtyRoll",
+          "rollType": 12,
+          "fieldCount": 7,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultInjuryRoll",
+          "rollType": 11,
+          "fieldCount": 18,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 1,
+          "fieldCount": 25,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 10,
+          "fieldCount": 37,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 2,
+          "fieldCount": 69,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 21,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 25,
+          "fieldCount": 9,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 26,
+          "fieldCount": 5,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 30,
+          "fieldCount": 3,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 34,
+          "fieldCount": 28,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 4,
+          "fieldCount": 5,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 46,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 5,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 6,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 67,
+          "fieldCount": 2,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 7,
+          "fieldCount": 7,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 71,
+          "fieldCount": 2,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 74,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 8,
+          "fieldCount": 2,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 87,
+          "fieldCount": 26,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        }
+      ],
+      "eventDiceFields": 478,
+      "snapshotDiceFields": 1264,
+      "stepFamilies": {
+        "AccuracyStep|24": 2,
+        "BallStep|3": 12,
+        "DamageStep|2": 38,
+        "PlayerStep|0": 228,
+        "PlayerStep|1": 760,
+        "PlayerStep|10": 5,
+        "PlayerStep|11": 2,
+        "PlayerStep|25": 1,
+        "PlayerStep|29": 1,
+        "PlayerStep|31": 35,
+        "PlayerStep|4": 10,
+        "PlayerStep|5": 3,
+        "PlayerStep|6": 226,
+        "PlayerStep|7": 16,
+        "PlayerStep|8": 2,
+        "PlayerStep|9": 2
+      },
+      "declarationCodes": {
+        "1": 158,
+        "15": 7,
+        "2": 27,
+        "3": 24,
+        "4": 2,
+        "5": 3,
+        "6": 4
+      }
+    },
+    {
+      "file": "demo8.bbr",
+      "sourceSha256": "305f4c96ba0e65c7618112f13c65ef946fa7a71ba4cf4345b4990d468495233d",
+      "families": [
+        {
+          "sourceTag": "EventFanFactor",
+          "rollType": 23,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventKickOffTable",
+          "rollType": null,
+          "fieldCount": 3,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventPitchInvasion",
+          "rollType": 59,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventPitchInvasion",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventQuickSnap",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventWeatherRoll",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionBlockDice",
+          "rollType": 3,
+          "fieldCount": 69,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "QuestionPushBack",
+          "rollType": 3,
+          "fieldCount": 57,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 2,
+          "fieldCount": 10,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 4,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultBlockRoll",
+          "rollType": 3,
+          "fieldCount": 63,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultCasualtyRoll",
+          "rollType": 12,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultInjuryRoll",
+          "rollType": 11,
+          "fieldCount": 13,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 1,
+          "fieldCount": 21,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 10,
+          "fieldCount": 54,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 2,
+          "fieldCount": 26,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 25,
+          "fieldCount": 14,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 26,
+          "fieldCount": 3,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 4,
+          "fieldCount": 10,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 5,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 7,
+          "fieldCount": 2,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 8,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        }
+      ],
+      "eventDiceFields": 356,
+      "snapshotDiceFields": 912,
+      "stepFamilies": {
+        "BallStep|3": 14,
+        "DamageStep|2": 55,
+        "PlayerStep|0": 174,
+        "PlayerStep|1": 406,
+        "PlayerStep|10": 3,
+        "PlayerStep|11": 1,
+        "PlayerStep|4": 2,
+        "PlayerStep|6": 245,
+        "PlayerStep|7": 39,
+        "PlayerStep|8": 1
+      },
+      "declarationCodes": {
+        "1": 106,
+        "2": 47,
+        "3": 19,
+        "4": 1,
+        "6": 1
+      }
+    },
+    {
+      "file": "demo9.bbr",
+      "sourceSha256": "7bef0a74bff43ae56da5edf6abed7d8cb182da85a4da591acb78943afebcbcaf",
+      "families": [
+        {
+          "sourceTag": "EventBlitz",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventBrilliantCoaching",
+          "rollType": 22,
+          "fieldCount": 4,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventFanFactor",
+          "rollType": 23,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventKickOffTable",
+          "rollType": null,
+          "fieldCount": 4,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "EventRoll",
+          "rollType": 13,
+          "fieldCount": 5,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "EventWeatherRoll",
+          "rollType": null,
+          "fieldCount": 1,
+          "identityStatus": "unscoped",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionBlockDice",
+          "rollType": 3,
+          "fieldCount": 87,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "QuestionPushBack",
+          "rollType": 3,
+          "fieldCount": 70,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 1,
+          "fieldCount": 1,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 2,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "QuestionTeamRerollUsage",
+          "rollType": 33,
+          "fieldCount": 2,
+          "identityStatus": "compiled_only",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultBlockRoll",
+          "rollType": 3,
+          "fieldCount": 84,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultCasualtyRoll",
+          "rollType": 12,
+          "fieldCount": 5,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultInjuryRoll",
+          "rollType": 11,
+          "fieldCount": 26,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 1,
+          "fieldCount": 12,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 10,
+          "fieldCount": 71,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 2,
+          "fieldCount": 16,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 25,
+          "fieldCount": 12,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 26,
+          "fieldCount": 4,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 33,
+          "fieldCount": 12,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 36,
+          "fieldCount": 4,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 4,
+          "fieldCount": 3,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 46,
+          "fieldCount": 3,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 7,
+          "fieldCount": 6,
+          "identityStatus": "known",
+          "directPolicyScope": "qualified_policy"
+        },
+        {
+          "sourceTag": "ResultRoll",
+          "rollType": 71,
+          "fieldCount": 1,
+          "identityStatus": "known",
+          "directPolicyScope": "linked_or_unmodeled"
+        }
+      ],
+      "eventDiceFields": 438,
+      "snapshotDiceFields": 1125,
+      "stepFamilies": {
+        "BallStep|3": 14,
+        "DamageStep|2": 73,
+        "PlayerStep|0": 238,
+        "PlayerStep|1": 612,
+        "PlayerStep|10": 4,
+        "PlayerStep|4": 6,
+        "PlayerStep|5": 2,
+        "PlayerStep|6": 307,
+        "PlayerStep|7": 48,
+        "PlayerStep|8": 1
+      },
+      "declarationCodes": {
+        "1": 149,
+        "2": 59,
+        "3": 25,
+        "5": 2,
+        "6": 1
+      }
+    }
+  ]
+}

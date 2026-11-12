@@ -83,7 +83,18 @@ const resummarize = (r: LuckReport) => {
   r.coverage.diceRecords = summarizeDiceRecords(r.diceRecords);
 };
 const oldProjection = (r: LuckReport) => ({
-  events: r.events.filter((e) => e.scoringStatus === "scored"),
+  // This hash predates modifier receipts. Preserve every original field;
+  // the added receipt has separate source and forgery acceptance probes.
+  events: r.events
+    .filter((e) => e.scoringStatus === "scored")
+    .map((e) => ({
+      ...e,
+      metadata: Object.fromEntries(
+        Object.entries(e.metadata).filter(
+          ([key]) => key !== "fixedNumericModifiers"
+        )
+      )
+    })),
   contextComponents: r.contextComponents,
   verdict: r.verdict,
   teams: r.teams.map((t) =>

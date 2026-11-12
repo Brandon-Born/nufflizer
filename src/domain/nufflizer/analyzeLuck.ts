@@ -86,7 +86,7 @@ import {
   retainEmbeddedInjuries,
   type EmbeddedInjuryRecord
 } from "./embeddedInjury";
-import { numericCheckExclusion } from "./numericCheckContract";
+import { numericCheckExclusion, fixedNumericModifierEvidence } from "./numericCheckContract";
 import { labelForRollType } from "@/domain/replay/rollTypeContracts";
 import { createHash } from "node:crypto";
 
@@ -993,6 +993,7 @@ function buildNormalizedEvent(
       modifiers,
       modifiersSum: modifiers.reduce((sum, value) => sum + value, 0),
       ...rerollMetadata,
+      fixedNumericModifiers: fixedNumericModifierEvidence(event),
       skillsUsed,
       normalizationFlags,
       normalizationNotes

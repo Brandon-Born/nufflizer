@@ -1,6 +1,6 @@
 # BB3 UI observations paired with raw replay records
 
-Observed 2026-11-09–10 using the [Computer Use skill](C:/Users/Brandon/.codex/plugins/cache/openai-bundled/computer-use/26.1103.60933/skills/computer-use/SKILL.md). Owning work: NUF-008–013, 016 and 022. NUF-009 remains in progress.
+Observed 2026-11-09–10 using the [Computer Use skill](C:/Users/Brandon/.codex/plugins/cache/openai-bundled/computer-use/26.1103.60933/skills/computer-use/SKILL.md). Owning work: NUF-008–013, 016 and 022. Current mapping acceptance is recorded in [SEMANTIC_CONTRACT_AUDIT.md](SEMANTIC_CONTRACT_AUDIT.md); broader rule/choice/role/state policies retain their original issues.
 
 ## What the experiment produced
 

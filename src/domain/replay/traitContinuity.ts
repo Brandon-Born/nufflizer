@@ -110,7 +110,7 @@ export function preservesTraitContinuity(e: ReplayEvent) {
     return e.payload?.Skill === 0 && e.payload.IsEvaluation === 0;
   if (e.sourceTag === "ResultUseAction")
     return (
-      e.actionCode !== undefined && [1, 2, 3, 4, 5, 6, 7].includes(e.actionCode)
+      e.actionCode !== undefined && [1, 2, 3, 4, 5, 6].includes(e.actionCode)
     );
   if (e.sourceTag === "ResultSkillUsage")
     return (

@@ -3,7 +3,7 @@ import { demoCorpus } from "../helpers/corpus";
 
 // The old shape/adjacency promotion gates are historical artifacts, not independent rule proof.
 // Retain their independently countable raw-dice invariants without claiming game semantics.
-describe("rollType 7 raw evidence (NUF-009 semantic mapping remains open)", () => {
+describe("rollType 7 raw evidence (independent raw numeric regression)", () => {
   it("preserves every observed result and its exact numeric threshold", () => {
     let total = 0;
     for (const { replay, report } of demoCorpus()) {

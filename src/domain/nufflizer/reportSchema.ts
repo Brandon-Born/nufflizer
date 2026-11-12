@@ -1,3 +1,4 @@
+import { isFixedNumericModifier } from "./numericCheckContract";
 import { summarizeDiceRecords } from "./diceEvidence";
 import { enumerateSkillBlock } from "./blockSkillModel";
 import {
@@ -470,6 +471,7 @@ export const LuckEventMetadataSchema = z.strictObject({
   difficulty: finite.optional(),
   dice: numbers.optional(),
   dieTypes: numbers.optional(),
+  fixedNumericModifiers:z.array(z.strictObject({playerId:z.number().int().min(-1),modifierType:count,skillId:z.number().int().min(-1),effectId:z.literal(-1),value:finite})).max(64).optional(),
   modifiers: numbers.optional(),
   modifiersSum: finite.optional(),
   probabilityPolicy: z.enum(["single_attempt", "two_attempt", "block_pool"]).optional(),
@@ -2192,6 +2194,14 @@ export const LuckReportSchema = z
         );
       }
       if (event.metadata.blockSelection) require(event.metadata.sourceTag === "ResultBlockRoll" && !event.metadata.isRollCandidate && event.scoringStatus === "excluded", "An observed selected block face is a deterministic summary of a linked pool.");
+      const fixed=event.metadata.fixedNumericModifiers;
+      const numeric=event.scoringStatus==="scored" && event.metadata.sourceTag==="ResultRoll" && [1,2,4,7].includes(event.metadata.rollType??-1);
+      if(numeric)require(!!fixed && fixed.length===(event.metadata.modifiers??[]).length &&
+        new Set(fixed.map(m=>JSON.stringify([m.playerId,m.modifierType,m.skillId,m.effectId]))).size===fixed.length &&
+        fixed.every((m,i)=>isFixedNumericModifier(event.metadata.rollType!,{PlayerId:m.playerId,ModifierType:m.modifierType,Skill:m.skillId,Effect:m.effectId,Value:m.value}) && m.value===event.metadata.modifiers![i]) &&
+        JSON.stringify([...new Set(fixed.filter(m=>m.skillId>=0).map(m=>m.skillId))])===JSON.stringify(event.metadata.skillsUsed??[]),
+        "Scored numeric checks require exact supported fixed pre-roll modifier receipts; post-roll, unknown or duplicate modifiers cannot certify these odds.");
+      else require(fixed===undefined,"Only a supported scored numeric check carries a fixed-modifier receipt.");
       const injuryObservation=event.metadata.injuryObservation;
       if(injuryObservation)require(event.type === "injury" && event.scoringStatus === "excluded" && event.metadata.isRollCandidate === true &&
         event.probabilitySuccess === null && event.actualSuccess === null && event.delta === 0 && event.weightedDelta === 0 &&

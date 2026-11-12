@@ -1,5 +1,7 @@
 # Roll Type Evidence Matrix (Demo Replay Baseline)
 
+Current mapping acceptance is [SEMANTIC_CONTRACT_AUDIT.md](SEMANTIC_CONTRACT_AUDIT.md): all96 roll/39 step names,41 declared source contracts, eight scoped policies and all12 source inventories. Historical tables below retain their dated hypotheses. Compiled-only names and unsupported policies remain distinct from supported odds; the audit does not complete the analyzer.
+
 ## Embedded staff-question injury evidence
 
 `QuestionKORecovery|11` carries original injury dice in RollInfos. UI-025 independently observes Stunty injury6+1=KO. An independent stdlib traversal found14 such questions across the12 public demos: demo1 has10, demo2 and demo-goblins1 have1 each, and demo3 has2. Their numeric records and locators are in the raw inventory fixture. These are unscored injury outcomes with unknown expectations. They are not direct KO recovery checks. An exact prior direct injury in the same verified damage step makes the question a copy. Full damage distributions and staff effects remain open.

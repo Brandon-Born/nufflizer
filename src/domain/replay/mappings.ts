@@ -42,15 +42,16 @@ export const STEP_TYPE_MAP: Readonly<Record<number, string>> = {
   38: "breathe_fire"
 };
 
-// ResultUseAction only: UI-paired declarations, not the entire sequence enum.
+// ResultUseAction declaration codes, not NetGameplaySequenceType. UI-034's
+// ThrowTeamMateStep follows Action4: the declared Pass budget and executed
+// special step are distinct. SequenceType7 does not establish Action7.
 export const ACTION_CODE_MAP: Readonly<Record<number, string>> = {
   1: "move",
   2: "block",
   3: "blitz",
   4: "pass",
   5: "handoff",
-  6: "foul",
-  7: "throw_team_mate"
+  6: "foul"
 };
 
 export const ROLL_TYPE_MAP: Readonly<Record<number, string>> = {

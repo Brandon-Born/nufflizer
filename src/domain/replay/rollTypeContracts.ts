@@ -172,10 +172,10 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
     rollType: 9,
     label: "throw_in",
     kind: "randomizer",
-    confidence: "high",
-    status: "known",
+    confidence: "low",
+    status: "ambiguous",
     notes:
-      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+      "Compiled ThrowIn name only; dice roles, geometry and behavior remain unverified. Retained as an unscored random outcome."
   },
   {
     sourceTag: "ResultRoll",
@@ -503,7 +503,8 @@ export function isRollCandidateContract(
 
   return (
     contract.kind === "scored_deterministic" ||
-    contract.kind === "excluded_deterministic"
+    contract.kind === "excluded_deterministic" ||
+    contract.kind === "randomizer"
   );
 }
 

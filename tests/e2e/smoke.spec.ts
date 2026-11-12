@@ -338,10 +338,10 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.41");
+  expect(report.schemaVersion).toBe("2.42");
   const keptCatch=report.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-548");
   expect(keptCatch.catchPossessionBounds).toMatchObject({policy:"kept_catch_failure_envelope",lower:-2/3,upper:0});
-  expect(report.modelVersion).toBe("dice-only-20");
+  expect(report.modelVersion).toBe("dice-only-21");
   expect(report.events.filter((e:{metadata:{combinedMovement?:unknown}})=>e.metadata.combinedMovement)).toHaveLength(2);
   expect(
     report.events.some(
@@ -367,7 +367,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
     )
   ).toBe(true);
 
-  expect(report.contextModelVersion).toBe("mobility-possession-32");
+  expect(report.contextModelVersion).toBe("mobility-possession-33");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
     report.coverage.rollCandidates.scoredCount +
@@ -1098,7 +1098,7 @@ test("committed team Dodge bounds keep terminal turn cost separate from compound
     if(index===0)await page.screenshot({path:"/tmp/nufflizier-terminal-team-dodge-desktop.png",fullPage:true});
     const download=page.waitForEvent("download");await page.getByRole("button",{name:"Download JSON"}).click();
     const result=await download;const saved=JSON.parse(readFileSync((await result.path())!,"utf8"));
-    expect(saved.schemaVersion).toBe("2.41");expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);
+    expect(saved.schemaVersion).toBe("2.42");expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);
     expect(saved.events.find((e:{contextualBounds?:{policy:string}})=>e.contextualBounds?.policy==="team_reroll_terminal_moves").probabilitySuccess).toBeCloseTo(8/9,12);
     if(index===0)await page.getByRole("button",{name:"Upload Another Replay"}).click();
     await page.unroute("**/api/nufflizier/analyze");
@@ -1127,7 +1127,7 @@ test("current roster completion excludes a spent player from later Dodge opportu
   await page.getByText(/With the team reroll already spent/).scrollIntoViewIfNeeded();
   await page.screenshot({path:"/tmp/nufflizier-current-roster-move-desktop.png",fullPage:false});
   const download=page.waitForEvent("download");await page.getByRole("button",{name:"Download JSON"}).click();const file=await download;
-  const saved=JSON.parse(readFileSync((await file.path())!,"utf8"));expect(saved.schemaVersion).toBe("2.41");
+  const saved=JSON.parse(readFileSync((await file.path())!,"utf8"));expect(saved.schemaVersion).toBe("2.42");
   expect(saved.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-1960").contextualBounds.maximumMoves).toBe(3);
   expect(saved.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-1942").metadata.initialRosterName).toBeUndefined();
   expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);
@@ -1153,7 +1153,7 @@ test("completed ordinary Moves stay spent across stable wait checkpoints",async(
   await expect(row).toContainText("97.2%");await expect(row).toContainText("83.3% success");
   await row.scrollIntoViewIfNeeded();await page.screenshot({path:"/tmp/nufflizier-deterministic-completion-desktop.png",fullPage:false});
   const download=page.waitForEvent("download");await page.getByRole("button",{name:"Download JSON"}).click();const file=await download;
-  const saved=JSON.parse(readFileSync((await file.path())!,"utf8"));expect(saved.schemaVersion).toBe("2.41");
+  const saved=JSON.parse(readFileSync((await file.path())!,"utf8"));expect(saved.schemaVersion).toBe("2.42");
   expect(saved.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-3098").contextualBounds.maximumMoves).toBe(3);
   expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);
   await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);expect(errors).toEqual([]);
@@ -1182,7 +1182,7 @@ test("retained Catch explains the original die's fixed-policy failure range",asy
   await expect(row).toContainText("Holding the recorded decline-on-failure policy fixed");
   await page.screenshot({path:"/tmp/nufflizier-retained-catch-mobile.png",fullPage:false});
   const download=page.waitForEvent("download");await page.getByRole("button",{name:"Download JSON"}).click();const file=await download;
-  const saved=JSON.parse(readFileSync((await file.path())!,"utf8"));expect(saved.schemaVersion).toBe("2.41");
+  const saved=JSON.parse(readFileSync((await file.path())!,"utf8"));expect(saved.schemaVersion).toBe("2.42");
   expect(saved.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-548").catchPossessionBounds).toMatchObject({policy:"kept_catch_failure_envelope",lower:-2/3,upper:0});
   expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);
   await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);expect(errors).toEqual([]);
@@ -1210,7 +1210,7 @@ test("crowd-pushed defenders retain one unscored injury and confirmed off-pitch 
   await page.screenshot({path:"/tmp/nufflizier-block-crowd-mobile.png",fullPage:false});
   const download=page.waitForEvent("download");await page.getByRole("button",{name:"Download JSON"}).click();const file=await download;
   const saved=JSON.parse(readFileSync((await file.path())!,"utf8")),pool=saved.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-3716"),c=pool.metadata.blockCrowd;
-  expect(saved.schemaVersion).toBe("2.41");expect(c.after).toMatchObject({checkpointAfter:3730,cell:{x:-1,y:-1},canAct:true,tackleZone:true,statusCode:null});
+  expect(saved.schemaVersion).toBe("2.42");expect(c.after).toMatchObject({checkpointAfter:3730,cell:{x:-1,y:-1},canAct:true,tackleZone:true,statusCode:null});
   expect(saved.damageSteps.find((s:{actionId:string})=>s.actionId===c.damageActionId)).toMatchObject({scoredRolls:0,unscoredRolls:1,diceContribution:0});
   expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);
   await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);expect(errors).toEqual([]);
@@ -1235,7 +1235,7 @@ test("recorded injury outcomes stay separate from unknown odds and unscored cont
   await expect(row.getByText(/The recorded injury result for player 43/)).toBeVisible();expect((await row.locator("td").nth(2).boundingBox())!.width).toBeGreaterThanOrEqual(256);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);await page.screenshot({path:"/tmp/nufflizier-injury-observation-mobile.png",fullPage:false});
   const download=page.waitForEvent("download");await page.getByRole("button",{name:"Download JSON"}).click();const file=await download;const saved=JSON.parse(readFileSync((await file.path())!,"utf8"));
-  const e=saved.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-3889");expect(saved.schemaVersion).toBe("2.41");expect(e.metadata.injuryObservation).toMatchObject({outcome:"casualty",recordKind:"direct",subjectId:"43",subjectTeamId:"1",sourceCode:1,damageStepSourceIndex:3886});
+  const e=saved.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-3889");expect(saved.schemaVersion).toBe("2.42");expect(e.metadata.injuryObservation).toMatchObject({outcome:"casualty",recordKind:"direct",subjectId:"43",subjectTeamId:"1",sourceCode:1,damageStepSourceIndex:3886});
   expect(e.scoringStatus).toBe("excluded");expect(e.probabilitySuccess).toBeNull();expect(e.actualSuccess).toBeNull();expect(e.weightedDelta).toBe(0);
   expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);expect(errors).toEqual([]);
 });
@@ -1427,8 +1427,8 @@ test("committed Rush ranges separate conditional chance from compound dice and p
   await page.getByRole("button", { name: "Download JSON" }).click();
   const file = await download;
   const saved = JSON.parse(readFileSync((await file.path())!, "utf8"));
-  expect(saved.schemaVersion).toBe("2.41");
-  expect(saved.contextModelVersion).toBe("mobility-possession-32");
+  expect(saved.schemaVersion).toBe("2.42");
+  expect(saved.contextModelVersion).toBe("mobility-possession-33");
   expect(
     saved.events.filter(
       (e: { contextualBounds?: { policy: string } }) =>
@@ -1531,8 +1531,8 @@ test("retained Rush failure prices only the original die's fixed-decline teammat
   await page.getByRole("button", { name: "Download JSON" }).click();
   const file = await download;
   const saved = JSON.parse(readFileSync((await file.path())!, "utf8"));
-  expect(saved.schemaVersion).toBe("2.41");
-  expect(saved.contextModelVersion).toBe("mobility-possession-32");
+  expect(saved.schemaVersion).toBe("2.42");
+  expect(saved.contextModelVersion).toBe("mobility-possession-33");
   const e = saved.events.find(
     (e: { metadata: { sourceId: string } }) =>
       e.metadata.sourceId === "source-2704"
@@ -1572,7 +1572,7 @@ test("retained Dodge reports the original fixed-decline envelope on desktop and 
  await row.scrollIntoViewIfNeeded();await page.screenshot({path:"/tmp/nufflizier-kept-dodge-desktop.png",fullPage:false});
  await page.setViewportSize({width:390,height:844});await row.locator("td").nth(2).scrollIntoViewIfNeeded();await expect(row.getByText(/Before the original Dodge die/)).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);await page.screenshot({path:"/tmp/nufflizier-kept-dodge-mobile.png",fullPage:false});
  const download=page.waitForEvent("download");await page.getByRole("button",{name:"Download JSON"}).click();const file=await download;const saved=JSON.parse(readFileSync((await file.path())!,"utf8"));
- expect(saved.schemaVersion).toBe("2.41");expect(saved.contextModelVersion).toBe("mobility-possession-32");const e=saved.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-3775");
+ expect(saved.schemaVersion).toBe("2.42");expect(saved.contextModelVersion).toBe("mobility-possession-33");const e=saved.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-3775");
  expect(e.metadata.preRoll.actorStandUpSourceIndex).toBe(3769);expect(e.metadata.teamRerollsSpent).toBe(0);expect(e.probabilitySuccess).toBe(2/3);expect(e.contextualBounds).toMatchObject({policy:"kept_dodge_terminal_moves",lower:-16/3,upper:0,maximumMoves:8});expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);expect(saved.verdict.luckierTeam).toBe("unknown");
  await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);expect(errors).toEqual([]);
 });
@@ -1594,7 +1594,7 @@ test("continued traits explain a separate fixed-policy block model without chang
  await row.scrollIntoViewIfNeeded();await page.screenshot({path:"/tmp/nufflizier-block-traits-desktop.png",fullPage:false});
  await page.setViewportSize({width:390,height:844});await row.locator("td").nth(2).scrollIntoViewIfNeeded();await expect(row.getByText(/Single-pool model/)).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);await page.screenshot({path:"/tmp/nufflizier-block-traits-mobile.png",fullPage:false});
  const download=page.waitForEvent("download");await page.getByRole("button",{name:"Download JSON"}).click();const file=await download,saved=JSON.parse(readFileSync((await file.path())!,"utf8"));
- expect(saved.schemaVersion).toBe("2.41");expect(saved.modelVersion).toBe("dice-only-20");const e=saved.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-98");expect(e.metadata.block.skillModel.wrestlePolicy).toBe("improve_knockdown_balance");expect(e.metadata.block.skillModel.expectedValue).toBeCloseTo(19/36,12);expect(e.weightedDelta).toBeCloseTo(1/3,12);expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);expect(saved.verdict.luckierTeam).toBe("unknown");
+ expect(saved.schemaVersion).toBe("2.42");expect(saved.modelVersion).toBe("dice-only-21");const e=saved.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-98");expect(e.metadata.block.skillModel.wrestlePolicy).toBe("improve_knockdown_balance");expect(e.metadata.block.skillModel.expectedValue).toBeCloseTo(19/36,12);expect(e.weightedDelta).toBeCloseTo(1/3,12);expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);expect(saved.verdict.luckierTeam).toBe("unknown");
  await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);expect(errors).toEqual([]);
 });
 
@@ -1630,7 +1630,7 @@ test("unknown snapshot dice prevent false full-support coverage on desktop and m
  await page.getByLabel("Scoring status").selectOption("excluded");
  const table=page.getByRole("table").filter({has:page.getByRole("columnheader",{name:"Replay segment"})}),row=table.locator("tbody tr").filter({hasText:"Unknown0.Dice"});await expect(row).toHaveCount(1);await row.locator("summary").click();await expect(row).toContainText("whether this is a new outcome or a copy remains unresolved");await expect(row).toContainText("Actual success and luck remain unknown");await expect(row).toContainText("Not scored");await row.scrollIntoViewIfNeeded();await page.screenshot({path:"/tmp/nufflizier-unknown-snapshot-desktop.png",fullPage:false});
  await page.setViewportSize({width:390,height:844});await row.locator("td").nth(2).scrollIntoViewIfNeeded();await expect(row.getByText(/Recorded dice field Unknown0.Dice:/)).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);await page.screenshot({path:"/tmp/nufflizier-unknown-snapshot-mobile.png",fullPage:false});
- const pending=page.waitForEvent("download");await page.getByRole("button",{name:"Download JSON"}).click();const download=await pending,saved=JSON.parse(readFileSync((await download.path())!,"utf8"));expect(saved.schemaVersion).toBe("2.41");expect(saved.coverage.rollCandidates.scoredRate).toBe(1/101);expect(saved.diceRecords).toHaveLength(101);expect(saved.verdict.luckierTeam).toBe("unknown");expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);
+ const pending=page.waitForEvent("download");await page.getByRole("button",{name:"Download JSON"}).click();const download=await pending,saved=JSON.parse(readFileSync((await download.path())!,"utf8"));expect(saved.schemaVersion).toBe("2.42");expect(saved.coverage.rollCandidates.scoredRate).toBe(1/101);expect(saved.diceRecords).toHaveLength(101);expect(saved.verdict.luckierTeam).toBe("unknown");expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);
  await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByText(/Dice-field coverage:/)).toHaveCount(0);expect(errors).toEqual([]);
 });
 
@@ -1670,7 +1670,7 @@ test("conditional injury tables explain Stunty odds without scoring treatment or
   const pending=page.waitForEvent("download");await page.getByRole("button",{name:"Download JSON"}).click();
   const file=await pending,saved=JSON.parse(readFileSync((await file.path())!,"utf8"));
   const e=saved.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-249");
-  expect(saved.schemaVersion).toBe("2.41");expect(e.metadata.injuryTable).toMatchObject({stunty:true,thickSkull:false,counts:[15,11,4,6]});
+  expect(saved.schemaVersion).toBe("2.42");expect(e.metadata.injuryTable).toMatchObject({stunty:true,thickSkull:false,counts:[15,11,4,6]});
   expect(e.probabilitySuccess).toBeNull();expect(e.actualSuccess).toBeNull();expect(e.weightedDelta).toBe(0);
   expect(saved.verdict.luckierTeam).toBe("unknown");expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);
   expect(await page.locator("nextjs-portal").count()).toBe(0);

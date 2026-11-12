@@ -1,5 +1,66 @@
 import type { ReplayEvent } from "@/domain/replay/types";
 
+// Only verified modifiers settled before the numeric roll. A recorded target
+// after an optional post-roll choice is not an unconditional fair threshold.
+// GR-015 explicitly makes Diving Tackle a post-roll decision; it is excluded.
+export function isFixedNumericModifier(type: number, raw: unknown): boolean {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return false;
+  const m = raw as Record<string, unknown>;
+  if (
+    Object.keys(m).some(
+      (k) =>
+        !["PlayerId", "Skill", "Effect", "Value", "ModifierType"].includes(k)
+    ) ||
+    !Number.isSafeInteger(m.ModifierType) ||
+    !Number.isSafeInteger(m.Skill) ||
+    !Number.isSafeInteger(m.PlayerId) ||
+    Number(m.PlayerId) < -1 ||
+    m.Effect !== -1
+  )
+    return false;
+  if (m.ModifierType === 3 && m.Skill === -1 && m.Value === -1)
+    return [2, 4, 7].includes(type);
+  if (m.ModifierType === 15 && m.Skill === -1 && m.Value === -1)
+    return [4, 7].includes(type);
+  if (m.ModifierType === 35 && m.Skill === -1 && m.Value === -1)
+    return type === 7;
+  if (m.ModifierType !== 27) return false;
+  return type === 2
+    ? ([16, 83].includes(Number(m.Skill)) && m.Value === 1) ||
+        (m.Skill === 49 && m.Value === -1)
+    : type === 4
+      ? m.Skill === 12 && m.Value === 1
+      : type === 7
+        ? ([12, 28].includes(Number(m.Skill)) && m.Value === 1) ||
+          (m.Skill === 33 && m.Value === -1)
+        : false;
+}
+
+// Called after numericCheckExclusion has admitted the source payload. The
+// public report validator independently enforces the same modifier contract.
+export function fixedNumericModifierEvidence(event: ReplayEvent) {
+  if (
+    event.sourceTag !== "ResultRoll" ||
+    ![1, 2, 4, 7].includes(event.rollType ?? -1)
+  )
+    return;
+  const container = event.payload?.Modifiers as
+    { Modifier?: unknown } | undefined;
+  const raw = container?.Modifier;
+  const nodes = raw === undefined ? [] : Array.isArray(raw) ? raw : [raw];
+  if (nodes.some((m) => !isFixedNumericModifier(event.rollType!, m))) return;
+  return nodes.map((node) => {
+    const m = node as Record<string, number>;
+    return {
+      playerId: m.PlayerId!,
+      modifierType: m.ModifierType!,
+      skillId: m.Skill!,
+      effectId: -1 as const,
+      value: m.Value!
+    };
+  });
+}
+
 // UI-002/006/008/009/014/093/094/097 and the installed roll enum agree on
 // these identities. This admits recorded effective targets, not a general
 // modifier calculator, pass accuracy model, or rule for other roll families.
@@ -35,14 +96,40 @@ export function numericCheckExclusion(
     if (!Number.isSafeInteger(payload.Requirement))
       return "invalid base Requirement for numeric check";
     const container = payload.Modifiers as { Modifier?: unknown } | undefined;
+    if (
+      payload.Modifiers !== undefined &&
+      payload.Modifiers !== "" &&
+      (!container ||
+        typeof container !== "object" ||
+        Array.isArray(container) ||
+        Object.keys(container).some((k) => k !== "Modifier"))
+    )
+      return "unsupported numeric modifier container";
     const nodes =
       container?.Modifier === undefined
         ? []
         : Array.isArray(container.Modifier)
           ? container.Modifier
           : [container.Modifier];
+    if (
+      nodes.length > 64 ||
+      new Set(
+        nodes.map((node) => {
+          const m = node as Record<string, unknown> | null;
+          return JSON.stringify([
+            m?.PlayerId,
+            m?.ModifierType,
+            m?.Skill,
+            m?.Effect
+          ]);
+        })
+      ).size !== nodes.length
+    )
+      return "duplicate or excessive numeric modifier evidence";
     let modifierSum = 0;
     for (const node of nodes) {
+      if (!isFixedNumericModifier(event.rollType!, node))
+        return "unverified or post-roll numeric modifier requires its own policy";
       const value = (node as { Value?: unknown } | null)?.Value;
       if (!Number.isSafeInteger(value)) return "invalid numeric check modifier";
       modifierSum += Number(value);
