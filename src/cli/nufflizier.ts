@@ -25,6 +25,8 @@ import {
   explainLonerGate,
   explainBlockResolution,
   formatActualOutcome,
+  formatContextComponentSum,
+  PARTIAL_CONTEXT_SCOPE,
   explainDriveEffectExpiry,
   explainContextCoverage,
   explainRecruitmentEvidence
@@ -96,6 +98,24 @@ function formatTeamSummary(
     `Roll-candidate coverage: ${(report.coverage.rollCandidates.scoredRate * 100).toFixed(1)}% scored (${report.coverage.rollCandidates.scoredCount} scored, ${report.coverage.rollCandidates.excludedCount} excluded)`,
     `All-event coverage: ${(report.coverage.allEvents.scoredRate * 100).toFixed(1)}% scored (${report.coverage.allEvents.scoredCount} scored, ${report.coverage.allEvents.excludedCount} excluded)`,
     explainContextCoverage(report.coverage.contextEvidence),
+    "Partial context component sums:",
+    PARTIAL_CONTEXT_SCOPE,
+    ...report.contextComponents.flatMap((summary) => [
+      `${report.teams.find((t) => t.teamId === summary.teamId)?.teamName ?? summary.teamId}: ${formatContextComponentSum(summary)}`,
+      ...summary.byCategory.map(
+        (category) =>
+          `  ${category.type}: ${formatContextComponentSum(category)}`
+      ),
+      ...summary.byAction
+        .slice(0, 20)
+        .map(
+          (action) =>
+            `  Source action ${action.actionId ?? "unlinked event"}: ${formatContextComponentSum(action)}; events ${action.eventIds.join(", ")}`
+        ),
+      ...(summary.byAction.length > 20
+        ? ["Further component groups are retained in JSON."]
+        : [])
+    ]),
     ...(injuryObservations.length ? [
       `Recorded injury results: ${injuryObservations.length}. These observed labels have unverified odds and are not luck scores or final player availability.`,
       ...injuryObservations.slice(0,20).map(event=>

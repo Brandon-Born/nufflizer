@@ -24,6 +24,8 @@ import {
   explainLonerGate,
   explainBlockResolution,
   formatActualOutcome,
+  formatContextComponentSum,
+  PARTIAL_CONTEXT_SCOPE,
   explainInjuryObservation,
   explainDriveEffectExpiry,
   explainContextCoverage,
@@ -119,7 +121,9 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
         if (teamFilter !== "all" && event.teamId !== teamFilter) return false;
         if (
           scoringFilter === "bounded"
-            ? !event.contextualBounds && !event.possessionBounds && !event.catchPossessionBounds
+            ? !event.contextualBounds &&
+              !event.possessionBounds &&
+              !event.catchPossessionBounds
             : scoringFilter !== "all" && event.scoringStatus !== scoringFilter
         )
           return false;
@@ -479,9 +483,16 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
             ) : null}
           </section>
 
+          <p className="text-xs text-amber-100/80">
+            Partial component sums cover only the supported model components
+            below. They do not rank the teams or bound whole-match luck.
+          </p>
           <div className="grid gap-4 md:grid-cols-2">
             {report.teams.map((team) => {
               const evidence = scoredEvidenceForTeam(report, team.teamId);
+              const components = report.contextComponents.find(
+                (c) => c.teamId === team.teamId
+              )!;
               return (
                 <article
                   key={team.teamId}
@@ -502,7 +513,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                     (provisional weights)
                   </p>
                   <p className="mt-1 text-xs text-amber-100/75">
-                    Context:{" "}
+                    Context points:{" "}
                     {team.impactCount > 0
                       ? formatDiceContribution(
                           team.impactScore,
@@ -513,6 +524,31 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                         (team.impactCount === 1 ? " estimate" : " estimates")
                       : "Not scored"}
                   </p>
+                  <p className="mt-1 text-xs text-amber-100/75">
+                    Partial component sum:{" "}
+                    {formatContextComponentSum(components)}
+                  </p>
+                  {components.bounds ? (
+                    <details className="mt-2 text-xs text-amber-100/80">
+                      <summary className="cursor-pointer">
+                        Partial component breakdown
+                      </summary>
+                      <p className="mt-1">{PARTIAL_CONTEXT_SCOPE}</p>
+                      <ul className="mt-1 list-inside list-disc">
+                        {components.byCategory.map((category) => (
+                          <li key={category.type}>
+                            {category.type.replaceAll("_", " ")}:{" "}
+                            {formatContextComponentSum(category)}
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="mt-1">
+                        Groups follow recorded source-action IDs, which need not
+                        span a whole activation. Unlinked components stay
+                        individual. Event membership is retained in JSON.
+                      </p>
+                    </details>
+                  ) : null}
                   <dl className="mt-3 grid grid-cols-2 gap-2 text-xs text-amber-50/90">
                     <div>
                       Block:{" "}
@@ -800,7 +836,9 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                               , weight {moment.explainability.weight}.
                             </p>
                             {moment.metadata.injuryObservation ? (
-                              <p className="mt-1 text-xs text-amber-100/80">{explainInjuryObservation(moment)}</p>
+                              <p className="mt-1 text-xs text-amber-100/80">
+                                {explainInjuryObservation(moment)}
+                              </p>
                             ) : null}
                             {moment.contextualImpact ? (
                               <p className="mt-1 text-xs text-amber-100/80">
@@ -834,9 +872,9 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                                 )}
                               </p>
                             ) : null}
-                            {explainRerollCounter(moment,sourcesById) ? (
+                            {explainRerollCounter(moment, sourcesById) ? (
                               <p className="mt-1 text-xs text-amber-100/80">
-                                {explainRerollCounter(moment,sourcesById)}
+                                {explainRerollCounter(moment, sourcesById)}
                               </p>
                             ) : null}
                             {moment.metadata.activationLoss ||
@@ -845,7 +883,9 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                                 {explainActivationLoss(moment)}
                               </p>
                             ) : null}
-                            {moment.contextualBounds || moment.possessionBounds || moment.catchPossessionBounds ? (
+                            {moment.contextualBounds ||
+                            moment.possessionBounds ||
+                            moment.catchPossessionBounds ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainContextBounds(moment)}
                               </p>
@@ -895,7 +935,11 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                           {formatActualOutcome(moment)}
                         </td>
                         <td className="px-2 py-3">
-                          {formatDiceContribution(moment.weightedDelta, moment.scoringStatus === "scored" ? 1 : 0, 3)}
+                          {formatDiceContribution(
+                            moment.weightedDelta,
+                            moment.scoringStatus === "scored" ? 1 : 0,
+                            3
+                          )}
                         </td>
                         <td className="px-2 py-3">{moment.scoringStatus}</td>
                         <td className="px-2 py-3">

@@ -1,3 +1,4 @@
+import type { ContextComponentSummary } from "./contextComponents";
 import { recordedInjuryName } from "./injuryObservation";
 import type { LuckEventType, LuckReport } from "./types";
 import { LuckEventTypeSchema } from "./reportSchema";
@@ -15,6 +16,16 @@ export function explainRerollCounter(
     ? ` The next same-turn checkpoint records ${after.count}. The counter change from ${before.count} to ${after.count} ${counter.reconciliation === "matched" ? "matches this decision" : "does not match this single decision; resource consumption remains unreconciled"}.`
     : " The next same-turn counter is unknown. A missing counter is not treated as zero, and a later turn cannot fill it.";
   return `Last recorded team reroll counter before the offer: ${before.count} (ReplayStep ${before.replayStep}, child ${before.childIndex}). ${choice}${follow} These observations do not certify another reroll is legal. The cost of losing the reroll is not included in luck points.`;
+}
+
+export const PARTIAL_CONTEXT_SCOPE =
+  "This is an arithmetic sum of the reported model components only. Missing or unmodeled consequences remain outside it. It is not a whole-match luck range, a confidence interval or a basis for ranking the teams. No midpoint or endpoint enters point scores.";
+export function formatContextComponentSum(
+  summary: Pick<ContextComponentSummary, "bounds" | "componentCount">
+): string {
+  return summary.bounds
+    ? `${summary.bounds.lower.toFixed(2)} to ${summary.bounds.upper.toFixed(2)} provisional context units across ${summary.componentCount} reported component${summary.componentCount === 1 ? "" : "s"}`
+    : "No supported context components";
 }
 
 export function formatActualOutcome(

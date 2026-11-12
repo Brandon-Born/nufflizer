@@ -43,7 +43,7 @@ test("Foul Appearance and terminal mental failures retain distinct activation co
   });
   await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
   await expect(
-    page.getByText(/Context: -0\.83 context units across 1 estimate/)
+    page.getByText(/Context points: -0\.83 context units across 1 estimate/)
   ).toBeVisible();
   const later = page.locator("tbody tr").filter({ hasText: "Dodge failed" });
   await later.locator("summary").click();
@@ -331,13 +331,13 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
       .locator("tbody tr")
       .filter({ hasText: /Ball handling (?:failed|succeeded)/ })
   ).toHaveCount(11);
-  await page.locator("summary").first().click();
+  await page.locator("tbody tr summary").first().click();
   await expect(page.getByText(/Source: source-/).first()).toBeVisible();
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.33");
+  expect(report.schemaVersion).toBe("2.34");
   const keptCatch=report.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-548");
   expect(keptCatch.catchPossessionBounds).toMatchObject({policy:"kept_catch_failure_envelope",lower:-2/3,upper:0});
   expect(report.modelVersion).toBe("dice-only-20");
@@ -366,7 +366,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
     )
   ).toBe(true);
 
-  expect(report.contextModelVersion).toBe("mobility-possession-27");
+  expect(report.contextModelVersion).toBe("mobility-possession-28");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
     report.coverage.rollCandidates.scoredCount +
@@ -551,7 +551,7 @@ test("complete pre-roll evidence explains the cost of an exposed pickup", async 
     page.getByRole("heading", { name: "Nuffle Match Report" })
   ).toBeVisible();
   await expect(
-    page.getByText(/Context: -3\.65 context units across 1 estimate/)
+    page.getByText(/Context points: -3\.65 context units across 1 estimate/)
   ).toBeVisible();
   await page.getByLabel("Sort order", { exact: true }).selectOption("context");
   const row = page
@@ -599,7 +599,7 @@ test("complete pre-roll evidence explains the cost of an exposed pickup", async 
   });
   await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
   await expect(
-    page.getByText("Context: Not scored")
+    page.getByText("Context points: Not scored")
   ).toHaveCount(2);
   const suppressedRow = page
     .locator("tbody tr")
@@ -854,7 +854,7 @@ test("real-source Dodge uncertainty and active continuation stay outside point t
       await expect(row).toContainText("5 movement points remained after this step");
       await expect(row).toContainText("observed movement adds no luck score");
     }
-    await expect(page.getByText("Context: Not scored")).toHaveCount(2);
+    await expect(page.getByText("Context points: Not scored")).toHaveCount(2);
     await page.screenshot({
       path: index
         ? "/tmp/nufflizier-active-continuation-desktop.png"
@@ -891,7 +891,7 @@ test("source-backed Sure Hands bounds preserve pending catch and reaction uncert
     }
     await expect(row).toContainText("reaction skills or effects are incomplete");await expect(row).toContainText("later catch/return dice");
     await expect(row).toContainText("No midpoint or range endpoint enters point totals");await expect(row).toContainText("88.9%");
-    await expect(page.getByText("Context: Not scored")).toHaveCount(2);
+    await expect(page.getByText("Context points: Not scored")).toHaveCount(2);
     await page.screenshot({path:c.id.endsWith("success")?"/tmp/nufflizier-pickup-successors-desktop.png":"/tmp/nufflizier-pickup-failure-desktop.png",fullPage:true});
     await page.getByRole("button",{name:"Reset filters",exact:true}).click();await expect(page.getByLabel("Scoring status")).toHaveValue("scored");
     await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);
@@ -927,7 +927,7 @@ test("occupied-bounce catches preserve turnover opportunities and unknown stand-
     const row=table.locator("tbody tr");await expect(row).toHaveCount(1);await row.locator("summary").click();
     await expect(row).toContainText("recorded catcher after a failed pickup");await expect(row).toContainText(`${c.chance} raw success`);
     await expect(row).toContainText(`${c.range} context units`);await expect(row).toContainText("Failed-catch rerolls, reactions and later bounces are unresolved");
-    await expect(row).toContainText("No midpoint or endpoint enters point totals");await expect(page.getByText("Context: Not scored")).toHaveCount(2);
+    await expect(row).toContainText("No midpoint or endpoint enters point totals");await expect(page.getByText("Context points: Not scored")).toHaveCount(2);
     await page.getByRole("button",{name:"Reset filters",exact:true}).click();await expect(page.getByLabel("Scoring status")).toHaveValue("scored");
     await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);
     await page.unroute("**/api/nufflizier/analyze");
@@ -976,7 +976,7 @@ test("reroll counters separate resource observations from dice and unknown reset
       await expect(gate).toContainText(c.change);
     }
     if(c.id === "missing_zero_and_period") await expect(row).toContainText("missing counter is not treated as zero");
-    await expect(page.getByText("Context: Not scored")).toHaveCount(2);
+    await expect(page.getByText("Context points: Not scored")).toHaveCount(2);
     await page.screenshot({path:`/tmp/nufflizier-reroll-counter-${c.id}.png`,fullPage:true});
     await page.getByRole("button",{name:"Reset filters",exact:true}).click();await expect(page.getByLabel("Scoring status")).toHaveValue("scored");
     await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);
@@ -1002,7 +1002,7 @@ test("team-rerolled movement separates actual cells from missing context",async(
     if(id.startsWith("team_dodge"))await expect(row).toContainText("3 movement points remained after this step");
     else {await expect(row).toContainText("explicitly held ball followed");await expect(row).toContainText("waiting snapshot omitted remaining movement");}await expect(row).toContainText("actual movement adds no luck score");
     if(id==="team_rush_touchdown")await expect(row).toContainText("touchdown immediately after this move");
-    await expect(page.getByText("Context: Not scored")).toHaveCount(2);
+    await expect(page.getByText("Context points: Not scored")).toHaveCount(2);
     await page.screenshot({path:`/tmp/nufflizier-${id}-desktop.png`,fullPage:true});
     await page.getByLabel("Scoring status").selectOption("bounded");
     // The Dodge fragment has its earlier own-skill range and the distinct
@@ -1032,7 +1032,7 @@ test("fixed-zone Dodge reaches the pickup square and Sure Hands secures possessi
   await expect(pickup).toHaveCount(1);await pickup.locator("summary").click();
   await expect(pickup).toContainText("successful Sure Hands replacement secured the ball there");await expect(pickup).toContainText("post-move budget stays at 0");
   await expect(pickup).toContainText("Earlier unknown possession is not changed");await expect(pickup).toContainText("failed-pickup alternatives remain unquantified");
-  await expect(pickup).toContainText("88.9%");await expect(page.getByText("Context: Not scored")).toHaveCount(2);
+  await expect(pickup).toContainText("88.9%");await expect(page.getByText("Context points: Not scored")).toHaveCount(2);
   await page.screenshot({path:"/tmp/nufflizier-zone-pickup-desktop.png",fullPage:true});
   await page.getByLabel("Scoring status").selectOption("bounded");await expect(table.locator("tbody tr").filter({has:page.locator("summary")})).toHaveCount(0);
   await page.getByRole("button",{name:"Reset filters",exact:true}).click();await expect(movement).toHaveCount(1);await expect(pickup).toHaveCount(1);
@@ -1058,7 +1058,7 @@ test("combined moves and failed turnovers retain separate dice and unknown tacti
     if(c.id==="combined_team_rush") {await expect(row).toContainText("[8, 1] to [9, 2]");await expect(row).toContainText("omitted coordinates remain unknown");await expect(row).toContainText("No ordinary activation");}
     if(c.id==="combined_pickup_carrier") {await expect(row).toContainText("[17, 6] to [18, 7]");await expect(row).toContainText("explicitly held ball followed");}
     if(c.id.startsWith("combined_failure")){await expect(row).toContainText("player fell and the turn ended");await expect(row).toContainText(c.id.endsWith("blitz")?"scored damage: 0.15":"scored damage: -0.40");}
-    await expect(page.getByText("Context: Not scored")).toHaveCount(2);
+    await expect(page.getByText("Context points: Not scored")).toHaveCount(2);
     await page.screenshot({path:`/tmp/nufflizier-${c.id}-desktop.png`,fullPage:true});
     await page.getByLabel("Scoring status").selectOption("bounded");await expect(row).toHaveCount(0);
     await page.getByRole("button",{name:"Reset filters",exact:true}).click();await expect(row).toHaveCount(1);
@@ -1097,7 +1097,7 @@ test("committed team Dodge bounds keep terminal turn cost separate from compound
     if(index===0)await page.screenshot({path:"/tmp/nufflizier-terminal-team-dodge-desktop.png",fullPage:true});
     const download=page.waitForEvent("download");await page.getByRole("button",{name:"Download JSON"}).click();
     const result=await download;const saved=JSON.parse(readFileSync((await result.path())!,"utf8"));
-    expect(saved.schemaVersion).toBe("2.33");expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);
+    expect(saved.schemaVersion).toBe("2.34");expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);
     expect(saved.events.find((e:{contextualBounds?:{policy:string}})=>e.contextualBounds?.policy==="team_reroll_terminal_moves").probabilitySuccess).toBeCloseTo(8/9,12);
     if(index===0)await page.getByRole("button",{name:"Upload Another Replay"}).click();
     await page.unroute("**/api/nufflizier/analyze");
@@ -1126,7 +1126,7 @@ test("current roster completion excludes a spent player from later Dodge opportu
   await page.getByText(/With the team reroll already spent/).scrollIntoViewIfNeeded();
   await page.screenshot({path:"/tmp/nufflizier-current-roster-move-desktop.png",fullPage:false});
   const download=page.waitForEvent("download");await page.getByRole("button",{name:"Download JSON"}).click();const file=await download;
-  const saved=JSON.parse(readFileSync((await file.path())!,"utf8"));expect(saved.schemaVersion).toBe("2.33");
+  const saved=JSON.parse(readFileSync((await file.path())!,"utf8"));expect(saved.schemaVersion).toBe("2.34");
   expect(saved.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-1960").contextualBounds.maximumMoves).toBe(3);
   expect(saved.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-1942").metadata.initialRosterName).toBeUndefined();
   expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);
@@ -1152,7 +1152,7 @@ test("completed ordinary Moves stay spent across stable wait checkpoints",async(
   await expect(row).toContainText("97.2%");await expect(row).toContainText("83.3% success");
   await row.scrollIntoViewIfNeeded();await page.screenshot({path:"/tmp/nufflizier-deterministic-completion-desktop.png",fullPage:false});
   const download=page.waitForEvent("download");await page.getByRole("button",{name:"Download JSON"}).click();const file=await download;
-  const saved=JSON.parse(readFileSync((await file.path())!,"utf8"));expect(saved.schemaVersion).toBe("2.33");
+  const saved=JSON.parse(readFileSync((await file.path())!,"utf8"));expect(saved.schemaVersion).toBe("2.34");
   expect(saved.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-3098").contextualBounds.maximumMoves).toBe(3);
   expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);
   await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);expect(errors).toEqual([]);
@@ -1181,7 +1181,7 @@ test("retained Catch explains the original die's fixed-policy failure range",asy
   await expect(row).toContainText("Holding the recorded decline-on-failure policy fixed");
   await page.screenshot({path:"/tmp/nufflizier-retained-catch-mobile.png",fullPage:false});
   const download=page.waitForEvent("download");await page.getByRole("button",{name:"Download JSON"}).click();const file=await download;
-  const saved=JSON.parse(readFileSync((await file.path())!,"utf8"));expect(saved.schemaVersion).toBe("2.33");
+  const saved=JSON.parse(readFileSync((await file.path())!,"utf8"));expect(saved.schemaVersion).toBe("2.34");
   expect(saved.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-548").catchPossessionBounds).toMatchObject({policy:"kept_catch_failure_envelope",lower:-2/3,upper:0});
   expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);
   await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);expect(errors).toEqual([]);
@@ -1209,7 +1209,7 @@ test("crowd-pushed defenders retain one unscored injury and confirmed off-pitch 
   await page.screenshot({path:"/tmp/nufflizier-block-crowd-mobile.png",fullPage:false});
   const download=page.waitForEvent("download");await page.getByRole("button",{name:"Download JSON"}).click();const file=await download;
   const saved=JSON.parse(readFileSync((await file.path())!,"utf8")),pool=saved.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-3716"),c=pool.metadata.blockCrowd;
-  expect(saved.schemaVersion).toBe("2.33");expect(c.after).toMatchObject({checkpointAfter:3730,cell:{x:-1,y:-1},canAct:true,tackleZone:true,statusCode:null});
+  expect(saved.schemaVersion).toBe("2.34");expect(c.after).toMatchObject({checkpointAfter:3730,cell:{x:-1,y:-1},canAct:true,tackleZone:true,statusCode:null});
   expect(saved.damageSteps.find((s:{actionId:string})=>s.actionId===c.damageActionId)).toMatchObject({scoredRolls:0,unscoredRolls:1,diceContribution:0});
   expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);
   await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);expect(errors).toEqual([]);
@@ -1234,7 +1234,102 @@ test("recorded injury outcomes stay separate from unknown odds and unscored cont
   await expect(row.getByText(/The recorded injury result for player 43/)).toBeVisible();expect((await row.locator("td").nth(2).boundingBox())!.width).toBeGreaterThanOrEqual(256);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);await page.screenshot({path:"/tmp/nufflizier-injury-observation-mobile.png",fullPage:false});
   const download=page.waitForEvent("download");await page.getByRole("button",{name:"Download JSON"}).click();const file=await download;const saved=JSON.parse(readFileSync((await file.path())!,"utf8"));
-  const e=saved.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-3889");expect(saved.schemaVersion).toBe("2.33");expect(e.metadata.injuryObservation).toMatchObject({outcome:"casualty",recordKind:"direct",subjectId:"43",subjectTeamId:"1",sourceCode:1,damageStepSourceIndex:3886});
+  const e=saved.events.find((e:{metadata:{sourceId:string}})=>e.metadata.sourceId==="source-3889");expect(saved.schemaVersion).toBe("2.34");expect(e.metadata.injuryObservation).toMatchObject({outcome:"casualty",recordKind:"direct",subjectId:"43",subjectTeamId:"1",sourceCode:1,damageStepSourceIndex:3886});
   expect(e.scoringStatus).toBe("excluded");expect(e.probabilitySuccess).toBeNull();expect(e.actualSuccess).toBeNull();expect(e.weightedDelta).toBe(0);
   expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);expect(errors).toEqual([]);
+});
+
+test("partial context sums reconcile while points and whole-match verdict remain abstained", async ({
+  page
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  page.on("console", (m) => {
+    if (m.type() === "error") errors.push(m.text());
+  });
+  const input = readFileSync("demo-replays/demo11.bbr", "utf8"),
+    report = analyzeNufflizerInput(input);
+  // Full source through domain/schema; original demo11 worker/API assertions
+  // separately check real transport and the unchanged four-second budget.
+  await page.route("**/api/nufflizier/analyze", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(report)
+    })
+  );
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/nufflizier");
+  await expect(page).toHaveTitle("Nufflizier");
+  await page.setInputFiles('input[name="replay"]', {
+    name: "source11.bbr",
+    mimeType: "application/octet-stream",
+    buffer: Buffer.from(input)
+  });
+  await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Nuffle Match Report" })
+  ).toBeVisible();
+  const card = page
+    .getByRole("article")
+    .filter({
+      has: page.getByRole("heading", {
+        name: report.teams[1].teamName,
+        exact: true
+      })
+    });
+  await expect(card.getByText("Context points: Not scored")).toBeVisible();
+  await expect(
+    card.getByText(
+      "Partial component sum: -4.67 to 4.00 provisional context units across 4 reported components"
+    )
+  ).toBeVisible();
+  await expect(
+    page.getByText(/They do not rank the teams or bound whole-match luck/)
+  ).toBeVisible();
+  await card.getByText("Partial component breakdown", { exact: true }).click();
+  await expect(
+    card.getByText(/not a whole-match luck range, a confidence interval/)
+  ).toBeVisible();
+  await expect(card.locator("li")).toHaveText([
+    "dodge: -4.67 to 4.00 provisional context units across 4 reported components"
+  ]);
+  await page.getByLabel("Scoring status").selectOption("bounded");
+  await page.getByLabel("Category", { exact: true }).selectOption("dodge");
+  const table = page
+    .getByRole("table")
+    .filter({
+      has: page.getByRole("columnheader", { name: "Replay segment" })
+    });
+  await expect(table.locator("tbody tr")).toHaveCount(4);
+  await expect(card.getByText(/Partial component sum: -4.67/)).toBeVisible();
+  await card.scrollIntoViewIfNeeded();
+  await page.screenshot({
+    path: "/tmp/nufflizier-context-components-desktop.png",
+    fullPage: false
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await card.scrollIntoViewIfNeeded();
+  await expect(
+    card.getByText(/not a whole-match luck range, a confidence interval/)
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth)
+  ).toBeLessThanOrEqual(390);
+  await page.screenshot({
+    path: "/tmp/nufflizier-context-components-mobile.png",
+    fullPage: false
+  });
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download JSON" }).click();
+  const file = await download;
+  const saved = JSON.parse(readFileSync((await file.path())!, "utf8"));
+  expect(saved.contextComponents).toEqual(report.contextComponents);
+  expect(
+    saved.teams.every((t: { impactCount: number }) => t.impactCount === 0)
+  ).toBe(true);
+  expect(saved.verdict.luckierTeam).toBe("unknown");
+  await page.getByRole("button", { name: "Upload Another Replay" }).click();
+  await expect(page.getByText("Partial component breakdown")).toHaveCount(0);
+  expect(errors).toEqual([]);
 });

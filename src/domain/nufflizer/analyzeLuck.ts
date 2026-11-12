@@ -1,3 +1,4 @@
+import { summarizeContextComponents } from "./contextComponents";
 import { attachInjuryObservations } from "./injuryObservation";
 import { attachBlockCrowd } from "./blockCrowd";
 import { attachRetainedCatchPossession } from "./retainedCatchPossession";
@@ -1736,6 +1737,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     verdict,
     coverage,
     damageSteps,
+    contextComponents:summarizeContextComponents(events,[homeAggregate.teamId,awayAggregate.teamId]) as LuckReport["contextComponents"],
     recruitments,
     weightTable: { ...LUCK_CATEGORY_WEIGHTS },
     howScoredSummary: buildHowScoredSummary(

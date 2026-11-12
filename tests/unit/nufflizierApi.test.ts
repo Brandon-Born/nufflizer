@@ -120,6 +120,11 @@ describe("POST /api/nufflizier/analyze", () => {
     });
     expect(e.metadata.preRoll?.activeTeamId).toBe("1");
     expect(e.metadata.preRoll?.period).toBeNull();
+    const componentTeam=report.contextComponents.find(t=>t.teamId==="1")!;
+    expect(componentTeam).toMatchObject({componentCount:4,pointCount:0,boundedCount:4});
+    expect(componentTeam.bounds!.lower).toBeCloseTo(-14/3,12);expect(componentTeam.bounds!.upper).toBe(4);
+    expect(componentTeam.byCategory[0]!.eventIds).toEqual(["12-17-ResultRoll","12-25-ResultRoll","16-28-ResultRoll","35-75-ResultRoll"]);
+    expect(componentTeam.byAction).toHaveLength(4);expect(report.teams.every(t=>t.impactCount===0)).toBe(true);
     const terminalMoves=report.events.filter(e=>e.contextualBounds?.policy === "team_reroll_terminal_moves");
     expect(terminalMoves.map(e=>e.metadata.locator?.replayStep)).toEqual([194,249,430]);
     expect(terminalMoves.map(e=>e.contextualBounds?.maximumMoves)).toEqual([6,3,4]);

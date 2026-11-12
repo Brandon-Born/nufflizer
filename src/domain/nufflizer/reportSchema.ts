@@ -1,3 +1,8 @@
+import {
+  contextComponent,
+  summarizeContextComponents,
+  type ContextComponentSummary
+} from "./contextComponents";
 import { directInjuryOutcome } from "./injuryObservation";
 import { validReportedBlockCrowd } from "./blockCrowd";
 import { bounceDestination } from "@/domain/replay/pickupSuccessors";
@@ -407,6 +412,34 @@ export const LuckTeamAggregateSchema = z.strictObject({
   impactScore: finite,
   impactByType: z.strictObject({ dodge: finite, ball_handling: finite })
 });
+const componentBucket = {
+  componentCount: count,
+  pointCount: count,
+  boundedCount: count,
+  bounds: z.strictObject({ lower: finite, upper: finite }).nullable()
+};
+const contextComponentSummary = z.strictObject({
+  ...componentBucket,
+  teamId: text,
+  byCategory: z
+    .array(
+      z.strictObject({
+        ...componentBucket,
+        type: LuckEventTypeSchema,
+        eventIds: z.array(text).min(1).max(REPLAY_LIMITS.events)
+      })
+    )
+    .max(8),
+  byAction: z
+    .array(
+      z.strictObject({
+        ...componentBucket,
+        actionId: text.nullable(),
+        eventIds: z.array(text).min(1).max(REPLAY_LIMITS.events)
+      })
+    )
+    .max(REPLAY_LIMITS.events)
+});
 // This model can only abstain. Supporting comparative verdicts requires a new, validated model version.
 export const LuckVerdictSchema = z.strictObject({
   luckierTeam: z.literal("unknown"),
@@ -499,6 +532,7 @@ export const LuckReportSchema = z
       .max(REPLAY_LIMITS.events),
     howScoredSummary: z.array(text).max(REPLAY_LIMITS.events),
     teams: z.tuple([LuckTeamAggregateSchema, LuckTeamAggregateSchema]),
+    contextComponents:z.tuple([contextComponentSummary,contextComponentSummary]),
     keyMoments: z.array(LuckEventSchema).max(REPLAY_LIMITS.events),
     events: z.array(LuckEventSchema).max(REPLAY_LIMITS.events)
   })
@@ -580,6 +614,75 @@ export const LuckReportSchema = z
     const linkedDamageActions = new Set<string>();
     const linkedBallCatches = new Set<string>();
     const families = summarizeRollFamilies(candidates);
+    const expectedComponents = summarizeContextComponents(
+      report.events,
+      report.teams.map((t) => t.teamId)
+    );
+    const sameBucket = (
+      a:
+        | ContextComponentSummary
+        | ContextComponentSummary["byAction"][number]
+        | ContextComponentSummary["byCategory"][number],
+      b: typeof a
+    ) =>
+      a.componentCount === b.componentCount &&
+      a.pointCount === b.pointCount &&
+      a.boundedCount === b.boundedCount &&
+      (a.bounds === null
+        ? b.bounds === null
+        : b.bounds !== null &&
+          a.bounds.lower <= a.bounds.upper &&
+          near(a.bounds.lower, b.bounds.lower) &&
+          near(a.bounds.upper, b.bounds.upper));
+    const sameMembers = (a: readonly string[], b: readonly string[]) =>
+      a.length === b.length && a.every((id, i) => id === b[i]);
+    require(report.contextComponents.every((team, i) => {
+      const expected = expectedComponents[i]!;
+      return (
+        !!expected &&
+        team.teamId === expected.teamId &&
+        sameBucket(team, expected) &&
+        team.byCategory.length === expected.byCategory.length &&
+        team.byCategory.every((category, j) => {
+          const group = expected.byCategory[j]!;
+          return (
+            category.type === group.type &&
+            sameBucket(category, group) &&
+            sameMembers(category.eventIds, group.eventIds)
+          );
+        }) &&
+        team.byAction.length === expected.byAction.length &&
+        team.byAction.every((action, j) => {
+          const group = expected.byAction[j]!;
+          return (
+            action.actionId === group.actionId &&
+            sameBucket(action, group) &&
+            sameMembers(action.eventIds, group.eventIds)
+          );
+        })
+      );
+    }), "Partial context component sums and category/action membership must reconcile with unique admitted event components; absent evidence is null, never zero.");
+    const componentSources = new Set<string>();
+    for (const event of report.events) {
+      const componentFields = [
+        event.contextualImpact,
+        event.contextualBounds,
+        event.possessionBounds,
+        event.catchPossessionBounds
+      ].filter((x) => x !== undefined);
+      if (componentFields.length)
+        require(componentFields.length === 1 &&
+          contextComponent(event) !== undefined &&
+          report.teams.some(
+            (t) => t.teamId === event.teamId
+          ), "An additive context component needs one finite interval or point on one owned scored random record; overlapping or excluded components cannot enter sums.");
+      if (componentFields.length && event.metadata.sourceId !== undefined) {
+        require(!componentSources.has(
+          event.metadata.sourceId
+        ), "One random source cannot fund duplicate context components.");
+        componentSources.add(event.metadata.sourceId);
+      }
+    }
     const contextEvidence = summarizeContextEvidence(report.events);
     require(Object.keys(contextEvidence).every(
       (key) =>
