@@ -1,6 +1,6 @@
 import type { PreRollEvidence } from "@/domain/replay/reconstructContext";
 
-export const CONTEXT_MODEL_VERSION = "mobility-possession-28";
+export const CONTEXT_MODEL_VERSION = "mobility-possession-29";
 export type ContextPolicy =
   | "declined_team_reroll"
   | "full_team_reroll"
@@ -193,7 +193,7 @@ export function estimateKeptCatchPossession(successChance: number) {
 // The caller requires a verified actual move or terminal self-fall/turnover;
 // the earlier failed die, reroll cost, actor continuation and ball value are
 // separate stages. Unknown teammate eligibility remains a possible-value set.
-export function estimateTeamDodgeMoveBounds(
+function terminalTeamMoveBounds(
   preRoll: PreRollEvidence | undefined,
   actualSuccess: boolean,
   successChance: number,
@@ -213,7 +213,6 @@ export function estimateTeamDodgeMoveBounds(
   const deviation = Number(actualSuccess) - successChance;
   const endpoints = [deviation * minimumMoves, deviation * maximumMoves];
   return {
-    policy: "team_reroll_terminal_moves" as const,
     terminalCheckpointAfter,
     successChance,
     minimumMoves,
@@ -221,4 +220,21 @@ export function estimateTeamDodgeMoveBounds(
     lower: Math.min(...endpoints) || 0,
     upper: Math.max(...endpoints) || 0
   };
+}
+
+
+export function estimateTeamDodgeMoveBounds(
+  ...args: Parameters<typeof terminalTeamMoveBounds>
+) {
+  const bounds = terminalTeamMoveBounds(...args);
+  return bounds ? { policy: "team_reroll_terminal_moves" as const, ...bounds } : undefined;
+}
+
+// The same teammate-only unit at an unmodified committed Rush replacement.
+// Ordinary-move proof excludes combined Dodge/Blitz/ball-value policies.
+export function estimateTeamRushMoveBounds(
+  ...args: Parameters<typeof terminalTeamMoveBounds>
+) {
+  const bounds = terminalTeamMoveBounds(...args);
+  return bounds ? { policy: "team_reroll_rush_moves" as const, ...bounds } : undefined;
 }

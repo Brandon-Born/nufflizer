@@ -35,6 +35,11 @@ INPUTS = [
  ('demo7.bbr','1','dodge','32-65',3098,'256-2','0','1/2'),
  ('demo7.bbr','1','dodge','38-38',3967,'321-1','1/6','5/6'),
  ('demo7.bbr','1','dodge','45-66',4765,'385-1','1/6','5/6'),
+ # Rush inputs are separately qualified by extract-terminal-rush-evidence.py.
+ ('demo2.bbr','1','movement_risk','8-84',702,'62-0','0','5/6'),
+ ('demo2.bbr','1','movement_risk','10-119',1091,'105-0','0','1'),
+ ('demo7.bbr','1','movement_risk','6-186',677,'65-0','0','3/2'),
+ ('demo9.bbr','1','movement_risk','9-102',858,'91-0','0','4/3'),
 ]
 
 def bucket(rows):
@@ -49,6 +54,7 @@ def build():
         cases.append(dict(file=file, teamId=team, type=category,
                           eventId=event+'-ResultRoll', sourceId=f'source-{source}',
                           actionId=f'sequence-{seq}-step-{step}', lower=lower, upper=upper))
+    cases.sort(key=lambda row: (row['file'], int(row['sourceId'].split('-')[1])))
     files = []
     for path in sorted((ROOT/'demo-replays').glob('*.bbr')):
         rows = [r for r in cases if r['file'] == path.name]
@@ -72,7 +78,7 @@ if __name__ == '__main__':
     if args.check:
         if OUTPUT.read_text() != rendered:
             raise SystemExit('Arithmetic fixture or source hashes differ; review before updating.')
-        print('19 component inputs / 12 source hashes / 24 team subtotals match exact rational arithmetic.')
+        print('23 component inputs / 12 source hashes / 24 team subtotals match exact rational arithmetic.')
     else:
         OUTPUT.write_text(rendered)
         print(OUTPUT.relative_to(ROOT))

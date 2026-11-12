@@ -6,7 +6,7 @@ import {
 // A waiting snapshot does not become playable state. Compare its observations
 // against the qualified original frame before valuing only teammate moves in
 // the hypothetical successful terminal successor. No omitted field is filled.
-export function teamDodgeContinuity(
+export function teamMovementContinuity(
   checkpoints: readonly ReplayBoardCheckpoint[],
   originalCheckpointAfter: number,
   questionIndex: number,

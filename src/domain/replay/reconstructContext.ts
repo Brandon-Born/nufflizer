@@ -394,8 +394,10 @@ function summarize(
         )
       : undefined;
   const destination = stepCell(step?.payload?.CellTo);
+  // Rush is admitted here only from a supported original team-reroll offer;
+  // committed ordinary movement/terminal continuity is checked separately.
   const movementCheckLinked =
-    rollType === 2 &&
+    (rollType === 2 || failedMovementOffer(event)?.family === 1) &&
     normal &&
     Boolean(owned) &&
     consistentGeometry &&
@@ -426,6 +428,7 @@ function summarize(
     board.ball.possession === "not_held" ||
     (board.ball.possession === "held" && board.ball.carrierId !== actorId);
   const activeMoveContinuation =
+    rollType === 2 &&
     movementCheckLinked &&
     destination &&
     actorId !== null &&
@@ -501,6 +504,7 @@ function summarize(
   }
   let teammateCarrierMove: PreRollEvidence["teammateCarrierMove"];
   if (
+    rollType === 2 &&
     movementCheckLinked &&
     actorCell &&
     destination &&

@@ -103,6 +103,26 @@
       "upper": "0"
     },
     {
+      "file": "demo2.bbr",
+      "teamId": "1",
+      "type": "movement_risk",
+      "eventId": "8-84-ResultRoll",
+      "sourceId": "source-702",
+      "actionId": "sequence-62-step-0",
+      "lower": "0",
+      "upper": "5/6"
+    },
+    {
+      "file": "demo2.bbr",
+      "teamId": "1",
+      "type": "movement_risk",
+      "eventId": "10-119-ResultRoll",
+      "sourceId": "source-1091",
+      "actionId": "sequence-105-step-0",
+      "lower": "0",
+      "upper": "1"
+    },
+    {
       "file": "demo3.bbr",
       "teamId": "1",
       "type": "ball_handling",
@@ -155,6 +175,16 @@
     {
       "file": "demo7.bbr",
       "teamId": "1",
+      "type": "movement_risk",
+      "eventId": "6-186-ResultRoll",
+      "sourceId": "source-677",
+      "actionId": "sequence-65-step-0",
+      "lower": "0",
+      "upper": "3/2"
+    },
+    {
+      "file": "demo7.bbr",
+      "teamId": "1",
       "type": "dodge",
       "eventId": "23-42-ResultRoll",
       "sourceId": "source-2237",
@@ -191,6 +221,16 @@
       "actionId": "sequence-385-step-1",
       "lower": "1/6",
       "upper": "5/6"
+    },
+    {
+      "file": "demo9.bbr",
+      "teamId": "1",
+      "type": "movement_risk",
+      "eventId": "9-102-ResultRoll",
+      "sourceId": "source-858",
+      "actionId": "sequence-91-step-0",
+      "lower": "0",
+      "upper": "4/3"
     }
   ],
   "files": [
@@ -530,12 +570,57 @@
         },
         {
           "teamId": "1",
-          "componentCount": 0,
+          "componentCount": 2,
           "pointCount": 0,
-          "boundedCount": 0,
-          "bounds": null,
-          "byCategory": [],
-          "byAction": []
+          "boundedCount": 2,
+          "bounds": {
+            "lower": "0",
+            "upper": "11/6"
+          },
+          "byCategory": [
+            {
+              "type": "movement_risk",
+              "componentCount": 2,
+              "pointCount": 0,
+              "boundedCount": 2,
+              "bounds": {
+                "lower": "0",
+                "upper": "11/6"
+              },
+              "eventIds": [
+                "8-84-ResultRoll",
+                "10-119-ResultRoll"
+              ]
+            }
+          ],
+          "byAction": [
+            {
+              "actionId": "sequence-62-step-0",
+              "componentCount": 1,
+              "pointCount": 0,
+              "boundedCount": 1,
+              "bounds": {
+                "lower": "0",
+                "upper": "5/6"
+              },
+              "eventIds": [
+                "8-84-ResultRoll"
+              ]
+            },
+            {
+              "actionId": "sequence-105-step-0",
+              "componentCount": 1,
+              "pointCount": 0,
+              "boundedCount": 1,
+              "bounds": {
+                "lower": "0",
+                "upper": "1"
+              },
+              "eventIds": [
+                "10-119-ResultRoll"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -788,12 +873,12 @@
         },
         {
           "teamId": "1",
-          "componentCount": 4,
+          "componentCount": 5,
           "pointCount": 0,
-          "boundedCount": 4,
+          "boundedCount": 5,
           "bounds": {
             "lower": "1/2",
-            "upper": "7/2"
+            "upper": "5"
           },
           "byCategory": [
             {
@@ -811,9 +896,35 @@
                 "38-38-ResultRoll",
                 "45-66-ResultRoll"
               ]
+            },
+            {
+              "type": "movement_risk",
+              "componentCount": 1,
+              "pointCount": 0,
+              "boundedCount": 1,
+              "bounds": {
+                "lower": "0",
+                "upper": "3/2"
+              },
+              "eventIds": [
+                "6-186-ResultRoll"
+              ]
             }
           ],
           "byAction": [
+            {
+              "actionId": "sequence-65-step-0",
+              "componentCount": 1,
+              "pointCount": 0,
+              "boundedCount": 1,
+              "bounds": {
+                "lower": "0",
+                "upper": "3/2"
+              },
+              "eventIds": [
+                "6-186-ResultRoll"
+              ]
+            },
             {
               "actionId": "sequence-188-step-1",
               "componentCount": 1,
@@ -909,12 +1020,43 @@
         },
         {
           "teamId": "1",
-          "componentCount": 0,
+          "componentCount": 1,
           "pointCount": 0,
-          "boundedCount": 0,
-          "bounds": null,
-          "byCategory": [],
-          "byAction": []
+          "boundedCount": 1,
+          "bounds": {
+            "lower": "0",
+            "upper": "4/3"
+          },
+          "byCategory": [
+            {
+              "type": "movement_risk",
+              "componentCount": 1,
+              "pointCount": 0,
+              "boundedCount": 1,
+              "bounds": {
+                "lower": "0",
+                "upper": "4/3"
+              },
+              "eventIds": [
+                "9-102-ResultRoll"
+              ]
+            }
+          ],
+          "byAction": [
+            {
+              "actionId": "sequence-91-step-0",
+              "componentCount": 1,
+              "pointCount": 0,
+              "boundedCount": 1,
+              "bounds": {
+                "lower": "0",
+                "upper": "4/3"
+              },
+              "eventIds": [
+                "9-102-ResultRoll"
+              ]
+            }
+          ]
         }
       ]
     }

@@ -7,7 +7,7 @@ import { directInjuryOutcome } from "./injuryObservation";
 import { validReportedBlockCrowd } from "./blockCrowd";
 import { bounceDestination } from "@/domain/replay/pickupSuccessors";
 import { continuationOptionBounds } from "@/domain/replay/activeMoveContinuation";
-import { estimateDodgeImpactBounds, estimateTeamDodgeMoveBounds, estimateNumericImpact, estimatePickupPossessionBounds, estimateFreshCatchPossession, estimateKeptCatchPossession } from "./contextImpact";
+import { estimateDodgeImpactBounds, estimateTeamDodgeMoveBounds, estimateTeamRushMoveBounds, estimateNumericImpact, estimatePickupPossessionBounds, estimateFreshCatchPossession, estimateKeptCatchPossession } from "./contextImpact";
 import { blockOutcomeName, consistentBlockResolution, knockedDownSubjects, summarizeBlockConsequence } from "./blockConsequences";
 import { enumerateBlockPool } from "./blockPools";
 import { z } from "zod";
@@ -365,7 +365,7 @@ export const LuckEventSchema = z.strictObject({
     z.strictObject({policy:z.literal("kept_catch_failure_envelope"),successChance:probability,minimumDifference:z.literal(0),maximumDifference:z.literal(2),lower:finite,upper:z.literal(0)})
   ]).optional(),
   possessionBounds:z.strictObject({policy:z.literal("sure_hands_reroll"),successChance:probability,minimumDifference:finite.min(0).max(3),maximumDifference:finite.min(0).max(3),lower:finite,upper:finite}).optional(),
-  contextualBounds:z.strictObject({policy:z.enum(["dodge_skill_reroll","team_reroll_terminal_moves"]),terminalCheckpointAfter:count.optional(),minimumMoves:count,maximumMoves:count,successChance:probability,activeContinuation:z.strictObject({minimum:z.union([z.literal(0),z.literal(1)]),maximum:z.union([z.literal(0),z.literal(1)])}).optional(),lower:finite,upper:finite}).optional(),
+  contextualBounds:z.strictObject({policy:z.enum(["dodge_skill_reroll","team_reroll_terminal_moves","team_reroll_rush_moves"]),terminalCheckpointAfter:count.optional(),minimumMoves:count,maximumMoves:count,successChance:probability,activeContinuation:z.strictObject({minimum:z.union([z.literal(0),z.literal(1)]),maximum:z.union([z.literal(0),z.literal(1)])}).optional(),lower:finite,upper:finite}).optional(),
   contextualImpact: z
     .strictObject({
       policy: z.enum(["declined_team_reroll", "full_team_reroll", "dodge_skill_reroll"]),
@@ -1415,7 +1415,7 @@ export const LuckReportSchema = z
       const availability = context?.ordinaryMoveAvailability;
       if (availability) {
         const members=[...availability.knownAvailablePlayerIds,...availability.unknownPlayerIds];
-        require(context?.movementCheckLinked === true && event.metadata.rollType === 2 && context.actorCell !== null &&
+        require(context?.movementCheckLinked === true && (event.metadata.rollType === 1 || event.metadata.rollType === 2) && context.actorCell !== null &&
           context.activeTeamId === event.teamId && Math.max(Math.abs(context.actorCell!.x-availability.successDestination.x),Math.abs(context.actorCell!.y-availability.successDestination.y)) === 1 &&
           members.length < 64 && new Set(members).size === members.length && !members.includes(event.playerId ?? "") &&
           context.otherUsefulActivations === (availability.unknownPlayerIds.length ? null : availability.knownAvailablePlayerIds.length),
@@ -1436,13 +1436,14 @@ export const LuckReportSchema = z
       }
       const bound=event.contextualBounds;
       if (bound) {
-        const teamStage=bound.policy === "team_reroll_terminal_moves";
-        const expected=teamStage ? estimateTeamDodgeMoveBounds(context,event.actualSuccess === true,bound.successChance,bound.terminalCheckpointAfter ?? -1) :
+        const rushStage=bound.policy === "team_reroll_rush_moves";
+        const teamStage=rushStage || bound.policy === "team_reroll_terminal_moves";
+        const expected=teamStage ? (rushStage ? estimateTeamRushMoveBounds : estimateTeamDodgeMoveBounds)(context,event.actualSuccess === true,bound.successChance,bound.terminalCheckpointAfter ?? -1) :
           estimateDodgeImpactBounds(context,"dodge_skill_reroll",Number(event.actualSuccess)-bound.successChance,bound.successChance);
         if(teamStage) {
           const m=event.metadata,question=sources.get(m.rerollQuestionId ?? ""),choice=sources.get(m.rerollDecisionId ?? "");
           const original=z.strictObject({Die:z.strictObject({DieType:z.literal(0),Value:z.number().int().min(1).max(6)})}).safeParse(m.originalDice);
-          require(m.rerollResource === "team" && m.rerollUsed === true && m.teamRerollsSpent === 1 &&
+          require((!rushStage || (m.difficulty === 2 && event.actualSuccess === true && m.teamRerollMovement?.rollType === 1)) && m.rerollResource === "team" && m.rerollUsed === true && m.teamRerollsSpent === 1 &&
             !m.rerollSkill && !m.lonerGate && !m.proGate && !bound.activeContinuation &&
             (m.modifiers?.length ?? 0) === 0 && m.requirement === m.difficulty &&
             question?.metadata.sourceTag === "QuestionTeamRerollUsage" && question.metadata.stepType === 1 &&
@@ -1459,9 +1460,9 @@ export const LuckReportSchema = z
             choice.metadata.sourceIndex === (m.sourceIndex ?? -1)-1 &&
             (event.actualSuccess ? !!m.teamRerollMovement && !m.teamRerollMovement.zonePenalty :
               !!m.movementFall && !m.movementFall.combinedRushSourceId),
-            "A conditional team-Dodge move component needs its committed direct replacement and confirmed move or self-fall/turnover, outside earlier dice, resources and ball value.");
+            "A conditional team movement component needs its committed direct replacement and confirmed move or self-fall/turnover, outside earlier dice, resources and ball value.");
         }
-        require((teamStage || bound.terminalCheckpointAfter === undefined) && event.scoringStatus === "scored" && event.metadata.rollType === 2 && context?.activeTeamId === event.teamId &&
+        require((teamStage || bound.terminalCheckpointAfter === undefined) && event.scoringStatus === "scored" && event.metadata.rollType === (rushStage ? 1 : 2) && context?.activeTeamId === event.teamId &&
           event.contextualImpact === undefined && !!expected && bound.minimumMoves === expected.minimumMoves && bound.maximumMoves === expected.maximumMoves &&
           bound.activeContinuation?.minimum === ("activeContinuation" in expected ? expected.activeContinuation?.minimum : undefined) && bound.activeContinuation?.maximum === ("activeContinuation" in expected ? expected.activeContinuation?.maximum : undefined) &&
           near(bound.successChance,(7-(event.metadata.difficulty ?? 0))/6) && near(bound.lower,expected.lower) && near(bound.upper,expected.upper),

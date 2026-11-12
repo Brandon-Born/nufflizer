@@ -65,6 +65,13 @@ describe("POST /api/nufflizier/analyze", () => {
       falls = report.events.filter(
         (e) => e.metadata.movementFall?.combinedRushSourceId
       );
+    const rushes=report.events.filter(e=>e.contextualBounds?.policy === "team_reroll_rush_moves");
+    expect(rushes.map(e=>e.metadata.sourceId)).toEqual(["source-702","source-1091"]);
+    expect(rushes.map(e=>e.contextualBounds!.maximumMoves)).toEqual([5,6]);
+    expect(rushes.every(e=>e.contextualBounds!.successChance===5/6 && e.probabilitySuccess===35/36 && e.contextualImpact===undefined)).toBe(true);
+    const components=report.contextComponents.find(t=>t.teamId==="1")!;
+    expect(components.componentCount).toBe(2);expect(components.byCategory[0]!.type).toBe("movement_risk");
+    expect(components.bounds!.lower).toBe(0);expect(components.bounds!.upper).toBeCloseTo(11/6,12);
     expect(falls.map((e) => e.metadata.locator?.replayStep)).toEqual([
       229, 259
     ]);

@@ -2,7 +2,7 @@ import { summarizeContextComponents } from "./contextComponents";
 import { attachInjuryObservations } from "./injuryObservation";
 import { attachBlockCrowd } from "./blockCrowd";
 import { attachRetainedCatchPossession } from "./retainedCatchPossession";
-import { teamDodgeContinuity } from "@/domain/replay/teamDodgeContinuity";
+import { teamMovementContinuity } from "@/domain/replay/teamMovementContinuity";
 import { findBounceCatchReactions, attachBounceCatchReactions } from "./catchPossession";
 import { findPickupTurnEnds, attachPickupTurnEnds } from "./pickupTurnEnd";
 import { findRerollCounterEvidence, attachRerollCounterEvidence } from "./rerollCounters";
@@ -27,6 +27,7 @@ import {
   estimateNumericImpact,
   estimateDodgeImpactBounds,
   estimateTeamDodgeMoveBounds,
+  estimateTeamRushMoveBounds,
   estimatePickupPossessionBounds
 } from "./contextImpact";
 import {
@@ -1404,7 +1405,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   for (const event of events) {
     const m = event.metadata;
     if (event.scoringStatus === "scored" && event.actualSuccess !== null &&
-      !event.contextualImpact && !event.contextualBounds && m.rollType === 2 &&
+      !event.contextualImpact && !event.contextualBounds && (m.rollType === 2 || (m.rollType === 1 && m.difficulty === 2 && event.actualSuccess === true)) &&
       m.rerollResource === "team" && m.rerollUsed === true && m.teamRerollsSpent === 1 &&
       !m.rerollSkill && !m.lonerGate && !m.proGate &&
       (m.modifiers?.length ?? 0) === 0 && m.requirement === m.difficulty &&
@@ -1420,9 +1421,9 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
           ? [[end.actorId,end.actorCell] as const] : [];
       }));
       const terminalCheckpointAfter=m.preRoll.ordinaryMoveAvailability && question?.metadata.sourceIndex!==undefined && choice?.metadata.sourceIndex!==undefined ?
-        teamDodgeContinuity(replay.boardCheckpoints ?? [],m.preRoll.checkpointAfter,question.metadata.sourceIndex,choice.metadata.sourceIndex,event.playerId!,m.preRoll.actorCell,m.preRoll.ordinaryMoveAvailability,epochs,completedMoves) : undefined;
+        teamMovementContinuity(replay.boardCheckpoints ?? [],m.preRoll.checkpointAfter,question.metadata.sourceIndex,choice.metadata.sourceIndex,event.playerId!,m.preRoll.actorCell,m.preRoll.ordinaryMoveAvailability,epochs,completedMoves) : undefined;
       if(terminalCheckpointAfter!==undefined)
-        event.contextualBounds = estimateTeamDodgeMoveBounds(m.preRoll,event.actualSuccess,(7-m.difficulty)/6,terminalCheckpointAfter);
+        event.contextualBounds = (m.rollType === 1 ? estimateTeamRushMoveBounds : estimateTeamDodgeMoveBounds)(m.preRoll,event.actualSuccess,(7-m.difficulty)/6,terminalCheckpointAfter);
     }
   }
   const blockDamage = new Map(damageSteps.map((step) => [step.actionId, step]));

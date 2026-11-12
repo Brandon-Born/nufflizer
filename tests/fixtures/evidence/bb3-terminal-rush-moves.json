@@ -1,0 +1,1749 @@
+{
+  "replayVersion": "1-4-0-0",
+  "scope": "Raw facts and bounded other-player ordinary-move component, not complete tactical value or eligibility.",
+  "cases": [
+    {
+      "id": "team_rush_second_move",
+      "sourceFile": "demo2.bbr",
+      "sha256": "70f663bdb35dcfbedfd596903c880dd45263ca4cd522091ee91cd0aa77c936e8",
+      "questionStep": 91,
+      "finalStep": 92,
+      "actorId": "39",
+      "teamId": "1",
+      "teamTurn": "2",
+      "fromCell": {
+        "x": 16,
+        "y": 8
+      },
+      "destination": {
+        "x": 16,
+        "y": 9
+      },
+      "originalDie": 1,
+      "replacementDie": 6,
+      "rawDeclaration": {
+        "ResultUseAction": {
+          "Action": [
+            "1"
+          ],
+          "TeamId": [
+            "0"
+          ]
+        }
+      },
+      "question": {
+        "QuestionTeamRerollUsage": {
+          "GamerId": [
+            "1"
+          ],
+          "CanUseProReroll": [
+            "0"
+          ],
+          "CanUseTeamReroll": [
+            "1"
+          ],
+          "StarSpecialRule": [
+            "-1"
+          ],
+          "RollInfos": [
+            {
+              "Status": [
+                "1"
+              ],
+              "Requirement": [
+                "2"
+              ],
+              "Dice": [
+                {
+                  "Die": [
+                    {
+                      "DieType": [
+                        "0"
+                      ],
+                      "Value": [
+                        "1"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Difficulty": [
+                "2"
+              ],
+              "RollType": [
+                "1"
+              ],
+              "Outcome": [
+                "0"
+              ],
+              "NewRoll": [
+                "1"
+              ]
+            }
+          ]
+        }
+      },
+      "choice": {
+        "ResultTeamRerollUsage": {
+          "GamerId": [
+            "1"
+          ],
+          "Used": [
+            "1"
+          ]
+        }
+      },
+      "final": {
+        "ResultRoll": {
+          "Status": [
+            "2"
+          ],
+          "Requirement": [
+            "2"
+          ],
+          "Dice": [
+            {
+              "Die": [
+                {
+                  "DieType": [
+                    "0"
+                  ],
+                  "Value": [
+                    "6"
+                  ]
+                }
+              ]
+            }
+          ],
+          "Difficulty": [
+            "2"
+          ],
+          "RollType": [
+            "1"
+          ],
+          "Outcome": [
+            "1"
+          ],
+          "NewRoll": [
+            "1"
+          ]
+        }
+      },
+      "outcome": {
+        "ResultMoveOutcome": {
+          "TentacleUsed": [
+            "0"
+          ],
+          "Moved": [
+            "1"
+          ],
+          "Rolls": [
+            {
+              "RollSummary": [
+                {
+                  "RollType": [
+                    "1"
+                  ],
+                  "Outcome": [
+                    "1"
+                  ]
+                }
+              ]
+            }
+          ],
+          "FumbleRooskieUsed": [
+            "0"
+          ]
+        }
+      },
+      "rawPlayers": [
+        {
+          "id": "37",
+          "cell": {
+            "x": -1,
+            "y": -1
+          },
+          "CanAct": null,
+          "Status": "3",
+          "Situation": "2",
+          "MovePoint": null
+        },
+        {
+          "id": "38",
+          "cell": {
+            "x": 11,
+            "y": 1
+          },
+          "CanAct": "1",
+          "Status": null,
+          "Situation": null,
+          "MovePoint": "5"
+        },
+        {
+          "id": "39",
+          "cell": {
+            "x": 15,
+            "y": 3
+          },
+          "CanAct": "1",
+          "Status": null,
+          "Situation": null,
+          "MovePoint": "5"
+        },
+        {
+          "id": "40",
+          "cell": {
+            "x": 9,
+            "y": 7
+          },
+          "CanAct": null,
+          "Status": null,
+          "Situation": null,
+          "MovePoint": null
+        },
+        {
+          "id": "41",
+          "cell": {
+            "x": 10,
+            "y": 7
+          },
+          "CanAct": "1",
+          "Status": null,
+          "Situation": null,
+          "MovePoint": null
+        },
+        {
+          "id": "42",
+          "cell": {
+            "x": 10,
+            "y": 5
+          },
+          "CanAct": "1",
+          "Status": null,
+          "Situation": null,
+          "MovePoint": "6"
+        },
+        {
+          "id": "43",
+          "cell": {
+            "x": 9,
+            "y": 11
+          },
+          "CanAct": "1",
+          "Status": null,
+          "Situation": null,
+          "MovePoint": "6"
+        },
+        {
+          "id": "44",
+          "cell": {
+            "x": 15,
+            "y": 6
+          },
+          "CanAct": "1",
+          "Status": "1",
+          "Situation": null,
+          "MovePoint": "2"
+        },
+        {
+          "id": "45",
+          "cell": {
+            "x": 13,
+            "y": 4
+          },
+          "CanAct": "1",
+          "Status": null,
+          "Situation": null,
+          "MovePoint": "5"
+        },
+        {
+          "id": "46",
+          "cell": {
+            "x": 15,
+            "y": 5
+          },
+          "CanAct": "1",
+          "Status": "1",
+          "Situation": null,
+          "MovePoint": "2"
+        },
+        {
+          "id": "47",
+          "cell": {
+            "x": 12,
+            "y": 7
+          },
+          "CanAct": null,
+          "Status": "2",
+          "Situation": null,
+          "MovePoint": null
+        },
+        {
+          "id": "48",
+          "cell": {
+            "x": -1,
+            "y": -1
+          },
+          "CanAct": null,
+          "Status": null,
+          "Situation": "1",
+          "MovePoint": "6"
+        }
+      ],
+      "completed": {
+        "sourceFile": "demo2.bbr",
+        "startStep": 90,
+        "confirmationStep": 91,
+        "actorId": "41",
+        "followingPlayerId": "39",
+        "before": {
+          "CurrentPhase": "5",
+          "IsStable": "1",
+          "ActiveTeam": "1",
+          "ActiveGamer": "1",
+          "Period": null,
+          "teamId": "1",
+          "teamTurn": "2",
+          "actorCell": {
+            "x": 12,
+            "y": 3
+          },
+          "CanAct": "1",
+          "Status": null,
+          "MovePoint": "6"
+        },
+        "after": {
+          "CurrentPhase": "5",
+          "IsStable": "1",
+          "ActiveTeam": "1",
+          "ActiveGamer": "1",
+          "Period": null,
+          "teamId": "1",
+          "teamTurn": "2",
+          "actorCell": {
+            "x": 10,
+            "y": 7
+          },
+          "CanAct": "1",
+          "Status": null,
+          "MovePoint": null
+        },
+        "ordinaryMoves": [
+          {
+            "from": {
+              "x": 12,
+              "y": 3
+            },
+            "to": {
+              "x": 11,
+              "y": 3
+            }
+          },
+          {
+            "from": {
+              "x": 11,
+              "y": 3
+            },
+            "to": {
+              "x": 10,
+              "y": 3
+            }
+          },
+          {
+            "from": {
+              "x": 10,
+              "y": 3
+            },
+            "to": {
+              "x": 9,
+              "y": 4
+            }
+          },
+          {
+            "from": {
+              "x": 9,
+              "y": 4
+            },
+            "to": {
+              "x": 9,
+              "y": 5
+            }
+          },
+          {
+            "from": {
+              "x": 9,
+              "y": 5
+            },
+            "to": {
+              "x": 9,
+              "y": 6
+            }
+          },
+          {
+            "from": {
+              "x": 9,
+              "y": 6
+            },
+            "to": {
+              "x": 10,
+              "y": 7
+            }
+          }
+        ],
+        "standUpObserved": false,
+        "rawDeclaration": {
+          "Action": [
+            "1"
+          ],
+          "TeamId": [
+            "0"
+          ]
+        },
+        "nextDeclaration": {
+          "Action": [
+            "1"
+          ],
+          "TeamId": [
+            "0"
+          ]
+        }
+      },
+      "possiblePlayerIds": [
+        "38",
+        "40",
+        "42",
+        "43",
+        "45"
+      ],
+      "minimumMoves": 0,
+      "maximumMoves": 5,
+      "lower": "0",
+      "upper": "5/6"
+    },
+    {
+      "id": "team_rush_third_move",
+      "sourceFile": "demo2.bbr",
+      "sha256": "70f663bdb35dcfbedfd596903c880dd45263ca4cd522091ee91cd0aa77c936e8",
+      "questionStep": 137,
+      "finalStep": 138,
+      "actorId": "40",
+      "teamId": "1",
+      "teamTurn": "3",
+      "fromCell": {
+        "x": 13,
+        "y": 12
+      },
+      "destination": {
+        "x": 14,
+        "y": 12
+      },
+      "originalDie": 1,
+      "replacementDie": 6,
+      "rawDeclaration": {
+        "ResultUseAction": {
+          "Action": [
+            "1"
+          ],
+          "TeamId": [
+            "0"
+          ]
+        }
+      },
+      "question": {
+        "QuestionTeamRerollUsage": {
+          "GamerId": [
+            "1"
+          ],
+          "CanUseProReroll": [
+            "0"
+          ],
+          "CanUseTeamReroll": [
+            "1"
+          ],
+          "StarSpecialRule": [
+            "-1"
+          ],
+          "RollInfos": [
+            {
+              "Status": [
+                "1"
+              ],
+              "Requirement": [
+                "2"
+              ],
+              "Dice": [
+                {
+                  "Die": [
+                    {
+                      "DieType": [
+                        "0"
+                      ],
+                      "Value": [
+                        "1"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Difficulty": [
+                "2"
+              ],
+              "RollType": [
+                "1"
+              ],
+              "Outcome": [
+                "0"
+              ],
+              "NewRoll": [
+                "1"
+              ]
+            }
+          ]
+        }
+      },
+      "choice": {
+        "ResultTeamRerollUsage": {
+          "GamerId": [
+            "1"
+          ],
+          "Used": [
+            "1"
+          ]
+        }
+      },
+      "final": {
+        "ResultRoll": {
+          "Status": [
+            "2"
+          ],
+          "Requirement": [
+            "2"
+          ],
+          "Dice": [
+            {
+              "Die": [
+                {
+                  "DieType": [
+                    "0"
+                  ],
+                  "Value": [
+                    "6"
+                  ]
+                }
+              ]
+            }
+          ],
+          "Difficulty": [
+            "2"
+          ],
+          "RollType": [
+            "1"
+          ],
+          "Outcome": [
+            "1"
+          ],
+          "NewRoll": [
+            "1"
+          ]
+        }
+      },
+      "outcome": {
+        "ResultMoveOutcome": {
+          "TentacleUsed": [
+            "0"
+          ],
+          "Moved": [
+            "1"
+          ],
+          "Rolls": [
+            {
+              "RollSummary": [
+                {
+                  "RollType": [
+                    "1"
+                  ],
+                  "Outcome": [
+                    "1"
+                  ]
+                }
+              ]
+            }
+          ],
+          "FumbleRooskieUsed": [
+            "0"
+          ]
+        }
+      },
+      "rawPlayers": [
+        {
+          "id": "37",
+          "cell": {
+            "x": -1,
+            "y": -1
+          },
+          "CanAct": null,
+          "Status": "3",
+          "Situation": "2",
+          "MovePoint": null
+        },
+        {
+          "id": "38",
+          "cell": {
+            "x": 11,
+            "y": 1
+          },
+          "CanAct": "1",
+          "Status": null,
+          "Situation": null,
+          "MovePoint": "5"
+        },
+        {
+          "id": "39",
+          "cell": {
+            "x": 15,
+            "y": 9
+          },
+          "CanAct": null,
+          "Status": null,
+          "Situation": null,
+          "MovePoint": null
+        },
+        {
+          "id": "40",
+          "cell": {
+            "x": 9,
+            "y": 7
+          },
+          "CanAct": "1",
+          "Status": null,
+          "Situation": null,
+          "MovePoint": "5"
+        },
+        {
+          "id": "41",
+          "cell": {
+            "x": 10,
+            "y": 7
+          },
+          "CanAct": "1",
+          "Status": null,
+          "Situation": null,
+          "MovePoint": "6"
+        },
+        {
+          "id": "42",
+          "cell": {
+            "x": 9,
+            "y": 5
+          },
+          "CanAct": null,
+          "Status": "2",
+          "Situation": null,
+          "MovePoint": null
+        },
+        {
+          "id": "43",
+          "cell": {
+            "x": 14,
+            "y": 9
+          },
+          "CanAct": null,
+          "Status": null,
+          "Situation": null,
+          "MovePoint": null
+        },
+        {
+          "id": "44",
+          "cell": {
+            "x": -1,
+            "y": -1
+          },
+          "CanAct": null,
+          "Status": "4",
+          "Situation": "4",
+          "MovePoint": null
+        },
+        {
+          "id": "45",
+          "cell": {
+            "x": 16,
+            "y": 8
+          },
+          "CanAct": null,
+          "Status": null,
+          "Situation": null,
+          "MovePoint": null
+        },
+        {
+          "id": "46",
+          "cell": {
+            "x": 17,
+            "y": 6
+          },
+          "CanAct": "1",
+          "Status": null,
+          "Situation": null,
+          "MovePoint": null
+        },
+        {
+          "id": "47",
+          "cell": {
+            "x": 12,
+            "y": 7
+          },
+          "CanAct": "1",
+          "Status": "1",
+          "Situation": null,
+          "MovePoint": "2"
+        },
+        {
+          "id": "48",
+          "cell": {
+            "x": -1,
+            "y": -1
+          },
+          "CanAct": null,
+          "Status": null,
+          "Situation": "1",
+          "MovePoint": "6"
+        }
+      ],
+      "completed": null,
+      "possiblePlayerIds": [
+        "38",
+        "39",
+        "41",
+        "43",
+        "45",
+        "46"
+      ],
+      "minimumMoves": 0,
+      "maximumMoves": 6,
+      "lower": "0",
+      "upper": "1"
+    },
+    {
+      "id": "team_rush_away_move",
+      "sourceFile": "demo7.bbr",
+      "sha256": "1af12b0bb733d279cb3364b5dabb88c0c59d1d15a308d1d6fd667403cfaeda56",
+      "questionStep": 100,
+      "finalStep": 101,
+      "actorId": "45",
+      "teamId": "1",
+      "teamTurn": "2",
+      "fromCell": {
+        "x": 8,
+        "y": 8
+      },
+      "destination": {
+        "x": 8,
+        "y": 9
+      },
+      "originalDie": 1,
+      "replacementDie": 2,
+      "rawDeclaration": {
+        "ResultUseAction": {
+          "Action": [
+            "1"
+          ],
+          "TeamId": [
+            "0"
+          ]
+        }
+      },
+      "question": {
+        "QuestionTeamRerollUsage": {
+          "GamerId": [
+            "1"
+          ],
+          "CanUseProReroll": [
+            "0"
+          ],
+          "CanUseTeamReroll": [
+            "1"
+          ],
+          "StarSpecialRule": [
+            "-1"
+          ],
+          "RollInfos": [
+            {
+              "Status": [
+                "1"
+              ],
+              "Requirement": [
+                "2"
+              ],
+              "Dice": [
+                {
+                  "Die": [
+                    {
+                      "DieType": [
+                        "0"
+                      ],
+                      "Value": [
+                        "1"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Difficulty": [
+                "2"
+              ],
+              "RollType": [
+                "1"
+              ],
+              "Outcome": [
+                "0"
+              ],
+              "NewRoll": [
+                "1"
+              ]
+            }
+          ]
+        }
+      },
+      "choice": {
+        "ResultTeamRerollUsage": {
+          "GamerId": [
+            "1"
+          ],
+          "Used": [
+            "1"
+          ]
+        }
+      },
+      "final": {
+        "ResultRoll": {
+          "Status": [
+            "2"
+          ],
+          "Requirement": [
+            "2"
+          ],
+          "Dice": [
+            {
+              "Die": [
+                {
+                  "DieType": [
+                    "0"
+                  ],
+                  "Value": [
+                    "2"
+                  ]
+                }
+              ]
+            }
+          ],
+          "Difficulty": [
+            "2"
+          ],
+          "RollType": [
+            "1"
+          ],
+          "Outcome": [
+            "1"
+          ],
+          "NewRoll": [
+            "1"
+          ]
+        }
+      },
+      "outcome": {
+        "ResultMoveOutcome": {
+          "TentacleUsed": [
+            "0"
+          ],
+          "Moved": [
+            "1"
+          ],
+          "Rolls": [
+            {
+              "RollSummary": [
+                {
+                  "RollType": [
+                    "1"
+                  ],
+                  "Outcome": [
+                    "1"
+                  ]
+                }
+              ]
+            }
+          ],
+          "FumbleRooskieUsed": [
+            "0"
+          ]
+        }
+      },
+      "rawPlayers": [
+        {
+          "id": "37",
+          "cell": {
+            "x": 11,
+            "y": 7
+          },
+          "CanAct": "1",
+          "Status": null,
+          "Situation": null,
+          "MovePoint": "1"
+        },
+        {
+          "id": "38",
+          "cell": {
+            "x": 14,
+            "y": 5
+          },
+          "CanAct": null,
+          "Status": null,
+          "Situation": null,
+          "MovePoint": null
+        },
+        {
+          "id": "39",
+          "cell": {
+            "x": 12,
+            "y": 13
+          },
+          "CanAct": null,
+          "Status": null,
+          "Situation": null,
+          "MovePoint": null
+        },
+        {
+          "id": "40",
+          "cell": {
+            "x": -1,
+            "y": -1
+          },
+          "CanAct": null,
+          "Status": null,
+          "Situation": "1",
+          "MovePoint": "6"
+        },
+        {
+          "id": "41",
+          "cell": {
+            "x": 17,
+            "y": 7
+          },
+          "CanAct": null,
+          "Status": null,
+          "Situation": null,
+          "MovePoint": null
+        },
+        {
+          "id": "42",
+          "cell": {
+            "x": 13,
+            "y": 10
+          },
+          "CanAct": null,
+          "Status": null,
+          "Situation": null,
+          "MovePoint": null
+        },
+        {
+          "id": "43",
+          "cell": {
+            "x": 14,
+            "y": 1
+          },
+          "CanAct": "1",
+          "Status": null,
+          "Situation": null,
+          "MovePoint": "7"
+        },
+        {
+          "id": "44",
+          "cell": {
+            "x": 9,
+            "y": 12
+          },
+          "CanAct": null,
+          "Status": null,
+          "Situation": null,
+          "MovePoint": null
+        },
+        {
+          "id": "45",
+          "cell": {
+            "x": 13,
+            "y": 3
+          },
+          "CanAct": "1",
+          "Status": null,
+          "Situation": null,
+          "MovePoint": "5"
+        },
+        {
+          "id": "46",
+          "cell": {
+            "x": 11,
+            "y": 11
+          },
+          "CanAct": null,
+          "Status": null,
+          "Situation": null,
+          "MovePoint": null
+        },
+        {
+          "id": "47",
+          "cell": {
+            "x": -1,
+            "y": -1
+          },
+          "CanAct": null,
+          "Status": null,
+          "Situation": "1",
+          "MovePoint": "5"
+        },
+        {
+          "id": "48",
+          "cell": {
+            "x": 15,
+            "y": 10
+          },
+          "CanAct": null,
+          "Status": null,
+          "Situation": null,
+          "MovePoint": null
+        },
+        {
+          "id": "49",
+          "cell": {
+            "x": -1,
+            "y": -1
+          },
+          "CanAct": null,
+          "Status": "3",
+          "Situation": "2",
+          "MovePoint": null
+        }
+      ],
+      "completed": null,
+      "possiblePlayerIds": [
+        "37",
+        "38",
+        "39",
+        "41",
+        "42",
+        "43",
+        "44",
+        "46",
+        "48"
+      ],
+      "minimumMoves": 0,
+      "maximumMoves": 9,
+      "lower": "0",
+      "upper": "3/2"
+    },
+    {
+      "id": "team_rush_diagonal_move",
+      "sourceFile": "demo9.bbr",
+      "sha256": "7bef0a74bff43ae56da5edf6abed7d8cb182da85a4da591acb78943afebcbcaf",
+      "questionStep": 117,
+      "finalStep": 118,
+      "actorId": "47",
+      "teamId": "1",
+      "teamTurn": "3",
+      "fromCell": {
+        "x": 6,
+        "y": 5
+      },
+      "destination": {
+        "x": 7,
+        "y": 6
+      },
+      "originalDie": 1,
+      "replacementDie": 3,
+      "rawDeclaration": {
+        "ResultUseAction": {
+          "Action": [
+            "1"
+          ],
+          "TeamId": [
+            "0"
+          ]
+        }
+      },
+      "question": {
+        "QuestionTeamRerollUsage": {
+          "GamerId": [
+            "1"
+          ],
+          "CanUseProReroll": [
+            "0"
+          ],
+          "CanUseTeamReroll": [
+            "1"
+          ],
+          "StarSpecialRule": [
+            "-1"
+          ],
+          "RollInfos": [
+            {
+              "Status": [
+                "1"
+              ],
+              "Requirement": [
+                "2"
+              ],
+              "Dice": [
+                {
+                  "Die": [
+                    {
+                      "DieType": [
+                        "0"
+                      ],
+                      "Value": [
+                        "1"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Difficulty": [
+                "2"
+              ],
+              "RollType": [
+                "1"
+              ],
+              "Outcome": [
+                "0"
+              ],
+              "NewRoll": [
+                "1"
+              ]
+            }
+          ]
+        }
+      },
+      "choice": {
+        "ResultTeamRerollUsage": {
+          "GamerId": [
+            "1"
+          ],
+          "Used": [
+            "1"
+          ]
+        }
+      },
+      "final": {
+        "ResultRoll": {
+          "Status": [
+            "2"
+          ],
+          "Requirement": [
+            "2"
+          ],
+          "Dice": [
+            {
+              "Die": [
+                {
+                  "DieType": [
+                    "0"
+                  ],
+                  "Value": [
+                    "3"
+                  ]
+                }
+              ]
+            }
+          ],
+          "Difficulty": [
+            "2"
+          ],
+          "RollType": [
+            "1"
+          ],
+          "Outcome": [
+            "1"
+          ],
+          "NewRoll": [
+            "1"
+          ]
+        }
+      },
+      "outcome": {
+        "ResultMoveOutcome": {
+          "TentacleUsed": [
+            "0"
+          ],
+          "Moved": [
+            "1"
+          ],
+          "Rolls": [
+            {
+              "RollSummary": [
+                {
+                  "RollType": [
+                    "1"
+                  ],
+                  "Outcome": [
+                    "1"
+                  ]
+                }
+              ]
+            }
+          ],
+          "FumbleRooskieUsed": [
+            "0"
+          ]
+        }
+      },
+      "rawPlayers": [
+        {
+          "id": "37",
+          "cell": {
+            "x": 10,
+            "y": 6
+          },
+          "CanAct": null,
+          "Status": null,
+          "Situation": null,
+          "MovePoint": null
+        },
+        {
+          "id": "38",
+          "cell": {
+            "x": 13,
+            "y": 9
+          },
+          "CanAct": null,
+          "Status": null,
+          "Situation": null,
+          "MovePoint": null
+        },
+        {
+          "id": "39",
+          "cell": {
+            "x": 10,
+            "y": 3
+          },
+          "CanAct": null,
+          "Status": null,
+          "Situation": null,
+          "MovePoint": null
+        },
+        {
+          "id": "40",
+          "cell": {
+            "x": 10,
+            "y": 7
+          },
+          "CanAct": "1",
+          "Status": null,
+          "Situation": null,
+          "MovePoint": "1"
+        },
+        {
+          "id": "41",
+          "cell": {
+            "x": 9,
+            "y": 2
+          },
+          "CanAct": "1",
+          "Status": null,
+          "Situation": null,
+          "MovePoint": "4"
+        },
+        {
+          "id": "42",
+          "cell": {
+            "x": 12,
+            "y": 5
+          },
+          "CanAct": "1",
+          "Status": null,
+          "Situation": null,
+          "MovePoint": "4"
+        },
+        {
+          "id": "43",
+          "cell": {
+            "x": 12,
+            "y": 7
+          },
+          "CanAct": "1",
+          "Status": null,
+          "Situation": null,
+          "MovePoint": "4"
+        },
+        {
+          "id": "44",
+          "cell": {
+            "x": 9,
+            "y": 3
+          },
+          "CanAct": "1",
+          "Status": null,
+          "Situation": null,
+          "MovePoint": "7"
+        },
+        {
+          "id": "45",
+          "cell": {
+            "x": 11,
+            "y": 4
+          },
+          "CanAct": "1",
+          "Status": null,
+          "Situation": null,
+          "MovePoint": "7"
+        },
+        {
+          "id": "46",
+          "cell": {
+            "x": 11,
+            "y": 3
+          },
+          "CanAct": "1",
+          "Status": "1",
+          "Situation": null,
+          "MovePoint": "4"
+        },
+        {
+          "id": "47",
+          "cell": {
+            "x": 8,
+            "y": 2
+          },
+          "CanAct": "1",
+          "Status": "1",
+          "Situation": null,
+          "MovePoint": "4"
+        }
+      ],
+      "completed": {
+        "sourceFile": "demo9.bbr",
+        "startStep": 116,
+        "confirmationStep": 117,
+        "actorId": "40",
+        "followingPlayerId": "47",
+        "before": {
+          "CurrentPhase": "5",
+          "IsStable": "1",
+          "ActiveTeam": "1",
+          "ActiveGamer": "1",
+          "Period": null,
+          "teamId": "1",
+          "teamTurn": "3",
+          "actorCell": {
+            "x": 14,
+            "y": 6
+          },
+          "CanAct": "1",
+          "Status": null,
+          "MovePoint": "6"
+        },
+        "after": {
+          "CurrentPhase": "5",
+          "IsStable": "1",
+          "ActiveTeam": "1",
+          "ActiveGamer": "1",
+          "Period": null,
+          "teamId": "1",
+          "teamTurn": "3",
+          "actorCell": {
+            "x": 10,
+            "y": 7
+          },
+          "CanAct": "1",
+          "Status": null,
+          "MovePoint": "1"
+        },
+        "ordinaryMoves": [
+          {
+            "from": {
+              "x": 14,
+              "y": 6
+            },
+            "to": {
+              "x": 14,
+              "y": 7
+            }
+          },
+          {
+            "from": {
+              "x": 14,
+              "y": 7
+            },
+            "to": {
+              "x": 13,
+              "y": 8
+            }
+          },
+          {
+            "from": {
+              "x": 13,
+              "y": 8
+            },
+            "to": {
+              "x": 12,
+              "y": 8
+            }
+          },
+          {
+            "from": {
+              "x": 12,
+              "y": 8
+            },
+            "to": {
+              "x": 11,
+              "y": 8
+            }
+          },
+          {
+            "from": {
+              "x": 11,
+              "y": 8
+            },
+            "to": {
+              "x": 10,
+              "y": 7
+            }
+          }
+        ],
+        "standUpObserved": false,
+        "rawDeclaration": {
+          "Action": [
+            "1"
+          ],
+          "TeamId": [
+            "0"
+          ]
+        },
+        "nextDeclaration": {
+          "Action": [
+            "1"
+          ],
+          "TeamId": [
+            "0"
+          ]
+        }
+      },
+      "possiblePlayerIds": [
+        "37",
+        "38",
+        "39",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45"
+      ],
+      "minimumMoves": 0,
+      "maximumMoves": 8,
+      "lower": "0",
+      "upper": "4/3"
+    }
+  ],
+  "retainedFailure": {
+    "ballBefore": {
+      "Ball": {
+        "Cell": [
+          {
+            "Y": [
+              "11"
+            ],
+            "X": [
+              "16"
+            ]
+          }
+        ],
+        "Carrier": [
+          "48"
+        ],
+        "IsHeld": [
+          "1"
+        ]
+      }
+    },
+    "sourceFile": "demo2.bbr",
+    "sha256": "70f663bdb35dcfbedfd596903c880dd45263ca4cd522091ee91cd0aa77c936e8",
+    "replayStep": 337,
+    "scope": "Genuine retained original after decline; not a failed committed replacement.",
+    "step": {
+      "PlayerStep": {
+        "Probability": [
+          "100.0"
+        ],
+        "PlayerId": [
+          "46"
+        ],
+        "TargetId": [
+          "-1"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "1"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "9"
+            ],
+            "X": [
+              "14"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "9"
+            ],
+            "X": [
+              "15"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      }
+    },
+    "messages": [
+      {
+        "ResultTeamRerollUsage": {
+          "GamerId": [
+            "1"
+          ],
+          "Used": [
+            "0"
+          ]
+        }
+      },
+      {
+        "ResultRoll": {
+          "Status": [
+            "1"
+          ],
+          "Requirement": [
+            "2"
+          ],
+          "Dice": [
+            {
+              "Die": [
+                {
+                  "DieType": [
+                    "0"
+                  ],
+                  "Value": [
+                    "1"
+                  ]
+                }
+              ]
+            }
+          ],
+          "Difficulty": [
+            "2"
+          ],
+          "RollType": [
+            "1"
+          ],
+          "Outcome": [
+            "0"
+          ],
+          "NewRoll": [
+            "0"
+          ]
+        }
+      },
+      {
+        "ResultDoMove": null
+      },
+      {
+        "ResultMoveOutcome": {
+          "TentacleUsed": [
+            "0"
+          ],
+          "Moved": [
+            "1"
+          ],
+          "Rolls": [
+            {
+              "RollSummary": [
+                {
+                  "RollType": [
+                    "1"
+                  ],
+                  "Outcome": [
+                    "0"
+                  ]
+                }
+              ]
+            }
+          ],
+          "FumbleRooskieUsed": [
+            "0"
+          ]
+        }
+      }
+    ],
+    "damage": {
+      "DamageStep": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "9"
+        ],
+        "PlayerId": [
+          "46"
+        ],
+        "TargetId": [
+          "46"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "9"
+            ],
+            "X": [
+              "15"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "9"
+            ],
+            "X": [
+              "15"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      }
+    },
+    "damageMessages": [
+      {
+        "ResultRoll": {
+          "Status": [
+            "1"
+          ],
+          "Requirement": [
+            "10"
+          ],
+          "Dice": [
+            {
+              "Die": [
+                {
+                  "DieType": [
+                    "0"
+                  ],
+                  "Value": [
+                    "4"
+                  ]
+                },
+                {
+                  "DieType": [
+                    "0"
+                  ],
+                  "Value": [
+                    "6"
+                  ]
+                }
+              ]
+            }
+          ],
+          "Difficulty": [
+            "10"
+          ],
+          "RollType": [
+            "10"
+          ],
+          "Outcome": [
+            "1"
+          ],
+          "NewRoll": [
+            "1"
+          ]
+        }
+      },
+      {
+        "ResultInjuryRoll": {
+          "Status": [
+            "1"
+          ],
+          "Dice": [
+            {
+              "Die": [
+                {
+                  "DieType": [
+                    "0"
+                  ],
+                  "Value": [
+                    "6"
+                  ]
+                },
+                {
+                  "DieType": [
+                    "0"
+                  ],
+                  "Value": [
+                    "2"
+                  ]
+                }
+              ]
+            }
+          ],
+          "Source": [
+            "9"
+          ],
+          "RollType": [
+            "11"
+          ],
+          "Outcome": [
+            "2"
+          ]
+        }
+      },
+      {
+        "ResultPlayerRemoval": {
+          "PlayerId": [
+            "46"
+          ],
+          "Situation": [
+            "2"
+          ],
+          "Reason": [
+            "0"
+          ],
+          "Status": [
+            "3"
+          ]
+        }
+      }
+    ],
+    "turnEnd": {
+      "EventEndTurn": {
+        "Reason": [
+          "2"
+        ]
+      }
+    }
+  }
+}

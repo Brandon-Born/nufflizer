@@ -356,7 +356,7 @@ describe("additive partial component accounting (NUF-019)", () => {
   });
 });
 
-describe("independent exact arithmetic over existing 19-component specification", () => {
+describe("independent exact arithmetic over 23-component specification", () => {
   it("regenerates with Fraction without importing the application", () => {
     const result = spawnSync(
       "python3",
