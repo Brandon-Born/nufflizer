@@ -56,7 +56,7 @@ describe("confirmed player activation losses (NUF-016/017/018/022)", () => {
       result.board.teams[1]!.players.find((p) => p.id === 42)!.canAct
     ).toBeNull();
   });
-  it("prints observed activation losses in CLI text despite having no scored swings", () => {
+  it("[cli-worker] prints observed activation losses in CLI text despite having no scored swings", () => {
     const directory = mkdtempSync(
       path.join(tmpdir(), "nufflizier-activation-")
     );

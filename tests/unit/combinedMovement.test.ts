@@ -464,7 +464,7 @@ describe("combined Rush/Dodge continuity and observed failure consequences", () 
     const r = analyzeNufflizerInput(xml("combined_skill_excluded"));
     expect(r.events.some((e) => e.metadata.combinedMovement)).toBe(false);
   });
-  it("prints success and observed fall groups independently of top swings", () => {
+  it("[cli-worker] prints success and observed fall groups independently of top swings", () => {
     const dir = mkdtempSync(join(tmpdir(), "nufflizier-combined-"));
     try {
       for (const id of ["combined_team_rush", "combined_failure_blitz"]) {

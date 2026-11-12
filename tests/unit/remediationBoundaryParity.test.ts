@@ -25,7 +25,7 @@ const invalid = [
   )
 ];
 describe("NUF-003 invalid replay parity", () => {
-  it.each(invalid)("rejects invalid data across HTTP and CLI", async (xml) => {
+  it.each(invalid)("[cli-worker] rejects invalid data across HTTP and CLI", async (xml) => {
     const form = new FormData();
     form.append("replay", new File([xml], "invalid.xml"));
     const response = await POST(

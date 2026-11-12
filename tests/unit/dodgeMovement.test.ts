@@ -105,7 +105,7 @@ describe("actual movement after a recorded own Dodge replacement", () => {
         ?.scoringStatus
     ).toBe("excluded");
   });
-  it("prints the observed move in CLI text independently of the top-swing selection", () => {
+  it("[cli-worker] prints the observed move in CLI text independently of the top-swing selection", () => {
     const dir = mkdtempSync(join(tmpdir(), "nufflizier-dodge-"));
     try {
       const path = join(dir, "source.xml");

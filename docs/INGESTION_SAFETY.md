@@ -1,6 +1,6 @@
 # Ingestion and execution contract
 
-Updated 2026-11-11. Owning IDs: NUF-002–007, 023–026. Local safeguards and the shared Redis gate are implemented. Both real Redis integration and the isolated hosted Preview verify the shared quota. See the implementation log for measurements and the Preview store's lifetime.
+Updated 2026-11-12. Owning IDs: NUF-002–007, 023–026. Local safeguards and the shared Redis gate are implemented. Both real Redis integration and the isolated hosted Preview verify the shared quota. See the implementation log for measurements and the Preview store's lifetime.
 
 ## Shared bounds
 
@@ -18,6 +18,8 @@ HTTP report serialization now runs inside the same worker deadline and enforces 
 
 `prepare:analyzer` uses esbuild to bundle the shared services into `.generated/analysis-worker.cjs`. Dev, build, tests and CLI prepare it automatically. Next.js output tracing explicitly includes that bundle. Production-build browser tests exercise the packaged worker; this does not prove Vercel deployment compatibility.
 
+`pnpm test` first runs the parallel pure domain/corpus gate, then real CLI cases serially, then real HTTP acceptance in a fresh process. Mark tests invoking the actual CLI worker with `[cli-worker]`; complementary filters retain every non-API test exactly once. This prevents unrelated corpus jobs from consuming the real worker's four-second wall-clock budget. The HTTP gate preserves its ten-request quota window. Neither test isolation nor local latency measurements extend the production deadline or establish hosted/cold-start acceptance.
+
 ## HTTP and CLI outcomes
 
 - HTTP 400 `INVALID_REPLAY`: invalid root, missing/duplicate teams, unsupported version, malformed nested encoding/XML or roll fields. No verdict is produced.
@@ -25,7 +27,7 @@ HTTP report serialization now runs inside the same worker deadline and enforces 
 - HTTP 504 `TIMEOUT` / 499 `CANCELLED`: terminated analysis, no fabricated report. HTTP 503 `BUSY` bounds concurrency.
 - HTTP 413 `REPORT_TOO_LARGE`: serialized JSON exceeds 4,000,000 bytes; use a smaller file or CLI.
 - HTTP 429 RATE_LIMIT includes the shared quota window remaining in Retry-After. An unavailable required backend returns 503 QUOTA_UNAVAILABLE before body reading.
-- CLI input/execution failures print a descriptive error to stderr and exit nonzero. JSON reports include schema `2.27`, model `dice-only-20`, limitations and explicit verdict status. Unknown odds/results are null, not invented zeros/failures. Weighted numeric contributions are additive dice units; no calibrated probability claim is made.
+- CLI input/execution failures print a descriptive error to stderr and exit nonzero. JSON reports include schema `2.40`, model `dice-only-20`, limitations and explicit verdict status. Unknown odds/results are null, not invented zeros/failures. Weighted numeric contributions are additive dice units; no calibrated probability claim is made.
 
 ## Dependency and deployment evidence
 

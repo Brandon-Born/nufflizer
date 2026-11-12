@@ -521,7 +521,7 @@ describe("actual movement after a direct committed team-rerolled Rush", () => {
         .sourceIndex!++;
     expect(LuckReportSchema.safeParse(r).success).toBe(false);
   });
-  it("prints actual movement independently of top-swing selection", () => {
+  it("[cli-worker] prints actual movement independently of top-swing selection", () => {
     const dir = mkdtempSync(join(tmpdir(), "nufflizier-team-move-"));
     try {
       const file = join(dir, "source.xml");

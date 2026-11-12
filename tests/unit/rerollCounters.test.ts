@@ -325,7 +325,7 @@ describe("observed team reroll counters, not inferred eligibility or reset rules
       )!.metadata.teamRerollCounter = structuredClone(p);
     expect(LuckReportSchema.safeParse(r).success).toBe(false);
   });
-  it("prints the counter trace independently of the top-swing selection", () => {
+  it("[cli-worker] prints the counter trace independently of the top-swing selection", () => {
     const dir = mkdtempSync(join(tmpdir(), "nuff-counter-"));
     try {
       const p = join(dir, "source.xml");

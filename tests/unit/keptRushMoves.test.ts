@@ -388,7 +388,7 @@ describe("retained original Rush under its fixed observed decline policy", () =>
         )
       ).toBeCloseTo(0, 12);
   });
-  it("prints the original-die policy separately from earlier Rush and damage dice", () => {
+  it("[cli-worker] prints the original-die policy separately from earlier Rush and damage dice", () => {
     const result = spawnSync(
       process.execPath,
       [

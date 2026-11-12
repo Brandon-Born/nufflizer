@@ -408,7 +408,7 @@ describe("occupied-bounce fresh catch possession envelope", () => {
       };
     expect(LuckReportSchema.safeParse(r).success).toBe(false);
   });
-  it("prints the reaction envelope through shared CLI copy", () => {
+  it("[cli-worker] prints the reaction envelope through shared CLI copy", () => {
     const dir = mkdtempSync(join(tmpdir(), "nuff-catch-"));
     try {
       const p = join(dir, "source.xml");

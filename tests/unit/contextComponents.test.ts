@@ -440,7 +440,7 @@ describe("independent exact arithmetic over 27-component specification", () => {
       }
     }
   );
-  it("CLI states the scope and exports exactly the same component accounting", () => {
+  it("[cli-worker] CLI states the scope and exports exactly the same component accounting", () => {
     const result = spawnSync(
       process.execPath,
       [

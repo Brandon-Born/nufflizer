@@ -244,7 +244,7 @@ describe("valid pickup failure successors and conditional possession bounds", ()
       expect(raw.Ball[0].IsHeld).toBeUndefined();
     }
   );
-  it("prints component bounds in CLI text without point totals or a midpoint", () => {
+  it("[cli-worker] prints component bounds in CLI text without point totals or a midpoint", () => {
     const dir = mkdtempSync(join(tmpdir(), "nufflizier-pickup-"));
     try {
       const path = join(dir, "source.xml");

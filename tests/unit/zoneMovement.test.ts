@@ -439,7 +439,7 @@ describe("fixed recorded zones and reached-square pickup consequences", () => {
       };
     expect(LuckReportSchema.safeParse(r).success).toBe(false);
   });
-  it("exports the observed pickup through CLI text independently of selected swings", () => {
+  it("[cli-worker] exports the observed pickup through CLI text independently of selected swings", () => {
     const dir = mkdtempSync(join(tmpdir(), "nufflizier-zone-"));
     try {
       const file = join(dir, "source.xml");

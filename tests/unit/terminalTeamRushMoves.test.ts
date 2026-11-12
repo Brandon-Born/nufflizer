@@ -328,7 +328,7 @@ describe("conditional teammate moves at a committed ordinary Rush replacement", 
     ])
       expect(terminal(report(id))).toBeUndefined();
   });
-  it("prints the source-linked conditional Rush range through CLI", () => {
+  it("[cli-worker] prints the source-linked conditional Rush range through CLI", () => {
     const result = spawnSync(
       process.execPath,
       [

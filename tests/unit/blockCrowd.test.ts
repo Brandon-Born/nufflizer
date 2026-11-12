@@ -400,7 +400,7 @@ describe("source-qualified direct defender crowd damage", () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
-  it("prints crowd removal and the unscored injury through the shared CLI", () => {
+  it("[cli-worker] prints crowd removal and the unscored injury through the shared CLI", () => {
     const dir = mkdtempSync(join(tmpdir(), "nuff-crowd-cli-")),
       source = join(dir, "source.xml");
     try {

@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "node scripts/build-analyzer.mjs && vitest run --exclude tests/unit/nufflizierApi.test.ts && vitest run tests/unit/nufflizierApi.test.ts",
+    "test": "node scripts/build-analyzer.mjs && node scripts/run-unit-gates.mjs",
     "test:nufflizier": "corepack pnpm test && corepack pnpm test:e2e",
     "test:legacy": "vitest run tests/unit/analyzeReplay.test.ts tests/unit/coachingOutput.test.ts tests/unit/teamScoping.test.ts tests/unit/demoReplayStructured.test.ts tests/unit/rulesPlayerLinking.test.ts tests/unit/legacyReplayApiRoute.test.ts",
     "test:quota": "node --import tsx scripts/verify-shared-quota.ts",

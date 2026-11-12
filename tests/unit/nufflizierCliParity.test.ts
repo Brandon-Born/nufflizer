@@ -11,7 +11,7 @@ import {
 import { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
 
 describe("nufflizier CLI/API parity", () => {
-  it("keeps verdict and core aggregates aligned for the same replay", () => {
+  it("[cli-worker] keeps verdict and core aggregates aligned for the same replay", () => {
     const replayPath = path.resolve(
       process.cwd(),
       "tests",
@@ -63,7 +63,7 @@ describe("nufflizier CLI/API parity", () => {
     expect(cliReport.teams[1]?.luckScore).toBe(apiReport.teams[1]?.luckScore);
   });
 
-  it("prints shared explainability guidance in text mode", () => {
+  it("[cli-worker] prints shared explainability guidance in text mode", () => {
     const replayPath = path.resolve(
       process.cwd(),
       "tests",
