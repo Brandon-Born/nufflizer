@@ -827,3 +827,9 @@ Independent numeric source extraction,74 focused regressions and original-worker
 Schema2.27 replaces public rerollAvailable, an arithmetic switch, with the applied single_attempt/two_attempt/block_pool probability policy. Unknown unlinked rerollUsed stays absent; recorded choices/counters remain separate. An offered-but-declined source Dodge keeps5/6 odds without an unavailable-resource claim. Conditional Block pools remain conditional fair-pool odds and excluded gates/merged originals have no applied policy. Web/API/CLI share the contract and explanation; older responses are rejected by version rather than reinterpreted.
 
 Thirteen new regressions, all1115 unit/API tests, real Redis quota, production build and19 browser flows pass. All12 source-scored outcomes/odds/contributions and measured14 ranges/zero point estimates are unchanged; dice-only-20/context21 and11 closed/17 open remain. Prior combined checkpoint cdb9169 passed exact CI43145826779. No legacy, dependency/workflow, hosted/account/service or spending change. Hosted initialization remains denied/pending and was not retried. See IMPLEMENTATION_LOG for source distinctions, local checks and final exact-candidate CI.
+
+
+
+## 2026-11-11 - Free-store authorization and authentication status
+
+The owner explicitly approved Stripe Projects initialization/terms for checking a free Upstash store after the prior automatic-review denial. The required CLI upgrade completed; initialization now waits for user browser sign-in and has no success receipt. No store, credentials, billing change or Preview was created. Current handoff docs distinguish this new approval from historical denials and from actual authentication/free-tier eligibility. Application schema2.27/dice-only-20/context21 and all code acceptance evidence remain unchanged.
