@@ -215,11 +215,48 @@ describe("fixed recorded zones and reached-square pickup consequences", () => {
   it.each([
     "team_dodge_zone_failure",
     "team_dodge_zone_combined_excluded",
+    "team_dodge_zone_declined_failure",
     "team_dodge_skill_modifier_excluded"
   ])("withholds unsupported source %s", (id) => {
     const r = analyzeNufflizerInput(xml(id));
     expect(r.events.some((e) => e.metadata.teamRerollMovement)).toBe(false);
     expect(r.events.some((e) => e.metadata.pickupAfterMovement)).toBe(false);
+  });
+  it("keeps the combined and declined source classifications independently distinct", () => {
+    const all = JSON.parse(readFileSync(path, "utf8")).cases;
+    const messages = (id: string) =>
+      all
+        .find((c: { id: string }) => c.id === id)
+        .records.flatMap(
+          (r: { steps?: { messages: Record<string, unknown>[] }[] }) =>
+            (r.steps ?? []).flatMap((s) => s.messages)
+        );
+    const combined = messages("team_dodge_zone_combined_excluded"),
+      declined = messages("team_dodge_zone_declined_failure");
+    expect(
+      combined.some(
+        (m: Record<string, unknown>) =>
+          !!m.ResultMoveOutcome &&
+          JSON.stringify(m.ResultMoveOutcome).includes('"RollType":["1"]') &&
+          !!m.ResultMoveOutcome &&
+          JSON.stringify(m.ResultMoveOutcome).includes('"RollType":["2"]')
+      )
+    ).toBe(true);
+    expect(
+      combined.find((m: Record<string, unknown>) => m.ResultTeamRerollUsage)
+        ?.ResultTeamRerollUsage
+    ).toMatchObject({ Used: ["1"] });
+    expect(
+      declined.find((m: Record<string, unknown>) => m.ResultTeamRerollUsage)
+        ?.ResultTeamRerollUsage
+    ).toMatchObject({ Used: ["0"] });
+    expect(
+      declined.some(
+        (m: Record<string, unknown>) =>
+          !!m.ResultMoveOutcome &&
+          JSON.stringify(m.ResultMoveOutcome).includes('"RollType":["1"]')
+      )
+    ).toBe(false);
   });
   it.each([
     "kind",

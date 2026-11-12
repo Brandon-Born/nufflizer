@@ -62,7 +62,8 @@ selections = [
     ('demo3.bbr', 'team_dodge_zone_move', [271, 272, 273, 274]),
     ('demo3.bbr', 'team_dodge_zone_pickup', [399, 400, 401, 402]),
     ('demo11.bbr', 'team_dodge_zone_failure', [202, 203, 204, 205]),
-    ('demo2.bbr', 'team_dodge_zone_combined_excluded', [95, 96, 97, 98]),
+    ('demo2.bbr', 'team_dodge_zone_declined_failure', [95, 96, 97, 98]),
+    ('demo1.bbr', 'team_dodge_zone_combined_excluded', [205, 206, 207, 208]),
     ('demo1.bbr', 'team_dodge_skill_modifier_excluded', [132, 133, 134, 135]),
     ('demo11.bbr', 'team_dodge_late_move', [448, 449, 450, 451]),
 ]

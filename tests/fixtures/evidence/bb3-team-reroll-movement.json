@@ -67815,7 +67815,7 @@
       ]
     },
     {
-      "id": "team_dodge_zone_combined_excluded",
+      "id": "team_dodge_zone_declined_failure",
       "sourceFile": "demo2.bbr",
       "sha256": "70f663bdb35dcfbedfd596903c880dd45263ca4cd522091ee91cd0aa77c936e8",
       "records": [
@@ -71720,6 +71720,3415 @@
               ],
               "ActivePlayer": [
                 "-1"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "team_dodge_zone_combined_excluded",
+      "sourceFile": "demo1.bbr",
+      "sha256": "1e637c37bfa46907c4ee0ffa4492f54a862a0dd1b2b0c1e367ec9e2f3dc8bf18",
+      "records": [
+        {
+          "replayStep": 205,
+          "childIndex": 0,
+          "projection": {
+            "Clock": "1341699"
+          }
+        },
+        {
+          "replayStep": 205,
+          "childIndex": 1,
+          "projection": {
+            "EventGamersAreReady": {}
+          }
+        },
+        {
+          "replayStep": 205,
+          "childIndex": 2,
+          "projection": {
+            "EventStartActiveTimer": {}
+          }
+        },
+        {
+          "replayStep": 205,
+          "childIndex": 3,
+          "projection": {
+            "EventRulesEngineStandBy": {
+              "Phase": [
+                "5"
+              ],
+              "ActiveGamer": [
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "replayStep": 205,
+          "childIndex": 4,
+          "projection": {
+            "BoardState": {
+              "ActiveTeam": [
+                "1"
+              ],
+              "ActiveGamer": [
+                "1"
+              ],
+              "ListTeams": [
+                {
+                  "TeamState": [
+                    {
+                      "GameTurn": [
+                        "4"
+                      ],
+                      "RerollNumber": [
+                        "3"
+                      ],
+                      "ListPitchPlayers": [
+                        {
+                          "PlayerState": [
+                            {
+                              "Id": [
+                                "1"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "5"
+                                  ],
+                                  "X": [
+                                    "8"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "6"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "2"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "1"
+                                  ],
+                                  "X": [
+                                    "2"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "3"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "3"
+                                  ],
+                                  "X": [
+                                    "8"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "4"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "6"
+                                  ],
+                                  "X": [
+                                    "13"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "5"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "2"
+                                  ],
+                                  "X": [
+                                    "7"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "6"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "8"
+                                  ],
+                                  "X": [
+                                    "13"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "7"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "7"
+                                  ],
+                                  "X": [
+                                    "13"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "8"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "7"
+                                  ],
+                                  "X": [
+                                    "12"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "9"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "3"
+                                  ],
+                                  "X": [
+                                    "6"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "10"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "6"
+                                  ],
+                                  "X": [
+                                    "12"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "11"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "4"
+                                  ],
+                                  "X": [
+                                    "7"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "Data": [
+                        {}
+                      ],
+                      "Side": [
+                        "32"
+                      ]
+                    },
+                    {
+                      "GameTurn": [
+                        "5"
+                      ],
+                      "RerollNumber": [
+                        "1"
+                      ],
+                      "ListPitchPlayers": [
+                        {
+                          "PlayerState": [
+                            {
+                              "Id": [
+                                "37"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "6"
+                                  ],
+                                  "X": [
+                                    "14"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "1"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "38"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "4"
+                                  ],
+                                  "X": [
+                                    "14"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "6"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "39"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "6"
+                                  ],
+                                  "X": [
+                                    "7"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "3"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "40"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "X": [
+                                    "1"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "6"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "41"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "7"
+                                  ],
+                                  "X": [
+                                    "14"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "7"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "42"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "1"
+                                  ],
+                                  "X": [
+                                    "8"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "43"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "3"
+                              ],
+                              "Situation": [
+                                "2"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "44"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "3"
+                              ],
+                              "Situation": [
+                                "2"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "45"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "3"
+                                  ],
+                                  "X": [
+                                    "3"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "46"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "8"
+                                  ],
+                                  "X": [
+                                    "14"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "6"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "47"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ],
+                              "Situation": [
+                                "1"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "48"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ],
+                              "Situation": [
+                                "1"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "49"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ],
+                              "Situation": [
+                                "1"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "50"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "2"
+                                  ],
+                                  "X": [
+                                    "5"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "2"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "51"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ],
+                              "Situation": [
+                                "1"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "Data": [
+                        {
+                          "TeamId": [
+                            "1"
+                          ]
+                        }
+                      ],
+                      "Side": [
+                        "64"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Ball": [
+                {
+                  "Cell": [
+                    {
+                      "Y": [
+                        "3"
+                      ],
+                      "X": [
+                        "8"
+                      ]
+                    }
+                  ],
+                  "Carrier": [
+                    "3"
+                  ],
+                  "IsHeld": [
+                    "1"
+                  ]
+                }
+              ],
+              "CurrentPhase": [
+                "5"
+              ],
+              "IsStable": [
+                "1"
+              ],
+              "ActivePlayer": [
+                "42"
+              ]
+            }
+          }
+        },
+        {
+          "replayStep": 206,
+          "childIndex": 0,
+          "projection": {
+            "Clock": "1345399"
+          }
+        },
+        {
+          "replayStep": 206,
+          "childIndex": 1,
+          "sequence": 165,
+          "steps": [
+            {
+              "stepIndex": 0,
+              "step": {
+                "PlayerStep": {
+                  "Probability": [
+                    "100.0"
+                  ],
+                  "PlayerId": [
+                    "42"
+                  ],
+                  "TargetId": [
+                    "-1"
+                  ],
+                  "IsEvaluation": [
+                    "0"
+                  ],
+                  "StepType": [
+                    "1"
+                  ],
+                  "CellTo": [
+                    {
+                      "Y": [
+                        "2"
+                      ],
+                      "X": [
+                        "9"
+                      ]
+                    }
+                  ],
+                  "State": [
+                    "1"
+                  ],
+                  "CellFrom": [
+                    {
+                      "Y": [
+                        "1"
+                      ],
+                      "X": [
+                        "8"
+                      ]
+                    }
+                  ],
+                  "Skill": [
+                    "0"
+                  ]
+                }
+              },
+              "messages": [
+                {
+                  "QuestionTeamRerollUsage": {
+                    "GamerId": [
+                      "1"
+                    ],
+                    "CanUseProReroll": [
+                      "0"
+                    ],
+                    "CanUseTeamReroll": [
+                      "1"
+                    ],
+                    "StarSpecialRule": [
+                      "-1"
+                    ],
+                    "RollInfos": [
+                      {
+                        "Status": [
+                          "1"
+                        ],
+                        "Requirement": [
+                          "2"
+                        ],
+                        "Dice": [
+                          {
+                            "Die": [
+                              {
+                                "DieType": [
+                                  "0"
+                                ],
+                                "Value": [
+                                  "1"
+                                ]
+                              }
+                            ]
+                          }
+                        ],
+                        "Difficulty": [
+                          "2"
+                        ],
+                        "RollType": [
+                          "1"
+                        ],
+                        "Outcome": [
+                          "0"
+                        ],
+                        "NewRoll": [
+                          "1"
+                        ],
+                        "Modifiers": [
+                          ""
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "replayStep": 206,
+          "childIndex": 2,
+          "projection": {
+            "BoardState": {
+              "ActiveTeam": [
+                "1"
+              ],
+              "ActiveGamer": [
+                "1"
+              ],
+              "ListTeams": [
+                {
+                  "TeamState": [
+                    {
+                      "GameTurn": [
+                        "4"
+                      ],
+                      "RerollNumber": [
+                        "3"
+                      ],
+                      "ListPitchPlayers": [
+                        {
+                          "PlayerState": [
+                            {
+                              "Id": [
+                                "1"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "5"
+                                  ],
+                                  "X": [
+                                    "8"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "6"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "2"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "1"
+                                  ],
+                                  "X": [
+                                    "2"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "3"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "3"
+                                  ],
+                                  "X": [
+                                    "8"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "4"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "6"
+                                  ],
+                                  "X": [
+                                    "13"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "5"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "2"
+                                  ],
+                                  "X": [
+                                    "7"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "6"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "8"
+                                  ],
+                                  "X": [
+                                    "13"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "7"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "7"
+                                  ],
+                                  "X": [
+                                    "13"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "8"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "7"
+                                  ],
+                                  "X": [
+                                    "12"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "9"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "3"
+                                  ],
+                                  "X": [
+                                    "6"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "10"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "6"
+                                  ],
+                                  "X": [
+                                    "12"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "11"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "4"
+                                  ],
+                                  "X": [
+                                    "7"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "Data": [
+                        {}
+                      ],
+                      "Side": [
+                        "32"
+                      ]
+                    },
+                    {
+                      "GameTurn": [
+                        "5"
+                      ],
+                      "RerollNumber": [
+                        "1"
+                      ],
+                      "ListPitchPlayers": [
+                        {
+                          "PlayerState": [
+                            {
+                              "Id": [
+                                "37"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "6"
+                                  ],
+                                  "X": [
+                                    "14"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "1"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "38"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "4"
+                                  ],
+                                  "X": [
+                                    "14"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "6"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "39"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "6"
+                                  ],
+                                  "X": [
+                                    "7"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "3"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "40"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "X": [
+                                    "1"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "6"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "41"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "7"
+                                  ],
+                                  "X": [
+                                    "14"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "7"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "42"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "1"
+                                  ],
+                                  "X": [
+                                    "8"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "43"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "3"
+                              ],
+                              "Situation": [
+                                "2"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "44"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "3"
+                              ],
+                              "Situation": [
+                                "2"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "45"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "3"
+                                  ],
+                                  "X": [
+                                    "3"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "46"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "8"
+                                  ],
+                                  "X": [
+                                    "14"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "6"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "47"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ],
+                              "Situation": [
+                                "1"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "48"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ],
+                              "Situation": [
+                                "1"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "49"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ],
+                              "Situation": [
+                                "1"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "50"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "2"
+                                  ],
+                                  "X": [
+                                    "5"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "2"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "51"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ],
+                              "Situation": [
+                                "1"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "Data": [
+                        {
+                          "TeamId": [
+                            "1"
+                          ]
+                        }
+                      ],
+                      "Side": [
+                        "64"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Ball": [
+                {
+                  "Cell": [
+                    {
+                      "Y": [
+                        "3"
+                      ],
+                      "X": [
+                        "8"
+                      ]
+                    }
+                  ],
+                  "Carrier": [
+                    "3"
+                  ],
+                  "IsHeld": [
+                    "1"
+                  ]
+                }
+              ],
+              "CurrentPhase": [
+                "5"
+              ],
+              "ActivePlayer": [
+                "42"
+              ]
+            }
+          }
+        },
+        {
+          "replayStep": 207,
+          "childIndex": 0,
+          "projection": {
+            "Clock": "1347599"
+          }
+        },
+        {
+          "replayStep": 207,
+          "childIndex": 1,
+          "sequence": 166,
+          "steps": [
+            {
+              "stepIndex": 0,
+              "step": {
+                "PlayerStep": {
+                  "Probability": [
+                    "100.0"
+                  ],
+                  "PlayerId": [
+                    "42"
+                  ],
+                  "TargetId": [
+                    "-1"
+                  ],
+                  "IsEvaluation": [
+                    "0"
+                  ],
+                  "StepType": [
+                    "1"
+                  ],
+                  "CellTo": [
+                    {
+                      "Y": [
+                        "2"
+                      ],
+                      "X": [
+                        "9"
+                      ]
+                    }
+                  ],
+                  "State": [
+                    "3"
+                  ],
+                  "CellFrom": [
+                    {
+                      "Y": [
+                        "1"
+                      ],
+                      "X": [
+                        "8"
+                      ]
+                    }
+                  ],
+                  "Skill": [
+                    "0"
+                  ]
+                }
+              },
+              "messages": [
+                {
+                  "ResultTeamRerollUsage": {
+                    "GamerId": [
+                      "1"
+                    ],
+                    "Used": [
+                      "1"
+                    ]
+                  }
+                },
+                {
+                  "ResultRoll": {
+                    "Status": [
+                      "2"
+                    ],
+                    "Requirement": [
+                      "2"
+                    ],
+                    "Dice": [
+                      {
+                        "Die": [
+                          {
+                            "DieType": [
+                              "0"
+                            ],
+                            "Value": [
+                              "6"
+                            ]
+                          }
+                        ]
+                      }
+                    ],
+                    "Difficulty": [
+                      "2"
+                    ],
+                    "RollType": [
+                      "1"
+                    ],
+                    "Outcome": [
+                      "1"
+                    ],
+                    "NewRoll": [
+                      "1"
+                    ],
+                    "Modifiers": [
+                      ""
+                    ]
+                  }
+                },
+                {
+                  "ResultRoll": {
+                    "Status": [
+                      "1"
+                    ],
+                    "Requirement": [
+                      "2"
+                    ],
+                    "Modifiers": [
+                      {
+                        "Modifier": [
+                          {
+                            "PlayerId": [
+                              "3"
+                            ],
+                            "Skill": [
+                              "-1"
+                            ],
+                            "Effect": [
+                              "-1"
+                            ],
+                            "Value": [
+                              "-1"
+                            ],
+                            "ModifierType": [
+                              "3"
+                            ]
+                          }
+                        ]
+                      }
+                    ],
+                    "Dice": [
+                      {
+                        "Die": [
+                          {
+                            "DieType": [
+                              "0"
+                            ],
+                            "Value": [
+                              "5"
+                            ]
+                          }
+                        ]
+                      }
+                    ],
+                    "Difficulty": [
+                      "3"
+                    ],
+                    "RollType": [
+                      "2"
+                    ],
+                    "Outcome": [
+                      "1"
+                    ],
+                    "NewRoll": [
+                      "1"
+                    ]
+                  }
+                },
+                {
+                  "ResultDoMove": null
+                },
+                {
+                  "ResultMoveOutcome": {
+                    "TentacleUsed": [
+                      "0"
+                    ],
+                    "Moved": [
+                      "1"
+                    ],
+                    "Rolls": [
+                      {
+                        "RollSummary": [
+                          {
+                            "RollType": [
+                              "1"
+                            ],
+                            "Outcome": [
+                              "1"
+                            ]
+                          },
+                          {
+                            "RollType": [
+                              "2"
+                            ],
+                            "Outcome": [
+                              "1"
+                            ]
+                          }
+                        ]
+                      }
+                    ],
+                    "FumbleRooskieUsed": [
+                      "0"
+                    ],
+                    "Pushbacks": [
+                      ""
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "replayStep": 207,
+          "childIndex": 2,
+          "projection": {
+            "EventRulesEngineStandBy": {
+              "Phase": [
+                "5"
+              ],
+              "ActiveGamer": [
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "replayStep": 207,
+          "childIndex": 3,
+          "projection": {
+            "BoardState": {
+              "ActiveTeam": [
+                "1"
+              ],
+              "ActiveGamer": [
+                "1"
+              ],
+              "ListTeams": [
+                {
+                  "TeamState": [
+                    {
+                      "GameTurn": [
+                        "4"
+                      ],
+                      "RerollNumber": [
+                        "3"
+                      ],
+                      "ListPitchPlayers": [
+                        {
+                          "PlayerState": [
+                            {
+                              "Id": [
+                                "1"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "5"
+                                  ],
+                                  "X": [
+                                    "8"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "6"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "2"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "1"
+                                  ],
+                                  "X": [
+                                    "2"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "3"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "3"
+                                  ],
+                                  "X": [
+                                    "8"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "4"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "6"
+                                  ],
+                                  "X": [
+                                    "13"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "5"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "2"
+                                  ],
+                                  "X": [
+                                    "7"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "6"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "8"
+                                  ],
+                                  "X": [
+                                    "13"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "7"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "7"
+                                  ],
+                                  "X": [
+                                    "13"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "8"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "7"
+                                  ],
+                                  "X": [
+                                    "12"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "9"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "3"
+                                  ],
+                                  "X": [
+                                    "6"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "10"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "6"
+                                  ],
+                                  "X": [
+                                    "12"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "11"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "4"
+                                  ],
+                                  "X": [
+                                    "7"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "Data": [
+                        {}
+                      ],
+                      "Side": [
+                        "32"
+                      ]
+                    },
+                    {
+                      "GameTurn": [
+                        "5"
+                      ],
+                      "ListPitchPlayers": [
+                        {
+                          "PlayerState": [
+                            {
+                              "Id": [
+                                "37"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "6"
+                                  ],
+                                  "X": [
+                                    "14"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "1"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "38"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "4"
+                                  ],
+                                  "X": [
+                                    "14"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "6"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "39"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "6"
+                                  ],
+                                  "X": [
+                                    "7"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "3"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "40"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "X": [
+                                    "1"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "6"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "41"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "7"
+                                  ],
+                                  "X": [
+                                    "14"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "7"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "42"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "2"
+                                  ],
+                                  "X": [
+                                    "9"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "43"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "3"
+                              ],
+                              "Situation": [
+                                "2"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "44"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "3"
+                              ],
+                              "Situation": [
+                                "2"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "45"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "3"
+                                  ],
+                                  "X": [
+                                    "3"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "46"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "8"
+                                  ],
+                                  "X": [
+                                    "14"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "6"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "47"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ],
+                              "Situation": [
+                                "1"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "48"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ],
+                              "Situation": [
+                                "1"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "49"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ],
+                              "Situation": [
+                                "1"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "50"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "2"
+                                  ],
+                                  "X": [
+                                    "5"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "2"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "51"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ],
+                              "Situation": [
+                                "1"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "Data": [
+                        {
+                          "TeamId": [
+                            "1"
+                          ]
+                        }
+                      ],
+                      "Side": [
+                        "64"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Ball": [
+                {
+                  "Cell": [
+                    {
+                      "Y": [
+                        "3"
+                      ],
+                      "X": [
+                        "8"
+                      ]
+                    }
+                  ],
+                  "Carrier": [
+                    "3"
+                  ],
+                  "IsHeld": [
+                    "1"
+                  ]
+                }
+              ],
+              "CurrentPhase": [
+                "5"
+              ],
+              "IsStable": [
+                "1"
+              ],
+              "ActivePlayer": [
+                "42"
+              ]
+            }
+          }
+        },
+        {
+          "replayStep": 208,
+          "childIndex": 0,
+          "projection": {
+            "Clock": "1359799"
+          }
+        },
+        {
+          "replayStep": 208,
+          "childIndex": 1,
+          "sequence": 167,
+          "steps": [
+            {
+              "stepIndex": 0,
+              "step": {
+                "PlayerStep": {
+                  "Probability": [
+                    "100.0"
+                  ],
+                  "PlayerId": [
+                    "37"
+                  ],
+                  "TargetId": [
+                    "-1"
+                  ],
+                  "IsEvaluation": [
+                    "0"
+                  ],
+                  "StepType": [
+                    "0"
+                  ],
+                  "CellTo": [
+                    {
+                      "Y": [
+                        "6"
+                      ],
+                      "X": [
+                        "14"
+                      ]
+                    }
+                  ],
+                  "State": [
+                    "3"
+                  ],
+                  "CellFrom": [
+                    {
+                      "Y": [
+                        "6"
+                      ],
+                      "X": [
+                        "14"
+                      ]
+                    }
+                  ],
+                  "Skill": [
+                    "0"
+                  ]
+                }
+              },
+              "messages": [
+                {
+                  "ResultUseAction": {
+                    "Action": [
+                      "1"
+                    ],
+                    "TeamId": [
+                      "0"
+                    ]
+                  }
+                },
+                {
+                  "ResultSkillUsage": {
+                    "PlayerId": [
+                      "37"
+                    ],
+                    "Skill": [
+                      "51"
+                    ],
+                    "Used": [
+                      "1"
+                    ]
+                  }
+                },
+                {
+                  "ResultRoll": {
+                    "Status": [
+                      "1"
+                    ],
+                    "Requirement": [
+                      "4"
+                    ],
+                    "Modifiers": [
+                      {
+                        "Modifier": [
+                          {
+                            "PlayerId": [
+                              "41"
+                            ],
+                            "Skill": [
+                              "-1"
+                            ],
+                            "Effect": [
+                              "-1"
+                            ],
+                            "Value": [
+                              "2"
+                            ],
+                            "ModifierType": [
+                              "17"
+                            ]
+                          }
+                        ]
+                      }
+                    ],
+                    "Dice": [
+                      {
+                        "Die": [
+                          {
+                            "DieType": [
+                              "0"
+                            ],
+                            "Value": [
+                              "4"
+                            ]
+                          }
+                        ]
+                      }
+                    ],
+                    "Difficulty": [
+                      "2"
+                    ],
+                    "RollType": [
+                      "34"
+                    ],
+                    "Outcome": [
+                      "1"
+                    ],
+                    "NewRoll": [
+                      "1"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "stepIndex": 1,
+              "step": {
+                "PlayerStep": {
+                  "Probability": [
+                    "100.0"
+                  ],
+                  "PlayerId": [
+                    "37"
+                  ],
+                  "TargetId": [
+                    "37"
+                  ],
+                  "IsEvaluation": [
+                    "0"
+                  ],
+                  "StepType": [
+                    "7"
+                  ],
+                  "CellTo": [
+                    {
+                      "Y": [
+                        "6"
+                      ],
+                      "X": [
+                        "14"
+                      ]
+                    }
+                  ],
+                  "State": [
+                    "3"
+                  ],
+                  "CellFrom": [
+                    {
+                      "Y": [
+                        "6"
+                      ],
+                      "X": [
+                        "14"
+                      ]
+                    }
+                  ],
+                  "Skill": [
+                    "0"
+                  ]
+                }
+              },
+              "messages": [
+                {
+                  "ResultNoRollSuccess": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "replayStep": 208,
+          "childIndex": 2,
+          "projection": {
+            "EventRulesEngineStandBy": {
+              "Phase": [
+                "5"
+              ],
+              "ActiveGamer": [
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "replayStep": 208,
+          "childIndex": 3,
+          "projection": {
+            "BoardState": {
+              "ActiveTeam": [
+                "1"
+              ],
+              "ActiveGamer": [
+                "1"
+              ],
+              "ListTeams": [
+                {
+                  "TeamState": [
+                    {
+                      "GameTurn": [
+                        "4"
+                      ],
+                      "RerollNumber": [
+                        "3"
+                      ],
+                      "ListPitchPlayers": [
+                        {
+                          "PlayerState": [
+                            {
+                              "Id": [
+                                "1"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "5"
+                                  ],
+                                  "X": [
+                                    "8"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "6"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "2"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "1"
+                                  ],
+                                  "X": [
+                                    "2"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "3"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "3"
+                                  ],
+                                  "X": [
+                                    "8"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "4"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "6"
+                                  ],
+                                  "X": [
+                                    "13"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "5"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "2"
+                                  ],
+                                  "X": [
+                                    "7"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "6"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "8"
+                                  ],
+                                  "X": [
+                                    "13"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "7"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "7"
+                                  ],
+                                  "X": [
+                                    "13"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "8"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "7"
+                                  ],
+                                  "X": [
+                                    "12"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "9"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "3"
+                                  ],
+                                  "X": [
+                                    "6"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "10"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "6"
+                                  ],
+                                  "X": [
+                                    "12"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "11"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "4"
+                                  ],
+                                  "X": [
+                                    "7"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "Data": [
+                        {}
+                      ],
+                      "Side": [
+                        "32"
+                      ]
+                    },
+                    {
+                      "GameTurn": [
+                        "5"
+                      ],
+                      "ListPitchPlayers": [
+                        {
+                          "PlayerState": [
+                            {
+                              "Id": [
+                                "37"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "6"
+                                  ],
+                                  "X": [
+                                    "14"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "1"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "38"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "4"
+                                  ],
+                                  "X": [
+                                    "14"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "6"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "39"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "6"
+                                  ],
+                                  "X": [
+                                    "7"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "3"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "40"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "X": [
+                                    "1"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "6"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "41"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "7"
+                                  ],
+                                  "X": [
+                                    "14"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "7"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "42"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "2"
+                                  ],
+                                  "X": [
+                                    "9"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "43"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "3"
+                              ],
+                              "Situation": [
+                                "2"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "44"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "3"
+                              ],
+                              "Situation": [
+                                "2"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "45"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "3"
+                                  ],
+                                  "X": [
+                                    "3"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "4"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "46"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "8"
+                                  ],
+                                  "X": [
+                                    "14"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "6"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "47"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ],
+                              "Situation": [
+                                "1"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "48"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ],
+                              "Situation": [
+                                "1"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "49"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ],
+                              "Situation": [
+                                "1"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "50"
+                              ],
+                              "CanAct": [
+                                "1"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "2"
+                                  ],
+                                  "X": [
+                                    "5"
+                                  ]
+                                }
+                              ],
+                              "Status": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "2"
+                              ]
+                            },
+                            {
+                              "Id": [
+                                "51"
+                              ],
+                              "Cell": [
+                                {
+                                  "Y": [
+                                    "-1"
+                                  ],
+                                  "X": [
+                                    "-1"
+                                  ]
+                                }
+                              ],
+                              "TackleZone": [
+                                "1"
+                              ],
+                              "MovePoint": [
+                                "5"
+                              ],
+                              "Situation": [
+                                "1"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "Data": [
+                        {
+                          "TeamId": [
+                            "1"
+                          ]
+                        }
+                      ],
+                      "Side": [
+                        "64"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Ball": [
+                {
+                  "Cell": [
+                    {
+                      "Y": [
+                        "3"
+                      ],
+                      "X": [
+                        "8"
+                      ]
+                    }
+                  ],
+                  "Carrier": [
+                    "3"
+                  ],
+                  "IsHeld": [
+                    "1"
+                  ]
+                }
+              ],
+              "CurrentPhase": [
+                "5"
+              ],
+              "IsStable": [
+                "1"
+              ],
+              "ActivePlayer": [
+                "37"
               ]
             }
           }
