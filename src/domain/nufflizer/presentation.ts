@@ -322,12 +322,15 @@ export function explainBlockResolution(
   );
   return [
     `Recorded block resolution: ${outcome}.`,
+    event.metadata.blockCrowd
+      ? `This block pushed defender ${event.metadata.blockCrowd.subjectId} from [${event.metadata.blockCrowd.from.x},${event.metadata.blockCrowd.from.y}] off pitch to [${event.metadata.blockCrowd.to.x},${event.metadata.blockCrowd.to.y}]. Two removal records are stages for that one player, not two injuries. The linked crowd injury has unknown odds; this verified prefix contains no armor roll. The confirming snapshot places the player off pitch; other recorded activity flags do not establish availability. Omitted posture remains unknown. This does not infer a team turnover, future return or tactical value.`
+      : null,
     skills.length ? `Applied skills: ${skills.join(", ")}.` : null,
     resolution.outcome === "wrestled_prone"
       ? "Wrestle does not add a knockdown armor check; a separate ball consequence can still matter."
       : null,
     resolution.damageActionIds.length
-      ? `${resolution.damageActionIds.length} immediately linked damage step${resolution.damageActionIds.length === 1 ? "" : "s"} retain each victim's team perspective.`
+      ? `${resolution.damageActionIds.length} immediately linked damage step${resolution.damageActionIds.length === 1 ? "" : "s"} retain${resolution.damageActionIds.length === 1 ? "s" : ""} each victim's team perspective.`
       : "No damage step is linked by this bounded contract.",
     `Terminal-pool and linked-damage subtotal: ${totals.join("; ")}. Earlier replaced pools remain separate.`,
     resolution.unscoredDamageRolls

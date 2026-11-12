@@ -103,6 +103,11 @@ describe("POST /api/nufflizier/analyze", () => {
           e.metadata.locator?.replayStep === 194 &&
           e.metadata.teamRerollMovement
       )!;
+    const crowd=report.events.find(e=>e.metadata.blockCrowd?.subjectId === "38")!,proof=crowd.metadata.blockCrowd!;
+    expect(crowd.metadata.sourceId).toBe("source-3716");expect(proof.after).toMatchObject({checkpointAfter:3730,cell:{x:-1,y:-1},canAct:true,tackleZone:true,statusCode:null});
+    expect(crowd.metadata.blockResolution!.unscoredDamageRolls).toBe(1);
+    expect(report.damageSteps.find(s=>s.actionId===proof.damageActionId)).toMatchObject({scoredRolls:0,unscoredRolls:1,diceContribution:0});
+
     expect(e.metadata.teamRerollMovement).toMatchObject({
       rollType: 2,
       movementBefore: 4,

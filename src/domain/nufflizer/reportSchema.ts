@@ -1,3 +1,4 @@
+import { validReportedBlockCrowd } from "./blockCrowd";
 import { bounceDestination } from "@/domain/replay/pickupSuccessors";
 import { continuationOptionBounds } from "@/domain/replay/activeMoveContinuation";
 import { estimateDodgeImpactBounds, estimateTeamDodgeMoveBounds, estimateNumericImpact, estimatePickupPossessionBounds, estimateFreshCatchPossession, estimateKeptCatchPossession } from "./contextImpact";
@@ -107,6 +108,12 @@ export const LuckEventMetadataSchema = z.strictObject({
     from:pitchCell,to:pitchCell,movementBefore:z.number().int().min(1).max(16).nullable(),
     movementAfter:z.number().int().min(0).max(15).nullable(),carriesBall:z.boolean().nullable(),checkpointAfter:count}).optional(),
   blockSelection:z.strictObject({face:z.number().int().min(0).max(4)}).optional(),
+  crowdPush:z.strictObject({playerId:text,from:pitchCell,to:z.strictObject({x:z.number().int().min(-1).max(26),y:z.number().int().min(-1).max(15)}),resolution:z.literal(3)}).optional(),
+  crowdRemoval:z.strictObject({reason:z.union([z.literal(0),z.literal(1)]),situation:z.union([z.literal(1),z.literal(2)]),status:z.union([z.literal(0),z.literal(3)])}).optional(),
+  blockCrowd:z.strictObject({pushSourceId:text,initialRemovalSourceId:text,finalRemovalSourceId:text,injurySourceId:text,subjectId:text,subjectTeamId:text,
+    from:pitchCell,to:z.strictObject({x:z.number().int().min(-1).max(26),y:z.number().int().min(-1).max(15)}),damageActionId:text,beforeCheckpointAfter:count,
+    after:z.strictObject({checkpointAfter:count,cell:z.strictObject({x:z.literal(-1),y:z.literal(-1)}),situationCode:z.union([z.literal(1),z.literal(2)]),
+      statusCode:z.number().int().nullable(),canAct:z.boolean().nullable(),tackleZone:z.boolean().nullable()})}).optional(),
   blockResolution: z.strictObject({
     outcome:z.enum(["attacker_down","both_down","wrestled_prone","both_stay_up","push","defender_down","defender_pushed_down"]),
     skillSourceIds:z.array(text).max(4),damageActionIds:z.array(text).max(2),
@@ -266,6 +273,7 @@ export const LuckEventMetadataSchema = z.strictObject({
       subjectId: text,
       subjectTeamId: text,
       sourceCode: finite.optional(),
+      crowd:z.strictObject({poolSourceId:text}).optional(),
       chainActionId: text.optional(),
       koRecovery: z
         .strictObject({ target: z.union([z.literal(3), z.literal(4)]) })
@@ -1423,6 +1431,21 @@ export const LuckReportSchema = z
         );
       }
       if (event.metadata.blockSelection) require(event.metadata.sourceTag === "ResultBlockRoll" && !event.metadata.isRollCandidate && event.scoringStatus === "excluded", "An observed selected block face is a deterministic summary of a linked pool.");
+      if(event.metadata.blockCrowd)
+        require(validReportedBlockCrowd(event,sources,report.coverage.sourceRecordCount),"Crowd damage requires one direct defender push, ordered removal/injury stages, confirmed off-pitch observation and no invented odds or armor.");
+      if(event.metadata.crowdPush || event.metadata.crowdRemoval)
+        require(event.scoringStatus === "excluded" && !event.metadata.isRollCandidate && report.events.some(pool=>{
+          const c=pool.metadata.blockCrowd;
+          return !!c && (event.metadata.crowdPush ? c.pushSourceId === event.metadata.sourceId :
+            c.initialRemovalSourceId === event.metadata.sourceId || c.finalRemovalSourceId === event.metadata.sourceId);
+        }),"Crowd push/removal receipts must be referenced non-random evidence, not extra outcomes.");
+      if(event.metadata.damage?.crowd) {
+        const pool=sources.get(event.metadata.damage.crowd.poolSourceId);
+        require(pool?.metadata.blockCrowd?.injurySourceId === event.metadata.sourceId && event.scoringStatus === "excluded" && event.metadata.isRollCandidate === true &&
+          event.metadata.sourceTag === "ResultInjuryRoll" && event.metadata.rollType === 11 && event.metadata.damage.sourceCode === 2 &&
+          !event.metadata.damage.regeneration && !event.metadata.damage.koRecovery,
+          "An unscored crowd injury anchor needs its own verified block chain and retains unknown odds.");
+      }
       const blockAftermath = event.metadata.blockResolution;
       if (blockAftermath) {
         const block = event.metadata.block;
@@ -1453,9 +1476,9 @@ export const LuckReportSchema = z
           const linked = blockAftermath.damageActionIds.flatMap(id => damageByAction.has(id) ? [damageByAction.get(id)!] : []);
           require(linked.length === blockAftermath.damageActionIds.length && new Set(blockAftermath.damageActionIds).size === linked.length &&
             new Set(linked.map(step=>step.playerId)).size === linked.length && linked.every(step =>
-              !linkedDamageActions.has(step.actionId) && subjects.includes(step.playerId) &&
+              !linkedDamageActions.has(step.actionId) && (subjects.includes(step.playerId) || (event.metadata.blockCrowd?.damageActionId === step.actionId && event.metadata.blockCrowd.subjectId === step.playerId)) &&
               (step.playerId === block.attackerId ? step.teamId === event.teamId : step.teamId !== event.teamId && teamIds.has(step.teamId)) &&
-              step.eventIds.some(id=>ids.get(id)?.metadata.damage?.sourceCode === 1) && step.eventIds.every(id=> {
+              step.eventIds.some(id=>ids.get(id)?.metadata.damage?.sourceCode === (event.metadata.blockCrowd?.damageActionId === step.actionId ? 2 : 1)) && step.eventIds.every(id=> {
                 const damage = ids.get(id)!;
                 return damage.metadata.sequenceId === final.metadata.sequenceId &&
                   damage.metadata.locator?.replayStep === final.metadata.locator?.replayStep &&
@@ -1615,7 +1638,7 @@ export const LuckReportSchema = z
       }
       if (damage) {
         require(event.type ===
-          (damage.regeneration || damage.koRecovery
+          (damage.regeneration || damage.koRecovery || damage.crowd
             ? "injury"
             : "armor_break") &&
           damage.subjectId === event.playerId &&

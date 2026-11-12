@@ -11,7 +11,8 @@ export type DamageStepSummary = {
   diceContribution: number;
 };
 
-// Only a verified armor or recovery check anchors a damage step. Grouping
+// Verified armor/recovery or source-qualified unscored crowd injury anchors
+// a damage step. Unscored-only stages retain unknown odds. Grouping
 // references the existing contributions and never adds them to a team twice.
 export function summarizeDamageSteps(
   events: readonly LuckEvent[]
@@ -19,7 +20,7 @@ export function summarizeDamageSteps(
   const summaries = new Map<string, DamageStepSummary>();
   for (const event of events) {
     const damage = event.metadata.damage;
-    if (!damage?.chainActionId || event.scoringStatus !== "scored") continue;
+    if (!damage?.chainActionId || (event.scoringStatus !== "scored" && !damage.crowd)) continue;
     if (!summaries.has(damage.chainActionId)) {
       summaries.set(damage.chainActionId, {
         actionId: damage.chainActionId,

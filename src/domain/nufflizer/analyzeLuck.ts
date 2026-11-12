@@ -1,3 +1,4 @@
+import { attachBlockCrowd } from "./blockCrowd";
 import { attachRetainedCatchPossession } from "./retainedCatchPossession";
 import { teamDodgeContinuity } from "@/domain/replay/teamDodgeContinuity";
 import { findBounceCatchReactions, attachBounceCatchReactions } from "./catchPossession";
@@ -1295,6 +1296,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     }
   }
 
+  const ballSources=new Map(events.flatMap(e=>e.metadata.sourceId?[[e.metadata.sourceId,e] as const]:[]));
+  attachBlockCrowd(replay,ballSources,blockConsequences);
   const damageSteps = summarizeDamageSteps(events);
   if (movementFalls.length > 0) {
     const damageByAction = new Map(
@@ -1336,11 +1339,6 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     }
   }
 
-  const ballSources = new Map(
-    events.flatMap((event) =>
-      event.metadata.sourceId ? [[event.metadata.sourceId, event] as const] : []
-    )
-  );
   for (const turn of replay.turns)
     linkPickupBallConsequences(turn, ballSources);
   attachBounceCatchReactions(bounceCatchReactions,ballSources);
@@ -1431,7 +1429,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     const selected = ballSources.get(consequence.selectedSourceId);
     if (selected)
       selected.metadata.blockSelection = { face: consequence.selectedFace };
-    const linkedDamage = consequence.damageActionIds.flatMap((id) =>
+    const damageActionIds=[...consequence.damageActionIds,...(pool.metadata.blockCrowd ? [pool.metadata.blockCrowd.damageActionId] : [])];
+    const linkedDamage = damageActionIds.flatMap((id) =>
       blockDamage.has(id) ? [blockDamage.get(id)!] : []
     );
     pool.metadata.blockResolution = {

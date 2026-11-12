@@ -410,7 +410,9 @@ export function summarizeBlockConsequence(
     diceByTeam[pool.teamId] = pool.weightedDelta;
   let unscoredDamageRolls = 0;
   for (const step of damage) {
-    diceByTeam[step.teamId] =
+    // An unscored-only crowd injury has no known contribution for its victim.
+    // Do not display an empty subtotal as that team's measured even luck.
+    if(step.scoredRolls>0) diceByTeam[step.teamId] =
       (diceByTeam[step.teamId] ?? 0) + step.diceContribution;
     unscoredDamageRolls += step.unscoredRolls;
   }
