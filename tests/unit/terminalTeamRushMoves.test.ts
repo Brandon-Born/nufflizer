@@ -165,7 +165,8 @@ describe("conditional teammate moves at a committed ordinary Rush replacement", 
     const failed = r.events.find((e) => e.metadata.sourceId === "source-2704")!;
     expect(failed.actualSuccess).toBe(false);
     expect(failed.metadata.movementFall).toBeDefined();
-    expect(failed.contextualBounds).toBeUndefined();
+    expect(failed.contextualBounds?.policy).toBe("kept_rush_terminal_moves");
+    expect(failed.metadata.teamRerollsSpent).toBe(0);
   });
   it("has zero expected terminal contribution for every fixed eligible count", () => {
     const context = terminal(report()).metadata.preRoll!;
@@ -345,7 +346,7 @@ describe("conditional teammate moves at a committed ordinary Rush replacement", 
     expect(result.stdout).toContain("replacement Rush die had 83.3% success");
     expect(result.stdout).toContain("0 to 5 other players");
     expect(result.stdout).toContain(
-      "0.00 to 1.83 provisional context units across 2 reported components"
+      "-7.50 to 1.83 provisional context units across 3 reported components"
     );
   });
 });

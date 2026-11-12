@@ -7,7 +7,7 @@ import { directInjuryOutcome } from "./injuryObservation";
 import { validReportedBlockCrowd } from "./blockCrowd";
 import { bounceDestination } from "@/domain/replay/pickupSuccessors";
 import { continuationOptionBounds } from "@/domain/replay/activeMoveContinuation";
-import { estimateDodgeImpactBounds, estimateTeamDodgeMoveBounds, estimateTeamRushMoveBounds, estimateNumericImpact, estimatePickupPossessionBounds, estimateFreshCatchPossession, estimateKeptCatchPossession } from "./contextImpact";
+import { estimateDodgeImpactBounds, estimateTeamDodgeMoveBounds, estimateTeamRushMoveBounds, estimateKeptRushMoveBounds, estimateNumericImpact, estimatePickupPossessionBounds, estimateFreshCatchPossession, estimateKeptCatchPossession } from "./contextImpact";
 import { blockOutcomeName, consistentBlockResolution, knockedDownSubjects, summarizeBlockConsequence } from "./blockConsequences";
 import { enumerateBlockPool } from "./blockPools";
 import { z } from "zod";
@@ -107,6 +107,9 @@ export const LuckEventMetadataSchema = z.strictObject({
   teamRerollCounter:z.strictObject({questionSourceId:text,spent:z.union([z.literal(0),z.literal(1)]),before:rerollCounterObservation,after:rerollCounterObservation.optional(),reconciliation:z.enum(["matched","mismatch","after_unavailable"])}).optional(),
   turnEndReason:z.literal(2).optional(),
   pickupTurnEnd:z.strictObject({catchSourceId:text,endSourceId:text,ordinaryMoves:z.strictObject({knownAvailablePlayerIds:z.array(text).max(64),unknownPlayerIds:z.array(text).max(64)}).optional()}).optional(),
+  retainedRushContext:z.strictObject({declarationSourceId:text,declarationCheckpointAfter:count,resumeCheckpointAfter:count,
+    successRushSourceId:text,doMoveSourceId:text,moveOutcomeSourceId:text,questionSourceId:text,decisionSourceId:text,waitingCheckpointAfter:count,
+    from:pitchCell,via:pitchCell,destination:pitchCell}).optional(),
   retainedCatchReaction:z.strictObject({pickupSourceId:text,bounceSourceId:text,questionSourceId:text,decisionSourceId:text,followingBounceSourceId:text,beforeCheckpointAfter:count,waitingCheckpointAfter:count}).optional(),
   bounceCatchReaction:z.strictObject({pickupSourceId:text,bounceSourceId:text,declarationSourceId:text,moveOutcomeSourceId:text,checkpointAfter:count}).optional(),
   pickupResolution:z.strictObject({declarationSourceId:text,moveOutcomeSourceId:text,cell:pitchCell,movementRemaining:z.number().int().min(0).max(16).nullable(),checkpointAfter:count}).optional(),
@@ -365,7 +368,7 @@ export const LuckEventSchema = z.strictObject({
     z.strictObject({policy:z.literal("kept_catch_failure_envelope"),successChance:probability,minimumDifference:z.literal(0),maximumDifference:z.literal(2),lower:finite,upper:z.literal(0)})
   ]).optional(),
   possessionBounds:z.strictObject({policy:z.literal("sure_hands_reroll"),successChance:probability,minimumDifference:finite.min(0).max(3),maximumDifference:finite.min(0).max(3),lower:finite,upper:finite}).optional(),
-  contextualBounds:z.strictObject({policy:z.enum(["dodge_skill_reroll","team_reroll_terminal_moves","team_reroll_rush_moves"]),terminalCheckpointAfter:count.optional(),minimumMoves:count,maximumMoves:count,successChance:probability,activeContinuation:z.strictObject({minimum:z.union([z.literal(0),z.literal(1)]),maximum:z.union([z.literal(0),z.literal(1)])}).optional(),lower:finite,upper:finite}).optional(),
+  contextualBounds:z.strictObject({policy:z.enum(["dodge_skill_reroll","team_reroll_terminal_moves","team_reroll_rush_moves","kept_rush_terminal_moves"]),terminalCheckpointAfter:count.optional(),minimumMoves:count,maximumMoves:count,successChance:probability,activeContinuation:z.strictObject({minimum:z.union([z.literal(0),z.literal(1)]),maximum:z.union([z.literal(0),z.literal(1)])}).optional(),lower:finite,upper:finite}).optional(),
   contextualImpact: z
     .strictObject({
       policy: z.enum(["declined_team_reroll", "full_team_reroll", "dodge_skill_reroll"]),
@@ -1436,9 +1439,10 @@ export const LuckReportSchema = z
       }
       const bound=event.contextualBounds;
       if (bound) {
-        const rushStage=bound.policy === "team_reroll_rush_moves";
-        const teamStage=rushStage || bound.policy === "team_reroll_terminal_moves";
-        const expected=teamStage ? (rushStage ? estimateTeamRushMoveBounds : estimateTeamDodgeMoveBounds)(context,event.actualSuccess === true,bound.successChance,bound.terminalCheckpointAfter ?? -1) :
+        const keptRush=bound.policy === "kept_rush_terminal_moves";
+        const rushStage=keptRush || bound.policy === "team_reroll_rush_moves";
+        const teamStage=bound.policy === "team_reroll_rush_moves" || bound.policy === "team_reroll_terminal_moves";
+        const expected=keptRush ? estimateKeptRushMoveBounds(context,bound.successChance,bound.terminalCheckpointAfter ?? -1) : teamStage ? (rushStage ? estimateTeamRushMoveBounds : estimateTeamDodgeMoveBounds)(context,event.actualSuccess === true,bound.successChance,bound.terminalCheckpointAfter ?? -1) :
           estimateDodgeImpactBounds(context,"dodge_skill_reroll",Number(event.actualSuccess)-bound.successChance,bound.successChance);
         if(teamStage) {
           const m=event.metadata,question=sources.get(m.rerollQuestionId ?? ""),choice=sources.get(m.rerollDecisionId ?? "");
@@ -1462,11 +1466,46 @@ export const LuckReportSchema = z
               !!m.movementFall && !m.movementFall.combinedRushSourceId),
             "A conditional team movement component needs its committed direct replacement and confirmed move or self-fall/turnover, outside earlier dice, resources and ball value.");
         }
-        require((teamStage || bound.terminalCheckpointAfter === undefined) && event.scoringStatus === "scored" && event.metadata.rollType === (rushStage ? 1 : 2) && context?.activeTeamId === event.teamId &&
+        require((teamStage || keptRush || bound.terminalCheckpointAfter === undefined) && event.scoringStatus === "scored" && event.metadata.rollType === (rushStage ? 1 : 2) && context?.activeTeamId === event.teamId &&
           event.contextualImpact === undefined && !!expected && bound.minimumMoves === expected.minimumMoves && bound.maximumMoves === expected.maximumMoves &&
           bound.activeContinuation?.minimum === ("activeContinuation" in expected ? expected.activeContinuation?.minimum : undefined) && bound.activeContinuation?.maximum === ("activeContinuation" in expected ? expected.activeContinuation?.maximum : undefined) &&
           near(bound.successChance,(7-(event.metadata.difficulty ?? 0))/6) && near(bound.lower,expected.lower) && near(bound.upper,expected.upper),
           "Partial ordinary-move bounds must reconcile with missing availability, the fixed policy and dice deviation, without a point estimate.");
+      }
+      const keptRushProof=event.metadata.retainedRushContext;
+      if(keptRushProof || bound?.policy === "kept_rush_terminal_moves") {
+        const m=event.metadata,p=keptRushProof,question=sources.get(p?.questionSourceId ?? ""),choice=sources.get(p?.decisionSourceId ?? "");
+        const declaration=sources.get(p?.declarationSourceId ?? ""),success=sources.get(p?.successRushSourceId ?? ""),move=sources.get(p?.doMoveSourceId ?? ""),outcome=sources.get(p?.moveOutcomeSourceId ?? "");
+        const original=z.strictObject({Die:z.strictObject({DieType:z.literal(0),Value:z.literal(1)})}).safeParse(m.originalDice);
+        const owns=(e:typeof event|undefined)=>!!e&&e.playerId===event.playerId&&e.teamId===event.teamId;
+        require(!!p && bound?.policy === "kept_rush_terminal_moves" && event.scoringStatus === "scored" && event.actualSuccess === false &&
+          m.rollType===1 && m.stepType===1 && m.targetId==="-1" && m.rerollUsed===false && m.teamRerollsSpent===0 &&
+          m.rerollResource===undefined && !m.rerollSkill && !m.lonerGate && !m.proGate && !bound.activeContinuation &&
+          !!m.movementFall && !m.movementFall.combinedRushSourceId && !m.teamRerollMovement &&
+          m.difficulty===2 && m.requirement===2 && (m.modifiers?.length ?? 0)===0 && original.success &&
+          m.dice?.length===1 && m.dice[0]===1 && m.dieTypes?.length===1 && m.dieTypes[0]===0 && near(event.probabilitySuccess ?? 0,5/6) &&
+          context?.checkpointAfter===p.resumeCheckpointAfter && context.actorCarriesBall===false && context.activeTeamId===event.teamId &&
+          context.actorCell?.x===p.via.x && context.actorCell.y===p.via.y &&
+          context.ordinaryMoveAvailability?.successDestination.x===p.destination.x && context.ordinaryMoveAvailability.successDestination.y===p.destination.y &&
+          Math.max(Math.abs(p.from.x-p.via.x),Math.abs(p.from.y-p.via.y))===1 &&
+          Math.max(Math.abs(p.via.x-p.destination.x),Math.abs(p.via.y-p.destination.y))===1 &&
+          declaration?.metadata.sourceTag==="ResultUseAction" && declaration.metadata.actionCode===1 && declaration.metadata.stepType===0 && owns(declaration) &&
+          p.declarationCheckpointAfter<(declaration.metadata.sourceIndex ?? -1) && (declaration.metadata.sourceIndex ?? Infinity)<p.resumeCheckpointAfter &&
+          success?.metadata.sourceTag==="ResultRoll" && success.metadata.rollType===1 && success.scoringStatus==="scored" && success.actualSuccess===true && owns(success) &&
+          success.metadata.requirement===2 && success.metadata.difficulty===2 && (success.metadata.modifiers?.length ?? 0)===0 &&
+          success.metadata.dice?.length===1 && success.metadata.dieTypes?.[0]===0 && success.metadata.dice[0]!>=2 &&
+          near(success.probabilitySuccess ?? 0,5/6) && success.metadata.rerollResource===undefined &&
+          question?.metadata.sourceTag==="QuestionTeamRerollUsage" && question.metadata.stepType===1 && question.metadata.targetId==="-1" && question.metadata.rerollOffer?.canUseTeamReroll===true && owns(question) &&
+          choice?.metadata.sourceTag==="ResultTeamRerollUsage" && choice.metadata.stepType===1 && choice.metadata.targetId==="-1" && choice.metadata.teamRerollDecision?.used===false && owns(choice) &&
+          question.metadata.rerollOffer.gamerId===choice.metadata.teamRerollDecision.gamerId &&
+          question.metadata.rerollOffer.decisionSourceId===p.decisionSourceId && m.rerollQuestionId===p.questionSourceId && m.rerollDecisionId===p.decisionSourceId &&
+          move?.metadata.sourceTag==="ResultDoMove" && outcome?.metadata.sourceTag==="ResultMoveOutcome" && [move,outcome].every(e=>owns(e)&&e!.scoringStatus==="excluded"&&e!.metadata.isRollCandidate===false&&e!.metadata.actionId===success.metadata.actionId) &&
+          success.metadata.sequenceId===question.metadata.sequenceId && success.metadata.actionId!==question.metadata.actionId && success.metadata.stepType===1 && success.metadata.targetId==="-1" && success.metadata.sequenceId!==m.sequenceId &&
+          success.metadata.sourceIndex===p.resumeCheckpointAfter+3 && move.metadata.sourceIndex===p.resumeCheckpointAfter+4 && outcome.metadata.sourceIndex===p.resumeCheckpointAfter+5 &&
+          question.metadata.sourceIndex===p.resumeCheckpointAfter+7 && p.waitingCheckpointAfter===question.metadata.sourceIndex &&
+          choice.metadata.sourceIndex===p.waitingCheckpointAfter+3 && m.sourceIndex===p.waitingCheckpointAfter+4 &&
+          bound.terminalCheckpointAfter===p.waitingCheckpointAfter,
+          "A retained original Rush component needs its ordinary declaration, deterministic checkpoint prefix, adjacent fresh Rush movement, fixed decline, identical kept die and verified self-fall/turnover; it adds no replacement draw, resource cost or point value.");
       }
       if (bound?.policy === "dodge_skill_reroll" || continuation || dodgeMove || event.contextualImpact?.policy === "dodge_skill_reroll") {
         const original=event.metadata.rerollOriginalId ? sources.get(event.metadata.rerollOriginalId) : undefined;

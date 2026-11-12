@@ -1,3 +1,4 @@
+import { findRetainedRushContexts, attachRetainedRushMoves } from "./retainedRushMoves";
 import { summarizeContextComponents } from "./contextComponents";
 import { attachInjuryObservations } from "./injuryObservation";
 import { attachBlockCrowd } from "./blockCrowd";
@@ -1091,6 +1092,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     pickupResolutions,
     pickupsAfterMovement
   } = reconstructReplayContext(replay, activationLosses);
+  const retainedRushContexts=findRetainedRushContexts(replay,contextBySource);
+  for(const proof of retainedRushContexts.values())for(const source of [proof.declarationSourceId,proof.successRushSourceId,proof.doMoveSourceId,proof.moveOutcomeSourceId,proof.questionSourceId,proof.decisionSourceId])activationEvidenceSources.add(source);
   for(const p of combinedMovements.values())for(const source of [p.stepSourceId,p.questionSourceId,p.decisionSourceId,p.rushSourceId,p.dodgeSourceId,p.doMoveSourceId,p.outcomeSourceId])if(source)activationEvidenceSources.add(source);
   for(const proof of pickupsAfterMovement.values())for(const source of [proof.movementSourceId,proof.originalSourceId,proof.skillSourceId,proof.declarationSourceId,proof.moveOutcomeSourceId])activationEvidenceSources.add(source);
   const bounceCatchReactions=findBounceCatchReactions(replay,contextBySource);
@@ -1426,6 +1429,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         event.contextualBounds = (m.rollType === 1 ? estimateTeamRushMoveBounds : estimateTeamDodgeMoveBounds)(m.preRoll,event.actualSuccess,(7-m.difficulty)/6,terminalCheckpointAfter);
     }
   }
+  attachRetainedRushMoves(retainedRushContexts,ballSources);
   const blockDamage = new Map(damageSteps.map((step) => [step.actionId, step]));
   for (const consequence of blockConsequences) {
     const pool = ballSources.get(consequence.poolSourceId);

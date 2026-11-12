@@ -40,6 +40,8 @@ INPUTS = [
  ('demo2.bbr','1','movement_risk','10-119',1091,'105-0','0','1'),
  ('demo7.bbr','1','movement_risk','6-186',677,'65-0','0','3/2'),
  ('demo9.bbr','1','movement_risk','9-102',858,'91-0','0','4/3'),
+ # Retained original fixed-decline policy, independently source-qualified.
+ ('demo2.bbr','1','movement_risk','27-181',2704,'257-0','-15/2','0'),
 ]
 
 def bucket(rows):
@@ -78,7 +80,7 @@ if __name__ == '__main__':
     if args.check:
         if OUTPUT.read_text() != rendered:
             raise SystemExit('Arithmetic fixture or source hashes differ; review before updating.')
-        print('23 component inputs / 12 source hashes / 24 team subtotals match exact rational arithmetic.')
+        print('24 component inputs / 12 source hashes / 24 team subtotals match exact rational arithmetic.')
     else:
         OUTPUT.write_text(rendered)
         print(OUTPUT.relative_to(ROOT))

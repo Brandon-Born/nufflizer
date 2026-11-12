@@ -123,6 +123,16 @@
       "upper": "1"
     },
     {
+      "file": "demo2.bbr",
+      "teamId": "1",
+      "type": "movement_risk",
+      "eventId": "27-181-ResultRoll",
+      "sourceId": "source-2704",
+      "actionId": "sequence-257-step-0",
+      "lower": "-15/2",
+      "upper": "0"
+    },
+    {
       "file": "demo3.bbr",
       "teamId": "1",
       "type": "ball_handling",
@@ -570,26 +580,27 @@
         },
         {
           "teamId": "1",
-          "componentCount": 2,
+          "componentCount": 3,
           "pointCount": 0,
-          "boundedCount": 2,
+          "boundedCount": 3,
           "bounds": {
-            "lower": "0",
+            "lower": "-15/2",
             "upper": "11/6"
           },
           "byCategory": [
             {
               "type": "movement_risk",
-              "componentCount": 2,
+              "componentCount": 3,
               "pointCount": 0,
-              "boundedCount": 2,
+              "boundedCount": 3,
               "bounds": {
-                "lower": "0",
+                "lower": "-15/2",
                 "upper": "11/6"
               },
               "eventIds": [
                 "8-84-ResultRoll",
-                "10-119-ResultRoll"
+                "10-119-ResultRoll",
+                "27-181-ResultRoll"
               ]
             }
           ],
@@ -618,6 +629,19 @@
               },
               "eventIds": [
                 "10-119-ResultRoll"
+              ]
+            },
+            {
+              "actionId": "sequence-257-step-0",
+              "componentCount": 1,
+              "pointCount": 0,
+              "boundedCount": 1,
+              "bounds": {
+                "lower": "-15/2",
+                "upper": "0"
+              },
+              "eventIds": [
+                "27-181-ResultRoll"
               ]
             }
           ]

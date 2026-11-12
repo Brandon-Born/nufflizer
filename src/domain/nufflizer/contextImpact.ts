@@ -1,6 +1,6 @@
 import type { PreRollEvidence } from "@/domain/replay/reconstructContext";
 
-export const CONTEXT_MODEL_VERSION = "mobility-possession-29";
+export const CONTEXT_MODEL_VERSION = "mobility-possession-30";
 export type ContextPolicy =
   | "declined_team_reroll"
   | "full_team_reroll"
@@ -237,4 +237,14 @@ export function estimateTeamRushMoveBounds(
 ) {
   const bounds = terminalTeamMoveBounds(...args);
   return bounds ? { policy: "team_reroll_rush_moves" as const, ...bounds } : undefined;
+}
+
+
+// Before the original Rush, holding the observed decline-on-failure policy
+// fixed. Its kept summary is not a second random stage or a resource spend.
+export function estimateKeptRushMoveBounds(
+  preRoll: PreRollEvidence | undefined, successChance: number, terminalCheckpointAfter: number
+) {
+  const bounds=terminalTeamMoveBounds(preRoll,false,successChance,terminalCheckpointAfter);
+  return bounds ? {policy:"kept_rush_terminal_moves" as const,...bounds} : undefined;
 }
