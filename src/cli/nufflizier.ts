@@ -25,6 +25,7 @@ import {
   explainLonerGate,
   explainBlockResolution,
   explainBlockSkillModel,
+  explainInjuryTable,
   formatActualOutcome,
   formatContextComponentSum,
   PARTIAL_CONTEXT_SCOPE,
@@ -129,6 +130,8 @@ function formatTeamSummary(
         `Player ${event.playerId}; source ${event.metadata.sourceId}: ${formatActualOutcome(event)}; Not scored.`),
       ...(injuryObservations.length>20 ? ["Further recorded injury results are retained in JSON."] : [])
     ] : []),
+    ...report.events.filter(event=>event.metadata.injuryTable).slice(0,20)
+      .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainInjuryTable(event)}`),
     ...report.events.filter((event) => event.metadata.teamRerollCounter).slice(0,20)
       .map((event) => `Player ${event.playerId ?? "unknown"}; source ${event.metadata.sourceId ?? event.id}: ${explainRerollCounter(event)}`),
     ...report.events.filter(event=>event.metadata.block?.traitEvidence).slice(0,20)

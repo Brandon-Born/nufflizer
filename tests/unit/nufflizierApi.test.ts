@@ -176,6 +176,11 @@ describe("POST /api/nufflizier/analyze", () => {
       moves = report.events.filter((e) => e.metadata.teamRerollMovement);
     const skillPools=report.events.filter(e=>e.metadata.block?.skillModel);
     expect(skillPools.map(e=>e.metadata.sourceId)).toEqual(["source-98","source-132"]);
+    const injuryTableEvent=report.events.find(e=>e.metadata.sourceId==="source-110")!;
+    expect(injuryTableEvent.metadata.injuryTable).toMatchObject({rules:"bb2020",policy:"fixed_unmodified_injury",stunty:false,thickSkull:false,counts:[21,9,0,6],traitEvidence:{playerId:"46",teamId:"1",observedCheckpointAfter:0,currentCheckpointAfter:104}});
+    expect(injuryTableEvent.scoringStatus).toBe("excluded");
+    expect(injuryTableEvent.probabilitySuccess).toBeNull();
+    expect(injuryTableEvent.weightedDelta).toBe(0);
     for(const pool of skillPools) {
       expect(pool.metadata.block!.skillModel!.expectedValue).toBeCloseTo(19/36,12);
       expect(pool.metadata.block!.skillModel!.positiveChance).toBeCloseTo(5/9,12);

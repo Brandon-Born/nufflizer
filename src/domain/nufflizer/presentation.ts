@@ -62,7 +62,16 @@ export function explainObservedDice(
 export function explainInjuryObservation(event:LuckReport["events"][number]):string|null {
   const observation=event.metadata.injuryObservation;
   if(!observation)return null;
-  return `The recorded injury result for player ${observation.subjectId} is ${recordedInjuryName(observation.outcome)}. This is a categorical observation, not a success or failure check. Its odds depend on the applicable injury table, current traits and modifiers; those are not verified here, so no luck contribution is assigned. This result does not establish final posture, removal, recovery or availability after treatment. Later mitigation and state observations remain separate evidence.`;
+  const table=explainInjuryTable(event);
+  return `The recorded injury result for player ${observation.subjectId} is ${recordedInjuryName(observation.outcome)}. This is a categorical observation, not a success or failure check. ${table ? "The separate table describes the original injury roll with no modifier. Modifier choice and treatment can change the applied result; their full policy and luck value are not established, so no luck contribution is assigned." : "Its odds depend on the applicable injury table, current traits and modifiers; those are not verified here, so no luck contribution is assigned."} This result does not establish final posture, removal, recovery or availability after treatment. Later mitigation and state observations remain separate evidence.${table ? ` ${table}` : ""}`;
+}
+
+export function explainInjuryTable(event:LuckReport["events"][number]):string|null {
+  const table=event.metadata.injuryTable;
+  if(!table)return null;
+  const names=["Stunned","KO","Badly Hurt","Casualty"];
+  const odds=table.counts.map((n,i)=>`${names[i]} ${n}/36 (${(100*n/36).toFixed(1)}%)`).join(", ");
+  return `Conditional unmodified injury table for player ${event.playerId}: ${table.stunty ? "Stunty" : "ordinary"}${table.thickSkull ? " with Thick Skull" : ""}; ${odds}. This enumerates 36 fair 2D6 results with no injury modifier, using complete traits observed at source ${table.traitEvidence.observedCheckpointAfter} and continued to checkpoint ${table.traitEvidence.currentCheckpointAfter}. It is conditional on reaching this injury roll, before treatment or recovery. It does not certify modifier eligibility or the coach's actual policy, final availability, or match impact; no luck score is added.`;
 }
 
 export function scoredEvidenceForTeam(

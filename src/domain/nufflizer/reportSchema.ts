@@ -6,6 +6,7 @@ import {
   type ContextComponentSummary
 } from "./contextComponents";
 import { directInjuryOutcome } from "./injuryObservation";
+import { injuryTableForTraits } from "./injuryTable";
 import { validReportedBlockCrowd } from "./blockCrowd";
 import { bounceDestination } from "@/domain/replay/pickupSuccessors";
 import { continuationOptionBounds } from "@/domain/replay/activeMoveContinuation";
@@ -125,6 +126,7 @@ const playerTraits = z.strictObject({
   acquiredSkills: z.array(z.number().int().nonnegative()).max(64).nullable()
 });
 const currentTraitEvidence = z.strictObject({playerId:text,teamId:text,rosterIndex:z.number().int().min(0).max(1),observedCheckpointAfter:count,currentCheckpointAfter:count,prayersCheckpointAfter:count,onPitch:z.boolean(),tackleZone:z.boolean().nullable(),statusCode:z.number().int().nonnegative().nullable(),traits:playerTraits});
+const injuryTable = z.strictObject({rules:z.literal("bb2020"),policy:z.literal("fixed_unmodified_injury"),stunty:z.boolean(),thickSkull:z.boolean(),traitEvidence:currentTraitEvidence,counts:z.array(z.number().int().min(0).max(36)).length(4),probabilities:z.array(probability).length(4)});
 const blockTraitEvidence = z.strictObject({attacker:currentTraitEvidence,defender:currentTraitEvidence});
 const blockSkillModel = z.strictObject({policy:z.literal("single_pool_knockdown_balance"),wrestlePolicy:z.enum(["decline","improve_knockdown_balance"]),traitEvidence:blockTraitEvidence,faceOutcomes:z.array(z.number().int().min(0).max(6)).length(5),outcomeDistribution:z.array(probability).length(7),expectedValue:finite.min(-1).max(1),poolOutcome:z.number().int().min(0).max(6),poolValue:z.union([z.literal(-1),z.literal(0),z.literal(1)]),positiveChance:probability});
 const activationEnd = z.strictObject({
@@ -183,6 +185,7 @@ export const LuckEventMetadataSchema = z.strictObject({
     from:pitchCell,to:pitchCell,movementBefore:z.number().int().min(1).max(16).nullable(),
     movementAfter:z.number().int().min(0).max(15).nullable(),carriesBall:z.boolean().nullable(),checkpointAfter:count}).optional(),
   blockSelection:z.strictObject({face:z.number().int().min(0).max(4)}).optional(),
+  injuryTable:injuryTable.optional(),
   injuryObservation:z.strictObject({outcome:z.enum(["stunned","ko","casualty"]),recordKind:z.enum(["direct","embedded_ko"]),subjectId:text,subjectTeamId:text,sourceCode:z.number().int().min(0).max(64),damageStepSourceIndex:count}).optional(),
   crowdPush:z.strictObject({playerId:text,from:pitchCell,to:z.strictObject({x:z.number().int().min(-1).max(26),y:z.number().int().min(-1).max(15)}),resolution:z.literal(3)}).optional(),
   crowdRemoval:z.strictObject({reason:z.union([z.literal(0),z.literal(1)]),situation:z.union([z.literal(1),z.literal(2)]),status:z.union([z.literal(0),z.literal(3)])}).optional(),
@@ -2201,6 +2204,16 @@ export const LuckReportSchema = z
         (injuryObservation.recordKind === "direct" ? event.metadata.sourceTag === "ResultInjuryRoll" : event.metadata.sourceTag === "QuestionKORecovery" && injuryObservation.outcome === "ko") &&
         event.metadata.damage?.observedInjury === true && event.metadata.damage.sourceCode === injuryObservation.sourceCode,
         "A recorded injury outcome needs its supported direct/embedded source namespace, uniquely affected player, ordered damage step and two D6; it supplies no odds, final posture or luck contribution.");
+      if(event.metadata.injuryTable) {
+        const table=event.metadata.injuryTable, proof=table.traitEvidence;
+        const expected=injuryTableForTraits(proof,event.metadata.dice??[],injuryObservation?.outcome??"");
+        require(!!injuryObservation && injuryObservation.recordKind==="direct" && [0,1,9].includes(injuryObservation.sourceCode) && event.metadata.modifiers?.length===0 && event.metadata.modifiersSum===0 &&
+          proof.playerId===event.playerId && proof.teamId===event.teamId && proof.observedCheckpointAfter<=proof.currentCheckpointAfter &&
+          proof.prayersCheckpointAfter<=proof.currentCheckpointAfter && proof.currentCheckpointAfter<injuryObservation.damageStepSourceIndex &&
+          !!expected && table.stunty===expected.stunty && table.thickSkull===expected.thickSkull &&
+          table.counts.every((n,i)=>n===expected.counts[i]) && table.probabilities.every((n,i)=>near(n,expected.probabilities[i]!)),
+          "An injury table requires an owned current trait receipt before damage, no applied modifier, matching recorded outcome and exact fair 2D6 categorical probabilities; no treatment, availability or luck value is implied.");
+      }
       if(event.metadata.blockCrowd)
         require(validReportedBlockCrowd(event,sources,report.coverage.sourceRecordCount),"Crowd damage requires one direct defender push, ordered removal/injury stages, confirmed off-pitch observation and no invented odds or armor.");
       if (event.metadata.crowdPush || event.metadata.crowdRemoval)

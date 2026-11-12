@@ -18,6 +18,7 @@ import { findKeptDodgeContexts, attachKeptDodgeMoves } from "./keptDodgeMoves";
 import { findRetainedRushContexts, attachRetainedRushMoves } from "./retainedRushMoves";
 import { summarizeContextComponents } from "./contextComponents";
 import { attachInjuryObservations } from "./injuryObservation";
+import { attachInjuryTables } from "./injuryTable";
 import { attachBlockCrowd } from "./blockCrowd";
 import { attachRetainedCatchPossession } from "./retainedCatchPossession";
 import { teamMovementContinuity } from "@/domain/replay/teamMovementContinuity";
@@ -1502,6 +1503,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
 
   const ballSources=new Map(events.flatMap(e=>e.metadata.sourceId?[[e.metadata.sourceId,e] as const]:[]));
   attachInjuryObservations(replay, ballSources);
+  attachInjuryTables(replay, ballSources);
   attachBlockCrowd(replay,ballSources,blockConsequences);
   const damageSteps = summarizeDamageSteps(events);
   if (movementFalls.length > 0) {

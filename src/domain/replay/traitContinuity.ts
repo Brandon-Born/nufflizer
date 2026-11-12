@@ -154,9 +154,15 @@ function rosterTeamIds(board: ObservedBoard, known: readonly string[]) {
 // existing instance only when its explicit identity and every present skill
 // list agree. It cannot seed knowledge or supply a missing list by itself.
 // Missing physical/clock fields remain unknown; no observation is mutated.
-export function findBlockTraitEvidence(replay: ReplayModel) {
-  const result = new Map<string, BlockTraitEvidence>();
-  if (replay.replayVersion !== "1-4-0-0") return result;
+function visitCurrentTraits(
+  replay: ReplayModel,
+  visit: (
+    event: ReplayEvent,
+    current: ReplayBoardCheckpoint | undefined,
+    ledger: ReadonlyMap<string, CurrentTraitEvidence>
+  ) => void
+) {
+  if (replay.replayVersion !== "1-4-0-0") return;
   const owners = buildPlayerOwnershipIndex(replay).playerToTeam;
   const known = replay.teams.map((t) => t.id);
   const ledger = new Map<string, CurrentTraitEvidence>();
@@ -168,7 +174,7 @@ export function findBlockTraitEvidence(replay: ReplayModel) {
         i > 0 && c.afterSourceIndex <= checkpoints[i - 1]!.afterSourceIndex
     )
   )
-    return result;
+    return;
   let cursor = 0,
     current: ReplayBoardCheckpoint | undefined,
     previousIndex = -1;
@@ -300,30 +306,7 @@ export function findBlockTraitEvidence(replay: ReplayModel) {
         current = checkpoints[cursor++]!;
         observe(current);
       }
-      if (
-        event.sourceTag === "QuestionBlockDice" &&
-        event.id &&
-        event.stepTag === "PlayerStep" &&
-        event.stepType === 6 &&
-        !event.attributionConflict &&
-        event.actorTeamSource !== "turn_inferred" &&
-        current?.board?.phaseCode === 5
-      ) {
-        const attacker = ledger.get(event.stepActorId ?? ""),
-          defender = ledger.get(event.stepTargetId ?? "");
-        if (
-          attacker &&
-          defender &&
-          attacker.teamId !== defender.teamId &&
-          event.playerId === attacker.playerId &&
-          event.actorTeamId === attacker.teamId &&
-          current.afterSourceIndex < index
-        )
-          result.set(event.id, {
-            attacker: structuredClone(attacker),
-            defender: structuredClone(defender)
-          });
-      }
+      visit(event, current, ledger);
       if (
         [
           "EventBuyMercenary",
@@ -339,5 +322,64 @@ export function findBlockTraitEvidence(replay: ReplayModel) {
         emptyPrayers.clear();
       }
     }
+}
+
+export function findBlockTraitEvidence(replay: ReplayModel) {
+  const result = new Map<string, BlockTraitEvidence>();
+  visitCurrentTraits(replay, (event, current, ledger) => {
+    if (
+      event.sourceTag === "QuestionBlockDice" &&
+      event.id &&
+      event.stepTag === "PlayerStep" &&
+      event.stepType === 6 &&
+      !event.attributionConflict &&
+      event.actorTeamSource !== "turn_inferred" &&
+      current?.board?.phaseCode === 5
+    ) {
+      const attacker = ledger.get(event.stepActorId ?? ""),
+        defender = ledger.get(event.stepTargetId ?? "");
+      if (
+        attacker &&
+        defender &&
+        attacker.teamId !== defender.teamId &&
+        event.playerId === attacker.playerId &&
+        event.actorTeamId === attacker.teamId &&
+        event.sourceIndex !== undefined &&
+        current.afterSourceIndex < event.sourceIndex
+      )
+        result.set(event.id, {
+          attacker: structuredClone(attacker),
+          defender: structuredClone(defender)
+        });
+    }
+  });
+  return result;
+}
+
+// Selected subjects receive a separate continued-trait receipt. No omitted
+// physical state, raw pre-roll field or ownership is restored by this lookup.
+export function findSubjectTraitEvidence(
+  replay: ReplayModel,
+  subjects: ReadonlyMap<string, string>
+) {
+  const result = new Map<string, CurrentTraitEvidence>();
+  if (!subjects.size) return result;
+  visitCurrentTraits(replay, (event, current, ledger) => {
+    const subject = event.id ? subjects.get(event.id) : undefined;
+    const evidence = subject ? ledger.get(subject) : undefined;
+    if (
+      event.id &&
+      subject &&
+      evidence &&
+      current?.board?.phaseCode === 5 &&
+      event.sourceIndex !== undefined &&
+      current.afterSourceIndex < event.sourceIndex &&
+      event.playerId === subject &&
+      event.actorTeamId === evidence.teamId &&
+      !event.attributionConflict &&
+      event.actorTeamSource !== "turn_inferred"
+    )
+      result.set(event.id, structuredClone(evidence));
+  });
   return result;
 }
