@@ -436,3 +436,16 @@ export function explainPickupBallChain(
   const aftermath=end ? ` The recorded team turn ended immediately after the successful catch.${opportunities} This observed ending does not establish a hypothetical failed-roll reroll policy.` : "";
   return `The failed pickup led to ${chain.bounceSourceIds.length} recorded bounce${chain.bounceSourceIds.length === 1 ? "" : "s"} and ${chain.catchEventIds.length} linked catch check${chain.catchEventIds.length === 1 ? "" : "s"}. ${catches ? catches + " " : ""}The last recorded landing was [${chain.endingCell.x}, ${chain.endingCell.y}]. Existing dice subtotals by team: ${totals}. These dice contributions are already included in the team totals.${aftermath} The full tactical cost of possession or the turn remains unquantified.`;
 }
+
+
+export function explainBlockSkillModel(event: LuckReport["events"][number]): string | null {
+  const traits=event.metadata.block?.traitEvidence,model=event.metadata.block?.skillModel;
+  if(!traits)return null;
+  const source=`Intrinsic skill evidence for attacker ${traits.attacker.playerId} and defender ${traits.defender.playerId} continues from checkpoints ${traits.attacker.observedCheckpointAfter}/${traits.defender.observedCheckpointAfter} through current roster checkpoint ${traits.attacker.currentCheckpointAfter}. Raw missing fields remain unknown; effects, transformations, changed identity and unsupported transitions break continuity.`;
+  if(!model)return `${source} This skill combination has no accepted block outcome model. The displayed dice score remains the separate raw-symbol calculation.`;
+  const relevant=(side:"attacker"|"defender")=>{
+    const skills=new Set([...(traits[side].traits.innateSkills ?? []),...(traits[side].traits.acquiredSkills ?? [])]);
+    return ([[30,"Block"],[side==="attacker"?57:7,side==="attacker"?"Tackle":"Dodge"],[68,"Wrestle"]] as const).filter(([id])=>skills.has(id)).map(([,name])=>name).join(", ") || "none";
+  };
+  return `${source} Continued intrinsic block skills: attacker ${relevant("attacker")}; defender ${relevant("defender")}. Single-pool model: both coaches choose by defender knockdowns minus attacker knockdowns, maximizing for the attacker and minimizing for the defender. Block prevents Both Down knockdowns; Dodge prevents Defender Stumbles unless Tackle applies. ${model.wrestlePolicy==="improve_knockdown_balance"?"Wrestle is used only when it improves the holder's knockdown balance; ties decline Wrestle.":"Wrestle is declined."} Under this fixed policy, the chance of a positive knockdown balance is ${(model.positiveChance*100).toFixed(1)}%; its expected balance is ${model.expectedValue.toFixed(3)} and the rolled pool offers ${model.poolValue}. This is a conditional model of the offered pool, not the coach's actual choice or tactical impact. Prone through Wrestle, pushes, position, ball, reroll resources and later damage are outside this component. It is not added to dice or context totals.`;
+}

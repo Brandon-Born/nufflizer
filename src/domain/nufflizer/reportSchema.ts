@@ -1,3 +1,4 @@
+import { enumerateSkillBlock } from "./blockSkillModel";
 import {
   contextComponent,
   summarizeContextComponents,
@@ -61,6 +62,9 @@ const playerTraits = z.strictObject({
   innateSkills: z.array(z.number().int().nonnegative()).max(64).nullable(),
   acquiredSkills: z.array(z.number().int().nonnegative()).max(64).nullable()
 });
+const currentTraitEvidence = z.strictObject({playerId:text,teamId:text,rosterIndex:z.number().int().min(0).max(1),observedCheckpointAfter:count,currentCheckpointAfter:count,prayersCheckpointAfter:count,onPitch:z.boolean(),tackleZone:z.boolean().nullable(),statusCode:z.number().int().nonnegative().nullable(),traits:playerTraits});
+const blockTraitEvidence = z.strictObject({attacker:currentTraitEvidence,defender:currentTraitEvidence});
+const blockSkillModel = z.strictObject({policy:z.literal("single_pool_knockdown_balance"),wrestlePolicy:z.enum(["decline","improve_knockdown_balance"]),traitEvidence:blockTraitEvidence,faceOutcomes:z.array(z.number().int().min(0).max(6)).length(5),outcomeDistribution:z.array(probability).length(7),expectedValue:finite.min(-1).max(1),poolOutcome:z.number().int().min(0).max(6),poolValue:z.union([z.literal(-1),z.literal(0),z.literal(1)]),positiveChance:probability});
 const activationEnd = z.strictObject({
   kind: z.enum(["ordinary_move_completed", "bone_head", "really_stupid"]),
   sourceId: text,
@@ -275,6 +279,8 @@ export const LuckEventMetadataSchema = z.strictObject({
       lonerGateSourceId: text.optional(),
       previousPoolSourceId: text.optional(),
       distribution: z.array(probability).length(5),
+      traitEvidence: blockTraitEvidence.optional(),
+      skillModel: blockSkillModel.optional(),
       rankedSymbol: z.number().int().min(0).max(4)
     })
     .optional(),
@@ -1735,6 +1741,14 @@ export const LuckReportSchema = z
             (block.pool.attackerChooses
               ? event.teamId
               : block.defenderTeamId), "Block roles must use opposing verified teams.");
+        if (block.traitEvidence) {
+          const {attacker,defender}=block.traitEvidence;
+          for (const proof of [attacker,defender]) require(proof.observedCheckpointAfter<=proof.currentCheckpointAfter && proof.prayersCheckpointAfter<=proof.currentCheckpointAfter && proof.currentCheckpointAfter<(event.metadata.sourceIndex ?? -1) && proof.traits.dataPlayerId!==null && String(proof.traits.dataPlayerId)===proof.playerId && proof.traits.playerTypeId!==null && proof.traits.innateSkills!==null && proof.traits.acquiredSkills!==null && [proof.traits.innateSkills,proof.traits.acquiredSkills].every(a=>new Set(a).size===a.length), "Continued intrinsic traits require complete owned identity, bounded unique lists and ordered source checkpoints.");
+          require(attacker.playerId===block.attackerId && attacker.teamId===event.teamId && defender.playerId===block.defenderId && defender.teamId===block.defenderTeamId && attacker.rosterIndex!==defender.rosterIndex && attacker.currentCheckpointAfter===defender.currentCheckpointAfter, "Block trait evidence must describe its two opposing current roster instances.");
+          const expected=enumerateSkillBlock(block.pool,block.traitEvidence,block.skillModel?.wrestlePolicy);
+          require(Boolean(expected)===Boolean(block.skillModel), "Supported block skill evidence requires its separate fixed-policy distribution; unsupported skills cannot fabricate a model.");
+          if (expected && block.skillModel) require(JSON.stringify(block.skillModel.traitEvidence)===JSON.stringify(block.traitEvidence) && block.skillModel.faceOutcomes.every((x,i)=>x===expected.faceOutcomes[i]) && block.skillModel.outcomeDistribution.every((x,i)=>near(x,expected.outcomeDistribution[i]!)) && block.skillModel.poolOutcome===expected.poolOutcome && block.skillModel.poolValue===expected.poolValue && near(block.skillModel.expectedValue,expected.expectedValue) && near(block.skillModel.positiveChance,expected.positiveChance), "A block skill distribution must reconcile fair faces/fresh indices, both current skill lists and the explicit choice policy.");
+        } else require(!block.skillModel, "A block skill model requires owned current trait evidence.");
         require(block.pool.faces.length === block.pool.outcomes.length &&
           new Set(block.pool.rolledIndexes).size ===
             block.pool.rolledIndexes.length &&

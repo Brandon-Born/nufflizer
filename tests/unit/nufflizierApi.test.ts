@@ -169,6 +169,14 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(response.status, JSON.stringify(payload).slice(0, 200)).toBe(200);
     const report = LuckReportSchema.parse(payload),
       moves = report.events.filter((e) => e.metadata.teamRerollMovement);
+    const skillPools=report.events.filter(e=>e.metadata.block?.skillModel);
+    expect(skillPools.map(e=>e.metadata.sourceId)).toEqual(["source-98","source-132"]);
+    for(const pool of skillPools) {
+      expect(pool.metadata.block!.skillModel!.expectedValue).toBeCloseTo(19/36,12);
+      expect(pool.metadata.block!.skillModel!.positiveChance).toBeCloseTo(5/9,12);
+      expect(pool.metadata.block!.traitEvidence!.attacker.observedCheckpointAfter).toBe(0);
+      expect(pool.metadata.preRoll?.actorTraits).toBeUndefined();
+    }
     expect(moves.map((e) => e.metadata.locator?.replayStep)).toEqual([44, 118]);
     for (const e of moves) {
       expect(e.metadata.teamRerollMovement).toMatchObject({

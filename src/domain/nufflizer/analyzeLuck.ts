@@ -1,3 +1,5 @@
+import { findBlockTraitEvidence } from "@/domain/replay/traitContinuity";
+import { enumerateSkillBlock } from "./blockSkillModel";
 import { findKeptDodgeContexts, attachKeptDodgeMoves } from "./keptDodgeMoves";
 import { findRetainedRushContexts, attachRetainedRushMoves } from "./retainedRushMoves";
 import { summarizeContextComponents } from "./contextComponents";
@@ -1065,6 +1067,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   const lonerChoices = new Map<string, 0 | 1>();
   const blockConsequences: ObservedBlockConsequence[] = [];
   const movementFalls: NonNullable<ReturnType<typeof findMovementFall>>[] = [];
+  const blockTraits = findBlockTraitEvidence(replay);
   const ownership = buildPlayerOwnershipIndex(replay);
   const { playerToTeam } = ownership;
   const activationLosses = findConfirmedActivationLosses(replay);
@@ -1283,6 +1286,11 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       );
       if (!normalized) {
         continue;
+      }
+      const traitEvidence = event.id ? blockTraits.get(event.id) : undefined;
+      if (normalized.metadata.block && traitEvidence) {
+        normalized.metadata.block.traitEvidence = traitEvidence;
+        normalized.metadata.block.skillModel = enumerateSkillBlock(normalized.metadata.block.pool, traitEvidence);
       }
       if (
         normalized.teamId !== "unresolved" &&

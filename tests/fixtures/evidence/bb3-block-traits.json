@@ -1,0 +1,2018 @@
+{
+  "scope": "Source witnesses, not universal omitted-field defaults or full-match skill/state certification. Continuity uses the explicitly supported non-mutating transition contract; current observations and initial complete seeds remain distinct.",
+  "cases": [
+    {
+      "id": "demo5_2_46",
+      "sourceFile": "demo5.bbr",
+      "sha256": "e55514b2b7c24fe5a41a8955119e194d25197ad284230b9d25faca0827a457e0",
+      "attackerId": "2",
+      "defenderId": "46",
+      "modelSupported": true,
+      "seeds": {
+        "2": {
+          "teamId": "0",
+          "prayersKnownEmpty": true,
+          "traits": {
+            "dataPlayerId": 2,
+            "playerTypeId": 1031,
+            "innateSkills": [],
+            "acquiredSkills": []
+          }
+        },
+        "46": {
+          "teamId": "1",
+          "prayersKnownEmpty": true,
+          "traits": {
+            "dataPlayerId": 46,
+            "playerTypeId": 1008,
+            "innateSkills": [],
+            "acquiredSkills": []
+          }
+        }
+      },
+      "refreshes": [
+        {
+          "replayStep": 1,
+          "childIndex": 11,
+          "playerId": "2",
+          "rosterIndex": 0,
+          "dataPresent": true,
+          "traits": {
+            "dataPlayerId": 2,
+            "playerTypeId": 1031,
+            "innateSkills": null,
+            "acquiredSkills": null
+          },
+          "effectsKnownEmpty": true,
+          "transformationsKnownAbsent": true,
+          "teamEffectsKnownEmpty": true,
+          "prayersKnownEmpty": null
+        },
+        {
+          "replayStep": 1,
+          "childIndex": 11,
+          "playerId": "46",
+          "rosterIndex": 1,
+          "dataPresent": true,
+          "traits": {
+            "dataPlayerId": 46,
+            "playerTypeId": 1008,
+            "innateSkills": null,
+            "acquiredSkills": null
+          },
+          "effectsKnownEmpty": true,
+          "transformationsKnownAbsent": true,
+          "teamEffectsKnownEmpty": true,
+          "prayersKnownEmpty": null
+        }
+      ],
+      "current": {
+        "replayStep": 25,
+        "childIndex": 4,
+        "players": [
+          {
+            "playerId": "2",
+            "rosterIndex": 0,
+            "dataPresent": false,
+            "traits": null,
+            "effectsKnownEmpty": true,
+            "transformationsKnownAbsent": true,
+            "teamEffectsKnownEmpty": true,
+            "prayersKnownEmpty": null
+          },
+          {
+            "playerId": "46",
+            "rosterIndex": 1,
+            "dataPresent": false,
+            "traits": null,
+            "effectsKnownEmpty": true,
+            "transformationsKnownAbsent": true,
+            "teamEffectsKnownEmpty": true,
+            "prayersKnownEmpty": null
+          }
+        ]
+      },
+      "prefixTags": [
+        "Clock",
+        "EventMatchStart",
+        "EventFanFactor",
+        "EventWeatherRoll",
+        "EventJourneyMen",
+        "EventJourneyMen",
+        "EventInducementsData",
+        "EventNewInducementsTurn",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventInducementsData",
+        "EventNewInducementsTurn",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventAddInducement",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventRemoveInducement",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventAddInducement",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventRemoveInducement",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventAddInducement",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventEndInducements",
+        "EventNewGamePhase",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventQuestionKickingChoice",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "Clock",
+        "EventKickingChoice",
+        "EventNewGamePhase",
+        "EventActiveTimerChanged",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetupMovePitchPlayer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetupMovePitchPlayer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetupMovePitchPlayer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetupMovePitchPlayer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetupMovePitchPlayer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetupMovePitchPlayer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetupMovePitchPlayer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventEndTurn",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventEndTurn",
+        "EventNewGamePhase",
+        "EventLegalKickers",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "PlayerStep",
+        "ResultRoll",
+        "EventKickOffTable",
+        "EventBrilliantCoaching",
+        "BallStep",
+        "ResultRoll",
+        "EventEndTurn",
+        "EventNewGamePhase",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "PlayerStep",
+        "ResultUseAction",
+        "PlayerStep"
+      ],
+      "pool": {
+        "replayStep": 26,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 0,
+        "step": {
+          "Probability": [
+            "100.0"
+          ],
+          "PlayerId": [
+            "2"
+          ],
+          "TargetId": [
+            "46"
+          ],
+          "IsEvaluation": [
+            "0"
+          ],
+          "StepType": [
+            "6"
+          ],
+          "CellTo": [
+            {
+              "Y": [
+                "9"
+              ],
+              "X": [
+                "13"
+              ]
+            }
+          ],
+          "State": [
+            "1"
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "8"
+              ],
+              "X": [
+                "12"
+              ]
+            }
+          ],
+          "Skill": [
+            "0"
+          ]
+        },
+        "pool": {
+          "RolledDiceIndexes": [
+            {
+              "RolledDiceIndexesItem": [
+                "0",
+                "1"
+              ]
+            }
+          ],
+          "Dice": [
+            {
+              "Die": [
+                {
+                  "DieType": [
+                    "2"
+                  ],
+                  "Value": [
+                    "4"
+                  ]
+                },
+                {
+                  "DieType": [
+                    "2"
+                  ],
+                  "Value": [
+                    "0"
+                  ]
+                }
+              ]
+            }
+          ],
+          "CanChoseDie": [
+            "1"
+          ],
+          "GamerId": [
+            "0"
+          ],
+          "DiceOutcomes": [
+            {
+              "DiceOutcomesItem": [
+                "6",
+                "0"
+              ]
+            }
+          ],
+          "CanUseTeamReroll": [
+            "1"
+          ],
+          "Assists": [
+            {
+              "AssistInfos": [
+                {
+                  "Cell": [
+                    {
+                      "Y": [
+                        "8"
+                      ],
+                      "X": [
+                        "13"
+                      ]
+                    }
+                  ],
+                  "Modifier": [
+                    "0"
+                  ]
+                },
+                {
+                  "Cell": [
+                    {
+                      "Y": [
+                        "7"
+                      ],
+                      "X": [
+                        "13"
+                      ]
+                    }
+                  ],
+                  "Modifier": [
+                    "0"
+                  ]
+                },
+                {
+                  "Cell": [
+                    {
+                      "Y": [
+                        "9"
+                      ],
+                      "X": [
+                        "12"
+                      ]
+                    }
+                  ],
+                  "Modifier": [
+                    "0"
+                  ]
+                }
+              ]
+            }
+          ],
+          "AttackerChoice": [
+            "1"
+          ],
+          "RollType": [
+            "3"
+          ],
+          "RollStatus": [
+            "1"
+          ]
+        }
+      }
+    },
+    {
+      "id": "demo5_5_44",
+      "sourceFile": "demo5.bbr",
+      "sha256": "e55514b2b7c24fe5a41a8955119e194d25197ad284230b9d25faca0827a457e0",
+      "attackerId": "5",
+      "defenderId": "44",
+      "modelSupported": true,
+      "seeds": {
+        "5": {
+          "teamId": "0",
+          "prayersKnownEmpty": true,
+          "traits": {
+            "dataPlayerId": 5,
+            "playerTypeId": 1031,
+            "innateSkills": [],
+            "acquiredSkills": []
+          }
+        },
+        "44": {
+          "teamId": "1",
+          "prayersKnownEmpty": true,
+          "traits": {
+            "dataPlayerId": 44,
+            "playerTypeId": 1008,
+            "innateSkills": [],
+            "acquiredSkills": []
+          }
+        }
+      },
+      "refreshes": [
+        {
+          "replayStep": 1,
+          "childIndex": 11,
+          "playerId": "5",
+          "rosterIndex": 0,
+          "dataPresent": true,
+          "traits": {
+            "dataPlayerId": 5,
+            "playerTypeId": 1031,
+            "innateSkills": null,
+            "acquiredSkills": null
+          },
+          "effectsKnownEmpty": true,
+          "transformationsKnownAbsent": true,
+          "teamEffectsKnownEmpty": true,
+          "prayersKnownEmpty": null
+        },
+        {
+          "replayStep": 1,
+          "childIndex": 11,
+          "playerId": "44",
+          "rosterIndex": 1,
+          "dataPresent": true,
+          "traits": {
+            "dataPlayerId": 44,
+            "playerTypeId": 1008,
+            "innateSkills": null,
+            "acquiredSkills": null
+          },
+          "effectsKnownEmpty": true,
+          "transformationsKnownAbsent": true,
+          "teamEffectsKnownEmpty": true,
+          "prayersKnownEmpty": null
+        }
+      ],
+      "current": {
+        "replayStep": 33,
+        "childIndex": 3,
+        "players": [
+          {
+            "playerId": "5",
+            "rosterIndex": 0,
+            "dataPresent": false,
+            "traits": null,
+            "effectsKnownEmpty": true,
+            "transformationsKnownAbsent": true,
+            "teamEffectsKnownEmpty": true,
+            "prayersKnownEmpty": null
+          },
+          {
+            "playerId": "44",
+            "rosterIndex": 1,
+            "dataPresent": false,
+            "traits": null,
+            "effectsKnownEmpty": true,
+            "transformationsKnownAbsent": true,
+            "teamEffectsKnownEmpty": true,
+            "prayersKnownEmpty": null
+          }
+        ]
+      },
+      "prefixTags": [
+        "Clock",
+        "EventMatchStart",
+        "EventFanFactor",
+        "EventWeatherRoll",
+        "EventJourneyMen",
+        "EventJourneyMen",
+        "EventInducementsData",
+        "EventNewInducementsTurn",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventInducementsData",
+        "EventNewInducementsTurn",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventAddInducement",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventRemoveInducement",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventAddInducement",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventRemoveInducement",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventAddInducement",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventEndInducements",
+        "EventNewGamePhase",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventQuestionKickingChoice",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "Clock",
+        "EventKickingChoice",
+        "EventNewGamePhase",
+        "EventActiveTimerChanged",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetupMovePitchPlayer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetupMovePitchPlayer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetupMovePitchPlayer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetupMovePitchPlayer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetupMovePitchPlayer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetupMovePitchPlayer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetupMovePitchPlayer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventEndTurn",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventEndTurn",
+        "EventNewGamePhase",
+        "EventLegalKickers",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "PlayerStep",
+        "ResultRoll",
+        "EventKickOffTable",
+        "EventBrilliantCoaching",
+        "BallStep",
+        "ResultRoll",
+        "EventEndTurn",
+        "EventNewGamePhase",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "PlayerStep",
+        "ResultUseAction",
+        "PlayerStep",
+        "QuestionBlockDice",
+        "Clock",
+        "PlayerStep",
+        "ResultBlockRoll",
+        "QuestionPushBack",
+        "Clock",
+        "PlayerStep",
+        "ResultPushBack",
+        "QuestionFollowUp",
+        "Clock",
+        "PlayerStep",
+        "ResultFollowUp",
+        "ResultBlockOutcome",
+        "DamageStep",
+        "ResultRoll",
+        "ResultInjuryRoll",
+        "ResultPlayerRemoval",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "PlayerStep",
+        "ResultUseAction",
+        "PlayerStep",
+        "QuestionBlockDice",
+        "Clock",
+        "PlayerStep",
+        "ResultBlockRoll",
+        "QuestionPushBack",
+        "Clock",
+        "PlayerStep",
+        "ResultPushBack",
+        "QuestionFollowUp",
+        "Clock",
+        "PlayerStep",
+        "ResultFollowUp",
+        "ResultBlockOutcome",
+        "DamageStep",
+        "ResultRoll",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "PlayerStep",
+        "ResultUseAction",
+        "PlayerStep"
+      ],
+      "pool": {
+        "replayStep": 34,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 0,
+        "step": {
+          "Probability": [
+            "100.0"
+          ],
+          "PlayerId": [
+            "5"
+          ],
+          "TargetId": [
+            "44"
+          ],
+          "IsEvaluation": [
+            "0"
+          ],
+          "StepType": [
+            "6"
+          ],
+          "CellTo": [
+            {
+              "Y": [
+                "5"
+              ],
+              "X": [
+                "13"
+              ]
+            }
+          ],
+          "State": [
+            "1"
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "5"
+              ],
+              "X": [
+                "12"
+              ]
+            }
+          ],
+          "Skill": [
+            "0"
+          ]
+        },
+        "pool": {
+          "RolledDiceIndexes": [
+            {
+              "RolledDiceIndexesItem": [
+                "0",
+                "1"
+              ]
+            }
+          ],
+          "Dice": [
+            {
+              "Die": [
+                {
+                  "DieType": [
+                    "2"
+                  ],
+                  "Value": [
+                    "1"
+                  ]
+                },
+                {
+                  "DieType": [
+                    "2"
+                  ],
+                  "Value": [
+                    "2"
+                  ]
+                }
+              ]
+            }
+          ],
+          "CanChoseDie": [
+            "1"
+          ],
+          "GamerId": [
+            "0"
+          ],
+          "DiceOutcomes": [
+            {
+              "DiceOutcomesItem": [
+                "1",
+                "4"
+              ]
+            }
+          ],
+          "CanUseTeamReroll": [
+            "1"
+          ],
+          "Assists": [
+            {
+              "AssistInfos": [
+                {
+                  "Cell": [
+                    {
+                      "Y": [
+                        "6"
+                      ],
+                      "X": [
+                        "13"
+                      ]
+                    }
+                  ],
+                  "Modifier": [
+                    "0"
+                  ]
+                },
+                {
+                  "Cell": [
+                    {
+                      "Y": [
+                        "6"
+                      ],
+                      "X": [
+                        "12"
+                      ]
+                    }
+                  ],
+                  "Modifier": [
+                    "0"
+                  ]
+                }
+              ]
+            }
+          ],
+          "AttackerChoice": [
+            "1"
+          ],
+          "RollType": [
+            "3"
+          ],
+          "RollStatus": [
+            "1"
+          ]
+        }
+      }
+    },
+    {
+      "id": "demo10_1_39",
+      "sourceFile": "demo10.bbr",
+      "sha256": "7895a4dfb4e8a69686336946171fadc5e3daf7bf8ecc8b720c7b8522f7744d8f",
+      "attackerId": "1",
+      "defenderId": "39",
+      "modelSupported": true,
+      "seeds": {
+        "1": {
+          "teamId": "0",
+          "prayersKnownEmpty": true,
+          "traits": {
+            "dataPlayerId": 1,
+            "playerTypeId": 1074,
+            "innateSkills": [
+              19,
+              13
+            ],
+            "acquiredSkills": []
+          }
+        },
+        "39": {
+          "teamId": "1",
+          "prayersKnownEmpty": true,
+          "traits": {
+            "dataPlayerId": 39,
+            "playerTypeId": 1031,
+            "innateSkills": [],
+            "acquiredSkills": []
+          }
+        }
+      },
+      "refreshes": [
+        {
+          "replayStep": 1,
+          "childIndex": 11,
+          "playerId": "1",
+          "rosterIndex": 0,
+          "dataPresent": true,
+          "traits": {
+            "dataPlayerId": 1,
+            "playerTypeId": 1074,
+            "innateSkills": [
+              19,
+              13
+            ],
+            "acquiredSkills": null
+          },
+          "effectsKnownEmpty": true,
+          "transformationsKnownAbsent": true,
+          "teamEffectsKnownEmpty": true,
+          "prayersKnownEmpty": null
+        },
+        {
+          "replayStep": 1,
+          "childIndex": 11,
+          "playerId": "39",
+          "rosterIndex": 1,
+          "dataPresent": true,
+          "traits": {
+            "dataPlayerId": 39,
+            "playerTypeId": 1031,
+            "innateSkills": null,
+            "acquiredSkills": null
+          },
+          "effectsKnownEmpty": true,
+          "transformationsKnownAbsent": true,
+          "teamEffectsKnownEmpty": true,
+          "prayersKnownEmpty": null
+        }
+      ],
+      "current": {
+        "replayStep": 19,
+        "childIndex": 3,
+        "players": [
+          {
+            "playerId": "1",
+            "rosterIndex": 0,
+            "dataPresent": false,
+            "traits": null,
+            "effectsKnownEmpty": true,
+            "transformationsKnownAbsent": true,
+            "teamEffectsKnownEmpty": true,
+            "prayersKnownEmpty": null
+          },
+          {
+            "playerId": "39",
+            "rosterIndex": 1,
+            "dataPresent": false,
+            "traits": null,
+            "effectsKnownEmpty": true,
+            "transformationsKnownAbsent": true,
+            "teamEffectsKnownEmpty": true,
+            "prayersKnownEmpty": null
+          }
+        ]
+      },
+      "prefixTags": [
+        "Clock",
+        "EventMatchStart",
+        "EventFanFactor",
+        "EventWeatherRoll",
+        "EventJourneyMen",
+        "EventJourneyMen",
+        "EventInducementsData",
+        "EventNewInducementsTurn",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventAddInducement",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventInducementsData",
+        "EventNewInducementsTurn",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventAddInducement",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventAddInducement",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventEndInducements",
+        "EventNewGamePhase",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventQuestionKickingChoice",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "Clock",
+        "EventKickingChoice",
+        "EventNewGamePhase",
+        "EventActiveTimerChanged",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetUpConfiguration",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetUpConfiguration",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventEndTurn",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventEndTurn",
+        "EventNewGamePhase",
+        "EventLegalKickers",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "PlayerStep",
+        "ResultRoll",
+        "EventKickOffTable",
+        "EventTimeOut",
+        "BallStep",
+        "ResultRoll",
+        "EventEndTurn",
+        "EventNewGamePhase",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "PlayerStep",
+        "ResultUseAction",
+        "PlayerStep",
+        "ResultDoMove",
+        "ResultMoveOutcome",
+        "PlayerStep",
+        "ResultDoMove",
+        "ResultMoveOutcome",
+        "PlayerStep",
+        "ResultDoMove",
+        "ResultMoveOutcome",
+        "PlayerStep",
+        "ResultDoMove",
+        "ResultMoveOutcome",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "PlayerStep",
+        "ResultUseAction",
+        "PlayerStep"
+      ],
+      "pool": {
+        "replayStep": 20,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 0,
+        "step": {
+          "Probability": [
+            "100.0"
+          ],
+          "PlayerId": [
+            "1"
+          ],
+          "TargetId": [
+            "39"
+          ],
+          "IsEvaluation": [
+            "0"
+          ],
+          "StepType": [
+            "6"
+          ],
+          "CellTo": [
+            {
+              "Y": [
+                "8"
+              ],
+              "X": [
+                "13"
+              ]
+            }
+          ],
+          "State": [
+            "1"
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "9"
+              ],
+              "X": [
+                "12"
+              ]
+            }
+          ],
+          "Skill": [
+            "0"
+          ]
+        },
+        "pool": {
+          "RolledDiceIndexes": [
+            {
+              "RolledDiceIndexesItem": [
+                "0",
+                "1"
+              ]
+            }
+          ],
+          "Dice": [
+            {
+              "Die": [
+                {
+                  "DieType": [
+                    "2"
+                  ],
+                  "Value": [
+                    "0"
+                  ]
+                },
+                {
+                  "DieType": [
+                    "2"
+                  ],
+                  "Value": [
+                    "4"
+                  ]
+                }
+              ]
+            }
+          ],
+          "CanChoseDie": [
+            "1"
+          ],
+          "GamerId": [
+            "0"
+          ],
+          "DiceOutcomes": [
+            {
+              "DiceOutcomesItem": [
+                "0",
+                "6"
+              ]
+            }
+          ],
+          "CanUseTeamReroll": [
+            "1"
+          ],
+          "Assists": [
+            {
+              "AssistInfos": [
+                {
+                  "Cell": [
+                    {
+                      "Y": [
+                        "8"
+                      ],
+                      "X": [
+                        "12"
+                      ]
+                    }
+                  ],
+                  "Modifier": [
+                    "0"
+                  ]
+                },
+                {
+                  "Cell": [
+                    {
+                      "Y": [
+                        "7"
+                      ],
+                      "X": [
+                        "12"
+                      ]
+                    }
+                  ],
+                  "Modifier": [
+                    "0"
+                  ]
+                }
+              ]
+            }
+          ],
+          "AttackerChoice": [
+            "1"
+          ],
+          "RollType": [
+            "3"
+          ],
+          "RollStatus": [
+            "1"
+          ]
+        }
+      }
+    },
+    {
+      "id": "demo6_10_45",
+      "sourceFile": "demo6.bbr",
+      "sha256": "e42180aa79c226ce003b5453a16c9cef30e1dd7d49039e7d50e24347434d3ff9",
+      "attackerId": "10",
+      "defenderId": "45",
+      "modelSupported": false,
+      "seeds": {
+        "10": {
+          "teamId": "0",
+          "prayersKnownEmpty": true,
+          "traits": {
+            "dataPlayerId": 10,
+            "playerTypeId": 6,
+            "innateSkills": [
+              57,
+              30,
+              63
+            ],
+            "acquiredSkills": []
+          }
+        },
+        "45": {
+          "teamId": "1",
+          "prayersKnownEmpty": true,
+          "traits": {
+            "dataPlayerId": 45,
+            "playerTypeId": 30,
+            "innateSkills": [
+              59,
+              52,
+              7
+            ],
+            "acquiredSkills": []
+          }
+        }
+      },
+      "refreshes": [
+        {
+          "replayStep": 1,
+          "childIndex": 11,
+          "playerId": "10",
+          "rosterIndex": 0,
+          "dataPresent": true,
+          "traits": {
+            "dataPlayerId": 10,
+            "playerTypeId": 6,
+            "innateSkills": [
+              57,
+              30,
+              63
+            ],
+            "acquiredSkills": null
+          },
+          "effectsKnownEmpty": true,
+          "transformationsKnownAbsent": true,
+          "teamEffectsKnownEmpty": true,
+          "prayersKnownEmpty": null
+        },
+        {
+          "replayStep": 1,
+          "childIndex": 11,
+          "playerId": "45",
+          "rosterIndex": 1,
+          "dataPresent": true,
+          "traits": {
+            "dataPlayerId": 45,
+            "playerTypeId": 30,
+            "innateSkills": [
+              59,
+              52,
+              7
+            ],
+            "acquiredSkills": null
+          },
+          "effectsKnownEmpty": true,
+          "transformationsKnownAbsent": true,
+          "teamEffectsKnownEmpty": true,
+          "prayersKnownEmpty": null
+        }
+      ],
+      "current": {
+        "replayStep": 38,
+        "childIndex": 3,
+        "players": [
+          {
+            "playerId": "10",
+            "rosterIndex": 0,
+            "dataPresent": false,
+            "traits": null,
+            "effectsKnownEmpty": true,
+            "transformationsKnownAbsent": true,
+            "teamEffectsKnownEmpty": true,
+            "prayersKnownEmpty": null
+          },
+          {
+            "playerId": "45",
+            "rosterIndex": 1,
+            "dataPresent": false,
+            "traits": null,
+            "effectsKnownEmpty": true,
+            "transformationsKnownAbsent": true,
+            "teamEffectsKnownEmpty": true,
+            "prayersKnownEmpty": null
+          }
+        ]
+      },
+      "prefixTags": [
+        "Clock",
+        "EventMatchStart",
+        "EventFanFactor",
+        "EventWeatherRoll",
+        "EventJourneyMen",
+        "EventJourneyMen",
+        "EventInducementsData",
+        "EventNewInducementsTurn",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventInducementsData",
+        "EventNewInducementsTurn",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventAddInducement",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventBuyMercenary",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventEndInducements",
+        "EventNewGamePhase",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventQuestionKickingChoice",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "Clock",
+        "EventKickingChoice",
+        "EventNewGamePhase",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetupSubstitutePlayers",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetupMovePitchPlayer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetupMovePitchPlayer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetupMovePitchPlayer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetupMovePitchPlayer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventEndTurn",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetUpConfiguration",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetUpConfiguration",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetUpConfiguration",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetUpConfiguration",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetUpConfiguration",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetUpConfiguration",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetUpConfiguration",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetUpConfiguration",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetUpConfiguration",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetUpConfiguration",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetUpConfiguration",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventEndTurn",
+        "EventNewGamePhase",
+        "EventLegalKickers",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "PlayerStep",
+        "ResultRoll",
+        "EventKickOffTable",
+        "EventBlitz",
+        "EventNewGamePhase",
+        "EventActiveTimerChanged",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "PlayerStep",
+        "ResultUseAction",
+        "PlayerStep",
+        "ResultDoMove",
+        "ResultMoveOutcome",
+        "PlayerStep",
+        "ResultDoMove",
+        "ResultMoveOutcome",
+        "PlayerStep",
+        "ResultDoMove",
+        "ResultMoveOutcome",
+        "PlayerStep",
+        "ResultDoMove",
+        "ResultMoveOutcome",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "PlayerStep",
+        "ResultUseAction",
+        "PlayerStep",
+        "ResultDoMove",
+        "ResultMoveOutcome",
+        "PlayerStep",
+        "ResultDoMove",
+        "ResultMoveOutcome",
+        "PlayerStep",
+        "ResultDoMove",
+        "ResultMoveOutcome",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "PlayerStep",
+        "ResultUseAction",
+        "PlayerStep",
+        "ResultDoMove",
+        "ResultMoveOutcome",
+        "PlayerStep",
+        "ResultDoMove",
+        "ResultMoveOutcome",
+        "PlayerStep",
+        "ResultDoMove",
+        "ResultMoveOutcome",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "PlayerStep",
+        "ResultUseAction",
+        "PlayerStep",
+        "ResultDoMove",
+        "ResultMoveOutcome",
+        "PlayerStep",
+        "ResultDoMove",
+        "ResultMoveOutcome",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "PlayerStep",
+        "ResultRoll",
+        "BallStep",
+        "ResultRoll",
+        "PlayerStep",
+        "ResultRoll",
+        "BallStep",
+        "ResultRoll",
+        "PlayerStep",
+        "ResultRoll",
+        "BallStep",
+        "ResultRoll",
+        "EventEndTurn",
+        "EventNewGamePhase",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "PlayerStep",
+        "ResultUseAction",
+        "PlayerStep",
+        "ResultDoMove",
+        "ResultMoveOutcome",
+        "PlayerStep",
+        "ResultDoMove",
+        "ResultMoveOutcome",
+        "PlayerStep",
+        "ResultDoMove",
+        "ResultMoveOutcome",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "PlayerStep",
+        "ResultUseAction",
+        "PlayerStep"
+      ],
+      "pool": {
+        "replayStep": 39,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 0,
+        "step": {
+          "Probability": [
+            "100.0"
+          ],
+          "PlayerId": [
+            "10"
+          ],
+          "TargetId": [
+            "45"
+          ],
+          "IsEvaluation": [
+            "0"
+          ],
+          "StepType": [
+            "6"
+          ],
+          "CellTo": [
+            {
+              "Y": [
+                "7"
+              ],
+              "X": [
+                "13"
+              ]
+            }
+          ],
+          "State": [
+            "1"
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "7"
+              ],
+              "X": [
+                "12"
+              ]
+            }
+          ],
+          "Skill": [
+            "0"
+          ]
+        },
+        "pool": {
+          "RolledDiceIndexes": [
+            {
+              "RolledDiceIndexesItem": [
+                "0",
+                "1"
+              ]
+            }
+          ],
+          "Dice": [
+            {
+              "Die": [
+                {
+                  "DieType": [
+                    "2"
+                  ],
+                  "Value": [
+                    "2"
+                  ]
+                },
+                {
+                  "DieType": [
+                    "2"
+                  ],
+                  "Value": [
+                    "0"
+                  ]
+                }
+              ]
+            }
+          ],
+          "CanChoseDie": [
+            "1"
+          ],
+          "GamerId": [
+            "0"
+          ],
+          "DiceOutcomes": [
+            {
+              "DiceOutcomesItem": [
+                "4",
+                "0"
+              ]
+            }
+          ],
+          "CanUseTeamReroll": [
+            "1"
+          ],
+          "Assists": [
+            {
+              "AssistInfos": [
+                {
+                  "Cell": [
+                    {
+                      "Y": [
+                        "8"
+                      ],
+                      "X": [
+                        "13"
+                      ]
+                    }
+                  ],
+                  "Modifier": [
+                    "0"
+                  ]
+                },
+                {
+                  "Cell": [
+                    {
+                      "Y": [
+                        "6"
+                      ],
+                      "X": [
+                        "13"
+                      ]
+                    }
+                  ],
+                  "Modifier": [
+                    "0"
+                  ]
+                },
+                {
+                  "Cell": [
+                    {
+                      "Y": [
+                        "8"
+                      ],
+                      "X": [
+                        "12"
+                      ]
+                    }
+                  ],
+                  "Modifier": [
+                    "0"
+                  ]
+                },
+                {
+                  "Cell": [
+                    {
+                      "Y": [
+                        "6"
+                      ],
+                      "X": [
+                        "12"
+                      ]
+                    }
+                  ],
+                  "Modifier": [
+                    "0"
+                  ]
+                }
+              ]
+            }
+          ],
+          "AttackerChoice": [
+            "1"
+          ],
+          "RollType": [
+            "3"
+          ],
+          "RollStatus": [
+            "1"
+          ]
+        }
+      }
+    },
+    {
+      "id": "demo8_2_47",
+      "sourceFile": "demo8.bbr",
+      "sha256": "305f4c96ba0e65c7618112f13c65ef946fa7a71ba4cf4345b4990d468495233d",
+      "attackerId": "2",
+      "defenderId": "47",
+      "modelSupported": false,
+      "seeds": {
+        "2": {
+          "teamId": "0",
+          "prayersKnownEmpty": true,
+          "traits": {
+            "dataPlayerId": 2,
+            "playerTypeId": 1031,
+            "innateSkills": [],
+            "acquiredSkills": []
+          }
+        },
+        "47": {
+          "teamId": "1",
+          "prayersKnownEmpty": true,
+          "traits": {
+            "dataPlayerId": 47,
+            "playerTypeId": 21,
+            "innateSkills": [
+              100
+            ],
+            "acquiredSkills": []
+          }
+        }
+      },
+      "refreshes": [
+        {
+          "replayStep": 1,
+          "childIndex": 11,
+          "playerId": "2",
+          "rosterIndex": 0,
+          "dataPresent": true,
+          "traits": {
+            "dataPlayerId": 2,
+            "playerTypeId": 1031,
+            "innateSkills": null,
+            "acquiredSkills": null
+          },
+          "effectsKnownEmpty": true,
+          "transformationsKnownAbsent": true,
+          "teamEffectsKnownEmpty": true,
+          "prayersKnownEmpty": null
+        },
+        {
+          "replayStep": 1,
+          "childIndex": 11,
+          "playerId": "47",
+          "rosterIndex": 1,
+          "dataPresent": true,
+          "traits": {
+            "dataPlayerId": 47,
+            "playerTypeId": 21,
+            "innateSkills": [
+              100
+            ],
+            "acquiredSkills": null
+          },
+          "effectsKnownEmpty": true,
+          "transformationsKnownAbsent": true,
+          "teamEffectsKnownEmpty": true,
+          "prayersKnownEmpty": null
+        }
+      ],
+      "current": {
+        "replayStep": 23,
+        "childIndex": 8,
+        "players": [
+          {
+            "playerId": "2",
+            "rosterIndex": 0,
+            "dataPresent": false,
+            "traits": null,
+            "effectsKnownEmpty": true,
+            "transformationsKnownAbsent": true,
+            "teamEffectsKnownEmpty": true,
+            "prayersKnownEmpty": null
+          },
+          {
+            "playerId": "47",
+            "rosterIndex": 1,
+            "dataPresent": false,
+            "traits": null,
+            "effectsKnownEmpty": true,
+            "transformationsKnownAbsent": true,
+            "teamEffectsKnownEmpty": true,
+            "prayersKnownEmpty": null
+          }
+        ]
+      },
+      "prefixTags": [
+        "Clock",
+        "EventMatchStart",
+        "EventFanFactor",
+        "EventWeatherRoll",
+        "EventJourneyMen",
+        "EventJourneyMen",
+        "EventInducementsData",
+        "EventNewInducementsTurn",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventInducementsData",
+        "EventNewInducementsTurn",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventAddInducement",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventRemoveInducement",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventAddInducement",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventEndInducements",
+        "EventNewGamePhase",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventQuestionKickingChoice",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "Clock",
+        "EventKickingChoice",
+        "EventNewGamePhase",
+        "EventActiveTimerChanged",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetUpConfiguration",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetUpConfiguration",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetUpConfiguration",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetUpConfiguration",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventEndTurn",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetUpConfiguration",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventSetUpConfiguration",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventEndTurn",
+        "EventNewGamePhase",
+        "EventLegalKickers",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "PlayerStep",
+        "ResultRoll",
+        "EventKickOffTable",
+        "EventNewGamePhase",
+        "EventActiveGamerChanged",
+        "EventPauseActiveTimer",
+        "EventActiveTimerChanged",
+        "EventQuestionHighKick",
+        "Clock",
+        "EventGamersAreReady",
+        "EventStartActiveTimer",
+        "Clock",
+        "EventHighKick",
+        "PlayerStep",
+        "ResultRoll",
+        "BallStep",
+        "ResultRoll",
+        "EventEndTurn",
+        "EventNewGamePhase",
+        "EventActiveTimerChanged",
+        "EventStartActiveTimer",
+        "EventRulesEngineStandBy",
+        "Clock",
+        "PlayerStep",
+        "ResultUseAction",
+        "PlayerStep"
+      ],
+      "pool": {
+        "replayStep": 24,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 0,
+        "step": {
+          "Probability": [
+            "100.0"
+          ],
+          "PlayerId": [
+            "2"
+          ],
+          "TargetId": [
+            "47"
+          ],
+          "IsEvaluation": [
+            "0"
+          ],
+          "StepType": [
+            "6"
+          ],
+          "CellTo": [
+            {
+              "Y": [
+                "8"
+              ],
+              "X": [
+                "13"
+              ]
+            }
+          ],
+          "State": [
+            "1"
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "8"
+              ],
+              "X": [
+                "12"
+              ]
+            }
+          ],
+          "Skill": [
+            "0"
+          ]
+        },
+        "pool": {
+          "RolledDiceIndexes": [
+            {
+              "RolledDiceIndexesItem": [
+                "0",
+                "1"
+              ]
+            }
+          ],
+          "Dice": [
+            {
+              "Die": [
+                {
+                  "DieType": [
+                    "2"
+                  ],
+                  "Value": [
+                    "2"
+                  ]
+                },
+                {
+                  "DieType": [
+                    "2"
+                  ],
+                  "Value": [
+                    "2"
+                  ]
+                }
+              ]
+            }
+          ],
+          "CanChoseDie": [
+            "1"
+          ],
+          "GamerId": [
+            "0"
+          ],
+          "DiceOutcomes": [
+            {
+              "DiceOutcomesItem": [
+                "4",
+                "4"
+              ]
+            }
+          ],
+          "CanUseTeamReroll": [
+            "1"
+          ],
+          "Assists": [
+            {
+              "AssistInfos": [
+                {
+                  "Cell": [
+                    {
+                      "Y": [
+                        "7"
+                      ],
+                      "X": [
+                        "13"
+                      ]
+                    }
+                  ],
+                  "Modifier": [
+                    "0"
+                  ]
+                },
+                {
+                  "Cell": [
+                    {
+                      "Y": [
+                        "9"
+                      ],
+                      "X": [
+                        "12"
+                      ]
+                    }
+                  ],
+                  "Modifier": [
+                    "0"
+                  ]
+                },
+                {
+                  "Cell": [
+                    {
+                      "Y": [
+                        "7"
+                      ],
+                      "X": [
+                        "12"
+                      ]
+                    }
+                  ],
+                  "Modifier": [
+                    "0"
+                  ]
+                }
+              ]
+            }
+          ],
+          "AttackerChoice": [
+            "1"
+          ],
+          "RollType": [
+            "3"
+          ],
+          "RollStatus": [
+            "1"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -96,6 +96,7 @@ function field(nodes: OrderedNode[], tag: string): string {
 }
 const cellProjection = { X: true, Y: true } as const;
 const boardProjection = {
+  Effects: true,
   Period: true,
   CurrentPhase: true,
   TurnsPerPeriod: true,
@@ -114,6 +115,9 @@ const boardProjection = {
   ListTeams: {
     TeamState: {
       Data: { TeamId: true },
+      TransformedPlayers: true,
+      Effects: true,
+      ActivePrayers: true,
       GameTurn: true,
       Touchdown: true,
       RerollNumber: true,

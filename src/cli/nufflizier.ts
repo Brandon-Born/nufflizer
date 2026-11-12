@@ -24,6 +24,7 @@ import {
   explainProGate,
   explainLonerGate,
   explainBlockResolution,
+  explainBlockSkillModel,
   formatActualOutcome,
   formatContextComponentSum,
   PARTIAL_CONTEXT_SCOPE,
@@ -124,6 +125,8 @@ function formatTeamSummary(
     ] : []),
     ...report.events.filter((event) => event.metadata.teamRerollCounter).slice(0,20)
       .map((event) => `Player ${event.playerId ?? "unknown"}; source ${event.metadata.sourceId ?? event.id}: ${explainRerollCounter(event)}`),
+    ...report.events.filter(event=>event.metadata.block?.traitEvidence).slice(0,20)
+      .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainBlockSkillModel(event)}`),
     ...report.events
       .filter((event) => event.metadata.blockResolution)
       .slice(0, 20)
@@ -211,6 +214,7 @@ function formatTeamSummary(
         explainMovementOutcome(moment.metadata),
         explainPickupBallChain(moment, report.teams, eventsById),
         explainProGate(moment.metadata.proGate),
+        explainBlockSkillModel(moment),
         explainBlockResolution(moment, report.teams, sourcesById)
       ]
         .filter(Boolean)

@@ -23,6 +23,7 @@ import {
   explainProGate,
   explainLonerGate,
   explainBlockResolution,
+  explainBlockSkillModel,
   formatActualOutcome,
   formatContextComponentSum,
   PARTIAL_CONTEXT_SCOPE,
@@ -888,6 +889,11 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                             moment.catchPossessionBounds ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainContextBounds(moment)}
+                              </p>
+                            ) : null}
+                            {moment.metadata.block?.traitEvidence ? (
+                              <p className="mt-1 text-xs text-amber-100/80">
+                                {explainBlockSkillModel(moment)}
                               </p>
                             ) : null}
                             {moment.metadata.blockResolution ? (

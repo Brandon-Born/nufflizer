@@ -11,6 +11,9 @@ import {
 type RecordLike = Record<string, unknown>;
 export type ObservedCell = { x: number | null; y: number | null };
 export type ObservedPlayer = {
+  traitsDataPresent?: boolean;
+  traitsDataTeamId?: number | null;
+  effectsKnownEmpty?: boolean;
   ordinaryMovePolicyKnown?: boolean;
   plainBallPolicyKnown?: boolean;
   mentalEffect: MentalTraitEffect | null;
@@ -25,6 +28,9 @@ export type ObservedPlayer = {
   movementRemaining: number | null;
 };
 export type ObservedTeam = {
+  transformationsKnownAbsent?: boolean;
+  effectsKnownEmpty?: boolean;
+  prayersKnownEmpty?: boolean;
   rosterIndex: number;
   explicitTeamId: number | null;
   sideCode: number | null;
@@ -34,6 +40,7 @@ export type ObservedTeam = {
   players: ObservedPlayer[];
 };
 export type ObservedBoard = {
+  effectsKnownEmpty?: boolean;
   stable: boolean | null;
   pitchLayout: "standard" | "small" | null;
   periodCode: number | null;
@@ -147,6 +154,9 @@ export function observeBoardCheckpoint(
                   if (mentalEffect && flag(p.TackleZone) === true)
                     issues.push("conflicting_tackle_zone_effect");
                   return {
+                    traitsDataPresent: Object.hasOwn(p, "Data"),
+                    traitsDataTeamId: nonnegative(record(p.Data).TeamId),
+                    effectsKnownEmpty: p.Effects === "",
                     mentalEffect,
                     traits,
                     plainBallPolicyKnown:plainBallPolicyKnown(traits,nonnegative(p.Id),p.Effects),
@@ -166,6 +176,11 @@ export function observeBoardCheckpoint(
                   };
                 });
           return {
+            transformationsKnownAbsent: team.TransformedPlayers === "",
+            effectsKnownEmpty: team.Effects === "",
+            prayersKnownEmpty: Object.hasOwn(team, "ActivePrayers")
+              ? team.ActivePrayers === ""
+              : undefined,
             rosterIndex,
             explicitTeamId: nonnegative(record(team.Data).TeamId),
             sideCode: nonnegative(team.Side),
@@ -204,6 +219,7 @@ export function observeBoardCheckpoint(
     ...source,
     status: "observed",
     board: {
+      effectsKnownEmpty: raw.Effects === "",
       stable: flag(raw.IsStable),
       pitchLayout: pitchLayout(raw),
       periodCode: nonnegative(raw.Period),
