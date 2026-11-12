@@ -324,7 +324,7 @@ export const LuckEventMetadataSchema = z.strictObject({
   dieTypes: numbers.optional(),
   modifiers: numbers.optional(),
   modifiersSum: finite.optional(),
-  rerollAvailable: z.boolean().optional(),
+  probabilityPolicy: z.enum(["single_attempt", "two_attempt", "block_pool"]).optional(),
   rerollUsed: z.boolean().optional(),
   skillsUsed: numbers.optional(),
   normalizationFlags: z.array(text).max(REPLAY_LIMITS.events).optional(),
@@ -622,6 +622,37 @@ export const LuckReportSchema = z
         ([reason, n]) => report.coverage.excludedByReason[reason] === n
       ), "Exclusion reasons must conserve excluded records.");
     for (const event of report.events) {
+      const policy = event.metadata.probabilityPolicy;
+      const base = event.explainability.baseOdds;
+      if (event.scoringStatus === "scored") {
+        require(
+          policy !== undefined && base !== undefined &&
+            event.probabilitySuccess !== null &&
+            event.explainability.rerollAdjustedOdds !== undefined &&
+            near(event.explainability.rerollAdjustedOdds, event.probabilitySuccess),
+          "Scored odds need an explicit probability policy and reconciled base/reported chances, independently of resource eligibility."
+        );
+        if (policy === "two_attempt") {
+          require(
+            [1, 2, 4, 7].includes(event.metadata.rollType ?? -1) &&
+              event.metadata.rerollUsed === true && !!event.metadata.rerollResource &&
+              !!(event.metadata.rerollQuestionId || event.metadata.rerollOriginalId) &&
+              base !== undefined && event.probabilitySuccess !== null &&
+              near(event.probabilitySuccess, 1 - (1 - base) ** 2),
+            "A two-attempt policy needs a linked actual reroll and its compound chance, not inferred availability."
+          );
+        } else {
+          require(
+            (policy === "block_pool") === !!event.metadata.block &&
+              (policy === "block_pool" || event.metadata.rerollUsed !== true) &&
+              base !== undefined && event.probabilitySuccess !== null &&
+              near(event.probabilitySuccess, base),
+            "Single-attempt and block-pool policies must retain their base chance without implying resource availability."
+          );
+        }
+      } else {
+        require(policy === undefined, "Unscored evidence cannot claim an applied odds policy.");
+      }
       const pro = event.metadata.proGate;
       if (pro) {
         const { dice, dieTypes, rollType, outcomeCode, teamRerollsSpent, rerollResource } = event.metadata;

@@ -8,7 +8,7 @@ type ProbabilityInput = {
   difficulty?: number;
   dice: number[];
   dieTypes: number[];
-  rerollAvailable: boolean;
+  twoAttemptPolicy: boolean;
 };
 export type ProbabilityResult = {
   probabilitySuccess: number;
@@ -83,12 +83,12 @@ export function computeProbabilityForEvent(
   }
   enumerate(0, []);
   const baseOdds = successes / count;
-  const adjusted = input.rerollAvailable ? 1 - (1 - baseOdds) ** 2 : baseOdds;
+  const adjusted = input.twoAttemptPolicy ? 1 - (1 - baseOdds) ** 2 : baseOdds;
   return {
     probabilitySuccess: adjusted,
     baseOdds,
     rerollAdjustedOdds: adjusted,
-    reason: `${sumRule(input.eventType) ? "sum" : "any-die"}-target roll; ${input.rerollAvailable ? "full reroll on failure policy" : "single attempt"}`
+    reason: `${sumRule(input.eventType) ? "sum" : "any-die"}-target roll; ${input.twoAttemptPolicy ? "full reroll on failure policy" : "single attempt"}`
   };
 }
 export function resolveActualSuccess(

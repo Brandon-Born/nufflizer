@@ -14,7 +14,7 @@ describe("nufflizier probability engine", () => {
       difficulty: 4,
       dice: [3],
       dieTypes: [0],
-      rerollAvailable: false
+      twoAttemptPolicy: false
     });
 
     expect(result.baseOdds).toBeCloseTo(0.5, 6);
@@ -29,7 +29,7 @@ describe("nufflizier probability engine", () => {
       difficulty: 2,
       dice: [4],
       dieTypes: [0],
-      rerollAvailable: false
+      twoAttemptPolicy: false
     });
 
     expect(result.baseOdds).toBeCloseTo(5 / 6, 6);
@@ -44,7 +44,7 @@ describe("nufflizier probability engine", () => {
       difficulty: 4,
       dice: [3],
       dieTypes: [0],
-      rerollAvailable: true
+      twoAttemptPolicy: true
     });
 
     expect(result.probabilitySuccess).toBeCloseTo(0.75, 6);
@@ -58,7 +58,7 @@ describe("nufflizier probability engine", () => {
       difficulty: 8,
       dice: [2, 4],
       dieTypes: [0, 0],
-      rerollAvailable: false
+      twoAttemptPolicy: false
     });
 
     expect(result.baseOdds).toBeCloseTo(15 / 36, 4);

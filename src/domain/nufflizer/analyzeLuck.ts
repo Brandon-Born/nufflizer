@@ -240,11 +240,14 @@ function buildInputsSummary(
   type: LuckEventType,
   target: string,
   dice: number[],
-  rerollAvailable: boolean,
+  twoAttemptPolicy: boolean,
   scoringStatus: LuckEvent["scoringStatus"]
 ): string {
   const diceText = dice.length > 0 ? `[${dice.join(", ")}]` : "none";
-  return `${eventTypeLabel(type)} | target ${target} | dice ${diceText} | reroll available ${rerollAvailable ? "yes" : "no"} | status ${scoringStatus}`;
+  const policy = scoringStatus !== "scored"
+    ? "not scored"
+    : twoAttemptPolicy ? "two attempts" : "one attempt";
+  return `${eventTypeLabel(type)} | target ${target} | dice ${diceText} | odds policy ${policy} | status ${scoringStatus}`;
 }
 
 function isPlayableTeamName(name: string): boolean {
@@ -383,13 +386,9 @@ function buildNormalizedEvent(
   const requirement = toNumber(payload?.Requirement);
   const difficulty = toNumber(payload?.Difficulty);
   const outcomeCode = toNumber(payload?.Outcome);
-  const { rerollAvailable, rerollUsed } = rerollLink ?? {
-    rerollAvailable: false,
-    rerollUsed: false
-  };
+  const twoAttemptPolicy = rerollLink?.twoAttemptPolicy ?? false;
   const rerollMetadata = {
-    rerollAvailable,
-    rerollUsed,
+    rerollUsed: rerollLink?.rerollUsed,
     originalDice: rerollLink?.originalDice,
     rerollOriginalId: rerollLink?.originalId,
     rerollQuestionId: rerollLink?.questionId,
@@ -480,7 +479,7 @@ function buildNormalizedEvent(
     );
   }
 
-  if (!rerollAvailable && skillsUsed.length > 0) {
+  if (!twoAttemptPolicy && skillsUsed.length > 0) {
     normalizationFlags.push("skill_modifier_present_without_explicit_reroll");
     normalizationNotes.push("skill modifiers alone do not establish a reroll");
   }
@@ -649,7 +648,7 @@ function buildNormalizedEvent(
     numericCheckExclusion(
       replayVersion,
       { ...event, rollType },
-      rerollAvailable,
+      twoAttemptPolicy,
       rerollLink?.retainedOriginal
     );
   const resolvedActual = armorScored
@@ -744,7 +743,7 @@ function buildNormalizedEvent(
               eventType,
               target,
               dice,
-              rerollAvailable,
+              twoAttemptPolicy,
               "excluded"
             )
       },
@@ -811,7 +810,7 @@ function buildNormalizedEvent(
             difficulty,
             dice,
             dieTypes,
-            rerollAvailable
+            twoAttemptPolicy
           });
   } catch (error) {
     return {
@@ -937,9 +936,12 @@ function buildNormalizedEvent(
       ),
       inputsSummary: block
         ? explainBlockEvidence(block)
-        : buildInputsSummary(eventType, target, dice, rerollAvailable, "scored")
+        : buildInputsSummary(eventType, target, dice, twoAttemptPolicy, "scored")
     },
     metadata: {
+      probabilityPolicy: block
+        ? "block_pool"
+        : twoAttemptPolicy ? "two_attempt" : "single_attempt",
       sourceTag: event.sourceTag,
       sourceId: event.id,
       actionId: event.actionId,
@@ -1024,6 +1026,7 @@ function buildHowScoredSummary(
 
   return [
     "Dice totals add supported outcomes under the stated rules. Context estimates are separate and require verified pre-roll state. Neither is a win probability.",
+    "A single-attempt calculation does not establish whether a reroll was available. Recorded choices and counter observations are separate evidence.",
     `Roll-candidate coverage: ${coverage.rollCandidates.scoredCount} scored and ${coverage.rollCandidates.excludedCount} excluded (${(
       coverage.rollCandidates.scoredRate * 100
     ).toFixed(1)}% scored).`,

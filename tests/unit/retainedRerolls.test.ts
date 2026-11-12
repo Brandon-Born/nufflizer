@@ -60,7 +60,7 @@ describe("NUF-012 retained original numeric checks", () => {
         sourceId: "kept",
         rerollQuestionId: "question",
         rerollUsed: false,
-        rerollAvailable: false,
+        probabilityPolicy: "single_attempt",
         originalDice: { Die: { DieType: 0, Value: 1 } }
       }
     });

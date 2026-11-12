@@ -28,7 +28,7 @@ describe("NUF-001 minimal source fragments", () => {
     expect(
       report.events
         .filter((e) => e.playerId === "37")
-        .every((e) => !e.metadata.rerollAvailable)
+        .every((e) => e.metadata.probabilityPolicy!=="two_attempt")
     ).toBe(true);
   });
   it("retains actual block faces and injury dice pending rule verification", () => {

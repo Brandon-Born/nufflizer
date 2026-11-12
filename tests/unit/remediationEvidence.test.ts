@@ -20,7 +20,7 @@ describe("NUF-007/012/013/014/015/019 evidence regressions", () => {
         dice: [2, 2],
         dieTypes: [0, 0],
         difficulty: 4,
-        rerollAvailable: false
+        twoAttemptPolicy: false
       })
     ).toThrow(/exactly one D6/);
     expect(
@@ -43,7 +43,7 @@ describe("NUF-007/012/013/014/015/019 evidence regressions", () => {
           dice: [1, 1],
           dieTypes: [0, 0],
           difficulty: target,
-          rerollAvailable: false
+          twoAttemptPolicy: false
         }).baseOdds
       ).toBe(totals.filter((n) => n >= target).length / 36);
   });
@@ -57,7 +57,7 @@ describe("NUF-007/012/013/014/015/019 evidence regressions", () => {
           dice,
           dieTypes: dice.map(() => 0),
           difficulty: 2,
-          rerollAvailable: false
+          twoAttemptPolicy: false
         })
       ).toThrow();
     }
@@ -67,7 +67,7 @@ describe("NUF-007/012/013/014/015/019 evidence regressions", () => {
       eventType: "ball_handling" as const,
       dice: [6],
       difficulty: 2,
-      rerollAvailable: false
+      twoAttemptPolicy: false
     };
     expect(
       computeProbabilityForEvent({ ...input, dieTypes: [0] }).baseOdds
@@ -245,7 +245,7 @@ describe("NUF-007/012/013/014/015/019 evidence regressions", () => {
       ];
       const links = linkTeamRerolls(events);
       expect(links.has(0)).toBe(false);
-      expect(links.get(3)?.rerollAvailable).toBe(Boolean(used));
+      expect(links.get(3)?.twoAttemptPolicy).toBe(Boolean(used));
       const report = analyzeReplayLuck(model(events));
       const last = report.events.at(-1)!;
       expect(last.probabilitySuccess).toBeCloseTo(used ? 35 / 36 : 5 / 6, 12);

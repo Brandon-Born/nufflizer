@@ -148,10 +148,10 @@ describe("block pools and actual resolutions (NUF-010/013/014)", () => {
       metadata: {
         lonerGate: { passed: true, gamerId: 1 },
         teamRerollsSpent: 1,
-        rerollAvailable: false,
         rerollUsed: false
       }
     });
+    expect(gate.metadata.probabilityPolicy).toBeUndefined();
     expect(
       r.events.find((e) => e.metadata.rollType === 34)?.probabilitySuccess
     ).toBeNull();

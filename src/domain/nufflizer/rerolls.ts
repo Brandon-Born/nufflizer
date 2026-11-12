@@ -3,7 +3,7 @@ import type { ReplayEvent } from "@/domain/replay/types";
 import { numericCheckExclusion } from "./numericCheckContract";
 
 export type RerollLink = {
-  rerollAvailable: boolean;
+  twoAttemptPolicy: boolean;
   rerollUsed: boolean;
   questionId?: string;
   originalDice?: unknown;
@@ -109,7 +109,7 @@ export function linkLonerGates(
     const verified = verifyLonerTest(skill, roll)!;
     const passed = verified.passed;
     links.set(index, {
-      rerollAvailable: false,
+      twoAttemptPolicy: false,
       rerollUsed: false,
       resource: "team",
       teamRerollsSpent: 1,
@@ -186,7 +186,7 @@ export function linkProGates(
         )
       )
         link = {
-          rerollAvailable: false,
+          twoAttemptPolicy: false,
           rerollUsed: false,
           retainedOriginal: true,
           questionId: question.id,
@@ -250,7 +250,7 @@ export function linkProGates(
     if (die === undefined || p.Outcome !== Number(die >= 3)) continue;
     links.set(index, {
       ...link,
-      rerollAvailable: false,
+      twoAttemptPolicy: false,
       rerollUsed: false,
       resource: "skill",
       teamRerollsSpent: 0,
@@ -441,7 +441,7 @@ export function linkTeamRerolls(
               ? "retained original already reported; repeated summary is not another attempt"
               : "declined reroll summary does not match valid original dice"
             : undefined,
-        rerollAvailable: fullTeam,
+        twoAttemptPolicy: fullTeam,
         rerollUsed: choice.payload?.Used === 1,
         questionId: question.id,
         decisionId: choice.id,
@@ -482,7 +482,7 @@ export function linkTeamRerolls(
     )
       continue;
     links.set(index, {
-      rerollAvailable: false,
+      twoAttemptPolicy: false,
       rerollUsed: false,
       mergedIntoId: anchor,
       exclusionReason:
@@ -623,14 +623,14 @@ export function linkObservedSkillRerolls(
         continue;
     }
     links.set(index, {
-      rerollAvailable: false,
+      twoAttemptPolicy: false,
       rerollUsed: false,
       mergedIntoId: final.id,
       exclusionReason:
         "first die retained as evidence for the skill-rerolled check"
     });
     links.set(index + 2, {
-      rerollAvailable: true,
+      twoAttemptPolicy: true,
       rerollUsed: true,
       resource: "skill",
       teamRerollsSpent: 0,

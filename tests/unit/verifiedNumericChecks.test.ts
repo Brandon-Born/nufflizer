@@ -126,7 +126,7 @@ describe("UI-backed numeric check contracts, replay 1-4-0-0", () => {
       actualSuccess: false,
       scoringStatus: "scored",
       metadata: {
-        rerollAvailable: false,
+        probabilityPolicy: "single_attempt",
         rerollUsed: false,
         teamRerollsSpent: 0
       }
@@ -246,7 +246,7 @@ describe("UI-backed numeric check contracts, replay 1-4-0-0", () => {
       scoringStatus: "excluded",
       probabilitySuccess: null
     });
-    expect(result.events.every((e) => !e.metadata.rerollAvailable)).toBe(true);
+    expect(result.events.every((e) => e.metadata.probabilityPolicy!=="two_attempt")).toBe(true);
   });
   it.each([
     { Die: { DieType: 99, Value: 1 } },

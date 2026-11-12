@@ -334,7 +334,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.26");
+  expect(report.schemaVersion).toBe("2.27");
   expect(report.modelVersion).toBe("dice-only-20");
   expect(report.events.filter((e:{metadata:{combinedMovement?:unknown}})=>e.metadata.combinedMovement)).toHaveLength(2);
   expect(
@@ -444,7 +444,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
         actualSuccess: false,
         metadata: expect.objectContaining({
           rollType: 4,
-          rerollAvailable: false,
+          probabilityPolicy: "single_attempt",
           rerollUsed: false,
           originalDice: { Die: { DieType: 0, Value: 3 } }
         })
@@ -455,7 +455,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
         actualSuccess: false,
         metadata: expect.objectContaining({
           rollType: 7,
-          rerollAvailable: false,
+          probabilityPolicy: "single_attempt",
           rerollUsed: false,
           originalDice: { Die: { DieType: 0, Value: 3 } }
         })
@@ -949,6 +949,11 @@ test("reroll counters separate resource observations from dice and unknown reset
     if(c.id === "numeric_rush_spent") {
       const roll=table.locator("tbody tr").filter({hasText:"97.2%"});await expect(roll).toHaveCount(1);await roll.locator("summary").click();
       await expect(roll).toContainText(c.change);
+    }
+    if(c.id === "numeric_dodge_declined") {
+      const kept=table.locator("tbody tr").filter({hasText:"Dodge failed"});await expect(kept).toHaveCount(1);await kept.locator("summary").click();
+      await expect(kept).toContainText("odds policy one attempt");await expect(kept).not.toContainText("reroll available no");
+      await expect(page.getByText("A single-attempt calculation does not establish whether a reroll was available. Recorded choices and counter observations are separate evidence.")).toBeVisible();
     }
     if(c.id.startsWith("block_")) {
       const pools=table.locator("tbody tr").filter({hasText:"Block pool:"});

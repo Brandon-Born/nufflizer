@@ -2,7 +2,7 @@
 
 Updated 2026-11-11. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.26` and model `dice-only-20`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.27` and model `dice-only-20`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -362,3 +362,10 @@ Three public successes qualify: demo1/99 carrier[3,5]→[2,5], demo1/207 team-re
 Separately, movementFall.combinedRushSourceId can reference a strictly adjacent fresh successful Rush before a fresh unmodified/fixed-zone failed Dodge, dual summary, self-damage and direct reason2 turn end. The reported subtotal references Rush + Dodge + already scored damage once; no event/category/team total is changed. Public demo2/229 Move gives−2/5 dice units, while259 Blitz gives+3/20 despite the bad actual turnover. The latter illustrates why raw dice contributions are not calibrated tactical value. No board is restored, no post-fall square is invented, and turn/availability/possession costs remain unquantified. Shared schema verifies source roles/order, summary-derived links and unique damage reconciliation and rejects forged source IDs, repeated sums or new contextual values.
 
 Web/API/CLI share these receipts. Current public scope remains14 partial value ranges/zero point-valued estimates and whole-match abstention. General combined replacement/skill choices, phase/resource/trait continuity, valid hypothetical failure alternatives and independent calibration remain open.
+
+
+## Schema2.27: odds policy does not establish reroll availability
+
+Scored events now require metadata.probabilityPolicy: single_attempt for an unchanged one-attempt chance, two_attempt for the already supported linked numeric full-reroll calculation, or block_pool for a supported categorical pool. Base/reported chances must reconcile. Two-attempt numeric claims require actual linked use/resource/source evidence and 1−(1−p)². Conditional fresh Block pools retain their fair-pool chance rather than claiming a compound Loner/resource policy. Excluded provenance, gates and merged originals have no applied probability policy.
+
+The former public rerollAvailable boolean was an arithmetic switch, not a general eligibility observation. It is removed; older schema responses are rejected. Internal twoAttemptPolicy keeps the same calculation and admission conditions. Unknown unlinked rerollUsed is omitted rather than defaulted to false; explicit linked decisions keep their recorded true/false. Offers, Used decisions and checkpoint counters remain separate evidence. One-attempt odds cannot prove a reroll was unavailable: the independently extracted declined Dodge has CanUseTeamReroll1, Used0 and counters5→5, yet correctly retains5/6 odds. Combined demo1/207 still has compound Rush35/36 and fresh Dodge2/3 separately; fresh Dodge resource use remains unknown. Web/CLI explanations make that distinction without changing dice-only-20, context21, scores, ranges or point estimates.
