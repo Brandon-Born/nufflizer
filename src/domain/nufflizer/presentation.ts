@@ -252,6 +252,7 @@ export function explainContextBounds(
   }
   const bound = event.contextualBounds;
   if (!bound) return null;
+  if (bound.policy === "kept_dodge_terminal_moves") return `Before the original Dodge die, hold the recorded decline-on-failure policy fixed. Its ${(bound.successChance*100).toFixed(1)}% success chance and terminal failure leave ${bound.minimumMoves} to ${bound.maximumMoves} possible other ordinary moves at stake. This teammate-move component is ${bound.lower.toFixed(2)} to ${bound.upper.toFixed(2)} provisional context units. Current eligibility is incomplete. The kept failure repeats the original die, not a replacement draw; no team reroll was spent. The active player's continuation, ball/scoring, resource decision and later damage values are outside this component. The observed fall and known-damage dice subtotal remain separate evidence. No midpoint or endpoint enters point totals; this is not calibrated whole-match impact.`;
   if (bound.policy === "kept_rush_terminal_moves") {
     const p = event.metadata.retainedRushContext;
     const bridge = p

@@ -1,0 +1,131 @@
+{
+  "scope": "Read-only raw direct Status2/NewRoll1/Outcome0/RollType1 emissions; not deduplicated opportunities or accepted negative-policy chains. Private filenames, member paths and arbitrary text omitted. Fingerprint covers decoded numeric encoded steps/messages only, not board/header equivalence or independent matches.",
+  "offlineDecodedByteCap": 33554432,
+  "rawInputByteCap": 4000000,
+  "unreadableInputs": 0,
+  "oversizedInputs": 0,
+  "sources": [
+    {
+      "sha256": "04445f58b61f529c09d957a6553d5972c778e9b9b38ba4a710a41ce563fdabb6",
+      "replayVersion": "1-4-0-0",
+      "encodedNumericFingerprint": "e2fbd820f2680413c3a87f9b2cc80e0f6c4badd10d0ae9e3c46c468896c25516",
+      "publicNumericCounterpart": "demo7.bbr",
+      "historicalSourceAuditHashMatch": true,
+      "failedCommittedRushEmissions": []
+    },
+    {
+      "sha256": "28c03430e9dcae3cd29651e1bc50731c75a9ff036cd8fe18346680a5969bf84f",
+      "replayVersion": "1-4-0-0",
+      "encodedNumericFingerprint": "207dee4df0415d4afb7046a036493d193a17980a2caf44a21af44050f3b828a0",
+      "publicNumericCounterpart": "demo4.bbr",
+      "historicalSourceAuditHashMatch": true,
+      "failedCommittedRushEmissions": []
+    },
+    {
+      "sha256": "3914f561be23dea9f7e737d9f41d37fb3c9a07378e761a0dbc2d2f8bef4e0487",
+      "replayVersion": "1-4-0-0",
+      "encodedNumericFingerprint": "e2c172b7499398d9d6f48c0513b3e53a7a6b27cb84d65099318f56e81ae946ac",
+      "publicNumericCounterpart": "demo5.bbr",
+      "historicalSourceAuditHashMatch": false,
+      "failedCommittedRushEmissions": []
+    },
+    {
+      "sha256": "8de93df6aaf3d787054277107cbb38ba84341854bb7fe731947c44b1c45f4c5e",
+      "replayVersion": "1-4-0-0",
+      "encodedNumericFingerprint": "2076d069f49b0dd7d29d864f891fde3c220bffde0961e3cf95b1a4a4bd8150ef",
+      "publicNumericCounterpart": "demo11.bbr",
+      "historicalSourceAuditHashMatch": false,
+      "failedCommittedRushEmissions": [
+        {
+          "replayStep": 227,
+          "childIndex": 1,
+          "stepIndex": 0,
+          "messageIndex": 1,
+          "actorId": 3,
+          "stepType": 31,
+          "lastAction": 15,
+          "questionStep": 226,
+          "used": [
+            1
+          ],
+          "recordedCarrier": false,
+          "knownNonCarrier": true,
+          "endReason": 2
+        }
+      ]
+    },
+    {
+      "sha256": "97cf6421d7641a01b9cd2e7ca4ef00857e234c81c49ff11fee70eae872f7084e",
+      "replayVersion": "1-4-0-0",
+      "encodedNumericFingerprint": "311bb6d119ea39f0f79cc6051927e9d735a2d409c028a86cbb6a60adf6586851",
+      "publicNumericCounterpart": "demo9.bbr",
+      "historicalSourceAuditHashMatch": false,
+      "failedCommittedRushEmissions": []
+    },
+    {
+      "sha256": "a98deed825209103e148912939356ab81a7509b733c81af2a0faf1e381f993ab",
+      "replayVersion": "1-4-0-0",
+      "encodedNumericFingerprint": "bfc952805aced7ffb434870658155f5d086e11fbd090ff5060a658be4f7e009c",
+      "publicNumericCounterpart": "demo1.bbr",
+      "historicalSourceAuditHashMatch": true,
+      "failedCommittedRushEmissions": [
+        {
+          "replayStep": 369,
+          "childIndex": 1,
+          "stepIndex": 0,
+          "messageIndex": 1,
+          "actorId": 3,
+          "stepType": 1,
+          "lastAction": 1,
+          "questionStep": 368,
+          "used": [
+            1
+          ],
+          "recordedCarrier": true,
+          "knownNonCarrier": false,
+          "endReason": 2
+        },
+        {
+          "replayStep": 477,
+          "childIndex": 1,
+          "stepIndex": 0,
+          "messageIndex": 1,
+          "actorId": 41,
+          "stepType": 6,
+          "lastAction": 3,
+          "questionStep": 476,
+          "used": [
+            1
+          ],
+          "recordedCarrier": false,
+          "knownNonCarrier": true,
+          "endReason": 2
+        }
+      ]
+    },
+    {
+      "sha256": "aff3c9744662ecc449e3e29e0484d37f795f9f0a9e93d8050a9533560e8a4ac1",
+      "replayVersion": "1-4-0-0",
+      "encodedNumericFingerprint": "1b2955574273a66f8b661b5b84dd0b4967fce0a9a31c8d0cc9dd25ed2c3c404c",
+      "publicNumericCounterpart": "demo6.bbr",
+      "historicalSourceAuditHashMatch": false,
+      "failedCommittedRushEmissions": []
+    },
+    {
+      "sha256": "d8ea4df7936bbf4127b798244ccdd6d12d7f4f4cd096721fee45c98dff07f9c2",
+      "replayVersion": "1-4-0-0",
+      "encodedNumericFingerprint": "9974a584e0801f3a43e265b8af779a61932b8cc9b3cd92bc23d9184f91162454",
+      "publicNumericCounterpart": "demo8.bbr",
+      "historicalSourceAuditHashMatch": false,
+      "failedCommittedRushEmissions": []
+    },
+    {
+      "sha256": "ed98a6a43fbd89aacefee5f7aec75ca7b0db77e5219dd35b75fb49132f4cfdf2",
+      "replayVersion": "1-4-0-0",
+      "encodedNumericFingerprint": "345940eca537ffdae2b58fda18ac95f7d5d09d652e71becec942f1e6e4f5b8b3",
+      "publicNumericCounterpart": "demo10.bbr",
+      "historicalSourceAuditHashMatch": false,
+      "failedCommittedRushEmissions": []
+    }
+  ]
+}

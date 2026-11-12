@@ -133,6 +133,26 @@
       "upper": "0"
     },
     {
+      "file": "demo2.bbr",
+      "teamId": "1",
+      "type": "dodge",
+      "eventId": "35-74-ResultRoll",
+      "sourceId": "source-3775",
+      "actionId": "sequence-337-step-0",
+      "lower": "-16/3",
+      "upper": "0"
+    },
+    {
+      "file": "demo3.bbr",
+      "teamId": "1",
+      "type": "dodge",
+      "eventId": "16-117-ResultRoll",
+      "sourceId": "source-1742",
+      "actionId": "sequence-166-step-0",
+      "lower": "-4/3",
+      "upper": "0"
+    },
+    {
       "file": "demo3.bbr",
       "teamId": "1",
       "type": "ball_handling",
@@ -231,6 +251,16 @@
       "actionId": "sequence-385-step-1",
       "lower": "1/6",
       "upper": "5/6"
+    },
+    {
+      "file": "demo8.bbr",
+      "teamId": "1",
+      "type": "dodge",
+      "eventId": "15-68-ResultRoll",
+      "sourceId": "source-1243",
+      "actionId": "sequence-123-step-0",
+      "lower": "-20/3",
+      "upper": "0"
     },
     {
       "file": "demo9.bbr",
@@ -580,14 +610,27 @@
         },
         {
           "teamId": "1",
-          "componentCount": 3,
+          "componentCount": 4,
           "pointCount": 0,
-          "boundedCount": 3,
+          "boundedCount": 4,
           "bounds": {
-            "lower": "-15/2",
+            "lower": "-77/6",
             "upper": "11/6"
           },
           "byCategory": [
+            {
+              "type": "dodge",
+              "componentCount": 1,
+              "pointCount": 0,
+              "boundedCount": 1,
+              "bounds": {
+                "lower": "-16/3",
+                "upper": "0"
+              },
+              "eventIds": [
+                "35-74-ResultRoll"
+              ]
+            },
             {
               "type": "movement_risk",
               "componentCount": 3,
@@ -643,6 +686,19 @@
               "eventIds": [
                 "27-181-ResultRoll"
               ]
+            },
+            {
+              "actionId": "sequence-337-step-0",
+              "componentCount": 1,
+              "pointCount": 0,
+              "boundedCount": 1,
+              "bounds": {
+                "lower": "-16/3",
+                "upper": "0"
+              },
+              "eventIds": [
+                "35-74-ResultRoll"
+              ]
             }
           ]
         }
@@ -663,11 +719,11 @@
         },
         {
           "teamId": "1",
-          "componentCount": 1,
+          "componentCount": 2,
           "pointCount": 0,
-          "boundedCount": 1,
+          "boundedCount": 2,
           "bounds": {
-            "lower": "0",
+            "lower": "-4/3",
             "upper": "5/3"
           },
           "byCategory": [
@@ -683,9 +739,35 @@
               "eventIds": [
                 "42-51-ResultRoll"
               ]
+            },
+            {
+              "type": "dodge",
+              "componentCount": 1,
+              "pointCount": 0,
+              "boundedCount": 1,
+              "bounds": {
+                "lower": "-4/3",
+                "upper": "0"
+              },
+              "eventIds": [
+                "16-117-ResultRoll"
+              ]
             }
           ],
           "byAction": [
+            {
+              "actionId": "sequence-166-step-0",
+              "componentCount": 1,
+              "pointCount": 0,
+              "boundedCount": 1,
+              "bounds": {
+                "lower": "-4/3",
+                "upper": "0"
+              },
+              "eventIds": [
+                "16-117-ResultRoll"
+              ]
+            },
             {
               "actionId": "sequence-415-step-3",
               "componentCount": 1,
@@ -1020,12 +1102,43 @@
         },
         {
           "teamId": "1",
-          "componentCount": 0,
+          "componentCount": 1,
           "pointCount": 0,
-          "boundedCount": 0,
-          "bounds": null,
-          "byCategory": [],
-          "byAction": []
+          "boundedCount": 1,
+          "bounds": {
+            "lower": "-20/3",
+            "upper": "0"
+          },
+          "byCategory": [
+            {
+              "type": "dodge",
+              "componentCount": 1,
+              "pointCount": 0,
+              "boundedCount": 1,
+              "bounds": {
+                "lower": "-20/3",
+                "upper": "0"
+              },
+              "eventIds": [
+                "15-68-ResultRoll"
+              ]
+            }
+          ],
+          "byAction": [
+            {
+              "actionId": "sequence-123-step-0",
+              "componentCount": 1,
+              "pointCount": 0,
+              "boundedCount": 1,
+              "bounds": {
+                "lower": "-20/3",
+                "upper": "0"
+              },
+              "eventIds": [
+                "15-68-ResultRoll"
+              ]
+            }
+          ]
         }
       ]
     },

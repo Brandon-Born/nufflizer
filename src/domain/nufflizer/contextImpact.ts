@@ -1,6 +1,6 @@
 import type { PreRollEvidence } from "@/domain/replay/reconstructContext";
 
-export const CONTEXT_MODEL_VERSION = "mobility-possession-30";
+export const CONTEXT_MODEL_VERSION = "mobility-possession-31";
 export type ContextPolicy =
   | "declined_team_reroll"
   | "full_team_reroll"
@@ -247,4 +247,20 @@ export function estimateKeptRushMoveBounds(
 ) {
   const bounds=terminalTeamMoveBounds(preRoll,false,successChance,terminalCheckpointAfter);
   return bounds ? {policy:"kept_rush_terminal_moves" as const,...bounds} : undefined;
+}
+
+
+// Original unmodified Dodge under the recorded decline-on-failure policy.
+// Only other-player moves; the actor, ball, reroll decision and damage stay separate.
+export function estimateKeptDodgeMoveBounds(
+  preRoll: PreRollEvidence | undefined,
+  successChance: number,
+  terminalCheckpointAfter: number
+) {
+  const bounds = terminalTeamMoveBounds(
+    preRoll, false, successChance, terminalCheckpointAfter
+  );
+  return bounds
+    ? { policy: "kept_dodge_terminal_moves" as const, ...bounds }
+    : undefined;
 }

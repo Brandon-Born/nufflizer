@@ -140,8 +140,8 @@ describe("retained original Rush under its fixed observed decline policy", () =>
     ).toEqual(facts.possiblePlayerIds);
     expect(facts.prefixMoves).toHaveLength(5);
     const summary = r.contextComponents.find((t) => t.teamId === "1")!;
-    expect(summary.componentCount).toBe(3);
-    expect(summary.bounds!.lower).toBe(-15 / 2);
+    expect(summary.componentCount).toBe(4);
+    expect(summary.bounds!.lower).toBeCloseTo(-77 / 6, 12);
     expect(summary.bounds!.upper).toBeCloseTo(11 / 6, 12);
     expect(
       summary.byAction.find((a) => a.eventIds.includes(e.id))!.eventIds
