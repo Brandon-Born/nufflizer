@@ -58,3 +58,6 @@ The owner accepted Upstash terms directly in Vercel. The durable nufflizier-prev
 
 
 Embedded messages reuse a validator and fast-xml-parser configuration owned only by that synchronous replay parse. Every message is still decoded, validated and charged against all byte/work budgets; parsed payloads are independent objects. Saxes resets after each successful close, its explicit entity map is restored on ready, and failures discard the validator. There is no cross-upload state or outcome cache. Independent reuse, failure-recovery and counter-reset regressions cover this path. First-cold hosted requests remain budget-sensitive; a typed timeout is not a valid report or semantic acceptance.
+
+
+Latest exact161760c Preview accepts full demo2/demo3 and enforces both app/platform size boundaries plus shared BUSY/rate limits using the durable Free store. Demo2 passes actual browser/export/reset. Demo1 still reaches typed4s TIMEOUT without a report; local and diagnostic success do not imply all hosted large/cold requests succeed. See the final execution receipt for file sizes, source/hash checks and the preserved open acceptance gap.

@@ -853,3 +853,9 @@ All12 supported source outcomes/odds/contributions and14 ranges/zero point estim
 ## 2026-11-11 - Independent message parsing with reused machinery
 
 The clean streaming checkpoint still exposed a first-cold4s timeout, retained as a hosting limitation. Message parsing now reuses configured machinery only within one replay while returning fresh payloads, restoring entity policy and discarding failed validator state. All per-message/aggregate budgets remain.35 safety/reuse regressions and1151 total tests, Redis/build and19 browser flows pass with unchanged12-demo results. A separately identified reuse Preview's first real Chromium upload/export/reset passes with diagnostics off; final committed hosting is recorded separately. No cache of outcomes, cross-upload state, semantic promotion or broad issue closure.
+
+
+
+## 2026-11-11 - Exact Preview acceptance qualified by the remaining large replay
+
+Exact161760c passes CI43155581489 and is Ready on Node22 in the isolated Preview with the durable Free Redis store. Live source hashes/preflight behavior agree; full demo2/demo3 scores match frozen references, and demo2 passes real Chromium upload/export/reset. Current app/platform413 limits,503 BUSY and shared429 despite forwarding spoofing pass. The largest demo1 still returns typed504 TIMEOUT with no report, so hosted acceptance remains partial and NUF-023/other17 open issues are not closed. All1151 local tests, real Redis/build and19 browser flows remain green; fourteen ranges/zero points and comparative abstention are preserved. No paid plan/billing or production/legacy change. The final documentation-only receipt is separately verified in CI.
