@@ -15,7 +15,7 @@ import { labelForRollType } from "./rollTypeContracts";
 import type { ReplayEvent, ReplayTurn, ReplayUnknownCode } from "./types";
 import {
   SAFE_XML_OPTIONS,
-  parseSafeXml,
+  createSafeXmlParser,
   projectReplayBoards,
   type ValidatedXml,
   type XmlProjection
@@ -187,6 +187,7 @@ export function extractStructuredTurnsFromReplayXml(
   let sequence = 0;
   let eventCount = 0;
   let embeddedBytes = 0;
+  const parseMessageXml = createSafeXmlParser();
   let activeGamer: string | undefined;
   const newTurn = (): ReplayTurn => ({
     turnNumber: turns.length + 1,
@@ -244,7 +245,7 @@ export function extractStructuredTurnsFromReplayXml(
       throw new ReplayValidationError(
         "Embedded messages exceed the total processing limit."
       );
-    const parsed = parseSafeXml(value, REPLAY_LIMITS.messageBytes);
+    const parsed = parseMessageXml(value, REPLAY_LIMITS.messageBytes);
     const keys = Object.keys(parsed).filter((key) => !key.startsWith("?"));
     if (keys.length !== 1)
       throw new ReplayValidationError(

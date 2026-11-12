@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { XMLValidator } from "fast-xml-parser";
-import { parseSafeXml, validateSafeXml } from "@/domain/replay/safeXml";
+import {
+  createSafeXmlParser,
+  createSafeXmlValidator,
+  parseSafeXml,
+  validateSafeXml
+} from "@/domain/replay/safeXml";
 import { REPLAY_LIMITS } from "@/domain/replay/limits";
 import { ReplayValidationError } from "@/lib/errors";
 
@@ -99,4 +104,50 @@ describe("streaming XML preflight keeps original-source safety and text semantic
     }
   });
 
+  it("reuses machinery while keeping every parsed payload independent", () => {
+    const parse = createSafeXmlParser();
+    const xml = "<Result><Id>1</Id><Dice><Value>4</Value></Dice></Result>";
+    const first = parse(xml),
+      second = parse(xml);
+    expect(first).toEqual(second);
+    (first.Result as { Dice: { Value: number } }).Dice.Value = 6;
+    expect((second.Result as { Dice: { Value: number } }).Dice.Value).toBe(4);
+    expect(parse("<Result/>")).toEqual({ Result: "" });
+    expect(parse("<Result>&AMP; &constructor; &amp;</Result>").Result).toBe(
+      "&AMP; &constructor; &"
+    );
+    expect(parse("<Result>&AMP; &constructor; &amp;</Result>").Result).toBe(
+      "&AMP; &constructor; &"
+    );
+  });
+
+  it("discards failed validator state before the next independent message", () => {
+    const parse = createSafeXmlParser();
+    for (const invalid of [
+      "<Broken><Child>",
+      "<!DOCTYPE Broken><Broken/>",
+      "<Broken>&#0;</Broken>",
+      "<É>".repeat(65) + "</É>".repeat(65)
+    ]) {
+      expect(() => parse(invalid)).toThrow(ReplayValidationError);
+      expect(parse("<Next><Id>2</Id></Next>")).toEqual({ Next: { Id: 2 } });
+    }
+  });
+
+  it("resets per-document depth, node and byte allowances", () => {
+    const validate = createSafeXmlValidator();
+    const maxDepth =
+      "<É>".repeat(REPLAY_LIMITS.xmlDepth) +
+      "</É>".repeat(REPLAY_LIMITS.xmlDepth);
+    expect(validate(maxDepth)).toBe(maxDepth);
+    expect(validate(maxDepth)).toBe(maxDepth);
+    const many =
+      "<Replay>" +
+      "<É/>".repeat(Math.floor(REPLAY_LIMITS.xmlNodes / 2)) +
+      "</Replay>";
+    expect(validate(many)).toBe(many);
+    expect(validate(many)).toBe(many);
+    expect(() => validate("<Replay/>", 1)).toThrow(/too large/);
+    expect(validate("<Replay/>")).toBe("<Replay/>");
+  });
 });

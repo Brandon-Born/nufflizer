@@ -847,3 +847,9 @@ Left optional Stripe authentication incomplete after explaining its role. The ow
 A real current Preview upload exposed a typed4s timeout despite green local gates. Content-free parent-mediated timing isolated slow parsing. Pinned saxes6.0.0 now performs original-source streaming preflight before the existing fast-xml-parser trees. All byte/work limits, DTD rejection and opaque-name semantics remain, Unicode node/depth counting is stronger, and error text is bounded.32 new safety regressions and one actual-worker diagnostic regression accompany the change; all1148 tests, real Redis, production build and19 browser flows pass with zero known production advisories.
 
 All12 supported source outcomes/odds/contributions and14 ranges/zero point estimates are identical. Three cold local comparisons show21.1% median parse improvement. Identified diagnostic Preview workers admit demo1/demo2/demo3 within the unchanged4s cap; clean committed-candidate deployed acceptance is recorded separately. No game-rule expansion, schema/model change, broad issue closure, paid plan/billing change or production/legacy deployment.
+
+
+
+## 2026-11-11 - Independent message parsing with reused machinery
+
+The clean streaming checkpoint still exposed a first-cold4s timeout, retained as a hosting limitation. Message parsing now reuses configured machinery only within one replay while returning fresh payloads, restoring entity policy and discarding failed validator state. All per-message/aggregate budgets remain.35 safety/reuse regressions and1151 total tests, Redis/build and19 browser flows pass with unchanged12-demo results. A separately identified reuse Preview's first real Chromium upload/export/reset passes with diagnostics off; final committed hosting is recorded separately. No cache of outcomes, cross-upload state, semantic promotion or broad issue closure.
