@@ -100,6 +100,11 @@ describe("POST /api/nufflizier/analyze", () => {
     });
     expect(e.metadata.preRoll?.activeTeamId).toBe("1");
     expect(e.metadata.preRoll?.period).toBeNull();
+    const terminalMoves=report.events.filter(e=>e.contextualBounds?.policy === "team_reroll_terminal_moves");
+    expect(terminalMoves.map(e=>e.metadata.locator?.replayStep)).toEqual([194,249,430]);
+    expect(terminalMoves.map(e=>e.contextualBounds?.maximumMoves)).toEqual([6,4,4]);
+    expect(terminalMoves.every(e=>e.contextualBounds?.successChance===2/3 && e.contextualImpact===undefined)).toBe(true);
+    expect(terminalMoves[1]!.contextualBounds!.lower).toBeCloseTo(-8/3,12);
     expect(e.probabilitySuccess).toBeCloseTo(8 / 9, 12);
     expect(
       report.events.filter((e) => e.metadata.teamRerollMovement)

@@ -1,6 +1,6 @@
 import { bounceDestination } from "@/domain/replay/pickupSuccessors";
 import { continuationOptionBounds } from "@/domain/replay/activeMoveContinuation";
-import { estimateDodgeImpactBounds, estimateNumericImpact, estimatePickupPossessionBounds, estimateFreshCatchPossession } from "./contextImpact";
+import { estimateDodgeImpactBounds, estimateTeamDodgeMoveBounds, estimateNumericImpact, estimatePickupPossessionBounds, estimateFreshCatchPossession } from "./contextImpact";
 import { blockOutcomeName, consistentBlockResolution, knockedDownSubjects, summarizeBlockConsequence } from "./blockConsequences";
 import { enumerateBlockPool } from "./blockPools";
 import { z } from "zod";
@@ -343,7 +343,7 @@ export const LuckEventSchema = z.strictObject({
   weightedDelta: finite,
   catchPossessionBounds:z.strictObject({policy:z.literal("fresh_catch_failure_envelope"),successChance:probability,minimumDifference:z.literal(0),maximumDifference:z.literal(2),lower:z.literal(0),upper:finite}).optional(),
   possessionBounds:z.strictObject({policy:z.literal("sure_hands_reroll"),successChance:probability,minimumDifference:finite.min(0).max(3),maximumDifference:finite.min(0).max(3),lower:finite,upper:finite}).optional(),
-  contextualBounds:z.strictObject({policy:z.literal("dodge_skill_reroll"),minimumMoves:count,maximumMoves:count,successChance:probability,activeContinuation:z.strictObject({minimum:z.union([z.literal(0),z.literal(1)]),maximum:z.union([z.literal(0),z.literal(1)])}).optional(),lower:finite,upper:finite}).optional(),
+  contextualBounds:z.strictObject({policy:z.enum(["dodge_skill_reroll","team_reroll_terminal_moves"]),terminalCheckpointAfter:count.optional(),minimumMoves:count,maximumMoves:count,successChance:probability,activeContinuation:z.strictObject({minimum:z.union([z.literal(0),z.literal(1)]),maximum:z.union([z.literal(0),z.literal(1)])}).optional(),lower:finite,upper:finite}).optional(),
   contextualImpact: z
     .strictObject({
       policy: z.enum(["declined_team_reroll", "full_team_reroll", "dodge_skill_reroll"]),
@@ -1269,14 +1269,38 @@ export const LuckReportSchema = z
       }
       const bound=event.contextualBounds;
       if (bound) {
-        const expected=estimateDodgeImpactBounds(context,bound.policy,Number(event.actualSuccess)-bound.successChance,bound.successChance);
-        require(event.scoringStatus === "scored" && event.metadata.rollType === 2 && context?.activeTeamId === event.teamId &&
+        const teamStage=bound.policy === "team_reroll_terminal_moves";
+        const expected=teamStage ? estimateTeamDodgeMoveBounds(context,event.actualSuccess === true,bound.successChance,bound.terminalCheckpointAfter ?? -1) :
+          estimateDodgeImpactBounds(context,"dodge_skill_reroll",Number(event.actualSuccess)-bound.successChance,bound.successChance);
+        if(teamStage) {
+          const m=event.metadata,question=sources.get(m.rerollQuestionId ?? ""),choice=sources.get(m.rerollDecisionId ?? "");
+          const original=z.strictObject({Die:z.strictObject({DieType:z.literal(0),Value:z.number().int().min(1).max(6)})}).safeParse(m.originalDice);
+          require(m.rerollResource === "team" && m.rerollUsed === true && m.teamRerollsSpent === 1 &&
+            !m.rerollSkill && !m.lonerGate && !m.proGate && !bound.activeContinuation &&
+            (m.modifiers?.length ?? 0) === 0 && m.requirement === m.difficulty &&
+            question?.metadata.sourceTag === "QuestionTeamRerollUsage" && question.metadata.stepType === 1 &&
+            question.playerId === event.playerId && question.teamId === event.teamId &&
+            question.metadata.rerollOffer?.canUseTeamReroll === true && question.metadata.rerollOffer.decisionSourceId === m.rerollDecisionId &&
+            original.success && original.data.Die.Value < (m.difficulty ?? 0) &&
+            bound.terminalCheckpointAfter !== undefined && (question.metadata.sourceIndex ?? Infinity)<=bound.terminalCheckpointAfter &&
+            bound.terminalCheckpointAfter<(choice?.metadata.sourceIndex ?? -1) &&
+            (!m.teamRerollMovement || m.teamRerollMovement.checkpointAfter === bound.terminalCheckpointAfter) &&
+            choice?.metadata.sourceTag === "ResultTeamRerollUsage" && choice.metadata.teamRerollDecision?.used === true &&
+            question.metadata.rerollOffer.gamerId === choice.metadata.teamRerollDecision.gamerId &&
+            (question.metadata.sourceIndex ?? Infinity)<(choice.metadata.sourceIndex ?? -1) &&
+            choice.playerId === event.playerId && choice.teamId === event.teamId &&
+            choice.metadata.sourceIndex === (m.sourceIndex ?? -1)-1 &&
+            (event.actualSuccess ? !!m.teamRerollMovement && !m.teamRerollMovement.zonePenalty :
+              !!m.movementFall && !m.movementFall.combinedRushSourceId),
+            "A conditional team-Dodge move component needs its committed direct replacement and confirmed move or self-fall/turnover, outside earlier dice, resources and ball value.");
+        }
+        require((teamStage || bound.terminalCheckpointAfter === undefined) && event.scoringStatus === "scored" && event.metadata.rollType === 2 && context?.activeTeamId === event.teamId &&
           event.contextualImpact === undefined && !!expected && bound.minimumMoves === expected.minimumMoves && bound.maximumMoves === expected.maximumMoves &&
-          bound.activeContinuation?.minimum === expected.activeContinuation?.minimum && bound.activeContinuation?.maximum === expected.activeContinuation?.maximum &&
+          bound.activeContinuation?.minimum === ("activeContinuation" in expected ? expected.activeContinuation?.minimum : undefined) && bound.activeContinuation?.maximum === ("activeContinuation" in expected ? expected.activeContinuation?.maximum : undefined) &&
           near(bound.successChance,(7-(event.metadata.difficulty ?? 0))/6) && near(bound.lower,expected.lower) && near(bound.upper,expected.upper),
           "Partial ordinary-move bounds must reconcile with missing availability, the fixed policy and dice deviation, without a point estimate.");
       }
-      if (bound || continuation || dodgeMove || event.contextualImpact?.policy === "dodge_skill_reroll") {
+      if (bound?.policy === "dodge_skill_reroll" || continuation || dodgeMove || event.contextualImpact?.policy === "dodge_skill_reroll") {
         const original=event.metadata.rerollOriginalId ? sources.get(event.metadata.rerollOriginalId) : undefined;
         const use=event.metadata.rerollDecisionId ? sources.get(event.metadata.rerollDecisionId) : undefined;
         const target=event.metadata.difficulty;

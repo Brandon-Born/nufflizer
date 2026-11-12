@@ -1,3 +1,4 @@
+import { teamDodgeContinuity } from "@/domain/replay/teamDodgeContinuity";
 import { findBounceCatchReactions, attachBounceCatchReactions } from "./catchPossession";
 import { findPickupTurnEnds, attachPickupTurnEnds } from "./pickupTurnEnd";
 import { findRerollCounterEvidence, attachRerollCounterEvidence } from "./rerollCounters";
@@ -21,6 +22,7 @@ import {
   CONTEXT_MODEL_VERSION,
   estimateNumericImpact,
   estimateDodgeImpactBounds,
+  estimateTeamDodgeMoveBounds,
   estimatePickupPossessionBounds
 } from "./contextImpact";
 import {
@@ -1387,6 +1389,24 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     if (outcome) {
       outcome.label = "Recorded movement after Dodge reroll";
       outcome.statusReason = "The successful own Dodge replacement and its immediately recorded movement preserve the observed position and remaining movement; no extra luck score is added.";
+    }
+  }
+  for (const event of events) {
+    const m = event.metadata;
+    if (event.scoringStatus === "scored" && event.actualSuccess !== null &&
+      !event.contextualImpact && !event.contextualBounds && m.rollType === 2 &&
+      m.rerollResource === "team" && m.rerollUsed === true && m.teamRerollsSpent === 1 &&
+      !m.rerollSkill && !m.lonerGate && !m.proGate &&
+      (m.modifiers?.length ?? 0) === 0 && m.requirement === m.difficulty &&
+      m.difficulty !== undefined && m.difficulty >= 2 && m.difficulty <= 6 &&
+      m.preRoll?.activeTeamId === event.teamId &&
+      (event.actualSuccess ? !!m.teamRerollMovement && !m.teamRerollMovement.zonePenalty :
+        !!m.movementFall && !m.movementFall.combinedRushSourceId)) {
+      const question=ballSources.get(m.rerollQuestionId ?? ""),choice=ballSources.get(m.rerollDecisionId ?? "");
+      const terminalCheckpointAfter=m.preRoll.ordinaryMoveAvailability && question?.metadata.sourceIndex!==undefined && choice?.metadata.sourceIndex!==undefined ?
+        teamDodgeContinuity(replay.boardCheckpoints ?? [],m.preRoll.checkpointAfter,question.metadata.sourceIndex,choice.metadata.sourceIndex,event.playerId!,m.preRoll.ordinaryMoveAvailability,epochs) : undefined;
+      if(terminalCheckpointAfter!==undefined)
+        event.contextualBounds = estimateTeamDodgeMoveBounds(m.preRoll,event.actualSuccess,(7-m.difficulty)/6,terminalCheckpointAfter);
     }
   }
   const blockDamage = new Map(damageSteps.map((step) => [step.actionId, step]));

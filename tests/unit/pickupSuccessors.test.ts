@@ -474,7 +474,7 @@ describe("valid pickup failure successors and conditional possession bounds", ()
         readFileSync(`demo-replays/${file}`, "utf8")
       );
       possession += r.events.filter((e) => e.possessionBounds).length;
-      moves += r.events.filter((e) => e.contextualBounds).length;
+      moves += r.events.filter((e) => e.contextualBounds?.policy === "dodge_skill_reroll").length;
       expect(r.coverage.contextEvidence.boundedCount).toBe(
         r.events.filter((e) => e.contextualBounds || e.possessionBounds || e.catchPossessionBounds).length
       );

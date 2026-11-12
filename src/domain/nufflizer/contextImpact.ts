@@ -1,6 +1,6 @@
 import type { PreRollEvidence } from "@/domain/replay/reconstructContext";
 
-export const CONTEXT_MODEL_VERSION = "mobility-possession-21";
+export const CONTEXT_MODEL_VERSION = "mobility-possession-22";
 export type ContextPolicy =
   | "declined_team_reroll"
   | "full_team_reroll"
@@ -164,6 +164,47 @@ export function estimatePickupPossessionBounds(
 
 // Fresh successful catch only. Failure may continue through choices/rebounds;
 // bound its own-possession continuation rather than inventing a fixed policy.
-export function estimateFreshCatchPossession(successChance:number) {
-  return {policy:"fresh_catch_failure_envelope",successChance,minimumDifference:0,maximumDifference:2,lower:0,upper:POSSESSION_VALUE*(1-successChance)} as const;
+export function estimateFreshCatchPossession(successChance: number) {
+  return {
+    policy: "fresh_catch_failure_envelope",
+    successChance,
+    minimumDifference: 0,
+    maximumDifference: 2,
+    lower: 0,
+    upper: POSSESSION_VALUE * (1 - successChance)
+  } as const;
+}
+
+// Only the teammate-move component at a committed direct team replacement.
+// The caller requires a verified actual move or terminal self-fall/turnover;
+// the earlier failed die, reroll cost, actor continuation and ball value are
+// separate stages. Unknown teammate eligibility remains a possible-value set.
+export function estimateTeamDodgeMoveBounds(
+  preRoll: PreRollEvidence | undefined,
+  actualSuccess: boolean,
+  successChance: number,
+  terminalCheckpointAfter: number
+) {
+  const availability = preRoll?.ordinaryMoveAvailability;
+  if (
+    !preRoll?.actorCell ||
+    preRoll.teamTurn === null ||
+    preRoll.actorCarriesBall !== false ||
+    !preRoll.movementCheckLinked ||
+    !availability?.unknownPlayerIds.length
+  )
+    return;
+  const minimumMoves = availability.knownAvailablePlayerIds.length;
+  const maximumMoves = minimumMoves + availability.unknownPlayerIds.length;
+  const deviation = Number(actualSuccess) - successChance;
+  const endpoints = [deviation * minimumMoves, deviation * maximumMoves];
+  return {
+    policy: "team_reroll_terminal_moves" as const,
+    terminalCheckpointAfter,
+    successChance,
+    minimumMoves,
+    maximumMoves,
+    lower: Math.min(...endpoints) || 0,
+    upper: Math.max(...endpoints) || 0
+  };
 }

@@ -334,7 +334,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.27");
+  expect(report.schemaVersion).toBe("2.28");
   expect(report.modelVersion).toBe("dice-only-20");
   expect(report.events.filter((e:{metadata:{combinedMovement?:unknown}})=>e.metadata.combinedMovement)).toHaveLength(2);
   expect(
@@ -361,7 +361,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
     )
   ).toBe(true);
 
-  expect(report.contextModelVersion).toBe("mobility-possession-21");
+  expect(report.contextModelVersion).toBe("mobility-possession-22");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
     report.coverage.rollCandidates.scoredCount +
@@ -1000,10 +1000,10 @@ test("team-rerolled movement separates actual cells from missing context",async(
     await expect(page.getByText("Context: Not scored")).toHaveCount(2);
     await page.screenshot({path:`/tmp/nufflizier-${id}-desktop.png`,fullPage:true});
     await page.getByLabel("Scoring status").selectOption("bounded");
-    // The Dodge fragment also contains an earlier own-skill component range.
-    // The new actual team-rerolled move itself never becomes a context range.
-    await expect(row).toHaveCount(0);
-    await expect(table.locator("tbody tr").filter({has:page.locator("summary")})).toHaveCount(id.startsWith("team_dodge")?1:0);
+    // The Dodge fragment has its earlier own-skill range and the distinct
+    // conditional terminal team-Dodge component; actual movement is unscored.
+    await expect(row).toHaveCount(id.startsWith("team_dodge")?1:0);
+    await expect(table.locator("tbody tr").filter({has:page.locator("summary")})).toHaveCount(id.startsWith("team_dodge")?2:0);
     await page.getByRole("button",{name:"Reset filters",exact:true}).click();await expect(page.getByLabel("Scoring status")).toHaveValue("scored");
     await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);
     await page.unroute("**/api/nufflizier/analyze");
@@ -1058,6 +1058,43 @@ test("combined moves and failed turnovers retain separate dice and unknown tacti
     await page.getByLabel("Scoring status").selectOption("bounded");await expect(row).toHaveCount(0);
     await page.getByRole("button",{name:"Reset filters",exact:true}).click();await expect(row).toHaveCount(1);
     await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);
+    await page.unroute("**/api/nufflizier/analyze");
+  }
+  expect(errors).toEqual([]);
+});
+
+test("committed team Dodge bounds keep terminal turn cost separate from compound dice", async ({page})=>{
+  const errors:string[]=[];
+  page.on("pageerror",error=>errors.push(error.message));
+  page.on("console",message=>{if(message.type()==="error")errors.push(message.text());});
+  await page.setViewportSize({width:1280,height:720});
+  await page.goto("/nufflizier");await expect(page).toHaveTitle("Nufflizier");
+  for(const [index,c] of [
+    {id:"direct_team_dodge_failure",file:"tests/fixtures/evidence/bb3-terminal-team-dodge.json",range:"-2.67 to 0.00"},
+    {id:"team_dodge_move",file:"tests/fixtures/evidence/bb3-team-reroll-movement.json",range:"0.00 to 1.33"}
+  ].entries()) {
+    const xml=lonerDriveXml(c.id,c.file),report=analyzeNufflizerInput(xml);
+    // Presentation uses a validated source-fragment response. The separate
+    // original-demo11 worker/API gate validates real execution at4s.
+    await page.route("**/api/nufflizier/analyze",route=>route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(report)}));
+    await page.setInputFiles('input[name="replay"]',{name:"source-terminal-team-dodge.xml",mimeType:"application/xml",buffer:Buffer.from(xml)});
+    await page.getByRole("button",{name:"Analyze Nuffle Luck"}).click();
+    await expect(page.getByRole("heading",{name:"Nuffle Match Report"})).toBeVisible();
+    await expect(page.getByText(/Separate context ranges are available for 1 check/)).toBeVisible();
+    await page.getByLabel("Scoring status").selectOption("bounded");
+    const row=page.getByRole("table").locator("tbody tr").filter({has:page.locator("summary")});
+    await expect(row).toHaveCount(1);await row.locator("summary").click();
+    await expect(row).toContainText("team reroll already spent");
+    await expect(row).toContainText("66.7% success");
+    await expect(row).toContainText("0 to 4 other players");
+    await expect(row).toContainText(c.range+" provisional context units");
+    await expect(row).toContainText("later damage dice are outside");
+    if(index===0)await page.screenshot({path:"/tmp/nufflizier-terminal-team-dodge-desktop.png",fullPage:true});
+    const download=page.waitForEvent("download");await page.getByRole("button",{name:"Download JSON"}).click();
+    const result=await download;const saved=JSON.parse(readFileSync((await result.path())!,"utf8"));
+    expect(saved.schemaVersion).toBe("2.28");expect(saved.teams.every((t:{impactCount:number})=>t.impactCount===0)).toBe(true);
+    expect(saved.events.find((e:{contextualBounds?:{policy:string}})=>e.contextualBounds?.policy==="team_reroll_terminal_moves").probabilitySuccess).toBeCloseTo(8/9,12);
+    if(index===0)await page.getByRole("button",{name:"Upload Another Replay"}).click();
     await page.unroute("**/api/nufflizier/analyze");
   }
   expect(errors).toEqual([]);
