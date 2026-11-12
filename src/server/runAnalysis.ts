@@ -67,6 +67,10 @@ export async function runAnalysis(
   let timer: ReturnType<typeof setTimeout> | undefined;
   let abort = () => {};
   try {
+    if (process.env.NUFFLIZIER_ANALYZER_TIMING === "1")
+      console.info(JSON.stringify({
+        event: "nufflizier_analysis_stage", stage: "worker_start", atMs: Date.now()
+      }));
     worker = new Worker(
       path.join(process.cwd(), ".generated", "analysis-worker.cjs"),
       {
@@ -95,7 +99,16 @@ export async function runAnalysis(
           ),
         options.timeoutMs ?? 4000
       );
-      worker!.once("message", (message) => {
+      worker!.on("message", (message) => {
+        if (process.env.NUFFLIZIER_ANALYZER_TIMING === "1" &&
+            message.kind === "analysis_stage" &&
+            ["worker_ready", "decode", "parse", "analyze", "validate", "serialize"].includes(message.stage) &&
+            Number.isSafeInteger(message.atMs)) {
+          console.info(JSON.stringify({
+            event: "nufflizier_analysis_stage", stage: message.stage, atMs: message.atMs
+          }));
+          return;
+        }
         if (message.ok) {
           try {
             resolve(

@@ -4,7 +4,7 @@ import { LuckReportSchema } from "@/domain/nufflizer/reportSchema";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { POST } from "@/app/api/nufflizier/analyze/route";
 
@@ -16,6 +16,27 @@ function readFixture(name: string): string {
 }
 
 describe("POST /api/nufflizier/analyze", () => {
+  it("keeps opt-in worker stage diagnostics separate from report data", async () => {
+    vi.stubEnv("NUFFLIZIER_ANALYZER_TIMING", "1");
+    const log = vi.spyOn(console, "info").mockImplementation(() => {});
+    try {
+      const data = new FormData();
+      data.set("replay", new File([readFixture("sample-basic.xml")], "private-input.xml"));
+      const response = await POST(new Request("http://localhost/api/nufflizier/analyze", {
+        method: "POST", body: data
+      }));
+      expect(response.status).toBe(200);
+      const report = LuckReportSchema.parse(await response.json());
+      const records = log.mock.calls.map(([s]) => JSON.parse(s));
+      expect(records.map(r => r.stage)).toEqual([
+        "worker_start", "worker_ready", "decode", "parse", "analyze", "validate", "serialize"
+      ]);
+      expect(records.every(r => Object.keys(r).sort().join() === "atMs,event,stage" &&
+        r.event === "nufflizier_analysis_stage" && Number.isSafeInteger(r.atMs))).toBe(true);
+      expect(JSON.stringify(records)).not.toContain("private-input");
+      expect(JSON.stringify(report)).not.toContain("analysis_stage");
+    } finally { log.mockRestore(); vi.unstubAllEnvs(); }
+  });
   it("exports both combined failure subtotals from the original demo2 worker", async () => {
     const data = new FormData();
     data.append(

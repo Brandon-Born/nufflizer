@@ -1,12 +1,12 @@
 # Ingestion and execution contract
 
-Updated 2026-11-10. Owning IDs: NUF-002–007, 023–026. Local safeguards and the shared Redis gate are implemented. Both real Redis integration and the isolated hosted Preview verify the shared quota. See the implementation log for measurements and the Preview store's lifetime.
+Updated 2026-11-11. Owning IDs: NUF-002–007, 023–026. Local safeguards and the shared Redis gate are implemented. Both real Redis integration and the isolated hosted Preview verify the shared quota. See the implementation log for measurements and the Preview store's lifetime.
 
 ## Shared bounds
 
 HTTP reads at most 4,100,000 bytes, including multipart overhead, before parsing the form. Exactly one `replay` file, no extra fields/files, is accepted. HTTP and CLI files are limited to 4,000,000 bytes. The CLI reads a bounded regular file using an open descriptor. The decoder bounds compressed bytes to 4,000,000 and expanded XML to 15 MiB **during** zlib inflation. Direct XML domain/service input is limited to 15 MiB; the HTTP/CLI transfer cap is deliberately smaller. The legacy compatibility opt-in uses the same reader and worker.
 
-Both XML parsers reject DTD/entity declarations before parsing and disable custom entity processing. Safe built-in/numeric text references are preserved. XML is bounded to depth 64 and 750,000 element nodes, decoded messages to 512 KiB each and 24 MiB total, and extracted source records to 50,000. Limits are in `src/domain/replay/limits.ts`. A quote-aware lexical preflight enforces depth before recursive tree work; XML validation rejects malformed syntax.
+Both XML parsers reject DTD/entity declarations before parsing and disable custom entity processing. Safe built-in/numeric text references are preserved. XML is bounded to depth 64 and 750,000 element nodes, decoded messages to 512 KiB each and 24 MiB total, and extracted source records to 50,000. Limits are in `src/domain/replay/limits.ts`. A pinned saxes6.0.0 streaming preflight validates the complete original source and counts every element, including Unicode names, before either fast-xml-parser tree pass. DTDs are rejected and only the five built-in entities are resolved during validation. Existing opaque valid named references such as &AMP; remain literal; invalid entity names and numeric codepoints reject. Validation does not rewrite source. Comments/CDATA do not count as elements, and error details are bounded to512 characters.
 
 Supported envelope elements are `Replay` and `MatchReplay`; two distinct explicit team IDs are required. Version `1-4-0-0` is the captured structured format. Unversioned legacy/synthetic envelopes are recognizable but cannot establish semantic completeness. Other declared versions are rejected pending supported fixtures. Malformed base64/XML and malformed numeric `ResultRoll` contracts reject the file; valid but unverified rules remain visible as excluded evidence. A missing die type is not D6 type zero. No die size is inferred from an observed face. Numeric odds and observed results use the same sum/any-die contract, with contradictions excluded. These arithmetic contracts do not establish BB3 rule mappings or natural-roll rules.
 
@@ -25,7 +25,7 @@ HTTP report serialization now runs inside the same worker deadline and enforces 
 - HTTP 504 `TIMEOUT` / 499 `CANCELLED`: terminated analysis, no fabricated report. HTTP 503 `BUSY` bounds concurrency.
 - HTTP 413 `REPORT_TOO_LARGE`: serialized JSON exceeds 4,000,000 bytes; use a smaller file or CLI.
 - HTTP 429 RATE_LIMIT includes the shared quota window remaining in Retry-After. An unavailable required backend returns 503 QUOTA_UNAVAILABLE before body reading.
-- CLI input/execution failures print a descriptive error to stderr and exit nonzero. JSON reports include schema `2.10`, model `dice-only-18`, limitations and explicit verdict status. Unknown odds/results are null, not invented zeros/failures. Weighted numeric contributions are additive dice units; no calibrated probability claim is made.
+- CLI input/execution failures print a descriptive error to stderr and exit nonzero. JSON reports include schema `2.27`, model `dice-only-20`, limitations and explicit verdict status. Unknown odds/results are null, not invented zeros/failures. Weighted numeric contributions are additive dice units; no calibrated probability claim is made.
 
 ## Dependency and deployment evidence
 
@@ -46,3 +46,12 @@ One atomic Redis script uses the backend clock to enforce ten admitted uploads p
 Run corepack pnpm test:quota with Redis 7 and its CLI on PATH. The integration invokes two independent handler gates using the production Lua against one private Redis Unix socket, verifying admission, forwarded-header resistance, body-read avoidance, cleanup, expiry and fail-closed errors. CI runs it after the unit tests. The [Redis atomic scripting contract](https://redis.io/docs/latest/develop/programmability/) and [JSON command format](https://upstash.com/docs/redis/features/restapi#post-command-in-body) document the backend protocol. A real hosted store remains a separate acceptance check.
 
 The authorized target is a separate nufflizer-preview Vercel project; the legacy bb-trainer project is not used. The preview build uses frozen dependencies and excludes evidence/test replay files. No production alias or persistent replay storage is needed. Record exact deployment observations in the implementation log.
+
+
+## Hosted parsing and optional stage diagnostics
+
+A real Node22 Preview upload reproduced a typed4s timeout even though all local gates passed. Parent-mediated stage records isolated3334ms of parsing. Streaming preflight replaces the repeated regex/XMLValidator pass while retaining fast-xml-parser extraction, every original byte/node/depth/message/event bound and the256MiB old-generation worker limit. Three cold local comparisons give median717.2→566.0ms parsing (21.1% improvement); diagnostic hosted demo1/demo2/demo3 workers complete in3636/3370/3283ms with unchanged supported results. Diagnostic source patches are identified separately from the final committed candidate and do not establish its deployed acceptance.
+
+NUFFLIZIER_ANALYZER_TIMING=1 optionally emits only event/stage/epoch-millisecond records through the parent. It is off by default, accepts no upload-controlled options, adds no report fields, logs no replay data and does not extend the deadline. Worker progress messages are distinct from the terminal result, so child stdout buffering/termination cannot hide the timing evidence. The real-worker regression verifies all seven stages, private filename omission and unchanged report validation.
+
+The owner accepted Upstash terms directly in Vercel. The durable nufflizier-preview-quota resource is independently read back as Free and was created with autoUpgrade=false/prodPack=false. Only the separate project's Preview environment and two sensitive quota variables use it; production/legacy are unchanged. Real production Lua passes against it. The account's existing Pro included credit covers bounded verification; no new paid service, plan or billing change was made. Exact committed-candidate HTTP/browser/boundary/quota receipts are recorded in IMPLEMENTATION_LOG when observed.

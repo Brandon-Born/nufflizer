@@ -833,3 +833,17 @@ Thirteen new regressions, all1115 unit/API tests, real Redis quota, production b
 ## 2026-11-11 - Free-store authorization and authentication status
 
 The owner explicitly approved Stripe Projects initialization/terms for checking a free Upstash store after the prior automatic-review denial. The required CLI upgrade completed; initialization now waits for user browser sign-in and has no success receipt. No store, credentials, billing change or Preview was created. Current handoff docs distinguish this new approval from historical denials and from actual authentication/free-tier eligibility. Application schema2.27/dice-only-20/context21 and all code acceptance evidence remain unchanged.
+
+
+
+## 2026-11-11 - Durable free Redis through Vercel
+
+Left optional Stripe authentication incomplete after explaining its role. The owner accepted Upstash provider terms directly through Vercel, and an explicitly free store with automatic upgrades/production pack disabled was provisioned. Live provider inspection confirms Free; connection and both sensitive app quota variables are Preview-only. Production Lua passes against the real hosted store with independent handlers, concurrency/quota/TTL and isolated-key cleanup. No app dependency, production/legacy configuration, paid plan or billing change. The existing Vercel plan has included credit for bounded checks; exact-candidate deployed acceptance remains separate. See IMPLEMENTATION_LOG for the initial review block, safer verified command, owner confirmation and readback limits.
+
+
+
+## 2026-11-11 - Streaming validation preserves the four-second hosted budget
+
+A real current Preview upload exposed a typed4s timeout despite green local gates. Content-free parent-mediated timing isolated slow parsing. Pinned saxes6.0.0 now performs original-source streaming preflight before the existing fast-xml-parser trees. All byte/work limits, DTD rejection and opaque-name semantics remain, Unicode node/depth counting is stronger, and error text is bounded.32 new safety regressions and one actual-worker diagnostic regression accompany the change; all1148 tests, real Redis, production build and19 browser flows pass with zero known production advisories.
+
+All12 supported source outcomes/odds/contributions and14 ranges/zero point estimates are identical. Three cold local comparisons show21.1% median parse improvement. Identified diagnostic Preview workers admit demo1/demo2/demo3 within the unchanged4s cap; clean committed-candidate deployed acceptance is recorded separately. No game-rule expansion, schema/model change, broad issue closure, paid plan/billing change or production/legacy deployment.

@@ -1,4 +1,5 @@
-import { XMLParser, XMLValidator } from "fast-xml-parser";
+import { XMLParser } from "fast-xml-parser";
+import { SaxesParser } from "saxes";
 import { ReplayValidationError } from "@/lib/errors";
 import { REPLAY_LIMITS } from "./limits";
 
@@ -41,7 +42,8 @@ export const SAFE_XML_OPTIONS = {
 declare const checkedXml: unique symbol;
 export type ValidatedXml = string & { readonly [checkedXml]: true };
 
-// Run before either XML parser allocates a tree. Comments/CDATA are skipped as whole tokens.
+// Validate the complete original source before either tree parser. Streaming
+// callbacks enforce work bounds without constructing an additional XML tree.
 export function validateSafeXml(
   xml: string,
   maxBytes: number = REPLAY_LIMITS.decodedBytes
@@ -50,37 +52,53 @@ export function validateSafeXml(
     throw new ReplayValidationError("Replay XML is too large.");
   let depth = 0;
   let nodes = 0;
-  const tokens =
-    /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<![^>]*>|<\/?[A-Za-z_](?:[^"'<>]|"[^"]*"|'[^']*')*>/g;
-  for (const match of xml.matchAll(tokens)) {
-    const token = match[0];
-    if (
-      token.startsWith("<!--") ||
-      token.startsWith("<![CDATA[") ||
-      token.startsWith("<?")
-    )
-      continue;
-    if (token.startsWith("<!"))
-      throw new ReplayValidationError(
-        "DOCTYPE and entity declarations are not supported."
-      );
-    if (token.startsWith("</")) {
-      depth -= 1;
-      continue;
-    }
-    nodes += 1;
-    if (!token.endsWith("/>")) depth += 1;
-    if (nodes > REPLAY_LIMITS.xmlNodes || depth > REPLAY_LIMITS.xmlDepth) {
+  const validator = new SaxesParser();
+  validator.ENTITIES = Object.assign(Object.create(null), {
+    amp: "&",
+    lt: "<",
+    gt: ">",
+    quot: '"',
+    apos: "'"
+  });
+  validator.on("error", (error) => {
+    // Keep the existing opaque-name contract (e.g. &AMP;). Saxes first
+    // validates its XML name; unknown names are never expanded or rewritten.
+    if (error.message.endsWith(": undefined entity.")) return;
+    throw error;
+  });
+  validator.on("doctype", () => {
+    throw new ReplayValidationError(
+      "DOCTYPE and entity declarations are not supported."
+    );
+  });
+  validator.on("opentagstart", () => {
+    nodes++;
+    depth++;
+    if (nodes > REPLAY_LIMITS.xmlNodes || depth > REPLAY_LIMITS.xmlDepth)
       throw new ReplayValidationError(
         "Replay XML exceeds the node/depth processing limit."
       );
-    }
-  }
-  const valid = XMLValidator.validate(xml);
-  if (valid !== true)
+  });
+  validator.on("closetag", () => {
+    depth--;
+  });
+  try {
+    validator.write(xml).close();
+  } catch (error) {
+    if (error instanceof ReplayValidationError) throw error;
+    if (error instanceof Error && /doctype/i.test(error.message))
+      throw new ReplayValidationError(
+        "DOCTYPE and entity declarations are not supported."
+      );
+    if (
+      error instanceof Error &&
+      /malformed character entity/.test(error.message)
+    )
+      throw new ReplayValidationError("Invalid XML character reference.");
     throw new ReplayValidationError(
-      `Replay XML parse failed: ${valid.err.msg}`
+      `Replay XML parse failed: ${error instanceof Error ? error.message.slice(0, 512) : "Invalid XML"}`
     );
+  }
   return xml as ValidatedXml;
 }
 

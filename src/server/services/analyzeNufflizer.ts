@@ -6,11 +6,19 @@ import type { LuckReport } from "@/domain/nufflizer/types";
 
 export type AnalyzeNufflizerOptions = {
   maxDecodedChars?: number;
+  onStage?: (stage: "decode" | "parse" | "analyze" | "validate") => void;
 };
 
-export function analyzeNufflizerXml(xml: string): LuckReport {
+export function analyzeNufflizerXml(
+  xml: string,
+  options: Pick<AnalyzeNufflizerOptions, "onStage"> = {}
+): LuckReport {
   const replay = parseReplayXml(xml, { omitRawReplaySteps: true });
-  const report = LuckReportSchema.safeParse(analyzeReplayLuck(replay));
+  options.onStage?.("parse");
+  const normalized = analyzeReplayLuck(replay);
+  options.onStage?.("analyze");
+  const report = LuckReportSchema.safeParse(normalized);
+  options.onStage?.("validate");
   if (!report.success)
     throw new Error("Generated report failed contract validation.");
   return report.data;
@@ -24,5 +32,6 @@ export function analyzeNufflizerInput(
     maxDecodedChars: options.maxDecodedChars
   });
 
-  return analyzeNufflizerXml(decoded.xml);
+  options.onStage?.("decode");
+  return analyzeNufflizerXml(decoded.xml, options);
 }
