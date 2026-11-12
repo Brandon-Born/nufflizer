@@ -869,3 +869,8 @@ The primary replay parser bypasses generic numeric allocation only for exactly r
 ## 2026-11-11 - Conditional team-Dodge teammate opportunities
 
 The exact parser checkpoint1f1f7f7 passes public CI43162561925 and bounded Preview demo1/demo3 HTTP acceptance with unchanged4s worker limits and source scores. Earlier failures remain qualified evidence. Schema2.28/context22 separately adds four real-source partial teammate-move components at committed direct team-Dodge replacements. Compared waiting snapshots guard continuity without filling omitted fields or restoring playable stability. Conditional66.7% chance stays separate from compound88.9% dice; original failure, reroll cost, actor/ball/scoring value and later damage remain outside this component. Independent source extracts,21 new regressions, original demo11 worker/API and a twentieth rendered flow cover the change. Eighteen ranges/zero point estimates and11 closed/17 open remain; no broad closure, calibrated verdict, new resource, paid plan or production/legacy change. Final context hosting is not claimed by the earlier parser receipt.
+
+
+## 2026-11-12 - Waiting actor origin guard
+
+The conditional team-Dodge gate now also requires the waiting actor to remain at its reconstructed pre-offer origin, preserving already verified prefix movement while rejecting contradictory snapshots.22 focused cases and final1227 unit/API tests, real Redis/build and20 browser flows pass at unchanged budgets. All four public components,18 ranges/zero points and11 closed/17 open remain; no new hosted or broad semantic acceptance is claimed.

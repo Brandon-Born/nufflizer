@@ -12,6 +12,7 @@ export function teamDodgeContinuity(
   questionIndex: number,
   decisionIndex: number,
   actorId: string,
+  actorCell: { x: number; y: number } | null,
   candidates: { knownAvailablePlayerIds: string[]; unknownPlayerIds: string[] },
   epochs: ReadonlyMap<ReplayBoardCheckpoint, number>
 ): number | undefined {
@@ -23,6 +24,7 @@ export function teamDodgeContinuity(
     b = waiting?.board;
   if (
     !before ||
+    !actorCell ||
     !waiting ||
     !a ||
     !b ||
@@ -50,7 +52,15 @@ export function teamDodgeContinuity(
     for (const player of team.players) {
       const current = next.players.find((p) => p.id === player.id);
       if (!current) return;
-      if (String(player.id) === actorId) continue;
+      if (String(player.id) === actorId) {
+        if (
+          current.pitchLocation !== "on_pitch" ||
+          current.cell.x !== actorCell.x ||
+          current.cell.y !== actorCell.y
+        )
+          return;
+        continue;
+      }
       if (
         player.cell.x !== current.cell.x ||
         player.cell.y !== current.cell.y ||

@@ -1404,7 +1404,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         !!m.movementFall && !m.movementFall.combinedRushSourceId)) {
       const question=ballSources.get(m.rerollQuestionId ?? ""),choice=ballSources.get(m.rerollDecisionId ?? "");
       const terminalCheckpointAfter=m.preRoll.ordinaryMoveAvailability && question?.metadata.sourceIndex!==undefined && choice?.metadata.sourceIndex!==undefined ?
-        teamDodgeContinuity(replay.boardCheckpoints ?? [],m.preRoll.checkpointAfter,question.metadata.sourceIndex,choice.metadata.sourceIndex,event.playerId!,m.preRoll.ordinaryMoveAvailability,epochs) : undefined;
+        teamDodgeContinuity(replay.boardCheckpoints ?? [],m.preRoll.checkpointAfter,question.metadata.sourceIndex,choice.metadata.sourceIndex,event.playerId!,m.preRoll.actorCell,m.preRoll.ordinaryMoveAvailability,epochs) : undefined;
       if(terminalCheckpointAfter!==undefined)
         event.contextualBounds = estimateTeamDodgeMoveBounds(m.preRoll,event.actualSuccess,(7-m.difficulty)/6,terminalCheckpointAfter);
     }

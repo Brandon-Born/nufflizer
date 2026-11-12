@@ -147,40 +147,44 @@ describe("conditional teammate-move cost of a committed team Dodge", () => {
     if (change === "proof") delete e.metadata.movementFall;
     expect(LuckReportSchema.safeParse(r).success).toBe(false);
   });
-  it.each(["position", "excluded_policy", "ball", "clock", "phase"])(
-    "withholds a contradictory waiting-snapshot %s",
-    (change) => {
-      const replay = parseReplayXml(fragment("direct_team_dodge_failure"));
-      const final = replay.turns
-        .flatMap((t) => t.events)
-        .find(
-          (e) =>
-            e.sourceTag === "ResultRoll" &&
-            e.rollType === 2 &&
-            e.payload?.Status === 2
-        )!;
-      const waiting = replay
-        .boardCheckpoints!.filter(
-          (c) => c.afterSourceIndex < final.sourceIndex!
-        )
-        .at(-1)!.board!;
-      const owner = waiting.teams.find((t) =>
-        t.players.some((p) => p.id === 39)
+  it.each([
+    "position",
+    "actor_position",
+    "excluded_policy",
+    "ball",
+    "clock",
+    "phase"
+  ])("withholds a contradictory waiting-snapshot %s", (change) => {
+    const replay = parseReplayXml(fragment("direct_team_dodge_failure"));
+    const final = replay.turns
+      .flatMap((t) => t.events)
+      .find(
+        (e) =>
+          e.sourceTag === "ResultRoll" &&
+          e.rollType === 2 &&
+          e.payload?.Status === 2
       )!;
-      if (change === "position")
-        owner.players.find((p) => p.id === 38)!.cell.x = 13;
-      if (change === "excluded_policy")
-        owner.players.find((p) => p.id === 43)!.statusCode = null;
-      if (change === "ball") waiting.ball.cell.x = 0;
-      if (change === "clock") owner.gameTurn = 7;
-      if (change === "phase") waiting.phaseCode = 3;
-      expect(
-        analyzeReplayLuck(replay).events.some(
-          (e) => e.contextualBounds?.policy === "team_reroll_terminal_moves"
-        )
-      ).toBe(false);
-    }
-  );
+    const waiting = replay
+      .boardCheckpoints!.filter((c) => c.afterSourceIndex < final.sourceIndex!)
+      .at(-1)!.board!;
+    const owner = waiting.teams.find((t) =>
+      t.players.some((p) => p.id === 39)
+    )!;
+    if (change === "position")
+      owner.players.find((p) => p.id === 38)!.cell.x = 13;
+    if (change === "actor_position")
+      owner.players.find((p) => p.id === 39)!.cell.x = 21;
+    if (change === "excluded_policy")
+      owner.players.find((p) => p.id === 43)!.statusCode = null;
+    if (change === "ball") waiting.ball.cell.x = 0;
+    if (change === "clock") owner.gameTurn = 7;
+    if (change === "phase") waiting.phaseCode = 3;
+    expect(
+      analyzeReplayLuck(replay).events.some(
+        (e) => e.contextualBounds?.policy === "team_reroll_terminal_moves"
+      )
+    ).toBe(false);
+  });
   it("uses only the qualified prefix for possible teammate eligibility", () => {
     const replay = parseReplayXml(fragment("direct_team_dodge_failure"));
     const original = analyzeReplayLuck(replay),
