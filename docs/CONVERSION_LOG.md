@@ -813,3 +813,10 @@ Independent public extracts and full demo3 worker acceptance corroborate2→1 an
 ## 2026-11-11 - Corrected negative source classification
 
 Final raw-source audit corrected a mislabeled negative: demo2/97 is a declined retained failed Dodge, while demo1/207 is the independently decoded successful combined Rush/Dodge. Both are now separately preserved with direct raw summary/Used assertions. The current fixture has20 cases and reproduces at SHA2566ce1836e21da6b68acdd44cca9e0c679f66bb677d7234afeda79d161c395d2ff.1027 unit/API tests and typecheck pass; production behavior, prior18-flow browser/Redis/build acceptance and all measured value limits are unchanged. Final exact-candidate CI verifies the evidence correction with the implementation. The earlier19-case classification/hash remains historical and is superseded by this note.
+
+
+## 2026-11-11 - Combined movement and linked failed-step consequences
+
+Schema2.26/context21 adds3 source-qualified combined Rush/Dodge successes and2 actual failed-step/self-damage/turnover groups. Local partial coordinates stay unknown when a disjoint known axis suffices; unresolved activation and playable availability are not restored. Success advances actor/explicit held ball once; failure supplies no continued board or tactical value. Separate existing Rush/Dodge odds and all scored contributions remain unchanged. Failure subtotals reference existing dice once, including the honest positive raw-dice subtotal on a bad Blitz turnover.
+
+Independent numeric source extraction,74 focused regressions and original-worker demo2/demo3 acceptance support the group. All1102 unit/API tests, real Redis quota, production build and19 browser flows pass locally. Prior15 team/15 own-Dodge receipts/one pickup,14 ranges/zero point estimates, comparison abstention and11 closed/17 open remain. No legacy/dependency/workflow/hosting/account/service change. Hosted initialization remains denied/pending and was not retried. See IMPLEMENTATION_LOG for exact source hash and the final exact-candidate CI gate.

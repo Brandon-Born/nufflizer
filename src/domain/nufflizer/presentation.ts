@@ -238,10 +238,14 @@ export function explainContextBounds(
 export function explainMovementOutcome(
   metadata: Pick<
     LuckReport["events"][number]["metadata"],
-    "movementFall" | "movementTouchdown" | "dodgeMovement" | "pickupResolution" | "teamRerollMovement" | "pickupAfterMovement"
+    "movementFall" | "movementTouchdown" | "dodgeMovement" | "pickupResolution" | "teamRerollMovement" | "pickupAfterMovement" | "combinedMovement"
   >
 ): string | null {
   const { movementFall: fall, movementTouchdown } = metadata;
+  if(metadata.combinedMovement) {
+    const p=metadata.combinedMovement;
+    return `The Rush succeeded, then the following Dodge ${p.dodgeSucceeded?"succeeded":"failed"}. ${p.dodgeSucceeded?`The confirmed combined step moved the player from [${p.from.x}, ${p.from.y}] to [${p.to.x}, ${p.to.y}].`:"A failed combined step does not establish a usable continued board or a final player position."} ${p.dodgeSucceeded&&p.carriedBallBefore===true?"The explicitly held ball followed the player. ":p.carriedBallBefore===null?"Earlier ball possession remains unknown. ":""}${p.movementAfter===null?"Remaining ordinary movement stays unknown.":"The observed ordinary movement budget stays at zero; remaining Rush attempts are not inferred."} ${p.partialOccupancy.length?"Distant players' omitted coordinates remain unknown; their known axes rule out the two relevant squares. ":""}No ordinary activation, useful-action count or failed alternative is inferred. The Rush and Dodge keep their separate existing dice contributions; this combined-step receipt adds no luck score.`;
+  }
   const teamMove=metadata.teamRerollMovement;
   if(teamMove) return `${movementTouchdown?"The replay records a touchdown immediately after this move. ":""}The successful team-rerolled ${teamMove.rollType===1?"Rush":"Dodge"} and its confirmed move advanced the player from [${teamMove.from.x}, ${teamMove.from.y}] to [${teamMove.to.x}, ${teamMove.to.y}]. ${teamMove.carriesBall===null?"Ball possession in the waiting snapshot remains unknown. ":teamMove.carriesBall?"The explicitly held ball followed the player. ":""}${teamMove.movementAfter===null?"The waiting snapshot omitted remaining movement; it stays unknown.":teamMove.rollType===1?"The observed ordinary movement budget stays at zero; remaining Rush attempts are not inferred.":`${teamMove.movementAfter} movement points remained after this step; the confirmed Dodge move used one point.`} ${teamMove.zonePenalty?`The recorded base ${teamMove.zonePenalty.baseTarget}+ check had ${teamMove.zonePenalty.markers.length} opposing tackle-zone penalty point${teamMove.zonePenalty.markers.length===1?"":"s"}; each recorded marker was observed beside the destination. `:""}Current player availability and omitted skills remain unknown. This actual movement adds no luck score; the existing two-attempt dice odds remain separate.`;
   if (movementTouchdown)
@@ -274,7 +278,7 @@ export function explainMovementOutcome(
   const unknown = fall.unscoredDamageRolls
     ? ` Damage rolls without verified odds: ${fall.unscoredDamageRolls}.`
     : "";
-  return `${aftermath} Dice subtotal for the movement check and scored damage: ${fall.diceContribution.toFixed(2)}.${unknown}`;
+  return `${fall.combinedRushSourceId?"The Rush succeeded before the following Dodge failed. ":""}${aftermath} Dice subtotal for ${fall.combinedRushSourceId?"both movement checks":"the movement check"} and scored damage: ${fall.diceContribution.toFixed(2)}.${unknown}${fall.combinedRushSourceId?" This references the existing contributions once. The turnover and availability cost remain unquantified; no final player position or extra luck score is inferred.":""}`;
 }
 
 export function explainBlockResolution(

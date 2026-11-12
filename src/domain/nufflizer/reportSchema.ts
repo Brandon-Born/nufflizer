@@ -82,6 +82,11 @@ const activationEnd = z.strictObject({
 const rerollCounterObservation=z.strictObject({checkpointAfter:count,replayStep:z.number().int().positive(),childIndex:count,
   teamId:text,teamTurn:z.number().int().positive(),periodCode:z.number().int().min(0).max(2).nullable(),count:z.number().int().min(0).max(16)});
 export const LuckEventMetadataSchema = z.strictObject({
+  combinedMovement:z.strictObject({stepSourceId:text,policy:z.enum(["fresh_rush_then_dodge","team_rush_then_dodge"]),questionSourceId:text.optional(),decisionSourceId:text.optional(),gamerId:z.union([z.literal(0),z.literal(1)]).optional(),
+    rushSourceId:text,dodgeSourceId:text,doMoveSourceId:text,outcomeSourceId:text,originalCheckpointAfter:count,checkpointAfter:count,from:pitchCell,to:pitchCell,
+    movementBefore:z.literal(0).nullable(),movementAfter:z.literal(0).nullable(),carriedBallBefore:z.boolean().nullable(),dodgeSucceeded:z.boolean(),
+    partialOccupancy:z.array(z.strictObject({playerId:text,cell:z.strictObject({x:z.number().int().min(0).max(25).nullable(),y:z.number().int().min(0).max(14).nullable()})})).max(64),
+    zonePenalty:z.strictObject({baseTarget:z.number().int().min(2).max(6),markers:z.array(z.strictObject({playerId:text,cell:pitchCell})).min(1).max(8)}).optional()}).optional(),
   pickupAfterMovement:z.strictObject({movementSourceId:text,originalSourceId:text,skillSourceId:text,declarationSourceId:text,moveOutcomeSourceId:text,
     checkpointAfter:count,cell:pitchCell,movementRemaining:z.number().int().min(0).max(16).nullable(),
     check:z.strictObject({threshold:z.number().int().min(2).max(6),baseTarget:z.number().int().min(2).max(6),markerPlayerIds:z.array(text).max(8)})}).optional(),
@@ -273,6 +278,7 @@ export const LuckEventMetadataSchema = z.strictObject({
     })
     .optional(),
   movementFall: z.strictObject({
+    combinedRushSourceId:text.optional(),
     damageActionId: text,
     moveOutcomeSourceIndex: count,
     turnoverSourceIndex: count,
@@ -1013,6 +1019,36 @@ export const LuckReportSchema = z
       }
       if(context?.carriedBallCell) require(context.actorCarriesBall === true && context.actorCell?.x === context.carriedBallCell.x && context.actorCell.y === context.carriedBallCell.y,
         "A known carried-ball cell must match its observed carrier's current position.");
+      const combined=event.metadata.combinedMovement;
+      if(combined) {
+        const rush=sources.get(combined.rushSourceId),step=sources.get(combined.stepSourceId),move=sources.get(combined.doMoveSourceId),outcome=sources.get(combined.outcomeSourceId);
+        const own=(e:typeof event|undefined)=>!!e&&e.teamId===event.teamId&&e.playerId===event.playerId;
+        const same=(e:typeof event|undefined)=>own(e)&&e!.metadata.actionId===event.metadata.actionId&&e!.metadata.sequenceId===event.metadata.sequenceId;
+        const zone=combined.zonePenalty,mods=event.metadata.modifiers??[];
+        require(event.metadata.sourceId===combined.dodgeSourceId&&event.scoringStatus==="scored"&&event.metadata.rollType===2&&event.actualSuccess===combined.dodgeSucceeded&&
+          !event.contextualImpact&&!event.contextualBounds&&!event.possessionBounds&&!event.metadata.rerollUsed&&!event.metadata.rerollSkill&&
+          same(rush)&&rush?.scoringStatus==="scored"&&rush.actualSuccess===true&&rush.metadata.rollType===1&&same(step)&&step?.metadata.sourceTag==="PlayerStep"&&step.metadata.stepType===1&&step.metadata.targetId==="-1"&&
+          same(move)&&move?.metadata.sourceTag==="ResultDoMove"&&move.scoringStatus==="excluded"&&same(outcome)&&outcome?.metadata.sourceTag==="ResultMoveOutcome"&&outcome.scoringStatus==="excluded"&&
+          event.metadata.sourceIndex!==undefined&&rush.metadata.sourceIndex===event.metadata.sourceIndex-1&&move.metadata.sourceIndex===event.metadata.sourceIndex+1&&outcome.metadata.sourceIndex===event.metadata.sourceIndex+2&&
+          combined.originalCheckpointAfter<=combined.checkpointAfter&&combined.checkpointAfter<(step.metadata.sourceIndex??-1)&&
+          Math.max(Math.abs(combined.from.x-combined.to.x),Math.abs(combined.from.y-combined.to.y))===1&&combined.movementAfter===(combined.dodgeSucceeded?combined.movementBefore:null)&&
+          new Set(combined.partialOccupancy.map(p=>p.playerId)).size===combined.partialOccupancy.length&&combined.partialOccupancy.every(p=>p.playerId!==event.playerId&&
+            ((p.cell.x===null)!==(p.cell.y===null))&&[combined.from,combined.to].every(c=>(p.cell.x!==null&&p.cell.x!==c.x)||(p.cell.y!==null&&p.cell.y!==c.y)))&&
+          (zone?event.metadata.requirement===zone.baseTarget&&event.metadata.difficulty===zone.baseTarget+zone.markers.length&&mods.length===zone.markers.length&&mods.every(m=>m===-1)&&event.metadata.modifiersSum===-mods.length&&
+            new Set(zone.markers.map(m=>m.playerId)).size===zone.markers.length&&zone.markers.every(m=>m.playerId!==event.playerId&&Math.max(Math.abs(m.cell.x-combined.to.x),Math.abs(m.cell.y-combined.to.y))===1):
+            mods.length===0&&event.metadata.modifiersSum===0&&event.metadata.requirement===event.metadata.difficulty),
+          "Combined movement needs two ordered scored checks and their confirmed two-family outcome; partial coordinates exclude the relevant squares without filling omissions or adding values.");
+        if(combined.policy==="team_rush_then_dodge") {
+          const q=sources.get(combined.questionSourceId??""),choice=sources.get(combined.decisionSourceId??"");
+          require(own(q)&&q?.metadata.sourceTag==="QuestionTeamRerollUsage"&&q.scoringStatus==="excluded"&&q.metadata.isRollCandidate===false&&same(choice)&&choice?.metadata.sourceTag==="ResultTeamRerollUsage"&&
+            choice.metadata.teamRerollDecision?.used===true&&choice.metadata.teamRerollDecision.gamerId===combined.gamerId&&choice.metadata.sourceIndex===(rush?.metadata.sourceIndex??-1)-1&&
+            step?.metadata.sourceIndex===(choice.metadata.sourceIndex??-1)-1&&combined.originalCheckpointAfter<(q.metadata.sourceIndex??-1)&&(q.metadata.sourceIndex??Infinity)<=combined.checkpointAfter&&
+            rush?.metadata.rerollResource==="team"&&rush.metadata.rerollUsed===true&&rush.metadata.teamRerollsSpent===1&&rush.metadata.rerollQuestionId===combined.questionSourceId&&rush.metadata.rerollDecisionId===combined.decisionSourceId,
+            "A combined team Rush retains its explicit used decision and compound Rush odds separately from the fresh Dodge.");
+        } else require(!combined.questionSourceId&&!combined.decisionSourceId&&combined.gamerId===undefined&&!rush?.metadata.rerollUsed&&!rush?.metadata.rerollSkill&&
+          step?.metadata.sourceIndex===(rush?.metadata.sourceIndex??-1)-1&&combined.originalCheckpointAfter===combined.checkpointAfter,
+          "A fresh combined Rush cannot invent a choice, resource spend or earlier waiting state.");
+      }
       const reachedPickup=event.metadata.pickupAfterMovement;
       if(reachedPickup) {
         const moveEvent=sources.get(reachedPickup.movementSourceId),move=moveEvent?.metadata.teamRerollMovement;
@@ -1350,7 +1386,12 @@ export const LuckReportSchema = z
         );
         linkedDamageActions.add(fall.damageActionId);
         if (step) {
-          const expected = summarizeMovementFall(event, step, ids);
+          const rush=fall.combinedRushSourceId?sources.get(fall.combinedRushSourceId):undefined;
+          if(fall.combinedRushSourceId)require(rollType===2&&rush?.scoringStatus==="scored"&&rush.actualSuccess===true&&rush.metadata.rollType===1&&rush.playerId===event.playerId&&rush.teamId===event.teamId&&
+            rush.metadata.actionId===event.metadata.actionId&&rush.metadata.sequenceId===event.metadata.sequenceId&&rush.metadata.sourceIndex===(sourceIndex??-1)-1&&
+            !rush.metadata.rerollUsed&&!rush.metadata.rerollSkill&&!event.metadata.rerollUsed&&!event.metadata.rerollSkill,
+            "A combined fall subtotal must reference the immediately preceding successful fresh Rush of the same actor, separately from the failed Dodge and self-damage.");
+          const expected = summarizeMovementFall(event, step, ids,rush);
           require(
             near(fall.diceContribution, expected.diceContribution) &&
               fall.armorHeld === expected.armorHeld &&

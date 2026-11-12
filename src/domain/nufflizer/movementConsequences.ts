@@ -1,6 +1,9 @@
 import type { ReplayTurn } from "@/domain/replay/types";
 import type { DamageStepSummary } from "./damageSteps";
 import type { LuckEvent } from "./types";
+import { unmodifiedD6Check } from "@/domain/replay/numericCheck";
+import { sameMovementActor } from "@/domain/replay/teamRerollMovement";
+import { recordedZoneD6Check } from "@/domain/replay/zoneD6Check";
 
 function pitchCell(value: unknown): { X: number; Y: number } | undefined {
   const cell = value as { X?: unknown; Y?: unknown } | undefined;
@@ -69,7 +72,25 @@ export function findMovementFall(turn: ReplayTurn) {
   const skill =
     beforeRoll?.sourceTag === "ResultSkillUsage" ? beforeRoll : undefined;
   const original = skill ? events[i - 5] : undefined;
-  const step = skill ? events[i - 6] : decision ? events[i - 5] : beforeRoll;
+  const combinedRush =
+    beforeRoll &&
+    unmodifiedD6Check(beforeRoll, 1, 1, true) &&
+    !!roll &&
+    recordedZoneD6Check(roll, 2, 1, false) &&
+    roll?.rollType === 2 &&
+    roll.payload?.Status === 1 &&
+    roll.payload.NewRoll === 1 &&
+    sameMovementActor(beforeRoll, roll) &&
+    beforeRoll.actionId === roll.actionId &&
+    beforeRoll.sequenceId === roll.sequenceId &&
+    beforeRoll.sourceIndex === roll.sourceIndex! - 1
+      ? beforeRoll
+      : undefined;
+  const step = skill
+    ? events[i - 6]
+    : decision || combinedRush
+      ? events[i - 5]
+      : beforeRoll;
   const from = pitchCell(step?.payload?.CellFrom);
   const to = pitchCell(step?.payload?.CellTo);
   const damageCell = pitchCell(damage?.payload?.CellFrom);
@@ -138,13 +159,53 @@ export function findMovementFall(turn: ReplayTurn) {
     outcome.payload.Rolls as
       { RollSummary?: { RollType?: number; Outcome?: number } } | undefined
   )?.RollSummary;
-  if (summary?.RollType !== roll.rollType || summary.Outcome !== 0) return;
+  if (combinedRush) {
+    if (
+      (move.payload && Object.keys(move.payload).length > 0) ||
+      Object.keys(outcome.payload!).some(
+        (k) =>
+          ![
+            "Moved",
+            "TentacleUsed",
+            "FumbleRooskieUsed",
+            "Rolls",
+            "Pushbacks"
+          ].includes(k)
+      ) ||
+      (outcome.payload!.Pushbacks !== undefined &&
+        outcome.payload!.Pushbacks !== "")
+    )
+      return;
+    const rows = summary as unknown as {
+      RollType?: number;
+      Outcome?: number;
+    }[];
+    if (
+      !Array.isArray(rows) ||
+      rows.length !== 2 ||
+      rows.some(
+        (r) =>
+          !r ||
+          typeof r !== "object" ||
+          Array.isArray(r) ||
+          Object.keys(r).length !== 2
+      ) ||
+      rows[0]?.RollType !== 1 ||
+      rows[0].Outcome !== 1 ||
+      rows[1]?.RollType !== 2 ||
+      rows[1].Outcome !== 0 ||
+      !combinedRush.id
+    )
+      return;
+  } else if (summary?.RollType !== roll.rollType || summary.Outcome !== 0)
+    return;
   return {
     rollSourceId: roll.id,
     decisionSourceId: decision?.id ?? skill?.id,
     skillOriginalId: original?.id,
     evidence: {
       damageActionId,
+      ...(combinedRush ? { combinedRushSourceId: combinedRush.id! } : {}),
       moveOutcomeSourceIndex: outcome.sourceIndex,
       turnoverSourceIndex: turnover.sourceIndex,
       turnoverChildIndex: turnover.locator.childIndex
@@ -155,11 +216,15 @@ export function findMovementFall(turn: ReplayTurn) {
 export function summarizeMovementFall(
   roll: LuckEvent,
   damage: DamageStepSummary,
-  events: ReadonlyMap<string, LuckEvent>
+  events: ReadonlyMap<string, LuckEvent>,
+  combinedRush?: LuckEvent
 ) {
   const damageEvents = damage.eventIds.map((id) => events.get(id)!);
   return {
-    diceContribution: roll.weightedDelta + damage.diceContribution,
+    diceContribution:
+      roll.weightedDelta +
+      damage.diceContribution +
+      (combinedRush?.weightedDelta ?? 0),
     unscoredDamageRolls: damage.unscoredRolls,
     armorHeld:
       damageEvents.find(

@@ -1,4 +1,8 @@
 import { unmodifiedD6Check } from "./numericCheck";
+import {
+  findCombinedMovements,
+  type CombinedMovement
+} from "./combinedMovement";
 import type { ObservedPickupAfterMovement } from "./pickupAfterMovement";
 import {
   recordedZoneD6Check,
@@ -614,6 +618,8 @@ export function reconstructReplayContext(
   const result = new Map<string, PreRollEvidence>();
   const dodgeMovements = new Map<string, ObservedDodgeMovement>();
   const teamRerollMovements = new Map<string, ObservedTeamRerollMovement>();
+  const combinedMovements = new Map<string, CombinedMovement>();
+  const combinedByOutcome = findCombinedMovements(replay);
   const pickupsAfterMovement = new Map<string, ObservedPickupAfterMovement>();
   const pickupResolutions = new Map<
     string,
@@ -642,6 +648,7 @@ export function reconstructReplayContext(
       preRollEvidence: result,
       dodgeMovements,
       teamRerollMovements,
+      combinedMovements,
       pickupsAfterMovement,
       pickupResolutions,
       activationEnds,
@@ -835,6 +842,53 @@ export function reconstructReplayContext(
         activeLosses.clear();
         activeEnds.clear();
         previousMove = undefined;
+      }
+      const combined = event.id ? combinedByOutcome.get(event.id) : undefined;
+      if (combined) {
+        const p = combined.proof,
+          actor = Number(combined.step.playerId);
+        combinedMovements.set(p.dodgeSourceId, p);
+        // This receipt establishes a physical two-check result. It cannot
+        // repair an earlier unresolved declaration, skill choice or clock.
+        board = p.dodgeSucceeded
+          ? changePlayer(
+              applyObservedMentalEffects(combined.board),
+              actor,
+              (player) => ({ ...player, cell: p.to })
+            )
+          : null;
+        if (board) board = { ...board, stable: null };
+        if (board && p.carriedBallBefore === true)
+          board = { ...board, ball: { ...board.ball, cell: p.to } };
+        if (board && p.policy === "team_rush_then_dodge")
+          board = {
+            ...board,
+            teams: board.teams.map((t) =>
+              t.players.some((player) => player.id === actor)
+                ? { ...t, rerolls: null }
+                : t
+            )
+          };
+        step = combined.step;
+        activationId = null;
+        activationActionCode = undefined;
+        activationEpoch = undefined;
+        activationCheckpointAfter = undefined;
+        previousMove = undefined;
+        actorDodgeMoveSourceId = undefined;
+        pickupSourceId = undefined;
+        qualifiedMoveTeamId = undefined;
+        pendingDodge = undefined;
+        pendingPickup = undefined;
+        pendingTeamMove = undefined;
+        teamOffer = undefined;
+        lastTeamMovement = undefined;
+        moveObserved = false;
+        moveOutcomeSourceIndex = event.sourceIndex;
+        moveOutcomeSourceId = undefined;
+        plainDoMoveSourceIndex = undefined;
+        pickupGeometryTrusted = false;
+        continue;
       }
       if (teamOffer && teamOffer.epoch !== epochs.get(checkpoint!))
         teamOffer = undefined;
@@ -2183,6 +2237,7 @@ export function reconstructReplayContext(
     preRollEvidence: result,
     dodgeMovements,
     teamRerollMovements,
+    combinedMovements,
     pickupsAfterMovement,
     pickupResolutions,
     activationEnds,

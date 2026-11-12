@@ -16,6 +16,42 @@ function readFixture(name: string): string {
 }
 
 describe("POST /api/nufflizier/analyze", () => {
+  it("exports both combined failure subtotals from the original demo2 worker", async () => {
+    const data = new FormData();
+    data.append(
+      "replay",
+      new File([readFileSync("demo-replays/demo2.bbr")], "source.bbr")
+    );
+    const response = await POST(
+      new Request("http://localhost/api/nufflizier/analyze", {
+        method: "POST",
+        body: data
+      })
+    );
+    const payload = await response.json();
+    expect(response.status, JSON.stringify(payload).slice(0, 200)).toBe(200);
+    const report = LuckReportSchema.parse(payload),
+      falls = report.events.filter(
+        (e) => e.metadata.movementFall?.combinedRushSourceId
+      );
+    expect(falls.map((e) => e.metadata.locator?.replayStep)).toEqual([
+      229, 259
+    ]);
+    expect(falls[0]!.metadata.movementFall!.diceContribution).toBeCloseTo(
+      -2 / 5,
+      12
+    );
+    expect(falls[1]!.metadata.movementFall!.diceContribution).toBeCloseTo(
+      3 / 20,
+      12
+    );
+    expect(
+      falls.every(
+        (e) => e.actualSuccess === false && e.contextualImpact === undefined
+      )
+    ).toBe(true);
+    expect(report.teams.every((t) => t.impactCount === 0)).toBe(true);
+  }, 20000);
   it("retains the full-source Dodge budget without filling its missing period", async () => {
     const data = new FormData();
     data.append(
@@ -253,6 +289,15 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(caught.catchPossessionBounds!.upper).toBeCloseTo(5 / 3, 12);
     expect(caught.metadata.preRoll).toBeUndefined();
     const reached = r.events.find((e) => e.metadata.pickupAfterMovement)!;
+    const combined = r.events.find((e) => e.metadata.combinedMovement)!;
+    expect(combined.metadata.locator?.replayStep).toBe(402);
+    expect(combined.metadata.combinedMovement).toMatchObject({
+      from: { x: 17, y: 6 },
+      to: { x: 18, y: 7 },
+      carriedBallBefore: true,
+      movementAfter: null
+    });
+    expect(combined.probabilitySuccess).toBeCloseTo(5 / 6, 12);
     expect(reached.metadata.locator?.replayStep).toBe(401);
     expect(reached.metadata.pickupAfterMovement).toMatchObject({
       cell: { x: 17, y: 6 },

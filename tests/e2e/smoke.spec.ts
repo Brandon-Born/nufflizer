@@ -334,8 +334,9 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.25");
+  expect(report.schemaVersion).toBe("2.26");
   expect(report.modelVersion).toBe("dice-only-20");
+  expect(report.events.filter((e:{metadata:{combinedMovement?:unknown}})=>e.metadata.combinedMovement)).toHaveLength(2);
   expect(
     report.events.some(
       (event: {
@@ -360,7 +361,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
     )
   ).toBe(true);
 
-  expect(report.contextModelVersion).toBe("mobility-possession-20");
+  expect(report.contextModelVersion).toBe("mobility-possession-21");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
     report.coverage.rollCandidates.scoredCount +
@@ -1026,4 +1027,33 @@ test("fixed-zone Dodge reaches the pickup square and Sure Hands secures possessi
   await page.getByLabel("Scoring status").selectOption("bounded");await expect(table.locator("tbody tr").filter({has:page.locator("summary")})).toHaveCount(0);
   await page.getByRole("button",{name:"Reset filters",exact:true}).click();await expect(movement).toHaveCount(1);await expect(pickup).toHaveCount(1);
   await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);expect(errors).toEqual([]);
+});
+
+test("combined moves and failed turnovers retain separate dice and unknown tactical cost",async({page})=>{
+  const errors:string[]=[];page.on("pageerror",e=>errors.push(e.message));page.on("console",m=>{if(m.type()==="error")errors.push(m.text());});
+  await page.goto("/nufflizier");await expect(page).toHaveTitle("Nufflizier");
+  for(const c of [
+    {id:"combined_team_rush",text:"confirmed combined step moved the player",chance:"66.7%"},
+    {id:"combined_pickup_carrier",text:"confirmed combined step moved the player",chance:"83.3%"},
+    {id:"combined_failure_move",text:"turnover and availability cost remain unquantified",chance:"66.7%"},
+    {id:"combined_failure_blitz",text:"turnover and availability cost remain unquantified",chance:"16.7%"}
+  ]) {
+    const xml=lonerDriveXml(c.id,"tests/fixtures/evidence/bb3-combined-movement.json"),report=analyzeNufflizerInput(xml);
+    await page.route("**/api/nufflizier/analyze",route=>route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(report)}));
+    await page.setInputFiles('input[name="replay"]',{name:"source-combined.xml",mimeType:"application/xml",buffer:Buffer.from(xml)});
+    await page.getByRole("button",{name:"Analyze Nuffle Luck"}).click();await expect(page.getByRole("heading",{name:"Nuffle Match Report"})).toBeVisible();
+    const table=page.getByRole("table").filter({has:page.getByRole("columnheader",{name:"Replay segment"})});
+    const row=table.locator("tbody tr").filter({hasText:c.text});await expect(row).toHaveCount(1);await row.locator("summary").click();
+    await expect(row).toContainText(c.chance);
+    if(c.id==="combined_team_rush") {await expect(row).toContainText("[8, 1] to [9, 2]");await expect(row).toContainText("omitted coordinates remain unknown");await expect(row).toContainText("No ordinary activation");}
+    if(c.id==="combined_pickup_carrier") {await expect(row).toContainText("[17, 6] to [18, 7]");await expect(row).toContainText("explicitly held ball followed");}
+    if(c.id.startsWith("combined_failure")){await expect(row).toContainText("player fell and the turn ended");await expect(row).toContainText(c.id.endsWith("blitz")?"scored damage: 0.15":"scored damage: -0.40");}
+    await expect(page.getByText("Context: Not scored")).toHaveCount(2);
+    await page.screenshot({path:`/tmp/nufflizier-${c.id}-desktop.png`,fullPage:true});
+    await page.getByLabel("Scoring status").selectOption("bounded");await expect(row).toHaveCount(0);
+    await page.getByRole("button",{name:"Reset filters",exact:true}).click();await expect(row).toHaveCount(1);
+    await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);
+    await page.unroute("**/api/nufflizier/analyze");
+  }
+  expect(errors).toEqual([]);
 });

@@ -1077,9 +1077,11 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     mentalTraitResults,
     dodgeMovements,
     teamRerollMovements,
+    combinedMovements,
     pickupResolutions,
     pickupsAfterMovement
   } = reconstructReplayContext(replay, activationLosses);
+  for(const p of combinedMovements.values())for(const source of [p.stepSourceId,p.questionSourceId,p.decisionSourceId,p.rushSourceId,p.dodgeSourceId,p.doMoveSourceId,p.outcomeSourceId])if(source)activationEvidenceSources.add(source);
   for(const proof of pickupsAfterMovement.values())for(const source of [proof.movementSourceId,proof.originalSourceId,proof.skillSourceId,proof.declarationSourceId,proof.moveOutcomeSourceId])activationEvidenceSources.add(source);
   const bounceCatchReactions=findBounceCatchReactions(replay,contextBySource);
   for(const movement of teamRerollMovements.values())for(const source of [movement.questionSourceId,movement.decisionSourceId,movement.declarationSourceId,movement.doMoveSourceId,movement.outcomeSourceId])activationEvidenceSources.add(source);
@@ -1297,6 +1299,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     } of movementFalls) {
       const roll = eventsBySource.get(rollSourceId);
       const damage = damageByAction.get(evidence.damageActionId);
+      const combinedRush=evidence.combinedRushSourceId?eventsBySource.get(evidence.combinedRushSourceId):undefined;
       if (
         !roll ||
         roll.scoringStatus !== "scored" ||
@@ -1310,11 +1313,12 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         !damage ||
         damage.playerId !== roll.playerId ||
         damage.teamId !== roll.teamId
+        || (evidence.combinedRushSourceId&&(!combinedRush||combinedRush.scoringStatus!=="scored"||combinedRush.actualSuccess!==true||combinedRush.teamId!==roll.teamId||combinedRush.playerId!==roll.playerId))
       )
         continue;
       roll.metadata.movementFall = {
         ...evidence,
-        ...summarizeMovementFall(roll, damage, eventsById)
+        ...summarizeMovementFall(roll, damage, eventsById,combinedRush)
       };
     }
   }
@@ -1329,6 +1333,14 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   attachBounceCatchReactions(bounceCatchReactions,ballSources);
   attachPickupTurnEnds(pickupTurnEnds,ballSources);
   attachRerollCounterEvidence(rerollCounters,ballSources);
+  for(const [source,proof] of combinedMovements) {
+    const dodge=ballSources.get(source),rush=ballSources.get(proof.rushSourceId);
+    if(dodge?.scoringStatus==="scored"&&rush?.scoringStatus==="scored"&&rush.actualSuccess===true&&dodge.actualSuccess===proof.dodgeSucceeded) {
+      dodge.metadata.combinedMovement=proof;
+      const choice=proof.decisionSourceId?ballSources.get(proof.decisionSourceId):undefined;
+      if(choice&&proof.gamerId!==undefined)choice.metadata.teamRerollDecision={gamerId:proof.gamerId,used:true};
+    }
+  }
   for(const [source,movement] of teamRerollMovements) {
     const roll=ballSources.get(source),choice=ballSources.get(movement.decisionSourceId);
     if(roll?.scoringStatus==="scored"&&roll.actualSuccess===true&&roll.metadata.rerollResource==="team"&&roll.metadata.rerollUsed&&choice) {
