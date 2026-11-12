@@ -334,8 +334,8 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
   await page.getByRole("button", { name: "Download JSON" }).click();
   const download = await downloadPromise;
   const report = JSON.parse(readFileSync((await download.path())!, "utf8"));
-  expect(report.schemaVersion).toBe("2.23");
-  expect(report.modelVersion).toBe("dice-only-19");
+  expect(report.schemaVersion).toBe("2.24");
+  expect(report.modelVersion).toBe("dice-only-20");
   expect(
     report.events.some(
       (event: {
@@ -360,7 +360,7 @@ test("real BBR upload exposes evidence, full filters, export and reset", async (
     )
   ).toBe(true);
 
-  expect(report.contextModelVersion).toBe("mobility-possession-18");
+  expect(report.contextModelVersion).toBe("mobility-possession-19");
   const context = report.coverage.contextEvidence;
   expect(context.rollCount).toBe(
     report.coverage.rollCandidates.scoredCount +
@@ -967,6 +967,37 @@ test("reroll counters separate resource observations from dice and unknown reset
     if(c.id === "missing_zero_and_period") await expect(row).toContainText("missing counter is not treated as zero");
     await expect(page.getByText("Context: Not scored")).toHaveCount(2);
     await page.screenshot({path:`/tmp/nufflizier-reroll-counter-${c.id}.png`,fullPage:true});
+    await page.getByRole("button",{name:"Reset filters",exact:true}).click();await expect(page.getByLabel("Scoring status")).toHaveValue("scored");
+    await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);
+    await page.unroute("**/api/nufflizier/analyze");
+  }
+  expect(errors).toEqual([]);
+});
+
+// Source-derived response through the real rendered upload/report interaction;
+// full original demo5 also passes the separate worker/API acceptance test.
+test("team-rerolled movement separates actual cells from missing context",async({page})=>{
+  const errors:string[]=[];page.on("pageerror",e=>errors.push(e.message));page.on("console",m=>{if(m.type()==="error")errors.push(m.text());});
+  await page.goto("/nufflizier");await expect(page).toHaveTitle("Nufflizier");
+  for(const id of ["team_rush_carrier","team_rush_touchdown","team_dodge_missing_period"]) {
+    const xml=lonerDriveXml(id,"tests/fixtures/evidence/bb3-team-reroll-movement.json"),report=analyzeNufflizerInput(xml);
+    await page.route("**/api/nufflizier/analyze",route=>route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(report)}));
+    await page.setInputFiles('input[name="replay"]',{name:"source-rush.xml",mimeType:"application/xml",buffer:Buffer.from(xml)});
+    await page.getByRole("button",{name:"Analyze Nuffle Luck"}).click();await expect(page.getByRole("heading",{name:"Nuffle Match Report"})).toBeVisible();
+    const table=page.getByRole("table").filter({has:page.getByRole("columnheader",{name:"Replay segment"})});
+    const row=table.locator("tbody tr").filter({hasText:"successful team-rerolled"});
+    await expect(row).toHaveCount(1);await row.locator("summary").click();
+    await expect(row).toContainText(id.startsWith("team_dodge")?"88.9%":"97.2%");
+    if(id.startsWith("team_dodge"))await expect(row).toContainText("3 movement points remained after this step");
+    else {await expect(row).toContainText("explicitly held ball followed");await expect(row).toContainText("waiting snapshot omitted remaining movement");}await expect(row).toContainText("actual movement adds no luck score");
+    if(id==="team_rush_touchdown")await expect(row).toContainText("touchdown immediately after this move");
+    await expect(page.getByText("Context: Not scored")).toHaveCount(2);
+    await page.screenshot({path:`/tmp/nufflizier-${id}-desktop.png`,fullPage:true});
+    await page.getByLabel("Scoring status").selectOption("bounded");
+    // The Dodge fragment also contains an earlier own-skill component range.
+    // The new actual team-rerolled move itself never becomes a context range.
+    await expect(row).toHaveCount(0);
+    await expect(table.locator("tbody tr").filter({has:page.locator("summary")})).toHaveCount(id.startsWith("team_dodge")?1:0);
     await page.getByRole("button",{name:"Reset filters",exact:true}).click();await expect(page.getByLabel("Scoring status")).toHaveValue("scored");
     await page.getByRole("button",{name:"Upload Another Replay"}).click();await expect(page.getByLabel("Scoring status")).toHaveCount(0);
     await page.unroute("**/api/nufflizier/analyze");

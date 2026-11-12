@@ -7,6 +7,7 @@ import {
   type ObservedBlockConsequence
 } from "./blockConsequences";
 import { findDriveEffectExpiries } from "@/domain/replay/driveEffects";
+import { checkpointClockEpochs } from "@/domain/replay/boardState";
 import { VERDICT_SUMMARIES } from "./explainabilityCopy";
 import { formatDiceContribution, scoredEvidenceForTeam } from "./presentation";
 import {
@@ -1075,9 +1076,11 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     mentalSkillUses,
     mentalTraitResults,
     dodgeMovements,
+    teamRerollMovements,
     pickupResolutions
   } = reconstructReplayContext(replay, activationLosses);
   const bounceCatchReactions=findBounceCatchReactions(replay,contextBySource);
+  for(const movement of teamRerollMovements.values())for(const source of [movement.questionSourceId,movement.decisionSourceId,movement.declarationSourceId,movement.doMoveSourceId,movement.outcomeSourceId])activationEvidenceSources.add(source);
   const pickupTurnEnds=findPickupTurnEnds(replay,bounceCatchReactions,contextBySource);
   for(const proof of pickupTurnEnds.values()) activationEvidenceSources.add(proof.endSourceId);
   for(const proof of bounceCatchReactions.values()) for(const source of [proof.declarationSourceId,proof.moveOutcomeSourceId]) activationEvidenceSources.add(source);
@@ -1110,6 +1113,16 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     activationEvidenceSources.add(expiry.phaseSourceId);
   }
   const koRecoveryChecks = countKoRecoveryChecks(replay.turns);
+  const checkpoints = replay.boardCheckpoints ?? [];
+  const epochs = checkpointClockEpochs(checkpoints);
+  const eventEpochs = new Map<number, number>();
+  let checkpointCursor = 0, epoch = 0;
+  for (const event of replay.turns.flatMap(t => t.events)) {
+    if (event.sourceIndex === undefined) continue;
+    while (checkpointCursor < checkpoints.length && checkpoints[checkpointCursor]!.afterSourceIndex < event.sourceIndex)
+      epoch = epochs.get(checkpoints[checkpointCursor++]!)!;
+    eventEpochs.set(event.sourceIndex, epoch);
+  }
 
   for (const replayTurn of replay.turns) {
     const fall =
@@ -1133,7 +1146,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
           (armorCounts.get(event.actionId) ?? 0) + 1
         );
     }
-    const rerollLinks = linkTeamRerolls(replayTurn.events);
+    const rerollLinks = linkTeamRerolls(replayTurn.events, eventEpochs);
     linkObservedSkillRerolls(
       replayTurn.events,
       replay.replayVersion,
@@ -1314,6 +1327,14 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   attachBounceCatchReactions(bounceCatchReactions,ballSources);
   attachPickupTurnEnds(pickupTurnEnds,ballSources);
   attachRerollCounterEvidence(rerollCounters,ballSources);
+  for(const [source,movement] of teamRerollMovements) {
+    const roll=ballSources.get(source),choice=ballSources.get(movement.decisionSourceId);
+    if(roll?.scoringStatus==="scored"&&roll.actualSuccess===true&&roll.metadata.rerollResource==="team"&&roll.metadata.rerollUsed&&choice) {
+      roll.metadata.teamRerollMovement=movement;choice.metadata.teamRerollDecision={gamerId:movement.gamerId,used:true};
+      const declaration=ballSources.get(movement.declarationSourceId);if(declaration)declaration.label="Recorded ordinary Move declaration";
+      const outcome=ballSources.get(movement.outcomeSourceId);if(outcome)outcome.label="Recorded movement after team reroll";
+    }
+  }
   for (const event of events)
     if (
       (event.metadata.rerollSkill === "Dodge" || event.metadata.rerollSkill === "Sure Hands") &&

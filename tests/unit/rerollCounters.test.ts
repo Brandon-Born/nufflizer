@@ -274,7 +274,15 @@ describe("observed team reroll counters, not inferred eligibility or reset rules
         })
       );
     expect(scores(observed)).toEqual(scores(unknown));
-    expect(observed.teams[1].eventCount).toBe(unknown.teams[1].eventCount + 2);
+    // Movement provenance now independently retains this offer and choice,
+    // including when resource counters are omitted. Neither is a new roll.
+    expect(observed.teams[1].eventCount).toBe(unknown.teams[1].eventCount);
+    expect(
+      unknown.events.filter((e) => e.metadata.teamRerollMovement)
+    ).toHaveLength(1);
+    expect(unknown.events.some((e) => e.metadata.teamRerollCounter)).toBe(
+      false
+    );
     expect(observed.coverage.rollCandidates).toEqual(
       unknown.coverage.rollCandidates
     );

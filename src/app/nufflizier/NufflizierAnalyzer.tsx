@@ -813,6 +813,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                             {moment.metadata.movementFall ||
                             moment.metadata.movementTouchdown ||
                             moment.metadata.dodgeMovement ||
+                            moment.metadata.teamRerollMovement ||
                             moment.metadata.pickupResolution ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainMovementOutcome(moment.metadata)}

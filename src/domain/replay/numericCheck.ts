@@ -4,7 +4,7 @@ import type { ReplayEvent } from "./types";
 // reroll policy. Extra modifiers, dice or unknown fields need their own policy.
 export function unmodifiedD6Check(
   event: ReplayEvent,
-  family: 2 | 4,
+  family: 1 | 2 | 4,
   status: 1 | 2,
   success: boolean
 ): number | undefined {

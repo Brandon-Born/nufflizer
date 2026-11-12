@@ -111,7 +111,7 @@ function formatTeamSummary(
           `Player ${event.playerId ?? "unknown"}; source ${event.metadata.sourceId ?? event.id}: ${explainContextBounds(event)}`
       ),
     ...report.events
-      .filter((event) => event.metadata.dodgeMovement || event.metadata.pickupResolution)
+      .filter((event) => event.metadata.dodgeMovement || event.metadata.pickupResolution || event.metadata.teamRerollMovement)
       .slice(0, 20)
       .map((event) => `Player ${event.playerId ?? "unknown"}; source ${event.metadata.sourceId ?? event.id}: ${explainMovementOutcome(event.metadata)}`),
     ...report.events

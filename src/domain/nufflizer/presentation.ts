@@ -238,10 +238,12 @@ export function explainContextBounds(
 export function explainMovementOutcome(
   metadata: Pick<
     LuckReport["events"][number]["metadata"],
-    "movementFall" | "movementTouchdown" | "dodgeMovement" | "pickupResolution"
+    "movementFall" | "movementTouchdown" | "dodgeMovement" | "pickupResolution" | "teamRerollMovement"
   >
 ): string | null {
   const { movementFall: fall, movementTouchdown } = metadata;
+  const teamMove=metadata.teamRerollMovement;
+  if(teamMove) return `${movementTouchdown?"The replay records a touchdown immediately after this move. ":""}The successful team-rerolled ${teamMove.rollType===1?"Rush":"Dodge"} and its confirmed move advanced the player from [${teamMove.from.x}, ${teamMove.from.y}] to [${teamMove.to.x}, ${teamMove.to.y}]. ${teamMove.carriesBall?"The explicitly held ball followed the player. ":""}${teamMove.movementAfter===null?"The waiting snapshot omitted remaining movement; it stays unknown.":teamMove.rollType===1?"The observed ordinary movement budget stays at zero; remaining Rush attempts are not inferred.":`${teamMove.movementAfter} movement points remained after this step; the confirmed Dodge move used one point.`} Current player availability and omitted skills remain unknown. This actual movement adds no luck score; the existing two-attempt dice odds remain separate.`;
   if (movementTouchdown)
     return "The replay records a touchdown immediately after this move.";
   if(metadata.pickupResolution) {

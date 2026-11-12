@@ -181,7 +181,11 @@ export function findMovementTouchdown(turn: ReplayTurn) {
   const outcome = turn.events.at(-4);
   const move = turn.events.at(-5);
   const roll = turn.events.at(-6);
-  const step = turn.events.at(-7);
+  const choice =
+    turn.events.at(-7)?.sourceTag === "ResultTeamRerollUsage"
+      ? turn.events.at(-7)
+      : undefined;
+  const step = turn.events.at(choice ? -8 : -7);
   if (
     end?.sourceTag !== "EventEndTurn" ||
     end.reasonCode !== 4 ||
@@ -199,6 +203,13 @@ export function findMovementTouchdown(turn: ReplayTurn) {
     !step.actionId ||
     !step.playerId ||
     step.attributionConflict ||
+    (choice &&
+      (choice.payload?.Used !== 1 ||
+        (choice.payload.GamerId !== 0 && choice.payload.GamerId !== 1) ||
+        choice.actionId !== step.actionId ||
+        choice.playerId !== step.playerId ||
+        choice.targetId !== step.targetId ||
+        choice.attributionConflict)) ||
     roll?.sourceTag !== "ResultRoll" ||
     !roll.id ||
     (roll.rollType !== 1 && roll.rollType !== 2) ||

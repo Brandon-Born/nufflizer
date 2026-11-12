@@ -16,6 +16,69 @@ function readFixture(name: string): string {
 }
 
 describe("POST /api/nufflizier/analyze", () => {
+  it("retains the full-source Dodge budget without filling its missing period", async () => {
+    const data = new FormData();
+    data.append(
+      "replay",
+      new File([readFileSync("demo-replays/demo11.bbr")], "source.bbr")
+    );
+    const response = await POST(
+      new Request("http://localhost/api/nufflizier/analyze", {
+        method: "POST",
+        body: data
+      })
+    );
+    const payload = await response.json();
+    expect(response.status, JSON.stringify(payload).slice(0, 200)).toBe(200);
+    const report = LuckReportSchema.parse(payload),
+      e = report.events.find(
+        (e) =>
+          e.metadata.locator?.replayStep === 194 &&
+          e.metadata.teamRerollMovement
+      )!;
+    expect(e.metadata.teamRerollMovement).toMatchObject({
+      rollType: 2,
+      movementBefore: 4,
+      movementAfter: 3
+    });
+    expect(e.metadata.preRoll?.activeTeamId).toBe("1");
+    expect(e.metadata.preRoll?.period).toBeNull();
+    expect(e.probabilitySuccess).toBeCloseTo(8 / 9, 12);
+    expect(
+      report.events.filter((e) => e.metadata.teamRerollMovement)
+    ).toHaveLength(2);
+  }, 20000);
+  it("exports full-source carrier Rush transitions and touchdown through the worker", async () => {
+    const data = new FormData();
+    data.append(
+      "replay",
+      new File([readFileSync("demo-replays/demo5.bbr")], "source.bbr")
+    );
+    const response = await POST(
+      new Request("http://localhost/api/nufflizier/analyze", {
+        method: "POST",
+        body: data
+      })
+    );
+    const payload = await response.json();
+    expect(response.status, JSON.stringify(payload).slice(0, 200)).toBe(200);
+    const report = LuckReportSchema.parse(payload),
+      moves = report.events.filter((e) => e.metadata.teamRerollMovement);
+    expect(moves.map((e) => e.metadata.locator?.replayStep)).toEqual([44, 118]);
+    for (const e of moves) {
+      expect(e.metadata.teamRerollMovement).toMatchObject({
+        carriesBall: true,
+        movementBefore: null,
+        movementAfter: null
+      });
+      expect(e.probabilitySuccess).toBeCloseTo(35 / 36, 12);
+    }
+    expect(moves[1]!.metadata.movementTouchdown?.destination).toEqual({
+      x: 25,
+      y: 12
+    });
+    expect(report.teams.every((t) => t.impactCount === 0)).toBe(true);
+  }, 20000);
   it("returns a valid nufflizier report payload", async () => {
     const formData = new FormData();
     formData.append(

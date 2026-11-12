@@ -264,6 +264,7 @@ export function checkpointClockEpochs(
             board.phaseCode,
             board.periodCode,
             board.activeTeamIndex,
+            board.activeGamerId,
             board.teams.map((team) => [
               team.rosterIndex,
               team.explicitTeamId,

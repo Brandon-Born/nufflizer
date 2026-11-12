@@ -22,6 +22,13 @@ export function unmodifiedDodgeDie(
 }
 
 export function successfulDodgeMoveOutcome(event: ReplayEvent): boolean {
+  return successfulSingleCheckMoveOutcome(event, 2);
+}
+
+export function successfulSingleCheckMoveOutcome(
+  event: ReplayEvent,
+  family: 1 | 2
+): boolean {
   const p = event.payload;
   if (
     event.sourceTag !== "ResultMoveOutcome" ||
@@ -50,7 +57,7 @@ export function successfulDodgeMoveOutcome(event: ReplayEvent): boolean {
     !!summary &&
     !Array.isArray(summary) &&
     Object.keys(summary).length === 2 &&
-    summary.RollType === 2 &&
+    summary.RollType === family &&
     summary.Outcome === 1
   );
 }

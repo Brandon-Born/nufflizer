@@ -278,7 +278,8 @@ function sameRoll(
 // Questions carry the original failed dice. Choice and result often occur in a later sequence.
 // Match the explicit actor/step/target/roll contract; proximity alone is never sufficient.
 export function linkTeamRerolls(
-  events: ReplayEvent[]
+  events: ReplayEvent[],
+  checkpointEpochs?: ReadonlyMap<number, number>
 ): Map<number, RerollLink> {
   const links = new Map<number, RerollLink>();
   const initialRollsInStep = new Set<string>();
@@ -354,6 +355,13 @@ export function linkTeamRerolls(
       initialRollsInStep.clear();
       continue;
     }
+    if (
+      pending &&
+      checkpointEpochs &&
+      checkpointEpochs.get(event.sourceIndex ?? -1) !==
+        checkpointEpochs.get(pending.question.sourceIndex ?? -1)
+    )
+      pending = undefined;
     if (!pending) {
       if (
         event.sourceTag === "PlayerStep" ||
@@ -374,6 +382,9 @@ export function linkTeamRerolls(
     // Only a matching continuation step can intervene in this simple policy.
     // Unknown messages, skill gates, declarations and turn/controller changes
     // break the link; proximity or a later matching actor is insufficient.
+    // A checkpoint's repeated carrier marker is an observation, not another
+    // roll, choice or ball mutation. An actual unmarked Carrier still breaks.
+    if (event.sourceTag === "Carrier" && event.checkpointCarrier) continue;
     if (event.sourceTag === "PlayerStep" && sameAction(pending.question, event))
       continue;
     if (!["ResultTeamRerollUsage", "ResultRoll"].includes(event.sourceTag)) {

@@ -82,6 +82,9 @@ const activationEnd = z.strictObject({
 const rerollCounterObservation=z.strictObject({checkpointAfter:count,replayStep:z.number().int().positive(),childIndex:count,
   teamId:text,teamTurn:z.number().int().positive(),periodCode:z.number().int().min(0).max(2).nullable(),count:z.number().int().min(0).max(16)});
 export const LuckEventMetadataSchema = z.strictObject({
+  teamRerollMovement:z.strictObject({rollType:z.union([z.literal(1),z.literal(2)]),gamerId:z.union([z.literal(0),z.literal(1)]),questionSourceId:text,decisionSourceId:text,
+    declarationSourceId:text,doMoveSourceId:text,outcomeSourceId:text,originalCheckpointAfter:count,checkpointAfter:count,from:pitchCell,to:pitchCell,
+    movementBefore:z.number().int().min(0).max(16).nullable(),movementAfter:z.number().int().min(0).max(16).nullable(),carriesBall:z.boolean()}).optional(),
   rerollOffer:z.strictObject({gamerId:z.union([z.literal(0),z.literal(1)]),canUseTeamReroll:z.boolean(),decisionSourceId:text}).optional(),
   teamRerollCounter:z.strictObject({questionSourceId:text,spent:z.union([z.literal(0),z.literal(1)]),before:rerollCounterObservation,after:rerollCounterObservation.optional(),reconciliation:z.enum(["matched","mismatch","after_unavailable"])}).optional(),
   turnEndReason:z.literal(2).optional(),
@@ -1013,6 +1016,30 @@ export const LuckReportSchema = z
         pickupResolution.checkpointAfter === context?.checkpointAfter && pickupResolution.movementRemaining === (context?.actorMovementRemaining ?? null),
         "Observed pickup possession needs the successful committed Sure Hands chain and unchanged post-move budget.");
       const dodgeMove = event.metadata.dodgeMovement;
+      const teamMove=event.metadata.teamRerollMovement;
+      if(teamMove) {
+        const question=sources.get(teamMove.questionSourceId),choice=sources.get(teamMove.decisionSourceId),declaration=sources.get(teamMove.declarationSourceId);
+        const doMove=sources.get(teamMove.doMoveSourceId),outcome=sources.get(teamMove.outcomeSourceId);
+        const own=(e:typeof event|undefined)=>e?.playerId===event.playerId&&e?.teamId===event.teamId;
+        const resumed=(e:typeof event|undefined)=>own(e)&&e?.metadata.actionId===event.metadata.actionId&&e?.metadata.sequenceId===event.metadata.sequenceId;
+        require(!!event.playerId&&event.scoringStatus==="scored"&&event.actualSuccess===true&&event.metadata.rollType===teamMove.rollType&&event.metadata.rerollResource==="team"&&event.metadata.rerollUsed===true&&event.metadata.teamRerollsSpent===1&&
+          !event.metadata.rerollSkill&&!event.metadata.lonerGate&&!event.metadata.proGate&&event.metadata.rerollQuestionId===teamMove.questionSourceId&&event.metadata.rerollDecisionId===teamMove.decisionSourceId&&
+          question?.metadata.sourceTag==="QuestionTeamRerollUsage"&&own(question)&&question.metadata.stepType===1&&question.metadata.isRollCandidate===false&&
+          choice?.metadata.sourceTag==="ResultTeamRerollUsage"&&resumed(choice)&&choice.metadata.teamRerollDecision?.used===true&&choice.metadata.teamRerollDecision.gamerId===teamMove.gamerId&&
+          declaration?.metadata.sourceTag==="ResultUseAction"&&own(declaration)&&declaration.metadata.actionCode===1&&declaration.metadata.stepType===0&&
+          doMove?.metadata.sourceTag==="ResultDoMove"&&resumed(doMove)&&doMove.scoringStatus==="excluded"&&
+          outcome?.metadata.sourceTag==="ResultMoveOutcome"&&resumed(outcome)&&outcome.scoringStatus==="excluded"&&
+          event.metadata.sourceIndex!==undefined&&choice.metadata.sourceIndex===event.metadata.sourceIndex-1&&doMove.metadata.sourceIndex===event.metadata.sourceIndex+1&&outcome.metadata.sourceIndex===event.metadata.sourceIndex+2&&
+          (declaration.metadata.sourceIndex??Infinity)<(question.metadata.sourceIndex??-1)&&(question.metadata.sourceIndex??Infinity)<choice.metadata.sourceIndex!&&
+          teamMove.originalCheckpointAfter===context?.checkpointAfter&&context.activationId===teamMove.declarationSourceId&&
+          teamMove.originalCheckpointAfter<=teamMove.checkpointAfter&&teamMove.checkpointAfter<choice.metadata.sourceIndex!&&
+          (declaration.metadata.sourceIndex??-1)>teamMove.originalCheckpointAfter&&context.actorCell?.x===teamMove.from.x&&context.actorCell.y===teamMove.from.y&&
+          Math.max(Math.abs(teamMove.to.x-teamMove.from.x),Math.abs(teamMove.to.y-teamMove.from.y))===1&&
+          (teamMove.movementBefore===null?teamMove.movementAfter===null:
+            teamMove.rollType===1?teamMove.movementBefore===0&&teamMove.movementAfter===0:
+            teamMove.movementBefore>=1&&teamMove.movementAfter===teamMove.movementBefore-1),
+          "Observed team-rerolled Rush/Dodge movement needs its original offer, owned ordinary declaration, committed direct replacement and adjacent confirmed move; fresh budget omissions stay unknown.");
+      }
       if (dodgeMove) {
         const declaration = sources.get(dodgeMove.declarationSourceId);
         const original = sources.get(event.metadata.rerollOriginalId ?? "");

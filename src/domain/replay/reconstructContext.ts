@@ -1,6 +1,11 @@
 import { unmodifiedD6Check } from "./numericCheck";
 import { observedActorRoster } from "./observedActorRoster";
 import {
+  failedMovementOffer,
+  sameMovementActor,
+  type ObservedTeamRerollMovement
+} from "./teamRerollMovement";
+import {
   pickupBounceSuccessors,
   plainPickupMoveOutcome,
   plainBounceSettlementKnown,
@@ -9,6 +14,7 @@ import {
 import {
   unmodifiedDodgeDie,
   successfulDodgeMoveOutcome,
+  successfulSingleCheckMoveOutcome,
   type ObservedDodgeMovement
 } from "./dodgeMovement";
 import {
@@ -520,8 +526,10 @@ function summarize(
   return {
     activeMoveContinuation,
     pickupSuccessors,
-    pickupMoveAvailability: pickupSuccessors && owned && actorId !== null
-      ? ordinaryMovesAtPickup(board, actorId) : undefined,
+    pickupMoveAvailability:
+      pickupSuccessors && owned && actorId !== null
+        ? ordinaryMovesAtPickup(board, actorId)
+        : undefined,
     pickupSettlementKnown:
       rollType === 4 && consistentGeometry
         ? plainBounceSettlementKnown(board)
@@ -598,6 +606,7 @@ export function reconstructReplayContext(
 ) {
   const result = new Map<string, PreRollEvidence>();
   const dodgeMovements = new Map<string, ObservedDodgeMovement>();
+  const teamRerollMovements = new Map<string, ObservedTeamRerollMovement>();
   const pickupResolutions = new Map<
     string,
     {
@@ -624,6 +633,7 @@ export function reconstructReplayContext(
     return {
       preRollEvidence: result,
       dodgeMovements,
+      teamRerollMovements,
       pickupResolutions,
       activationEnds,
       mentalEffectEnds,
@@ -674,6 +684,30 @@ export function reconstructReplayContext(
   let activeEnds = new Map<string, ActivationEnd>();
   let previousMove: { end: ActivationEnd; moved: boolean } | undefined;
   let actorDodgeMoveSourceId: string | undefined;
+  let teamOffer:
+    | {
+        question: ReplayEvent;
+        threshold: number;
+        family: 1 | 2;
+        from: Cell;
+        to: Cell;
+        declarationSourceId: string;
+        checkpointAfter: number;
+        epoch: number | undefined;
+      }
+    | undefined;
+  let pendingTeamMove:
+    | {
+        offer: NonNullable<typeof teamOffer>;
+        board: ObservedBoard;
+        choice: ReplayEvent;
+        lastIndex: number;
+        checkpointAfter: number;
+        stage: "replacement" | "do_move" | "outcome";
+        replacementSourceId?: string;
+        doMoveSourceId?: string;
+      }
+    | undefined;
   let pendingPickup:
     | {
         board: ObservedBoard;
@@ -712,12 +746,13 @@ export function reconstructReplayContext(
       ) {
         checkpoint = checkpoints[cursor++]!;
         frameChanged = true;
-        if (pendingDodge || pendingPickup) {
+        if (pendingDodge || pendingPickup || pendingTeamMove) {
           previousMove = undefined;
           activationId = null;
         }
         pendingDodge = undefined;
         pendingPickup = undefined;
+        pendingTeamMove = undefined;
         actorDodgeMoveSourceId = undefined;
         const next = checkpoint.board;
         if (checkpoint.kind === "initial")
@@ -777,6 +812,142 @@ export function reconstructReplayContext(
         activeEnds.clear();
         previousMove = undefined;
       }
+      if (teamOffer && teamOffer.epoch !== epochs.get(checkpoint!))
+        teamOffer = undefined;
+      if (pendingTeamMove) {
+        const pending = pendingTeamMove,
+          offer = pending.offer,
+          p = event.payload;
+        const sameChain =
+          !!event.id &&
+          sameMovementActor(offer.question, event) &&
+          event.sourceIndex === pending.lastIndex + 1 &&
+          event.actionId === pending.choice.actionId &&
+          event.sequenceId === pending.choice.sequenceId;
+        let accepted = false;
+        if (
+          sameChain &&
+          pending.stage === "replacement" &&
+          unmodifiedD6Check(event, offer.family, 2, true) === offer.threshold
+        ) {
+          pending.replacementSourceId = event.id;
+          pending.stage = "do_move";
+          accepted = true;
+        } else if (
+          sameChain &&
+          pending.stage === "do_move" &&
+          event.sourceTag === "ResultDoMove" &&
+          (!p || Object.keys(p).length === 0)
+        ) {
+          pending.doMoveSourceId = event.id;
+          pending.stage = "outcome";
+          accepted = true;
+        } else if (
+          sameChain &&
+          pending.stage === "outcome" &&
+          successfulSingleCheckMoveOutcome(event, offer.family) &&
+          event.id
+        ) {
+          const actor = Number(offer.question.playerId),
+            owner = pending.board.teams.find((t) =>
+              t.players.some((p) => p.id === actor)
+            )!;
+          const player = owner.players.find((p) => p.id === actor)!,
+            budget = player.movementRemaining;
+          const movementAfter =
+            budget === null ? null : budget - (offer.family === 2 ? 1 : 0);
+          board = changePlayer(pending.board, actor, (p) => ({
+            ...p,
+            cell: offer.to,
+            movementRemaining: movementAfter
+          }));
+          const carriesBall =
+            board.ball.possession === "held" && board.ball.carrierId === actor;
+          if (carriesBall)
+            board = { ...board, ball: { ...board.ball, cell: offer.to } };
+          teamRerollMovements.set(pending.replacementSourceId!, {
+            rollType: offer.family,
+            gamerId: pending.choice.payload!.GamerId as 0 | 1,
+            questionSourceId: offer.question.id!,
+            decisionSourceId: pending.choice.id!,
+            declarationSourceId: offer.declarationSourceId,
+            doMoveSourceId: pending.doMoveSourceId!,
+            outcomeSourceId: event.id,
+            originalCheckpointAfter: offer.checkpointAfter,
+            checkpointAfter: pending.checkpointAfter,
+            from: offer.from,
+            to: offer.to,
+            movementBefore: budget,
+            movementAfter,
+            carriesBall
+          });
+          // Re-establish completion provenance only when its original clock and
+          // current roster are known. This does not invent playable stability.
+          if (
+            owner.explicitTeamId !== null &&
+            owner.gameTurn !== null &&
+            owner.gameTurn > 0
+          )
+            previousMove = {
+              moved: true,
+              end: {
+                kind: "ordinary_move_completed",
+                sourceId: offer.declarationSourceId,
+                sourceIndex: offer.question.sourceIndex!,
+                declarationSourceId: offer.declarationSourceId,
+                actorId: String(actor),
+                teamId: String(owner.explicitTeamId),
+                rosterIndex: owner.rosterIndex,
+                teamTurn: owner.gameTurn,
+                periodCode: board.periodCode,
+                actorCell: offer.to,
+                followingPlayerId: "",
+                checkpointAfter: pending.checkpointAfter,
+                moveSourceId: event.id
+              }
+            };
+          moveObserved = false;
+          moveOutcomeSourceIndex = event.sourceIndex;
+          moveOutcomeSourceId = undefined;
+          pickupGeometryTrusted = false;
+          pendingTeamMove = undefined;
+          continue;
+        }
+        if (accepted) {
+          pending.lastIndex = event.sourceIndex;
+          continue;
+        }
+        pendingTeamMove = undefined;
+        board = null;
+        previousMove = undefined;
+        activationId = null;
+        activeEnds.clear();
+        activeLosses.clear();
+        actorDodgeMoveSourceId = undefined;
+        pickupSourceId = undefined;
+        actorEffectEnd = undefined;
+        mentalActivationPending = false;
+        pickupGeometryTrusted = false;
+        continue;
+      }
+      if (
+        teamOffer &&
+        event.sourceTag !== "Carrier" &&
+        event.sourceTag !== "PlayerStep" &&
+        event.sourceTag !== "ResultTeamRerollUsage"
+      )
+        teamOffer = undefined;
+      if (
+        teamOffer &&
+        ((event.sourceTag === "Carrier" && !event.checkpointCarrier) ||
+          (event.sourceTag === "PlayerStep" &&
+            (!sameMovementActor(teamOffer.question, event) ||
+              event.payload?.IsEvaluation !== 0 ||
+              event.payload.Skill !== 0 ||
+              !same(stepCell(event.payload.CellFrom), teamOffer.from) ||
+              !same(stepCell(event.payload.CellTo), teamOffer.to))))
+      )
+        teamOffer = undefined;
       if (pendingPickup) {
         const pending = pendingPickup,
           original = pending.original,
@@ -1016,6 +1187,80 @@ export function reconstructReplayContext(
         continue;
       }
       const p = event.payload;
+      if (teamOffer && event.sourceTag === "ResultTeamRerollUsage") {
+        const offer = teamOffer;
+        teamOffer = undefined;
+        const actor = Number(offer.question.playerId),
+          owner = observedActorRoster(
+            board,
+            actor,
+            offer.question.actorTeamId!,
+            replay.teams.map((t) => t.id)
+          );
+        const player = owner?.players.find((p) => p.id === actor);
+        const players = board.teams.flatMap((t) => t.players),
+          positions = players.filter((p) => p.pitchLocation === "on_pitch");
+        if (
+          event.id &&
+          p?.Used === 1 &&
+          p.GamerId === offer.question.payload?.GamerId &&
+          Object.keys(p).every((k) => ["Used", "GamerId"].includes(k)) &&
+          sameMovementActor(offer.question, event) &&
+          activationId === offer.declarationSourceId &&
+          activationActionCode === 1 &&
+          board.activePlayerId === actor &&
+          board.phaseCode === 5 &&
+          owner?.rosterIndex === p.GamerId &&
+          (board.activeGamerId === null || board.activeGamerId === p.GamerId) &&
+          !board.issues.length &&
+          !smallPitchObserved &&
+          player?.pitchLocation === "on_pitch" &&
+          player.canAct !== false &&
+          !player.mentalEffect &&
+          (player.statusCode === null || player.statusCode === 0) &&
+          (player.situationCode === null || player.situationCode === 0) &&
+          same(cell(player.cell), offer.from) &&
+          (player.movementRemaining === null ||
+            (offer.family === 1
+              ? player.movementRemaining === 0
+              : Number.isInteger(player.movementRemaining) &&
+                player.movementRemaining >= 1 &&
+                player.movementRemaining <= 16)) &&
+          step?.payload?.IsEvaluation === 0 &&
+          step.payload.Skill === 0 &&
+          same(stepCell(step.payload.CellFrom), offer.from) &&
+          same(stepCell(step.payload.CellTo), offer.to) &&
+          new Set(positions.map((p) => `${p.cell.x},${p.cell.y}`)).size ===
+            positions.length &&
+          players.every(
+            (p) =>
+              p.id !== null &&
+              p.pitchLocation !== "unknown" &&
+              (p.id === actor ||
+                p.pitchLocation === "off_pitch" ||
+                !same(cell(p.cell), offer.to))
+          )
+        ) {
+          // The recorded spend invalidates the old observed count; no general
+          // resource policy or later counter is substituted for it here.
+          const saved = {
+            ...board,
+            teams: board.teams.map((t) =>
+              t !== owner ? t : { ...t, rerolls: null }
+            )
+          };
+          pendingTeamMove = {
+            offer,
+            board: saved,
+            choice: event,
+            lastIndex: event.sourceIndex,
+            checkpointAfter: checkpoint.afterSourceIndex,
+            stage: "replacement"
+          };
+          board = null;
+          continue;
+        }
+      }
       if (
         event.id &&
         [
@@ -1097,8 +1342,43 @@ export function reconstructReplayContext(
           "ResultGainSpp"
         ].includes(event.sourceTag) ||
         (event.sourceTag === "ResultTeamRerollUsage" && p?.Used === 0)
-      )
+      ) {
+        if (event.sourceTag === "QuestionTeamRerollUsage") {
+          teamOffer = undefined;
+          const offerDie = failedMovementOffer(event),
+            from = stepCell(step?.payload?.CellFrom),
+            to = stepCell(step?.payload?.CellTo);
+          if (
+            offerDie &&
+            event.id &&
+            activationId &&
+            activationActionCode === 1 &&
+            activationCheckpointAfter === checkpoint.afterSourceIndex &&
+            board.phaseCode === 5 &&
+            board.stable === true &&
+            sameMovementActor(event, event) &&
+            step?.payload?.IsEvaluation === 0 &&
+            step.payload.Skill === 0 &&
+            board.activePlayerId === Number(event.playerId) &&
+            from &&
+            to &&
+            pitch(to) &&
+            distance(from, to) === 1 &&
+            same(result.get(event.id)?.actorCell ?? null, from)
+          )
+            teamOffer = {
+              question: event,
+              threshold: offerDie.threshold,
+              family: offerDie.family,
+              from,
+              to,
+              declarationSourceId: activationId,
+              checkpointAfter: checkpoint.afterSourceIndex,
+              epoch: epochs.get(checkpoint)
+            };
+        }
         continue;
+      }
       // The snapshot already describes both the known holder and absence of
       // one. Its repeated markers are evidence, not another transition.
       if (event.sourceTag === "Carrier" && event.checkpointCarrier) continue;
@@ -1398,9 +1678,15 @@ export function reconstructReplayContext(
         activationEpoch = epochs.get(checkpoint);
         activationCheckpointAfter = checkpoint.afterSourceIndex;
         activationActionCode = event.actionCode;
-        const moveRoster = actor !== null && event.actorTeamId
-          ? observedActorRoster(board, actor, event.actorTeamId, replay.teams.map((t) => t.id))
-          : undefined;
+        const moveRoster =
+          actor !== null && event.actorTeamId
+            ? observedActorRoster(
+                board,
+                actor,
+                event.actorTeamId,
+                replay.teams.map((t) => t.id)
+              )
+            : undefined;
         const moveActor = moveRoster?.players.find((p) => p.id === actor);
         qualifiedMoveTeamId =
           event.actionCode === 1 &&
@@ -1411,7 +1697,8 @@ export function reconstructReplayContext(
           Object.keys(p).every((k) => ["Action", "TeamId"].includes(k)) &&
           step.payload?.Skill === 0 &&
           step.payload.IsEvaluation === 0 &&
-          moveActor && same(cell(moveActor.cell), stepCell(step.payload.CellFrom))
+          moveActor &&
+          same(cell(moveActor.cell), stepCell(step.payload.CellFrom))
             ? event.actorTeamId
             : undefined;
         actorDodgeMoveSourceId = undefined;
@@ -1446,9 +1733,15 @@ export function reconstructReplayContext(
         step.payload.Skill === 0 &&
         (step.stepTargetId === step.stepActorId || step.stepTargetId === "-1")
       ) {
-        const active = event.actorTeamId && actor !== null
-          ? observedActorRoster(board, actor, event.actorTeamId, replay.teams.map((t) => t.id))
-          : undefined;
+        const active =
+          event.actorTeamId && actor !== null
+            ? observedActorRoster(
+                board,
+                actor,
+                event.actorTeamId,
+                replay.teams.map((t) => t.id)
+              )
+            : undefined;
         const player = active?.players.find((p) => p.id === actor);
         const budgetContinuityKnown =
           board.activeTeamIndex !== null && active?.explicitTeamId != null;
@@ -1457,10 +1750,19 @@ export function reconstructReplayContext(
           qualifiedMoveTeamId === event.actorTeamId &&
           activationCheckpointAfter === checkpoint.afterSourceIndex &&
           step?.payload?.State === 3 &&
-          Object.keys(step.payload).every((k) => [
-            "Probability", "PlayerId", "TargetId", "IsEvaluation", "StepType",
-            "CellTo", "State", "CellFrom", "Skill"
-          ].includes(k)) &&
+          Object.keys(step.payload).every((k) =>
+            [
+              "Probability",
+              "PlayerId",
+              "TargetId",
+              "IsEvaluation",
+              "StepType",
+              "CellTo",
+              "State",
+              "CellFrom",
+              "Skill"
+            ].includes(k)
+          ) &&
           (!p || Object.keys(p).length === 0);
         if (
           !board.issues.length &&
@@ -1485,7 +1787,9 @@ export function reconstructReplayContext(
             ...p,
             statusCode: STANDING,
             tackleZone: null,
-            movementRemaining: budgetContinuityKnown ? p.movementRemaining : null
+            movementRemaining: budgetContinuityKnown
+              ? p.movementRemaining
+              : null
           }));
           standUpPending = false;
           standUpSourceIndex = event.sourceIndex;
@@ -1735,6 +2039,7 @@ export function reconstructReplayContext(
   return {
     preRollEvidence: result,
     dodgeMovements,
+    teamRerollMovements,
     pickupResolutions,
     activationEnds,
     mentalEffectEnds,
