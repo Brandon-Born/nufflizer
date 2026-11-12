@@ -1,0 +1,53 @@
+{
+  "scope": "bf584af regression projections, not independent semantic expectations. Includes every scored event, existing context component and dice/point team value; coverage/event counts intentionally change.",
+  "files": [
+    {
+      "file": "demo-goblins1.bbr",
+      "sha256": "650f08c50e592b537c5a1a7033598d06eb6855476398ff79966742697cdb5889"
+    },
+    {
+      "file": "demo1.bbr",
+      "sha256": "4dd08f9ec615d7449c204bafa2331246c208b555430160c8fc22116b5ac53392"
+    },
+    {
+      "file": "demo10.bbr",
+      "sha256": "bd080733daa051387fa3529e9fef9d019358a5e543f53d00b6d75ea9cfdb3b48"
+    },
+    {
+      "file": "demo11.bbr",
+      "sha256": "c01ac42569da5fad4cfdedd9234d08d1c33be535c707f09b02d46f055d510a17"
+    },
+    {
+      "file": "demo2.bbr",
+      "sha256": "e4ff6e36f9b2cfed675abac4a5ae89a662a0488cd192541c342904eec6948564"
+    },
+    {
+      "file": "demo3.bbr",
+      "sha256": "da9e94c75e317fbcda6388ad31b51b9398facf4cd11cf5d048a7e81c35e53e5d"
+    },
+    {
+      "file": "demo4.bbr",
+      "sha256": "e6645aed56709d133f6c344470238d110b3f2c186c2c100f32d01fee7b59bfc5"
+    },
+    {
+      "file": "demo5.bbr",
+      "sha256": "8bc0bfd96bc1154ae053c7ed0d6552b1531e2fad8735a77e3eb8f4a0a9f89159"
+    },
+    {
+      "file": "demo6.bbr",
+      "sha256": "8eef38b7df186dce8a3c153ad8fd29de9d0a2afc9485b8799b7e7f728a25c176"
+    },
+    {
+      "file": "demo7.bbr",
+      "sha256": "87d264f64d4854eca2d5d2cbb48f9eb7df3203c1c47668d44482bf4d87a00ea6"
+    },
+    {
+      "file": "demo8.bbr",
+      "sha256": "fe5bc8516180d86d3b3e10d429569bc76b25c2e7d19b0279f4c25997daca2855"
+    },
+    {
+      "file": "demo9.bbr",
+      "sha256": "e483c707849d1ac5f703f81bbb8fad8862712af156b5f18fd24b72451820fbae"
+    }
+  ]
+}

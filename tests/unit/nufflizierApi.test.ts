@@ -427,6 +427,10 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(e.contextualBounds?.maximumMoves).toBe(3);expect(e.contextualBounds?.upper).toBeCloseTo(1/2,12);
     expect(report.events.find(e=>e.metadata.sourceId==="source-3065")?.metadata.activationEnd?.completionCheckpointAfter).toBe(3062);
     expect(report.events.find(e=>e.metadata.sourceId==="source-3090")?.metadata.activationEnd?.completionCheckpointAfter).toBe(3087);
+    expect(report.coverage.modelVersion).toBe("dice-evidence-1");expect(report.diceRecords).toHaveLength(478);
+    expect(report.events.filter(e=>e.metadata.observedReroll)).toHaveLength(8);
+    const direction=report.events.find(e=>e.metadata.sourceId==="source-4802")!;expect(direction.metadata.observedReroll).toMatchObject({used:true,originalDie:6,finalDie:6});expect(direction.scoringStatus).toBe("excluded");expect(direction.probabilitySuccess).toBeNull();
+    expect(report.diceRecords.find(d=>d.parentSourceId==="source-4802")?.aliasOf).toBeUndefined();
     expect(e.probabilitySuccess).toBeCloseTo(35/36,12);expect(report.teams.every(t=>t.impactCount===0)).toBe(true);
   },20000);
 

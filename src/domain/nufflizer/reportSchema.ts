@@ -1,3 +1,4 @@
+import { summarizeDiceRecords } from "./diceEvidence";
 import { enumerateSkillBlock } from "./blockSkillModel";
 import {
   contextComponent,
@@ -56,6 +57,65 @@ const activeMoveContinuation = z.strictObject({
   declarationSourceId:text,movementBefore:z.number().int().min(0).max(16).nullable(),movementAfterSuccess:z.number().int().min(0).max(15).nullable(),
   opponentMarking:z.enum(["unmarked","marked","unknown"]),candidateDestination:pitchCell,minimum:z.union([z.literal(0),z.literal(1)]),maximum:z.union([z.literal(0),z.literal(1)])
 });
+const dicePath = z
+  .array(
+    z.union([
+      z.string().min(1).max(128),
+      z.number().int().nonnegative().max(REPLAY_LIMITS.xmlNodes)
+    ])
+  )
+  .min(1)
+  .max(REPLAY_LIMITS.xmlDepth * 2);
+const diceLocator = z.strictObject({
+  replayStep: z.number().int().positive().optional(),
+  childIndex: count.optional(),
+  stepIndex: count.optional(),
+  messageIndex: count.optional()
+});
+const diceRecord = z.strictObject({
+  locator: diceLocator.optional(),
+  id: text,
+  parentOrdinal: count,
+  parentSourceId: text.optional(),
+  parentSourceIndex: count.optional(),
+  parentSourceTag: text,
+  parentEventId: text.optional(),
+  actionId: text.optional(),
+  stepTag: text.optional(),
+  stepType: count.optional(),
+  stepActorId: text.optional(),
+  stepTargetId: text.optional(),
+  damageSource: count.optional(),
+  status: count.optional(),
+  newRoll: count.optional(),
+  rollStatus: count.optional(),
+  freshDiceIndexes: z
+    .array(z.number().int().min(0).max(5).nullable())
+    .max(6)
+    .optional(),
+  path: dicePath,
+  rollType: z.number().int().min(0).max(1_000_000).optional(),
+  dice: z
+    .array(
+      z.strictObject({
+        value: z.number().int().min(0).max(100).nullable(),
+        dieType: z.number().int().min(0).max(1_000_000).nullable()
+      })
+    )
+    .max(6),
+  quality: z.enum(["complete", "incomplete", "malformed", "not_applicable"]),
+  disposition: z.enum([
+    "covered_roll",
+    "unscored_roll",
+    "summary",
+    "unresolved",
+    "nonrandom"
+  ]),
+  eventId: text.optional(),
+  aliasOf: text.optional()
+});
+const observedRerollKind = z.enum(["skill", "star"]),
+  observedRule = z.union([z.literal(34), z.literal(47)]);
 const playerTraits = z.strictObject({
   dataPlayerId: z.number().int().nonnegative().nullable(),
   playerTypeId: z.number().int().nonnegative().nullable(),
@@ -193,6 +253,60 @@ export const LuckEventMetadataSchema = z.strictObject({
   }).optional(),
   rerollPolicy: text.optional(),
   mergedRerollAnchorId: text.optional(),
+  diceEvidenceId: text.optional(),
+  repeatedDiceSourceId: text.optional(),
+  teamDiceChoice: z
+    .strictObject({
+      questionSourceId: text,
+      used: z.boolean(),
+      gamerId: z.union([z.literal(0), z.literal(1)])
+    })
+    .optional(),
+  teamDiceIdentity: z
+    .strictObject({
+      questionSourceId: text,
+      decisionSourceId: text,
+      originalRecordId: text,
+      teamUsed: z.boolean(),
+      replacementRolled: z.boolean(),
+      originalDie: z.number().int().min(1).max(6),
+      finalDie: z.number().int().min(1).max(6),
+      gateSourceId: text.optional(),
+      gatePassed: z.boolean().optional(),
+      gateSkillId: z
+        .union([z.literal(44), z.literal(1008), z.literal(50)])
+        .optional()
+    })
+    .optional(),
+  observedRerollOffer: z
+    .strictObject({
+      kind: observedRerollKind,
+      ruleId: observedRule,
+      gamerId: z.union([z.literal(0), z.literal(1)]),
+      originalRecordId: text
+    })
+    .optional(),
+  observedRerollChoice: z
+    .strictObject({
+      kind: observedRerollKind,
+      ruleId: observedRule,
+      used: z.boolean(),
+      questionSourceId: text
+    })
+    .optional(),
+  observedReroll: z
+    .strictObject({
+      kind: observedRerollKind,
+      ruleId: observedRule,
+      used: z.boolean(),
+      questionSourceId: text,
+      decisionSourceId: text,
+      ownershipCheckpointAfter: count,
+      originalRecordId: text,
+      originalDie: z.number().int().min(1).max(6),
+      finalDie: z.number().int().min(1).max(6)
+    })
+    .optional(),
   sourceTag: text,
   sourceId: text.optional(),
   actionId: text.optional(),
@@ -485,7 +599,19 @@ export const LuckReportSchema = z
     generatedAt: z.iso.datetime(),
     match: z.strictObject({ id: text, homeTeam: text, awayTeam: text }),
     verdict: LuckVerdictSchema,
+    diceRecords: z.array(diceRecord).max(REPLAY_LIMITS.events),
     coverage: z.strictObject({
+      modelVersion: z.literal("dice-evidence-1"),
+      diceRecords: z.strictObject({
+        recordCount: count,
+        coveredCount: count,
+        unscoredCount: count,
+        summaryCount: count,
+        nonrandomCount: count,
+        unresolvedCount: count,
+        malformedCount: count,
+        scoredRate: probability
+      }),
       sourceRecordCount: count,
       denominatorDescription: text.min(1),
       allEvents: coverageBucket,
@@ -710,8 +836,377 @@ export const LuckReportSchema = z
           row.unattributedCount === expected.unattributedCount
         );
       }), "Roll-family coverage must match the reported candidate evidence.");
+    const rawDiceById = new Map(report.diceRecords.map((r) => [r.id, r]));
+    const parentKeys= new Set(
+      report.events.map(
+        (e) => {
+          const r = rawDiceById.get
+            (e.metadata.diceEvidenceId ?? "");
+        return r ? (r.parentEventId ?? `raw-${r.parentOrdinal}`) : e.id;
+      })
+    );
     require(report.coverage.sourceRecordCount >=
-      report.events.length, "Reported evidence cannot exceed source records.");
+      parentKeys.size, "Expanded outcome rows must reconcile with their original source parents.");
+    require(JSON.stringify(report.coverage.diceRecords) ===
+      JSON.stringify(
+        summarizeDiceRecords(report.diceRecords)
+      ), "Raw dice record counts and coverage must reconcile independently of policy-event counts.");
+    const resolvedAliases = new Set<string>();
+    let aliasesAcyclic = true;
+    for (const r of report.diceRecords) {
+      if (resolvedAliases.has(r.id)) continue;
+      const path = new Set<string>();
+      let next: typeof r | undefined = r;
+      while (next && !resolvedAliases.has(next.id) && !path.has(next.id)) {
+        path.add(next.id);
+        next = next.aliasOf ? rawDiceById.get(next.aliasOf) : undefined;
+      }
+      if (next && path.has(next.id)) aliasesAcyclic = false;
+      for (const id of path) resolvedAliases.add(id);
+    }
+    require(aliasesAcyclic, "Dice summary aliases cannot form cycles.");
+    const rootDiceBySource = new Map(
+      report.diceRecords
+        .filter((r) => r.path.length === 1 && r.path[0] === "Dice")
+        .map((r) => [r.parentSourceId, r])
+    );
+    const rawPaths = new Set<string>();
+    for (const [index, r] of report.diceRecords.entries()) {
+      const pathKey = JSON.stringify([r.parentOrdinal, r.path]);
+      require(r.id === `dice-${index}` &&
+        !rawPaths.has(
+          pathKey
+        ), "Dice evidence identities and parent/path membership must be unique and source ordered.");
+      rawPaths.add(pathKey);
+      require(r.parentOrdinal < report.coverage.sourceRecordCount &&
+        (!index ||
+          r.parentOrdinal >=
+            report.diceRecords[index - 1]!
+              .parentOrdinal), "Dice field parents must stay in source order within the raw event bound.");
+      const invalid =
+        !r.dice.length ||
+        r.dice.some(
+          (d) =>
+            d.value === null ||
+            (d.dieType === 0 && (d.value < 1 || d.value > 6)) ||
+            (d.dieType === 2 && d.value > 4)
+        ) ||
+        r.freshDiceIndexes?.some((v) => v === null);
+      require(r.quality === "not_applicable"
+        ? r.disposition === "nonrandom"
+        : r.quality === "malformed"
+          ? !["summary", "covered_roll"].includes(r.disposition)
+          : !invalid &&
+            (r.quality !== "complete" ||
+              r.dice.every(
+                (d) => d.dieType !== null
+              )), "Dice quality cannot conceal invalid faces, missing types or a nonrandom sentinel.");
+      const parent = r.parentEventId ? ids.get(r.parentEventId) : undefined;
+      if (r.parentEventId)
+        require(!!parent &&
+          !parent.metadata.diceEvidenceId &&
+          parent.metadata.sourceTag === r.parentSourceTag &&
+          parent.metadata.sourceId === r.parentSourceId &&
+          parent.metadata.sourceIndex ===
+            r.parentSourceIndex, "Dice evidence parent receipts must match their source identity and locator.");
+      if (r.disposition === "nonrandom") {
+        require(r.quality === "not_applicable" &&
+          r.parentSourceTag === "QuestionPushBack" &&
+          r.rollType === 0 &&
+          JSON.stringify(r.path) === JSON.stringify(["BlockRoll", "Die"]) &&
+          r.dice.length === 1 &&
+          r.dice[0]!.value === 0 &&
+          r.dice[0]!.dieType === 0 &&
+          !r.eventId &&
+          !r.aliasOf, "No-roll placeholders require their exact namespace and zero sentinel; they are not random outcomes.");
+      } else if (r.disposition === "summary") {
+        const target = r.aliasOf ? rawDiceById.get(r.aliasOf) : undefined;
+        require(!!target &&
+          target.parentOrdinal < r.parentOrdinal &&
+          !r.eventId, "A repeated dice record needs an earlier source-linked alias without another scored event.");
+        if (target) {
+          const equal = JSON.stringify(r.dice) === JSON.stringify(target.dice);
+          const block =
+            r.rollType === 3 &&
+            target.rollType === 3 &&
+            r.stepTag === "PlayerStep" &&
+            target.stepTag === "PlayerStep" &&
+            r.stepType === 6 &&
+            target.stepType === 6 &&
+            r.stepActorId === target.stepActorId &&
+            r.stepTargetId === target.stepTargetId &&
+            [
+              "ResultBlockRoll",
+              "QuestionBlockSkillUsage",
+              "QuestionPushBack",
+              "QuestionBlockDice"
+            ].includes(r.parentSourceTag) &&
+            ["QuestionBlockDice", "ResultBlockRoll"].includes(
+              target.parentSourceTag
+            ) &&
+            r.dice.every((d) =>
+              target.dice.some(
+                (v) => v.value === d.value && v.dieType === d.dieType
+              )
+            );
+          const sameSubjects =
+            r.stepTag === target.stepTag &&
+            r.stepType === target.stepType &&
+            r.stepActorId === target.stepActorId &&
+            r.stepTargetId === target.stepTargetId;
+          const parentFinal = r.parentEventId
+            ? ids.get(r.parentEventId)
+            : undefined;
+          const linkedQuestion =
+            parentFinal?.metadata.rerollQuestionId ??
+            parentFinal?.metadata.observedReroll?.questionSourceId ??
+            parentFinal?.metadata.teamDiceIdentity?.questionSourceId;
+          const copiedKept =
+            r.parentSourceTag === "ResultRoll" &&
+            [
+              "QuestionTeamRerollUsage",
+              "QuestionStarSpecialRuleUsage",
+              "QuestionSkillUsage"
+            ].includes(target.parentSourceTag) &&
+            linkedQuestion === target.parentSourceId &&
+            sameSubjects &&
+            r.rollType === target.rollType &&
+            equal &&
+            !parentFinal?.metadata.observedReroll?.used &&
+            !parentFinal?.metadata.teamDiceIdentity?.replacementRolled &&
+            r.newRoll === 0;
+          const repeatedTerminal =
+            r.parentSourceTag === "ResultRoll" &&
+            target.parentSourceTag === "ResultRoll" &&
+            (parentFinal?.metadata.repeatedDiceSourceId ?? parentFinal?.metadata.mergedRerollAnchorId) ===
+              target.parentSourceId &&
+            sameSubjects &&
+            r.actionId === target.actionId &&
+            equal;
+          const copiedOriginal =
+            [
+              "QuestionTeamRerollUsage",
+              "QuestionKORecovery",
+              "QuestionApothecaryCasualtyUsage"
+            ].includes(r.parentSourceTag) &&
+            ["ResultRoll", "ResultInjuryRoll", "ResultCasualtyRoll"].includes(
+              target.parentSourceTag
+            ) &&
+            sameSubjects &&
+            r.rollType === target.rollType &&
+            equal;
+          const copiedTreatment =
+            r.parentSourceTag === "QuestionApothecaryCasualtyChoice" &&
+            target.parentSourceTag === "QuestionApothecaryCasualtyUsage" &&
+            sameSubjects &&
+            r.damageSource === target.damageSource &&
+            r.rollType === target.rollType &&
+            equal;
+          require(r.quality !== "malformed" &&
+            target.quality !== "malformed" &&
+            (block ||
+              copiedKept ||
+              repeatedTerminal ||
+              copiedOriginal ||
+              copiedTreatment), "Dice copies need a compatible source namespace, participants and an explicit pool/choice relationship; equal faces alone do not identify a summary.");
+        }
+      } else {
+        const e = r.eventId ? ids.get(r.eventId) : undefined;
+        require(!!e &&
+          !r.aliasOf &&
+          (r.disposition === "covered_roll"
+            ? e.scoringStatus === "scored" && r.quality !== "malformed"
+            : e.scoringStatus ===
+              "excluded"), "Every non-summary dice group must point to its supported or explicitly unscored evidence.");
+        if (e && r.disposition === "covered_roll")
+          require(e.id === r.parentEventId ||
+            (r.parentSourceId !== undefined &&
+              [
+                e.metadata.rerollQuestionId,
+                e.metadata.rerollOriginalId
+              ].includes(
+                r.parentSourceId
+              )), "A covered dice group must belong to its scored event or its explicitly linked policy original.");
+      }
+    }
+    const fieldSources = new Set(
+      report.diceRecords.map((r) => r.parentSourceId)
+    );
+    const teamChoiceLinks = new Set(
+      report.events.flatMap((e) =>
+        e.metadata.teamDiceIdentity
+          ? [e.metadata.teamDiceIdentity.decisionSourceId]
+          : []
+      )
+    );
+    const offerLinks = new Map(
+      report.events
+        .filter((e) => e.metadata.observedReroll)
+        .map((e) => [e.metadata.observedReroll!.questionSourceId, e])
+    );
+    const choiceLinks = new Map(
+      report.events
+        .filter((e) => e.metadata.observedReroll)
+        .map((e) => [e.metadata.observedReroll!.decisionSourceId, e])
+    );
+    for (const e of report.events) {
+      if (e.metadata.dice?.length && !e.metadata.diceEvidenceId)
+        require(fieldSources.has(
+          e.metadata.sourceId
+        ), "Reported dice cannot lose their raw field membership.");
+      if (e.metadata.teamDiceChoice)
+        require(teamChoiceLinks.has(
+          e.metadata.sourceId ?? ""
+        ), "A team dice choice cannot be orphaned from its terminal identity proof.");
+      if (e.metadata.observedRerollOffer)
+        require(offerLinks.has(
+          e.metadata.sourceId ?? ""
+        ), "An observed reroll offer cannot be orphaned from its terminal proof.");
+      if (e.metadata.observedRerollChoice)
+        require(choiceLinks.has(
+          e.metadata.sourceId ?? ""
+        ), "An observed reroll decision cannot be orphaned from its terminal proof.");
+      if (e.metadata.repeatedDiceSourceId) {
+        const original = sources.get(e.metadata.repeatedDiceSourceId);
+        require(!!original &&
+          e.scoringStatus === "excluded" &&
+          e.metadata.isRollCandidate === false &&
+          e.metadata.actionId === original.metadata.actionId &&
+          JSON.stringify(e.metadata.dice) ===
+            JSON.stringify(original.metadata.dice) &&
+          (original.metadata.sourceIndex ?? Infinity) <
+            (e.metadata.sourceIndex ??
+              -1), "A repeated terminal receipt must preserve the earlier same-action dice without a new candidate.");
+      }
+      if (e.metadata.diceEvidenceId) {
+        const r = rawDiceById.get(e.metadata.diceEvidenceId);
+        require(!!r &&
+          r.eventId === e.id &&
+          e.id === `nested-${r.id
+      }` &&
+          e.metadata.sourceId === e.id &&
+          e.metadata.sourceTag === r.parentSourceTag &&
+          e.metadata.sourceIndex === r.parentSourceIndex &&
+          e.metadata.isRollCandidate === true &&
+          e.scoringStatus === "excluded" &&
+          e.type === "unknown" &&
+          e.probabilitySuccess === null &&
+          e.actualSuccess ===
+            null, "Expanded nested dice must retain their source path and unknown odds/outcome, without a score.");
+      }
+      const team = e.metadata.teamDiceIdentity;
+      if (team) {
+        const q = sources.get(team.questionSourceId),
+          choice = sources.get(team.decisionSourceId),
+          original = rawDiceById.get(team.originalRecordId),
+          gate = team.gateSourceId ? sources.get(team.gateSourceId) : undefined;
+        const finalDice = rootDiceBySource.get(e.metadata.sourceId);
+        require(e.scoringStatus === "excluded" &&
+          e.probabilitySuccess === null &&
+          e.metadata.sourceTag === "ResultRoll" &&
+          q?.metadata.sourceTag === "QuestionTeamRerollUsage" &&
+          choice?.metadata.sourceTag === "ResultTeamRerollUsage" &&
+          original?.parentSourceId === team.questionSourceId &&
+          original.dice.length === 1 &&
+          original.dice[0]?.value === team.originalDie &&
+          original.dice[0]?.dieType === 0 &&
+          e.metadata.dice?.length === 1 &&
+          e.metadata.dice[0] === team.finalDie &&
+          original.rollType === e.metadata.rollType &&
+          original.status === 1 &&
+          original.newRoll === 1 &&
+          choice?.metadata.teamDiceChoice?.questionSourceId ===
+            team.questionSourceId &&
+          choice.metadata.teamDiceChoice.used === team.teamUsed &&
+          finalDice?.status === (team.replacementRolled ? 2 : 1) &&
+          finalDice?.newRoll === (team.replacementRolled ? 1 : 0) &&
+          (team.replacementRolled || team.originalDie === team.finalDie) &&
+          (q?.metadata.sourceIndex ?? Infinity) <
+            (choice?.metadata.sourceIndex ?? -1) &&
+          (choice?.metadata.sourceIndex ?? Infinity) <
+            (e.metadata.sourceIndex ??
+              -1), "Observed team dice identities need an ordered matching original, explicit decision and terminal flags; they cannot promote odds or ownership.");
+        require(gate
+          ? team.gatePassed !== undefined &&
+              team.gateSkillId !== undefined &&
+              gate.metadata.rollType === (team.gateSkillId === 50 ? 15 : 71) &&
+              team.teamUsed === (team.gateSkillId !== 50) &&
+              gate.metadata.outcomeCode === Number(team.gatePassed) &&
+              gate.metadata.dice?.length === 1 &&
+              gate.metadata.dieTypes?.[0] === 0 &&
+              [44, 1008, 50].includes(team.gateSkillId) &&
+              gate.metadata.requirement ===
+                (team.gateSkillId === 1008
+                  ? 3
+                  : team.gateSkillId === 44
+                    ? 4
+                    : 3) &&
+              team.gatePassed ===
+                gate.metadata.dice[0]! >= gate.metadata.requirement! &&
+              team.replacementRolled === team.gatePassed &&
+              (choice?.metadata.sourceIndex ?? Infinity) <
+                (gate.metadata.sourceIndex ?? -1) &&
+              (gate.metadata.sourceIndex ?? Infinity) <
+                (e.metadata.sourceIndex ?? -1)
+          : team.gatePassed === undefined &&
+              team.gateSkillId === undefined &&
+              team.replacementRolled ===
+                team.teamUsed, "An observed reroll gate must be a separately ordered supported numeric test, never an inferred reroll price or eligibility claim.");
+      }
+      const proof = e.metadata.observedReroll;
+      if (proof) {
+        const q = sources.get(proof.questionSourceId),
+          choice = sources.get(proof.decisionSourceId),
+          original = rawDiceById.get(proof.originalRecordId),
+          offer = q?.metadata.observedRerollOffer,
+          used = choice?.metadata.observedRerollChoice;
+        require(e.scoringStatus === "excluded" &&
+          e.metadata.sourceTag === "ResultRoll" &&
+          q?.metadata.sourceTag ===
+            (proof.kind === "star"
+              ? "QuestionStarSpecialRuleUsage"
+              : "QuestionSkillUsage") &&
+          choice?.metadata.sourceTag ===
+            (proof.kind === "star"
+              ? "ResultStarSpecialRuleUsage"
+              : "ResultSkillUsage") &&
+          proof.ruleId === (proof.kind === "star" ? 34 : 47) &&
+          proof.ownershipCheckpointAfter < (q?.metadata.sourceIndex ?? -1) &&
+          e.probabilitySuccess === null &&
+          offer?.kind === proof.kind &&
+          String(offer.gamerId) === e.teamId &&
+          offer.ruleId === proof.ruleId &&
+          offer.originalRecordId === proof.originalRecordId &&
+          used?.kind === proof.kind &&
+          used.ruleId === proof.ruleId &&
+          used.used === proof.used &&
+          used.questionSourceId === proof.questionSourceId &&
+          q?.playerId === e.playerId &&
+          choice?.playerId === e.playerId &&
+          q?.teamId === e.teamId &&
+          choice?.teamId === e.teamId &&
+          e.teamId !== "unresolved" &&
+          original?.parentSourceId === proof.questionSourceId &&
+          original.dice.length === 1 &&
+          original.status === 1 &&
+          original.newRoll === (proof.kind === "star" ? 0 : 1) &&
+          original.rollType === (proof.kind === "star" ? 87 : 5) &&
+          original.dice[0]!.value === proof.originalDie &&
+          original.dice[0]!.dieType === 0 &&
+          e.metadata.dice?.length === 1 &&
+          e.metadata.dice[0] === proof.finalDie &&
+          (proof.used || proof.originalDie === proof.finalDie) &&
+          rootDiceBySource.get(e.metadata.sourceId)?.status ===
+            (proof.kind === "star" ? 1 : proof.used ? 2 : 1) &&
+          rootDiceBySource.get(e.metadata.sourceId)?.newRoll ===
+            (proof.kind === "star" ? 0 : proof.used ? 1 : 0) &&
+          (q?.metadata.sourceIndex ?? Infinity) <
+            (choice?.metadata.sourceIndex ?? -1) &&
+          (choice?.metadata.sourceIndex ?? Infinity) <
+            (e.metadata.sourceIndex ??
+              -1), "Observed reroll dice require the owned original question, explicit matching choice and terminal record; observed use alone adds no accepted odds.");
+      }
+    }
     for (const [bucket, events] of [
       [report.coverage.allEvents, report.events],
       [report.coverage.rollCandidates, candidates]
@@ -785,22 +1280,20 @@ export const LuckReportSchema = z
       const pro = event.metadata.proGate;
       if (pro) {
         const { dice, dieTypes, rollType, outcomeCode, teamRerollsSpent, rerollResource } = event.metadata;
-        require(
-          rollType === 15 &&
+        require(rollType === 15 &&
             dice?.length === 1 &&
             dieTypes?.length === 1 &&
             dieTypes[0] === 0 &&
             Number.isInteger(dice[0]) &&
             dice[0]! >= 1 &&
             dice[0]! <= 6 &&
-            pro.passed === (dice[0]! >= 3) &&
-            outcomeCode === Number(pro.passed) &&
-            event.actualSuccess === pro.passed &&
-            teamRerollsSpent === 0 &&
-            rerollResource === "skill" &&
-            event.scoringStatus === "excluded",
-          "Pro evidence requires a verified 3+ gate and its skill resource."
-        );
+          pro.passed === dice[0]! >= 3 &&
+          outcomeCode === Number(pro.passed) &&
+          event.actualSuccess === pro.passed &&
+          teamRerollsSpent === 0 &&
+          rerollResource === "skill" &&
+          event.scoringStatus ===
+            "excluded", "Pro evidence requires a verified 3+ gate and its skill resource.");
       }
       const gate = event.metadata.lonerGate;
       if (gate) {
@@ -827,9 +1320,10 @@ export const LuckReportSchema = z
           Number.isInteger(dice[0]) &&
           dice[0]! >= 1 &&
           dice[0]! <= 6 &&
-          gate.passed === (dice[0]! >= gate.threshold) &&
+          gate.passed === dice[0]! >= gate.threshold &&
           gate.threshold === (gate.skillId === 1008 ? 3 : 4) &&
-          event.metadata.requirement === gate.threshold && event.metadata.difficulty === gate.threshold &&
+          event.metadata.requirement === gate.threshold &&
+          event.metadata.difficulty === gate.threshold &&
           event.actualSuccess === gate.passed &&
           outcomeCode === Number(gate.passed) &&
           Boolean(rerollDecisionId) &&
@@ -843,17 +1337,24 @@ export const LuckReportSchema = z
         ), "Reported evidence must have a known or unresolved team.");
       const context = event.metadata.preRoll;
       const ended = context?.endedActivationSourceIds;
-      if (ended) require(new Set(ended).size === ended.length && ended.every(id => {
-        const loss = sources.get(id)?.metadata.activationLoss;
-        const end = sources.get(id)?.metadata.activationEnd;
-        if (end) return end.teamId === context.actorRosterTeamId && end.teamTurn === context.teamTurn &&
+      if (ended)
+        require(new Set(ended).size === ended.length &&
+          ended.every((id) => {
+            const loss = sources.get(id)?.metadata.activationLoss;
+            const end = sources.get(id)?.metadata.activationEnd;
+            if (end)
+              return (
+                end.teamId === context.actorRosterTeamId && end.teamTurn === context.teamTurn &&
           context.period === (end.periodCode === 0 ? "first_half" : end.periodCode === 1 ? "second_half" : end.periodCode === 2 ? "extra_time" : null) &&
-          end.sourceIndex <= (event.metadata.sourceIndex ?? -1);
-        return loss && loss.teamId === context.actorRosterTeamId &&
+          end.sourceIndex <= (event.metadata.sourceIndex ?? -1)
+              );
+            return (
+              loss && loss.teamId === context.actorRosterTeamId &&
           loss.teamTurn === context.teamTurn &&
           context.period === (loss.periodCode === 0 ? "first_half" : loss.periodCode === 1 ? "second_half" : loss.periodCode === 2 ? "extra_time" : null) &&
-          loss.followingSourceIndex <= (event.metadata.sourceIndex ?? -1);
-      }), "Known ended activations require earlier confirmed same-team, same-turn evidence.");
+          loss.followingSourceIndex <= (event.metadata.sourceIndex ?? -1)
+            );
+          }), "Known ended activations require earlier confirmed same-team, same-turn evidence.");
       const expiry = event.metadata.driveEffectExpiry;
       if (expiry) {
         const phase = sources.get(expiry.phaseSourceId);
@@ -892,8 +1393,8 @@ export const LuckReportSchema = z
               (target === 2 && modifiers.length === 1 && modifiers[0] === 2 && event.metadata.modifiersSum === 2));
         require(event.metadata.dice?.length === 1 && event.metadata.dieTypes?.length === 1 && event.metadata.dieTypes[0] === 0 &&
           face !== undefined && Number.isInteger(face) && face >= 1 && face <= 6 && targetKnown &&
-          event.actualSuccess === (face >= target!) && event.metadata.outcomeCode === Number(event.actualSuccess),
-          "A resolved mental test requires one consistent D6, effective target, modifiers and observed outcome.");
+          event.actualSuccess === face >= target! &&
+          event.metadata.outcomeCode === Number(event.actualSuccess), "A resolved mental test requires one consistent D6, effective target, modifiers and observed outcome.");
         require(event.metadata.sourceTag === "ResultRoll" && event.metadata.rollType === (resolution.providerSkillId === 51 ? 34 : 33) &&
           typeof event.actualSuccess === "boolean" && event.actualSuccess === Boolean(event.metadata.outcomeCode) &&
           event.scoringStatus === "excluded" && event.probabilitySuccess === null &&
@@ -1081,7 +1582,7 @@ export const LuckReportSchema = z
         );
       }
       const reaction=event.metadata.bounceCatchReaction,catchBound=event.catchPossessionBounds;
-      const counter=event.metadata.teamRerollCounter;
+      const counter = event.metadata.teamRerollCounter;
       if(counter) {
         const question=sources.get(counter.questionSourceId),choice=event.metadata.teamRerollDecision,before=counter.before,after=counter.after;
         require(event.metadata.sourceTag === "ResultTeamRerollUsage" && event.scoringStatus === "excluded" && event.metadata.isRollCandidate === false &&
@@ -1110,7 +1611,7 @@ export const LuckReportSchema = z
           sources.get(event.metadata.rerollOffer.decisionSourceId)?.metadata.teamRerollCounter?.questionSourceId === event.metadata.sourceId &&
           counterQuestions.has(event.metadata.sourceId ?? ""),
           "A counter offer must reference one observed decision, preserving an existing attacker-selected pool or excluded non-random offer.");
-      const pickupEnd=event.metadata.pickupTurnEnd;
+      const pickupEnd = event.metadata.pickupTurnEnd;
       if(pickupEnd) {
         const caught=sources.get(pickupEnd.catchSourceId),end=sources.get(pickupEnd.endSourceId);
         const moves=pickupEnd.ordinaryMoves, known=moves?.knownAvailablePlayerIds ?? [],unknown=moves?.unknownPlayerIds ?? [];
@@ -1181,12 +1682,12 @@ export const LuckReportSchema = z
           near(catchBound.successChance,event.probabilitySuccess ?? -1) && near(catchBound.lower,expected.lower) && catchBound.upper === 0,
           "A retained Catch envelope needs its first-bounce pickup chain, original offer and decline, matching kept die, adjacent further bounce and ordered physical checkpoints; no new random stage or point value.");
       }
-      const successors=context?.pickupSuccessors;
-      const possession=event.possessionBounds;
-      if(successors || possession) {
+      const successors = context?.pickupSuccessors;
+      const possession = event.possessionBounds;
+      if (successors || possession) {
         const original=sources.get(event.metadata.rerollOriginalId ?? ""),use=sources.get(event.metadata.rerollDecisionId ?? "");
         const declaration=sources.get(successors?.declarationSourceId ?? ""),move=sources.get(successors?.moveOutcomeSourceId ?? "");
-        const target=event.metadata.difficulty;
+        const target = event.metadata.difficulty;
         const owns=(e:typeof event|undefined)=>e?.playerId === event.playerId && e?.teamId === event.teamId;
         const sameStep=(e:typeof event|undefined)=>owns(e) && e?.metadata.actionId === event.metadata.actionId && e?.metadata.sequenceId === event.metadata.sequenceId;
         require(!!successors && !!possession && event.scoringStatus === "scored" && event.metadata.rollType === 4 && event.metadata.stepType === 1 &&
@@ -1206,17 +1707,24 @@ export const LuckReportSchema = z
           original.metadata.dice?.length === 1 && original.metadata.dieTypes?.length === 1 && original.metadata.dieTypes[0] === 0 &&
           Number.isInteger(original.metadata.dice[0]) && original.metadata.dice[0]! >= 1 && original.metadata.dice[0]! < target &&
           event.metadata.dice?.length === 1 && event.metadata.dieTypes?.length === 1 && event.metadata.dieTypes[0] === 0 &&
-          Number.isInteger(event.metadata.dice[0]) && event.metadata.dice[0]!>=1 && event.metadata.dice[0]!<=6 && event.actualSuccess === (event.metadata.dice[0]!>=target) &&
-          event.probabilitySuccess !== null && near(event.probabilitySuccess,1-((target-1)/6)**2),
-          "Pickup possession bounds require an owned ordinary Move and committed original/Sure-Hands/replacement chain; missing checkpoint possession stays unknown.");
-        if(successors) {
-          require(new Set(successors.branches.map(b=>b.direction)).size === 8 && successors.branches.every(b=>{
-            const expected=bounceDestination(b.direction,successors.origin);
-            const onPitch=b.destination.x>=0 && b.destination.x<=25 && b.destination.y>=0 && b.destination.y<=14;
-            return expected?.x === b.destination.x && expected?.y === b.destination.y && (b.kind === "out_of_bounds" ? !onPitch : onPitch) &&
-              (b.kind !== "occupied" || (b.playerId !== event.playerId)) &&
-              (b.kind !== "empty" || (b.settlement === "loose") === (context?.pickupSettlementKnown === true));
-          }),"Pickup successors require all eight unique valid D8 directions, retaining occupied catch and off-pitch return uncertainty.");
+          Number.isInteger(event.metadata.dice[0]) && event.metadata.dice[0]!>=1 && event.metadata.dice[0]!<=6 &&
+          event.actualSuccess === event.metadata.dice[0]! >= target &&
+          event.probabilitySuccess !== null &&
+          near(
+            event.probabilitySuccess,
+            1 - ((target - 1) / 6) ** 2
+          ), "Pickup possession bounds require an owned ordinary Move and committed original/Sure-Hands/replacement chain; missing checkpoint possession stays unknown.");
+        if (successors) {
+          require(new Set(successors.branches.map(b=>b.direction)).size === 8 &&
+            successors.branches.every((b) => {
+              const expected=bounceDestination(b.direction,successors.origin);
+              const onPitch=b.destination.x>=0 && b.destination.x<=25 && b.destination.y>=0 && b.destination.y<=14;
+              return (
+                expected?.x === b.destination.x && expected?.y === b.destination.y && (b.kind === "out_of_bounds" ? !onPitch : onPitch) &&
+                (b.kind !== "occupied" || b.playerId !== event.playerId) &&
+                (b.kind !== "empty" || (b.settlement === "loose") === (context?.pickupSettlementKnown === true))
+              );
+            }), "Pickup successors require all eight unique valid D8 directions, retaining occupied catch and off-pitch return uncertainty.");
         }
         const expected=possession ? estimatePickupPossessionBounds(context,possession.policy,Number(event.actualSuccess)-possession.successChance,possession.successChance) : undefined;
         require(!!possession && !!expected && near(possession.successChance,(7-(target ?? 0))/6) &&
@@ -1226,8 +1734,8 @@ export const LuckReportSchema = z
       }
       if(context?.carriedBallCell) require(context.actorCarriesBall === true && context.actorCell?.x === context.carriedBallCell.x && context.actorCell.y === context.carriedBallCell.y,
         "A known carried-ball cell must match its observed carrier's current position.");
-      const combined=event.metadata.combinedMovement;
-      if(combined) {
+      const combined = event.metadata.combinedMovement;
+      if (combined) {
         const rush=sources.get(combined.rushSourceId),step=sources.get(combined.stepSourceId),move=sources.get(combined.doMoveSourceId),outcome=sources.get(combined.outcomeSourceId);
         const own=(e:typeof event|undefined)=>!!e&&e.teamId===event.teamId&&e.playerId===event.playerId;
         const same=(e:typeof event|undefined)=>own(e)&&e!.metadata.actionId===event.metadata.actionId&&e!.metadata.sequenceId===event.metadata.sequenceId;
@@ -1239,12 +1747,16 @@ export const LuckReportSchema = z
           event.metadata.sourceIndex!==undefined&&rush.metadata.sourceIndex===event.metadata.sourceIndex-1&&move.metadata.sourceIndex===event.metadata.sourceIndex+1&&outcome.metadata.sourceIndex===event.metadata.sourceIndex+2&&
           combined.originalCheckpointAfter<=combined.checkpointAfter&&combined.checkpointAfter<(step.metadata.sourceIndex??-1)&&
           Math.max(Math.abs(combined.from.x-combined.to.x),Math.abs(combined.from.y-combined.to.y))===1&&combined.movementAfter===(combined.dodgeSucceeded?combined.movementBefore:null)&&
-          new Set(combined.partialOccupancy.map(p=>p.playerId)).size===combined.partialOccupancy.length&&combined.partialOccupancy.every(p=>p.playerId!==event.playerId&&
-            ((p.cell.x===null)!==(p.cell.y===null))&&[combined.from,combined.to].every(c=>(p.cell.x!==null&&p.cell.x!==c.x)||(p.cell.y!==null&&p.cell.y!==c.y)))&&
+          new Set(combined.partialOccupancy.map(p=>p.playerId)).size===combined.partialOccupancy.length &&
+          combined.partialOccupancy.every(
+            (p) =>
+              p.playerId !== event.playerId &&
+              (p.cell.x === null) !== (p.cell.y === null) &&
+              [combined.from,combined.to].every(c=>(p.cell.x!==null&&p.cell.x!==c.x)||(p.cell.y!==null&&p.cell.y!==c.y))
+          ) &&
           (zone?event.metadata.requirement===zone.baseTarget&&event.metadata.difficulty===zone.baseTarget+zone.markers.length&&mods.length===zone.markers.length&&mods.every(m=>m===-1)&&event.metadata.modifiersSum===-mods.length&&
             new Set(zone.markers.map(m=>m.playerId)).size===zone.markers.length&&zone.markers.every(m=>m.playerId!==event.playerId&&Math.max(Math.abs(m.cell.x-combined.to.x),Math.abs(m.cell.y-combined.to.y))===1):
-            mods.length===0&&event.metadata.modifiersSum===0&&event.metadata.requirement===event.metadata.difficulty),
-          "Combined movement needs two ordered scored checks and their confirmed two-family outcome; partial coordinates exclude the relevant squares without filling omissions or adding values.");
+            mods.length===0&&event.metadata.modifiersSum===0&&event.metadata.requirement===event.metadata.difficulty), "Combined movement needs two ordered scored checks and their confirmed two-family outcome; partial coordinates exclude the relevant squares without filling omissions or adding values.");
         if(combined.policy==="team_rush_then_dodge") {
           const q=sources.get(combined.questionSourceId??""),choice=sources.get(combined.decisionSourceId??"");
           require(own(q)&&q?.metadata.sourceTag==="QuestionTeamRerollUsage"&&q.scoringStatus==="excluded"&&q.metadata.isRollCandidate===false&&same(choice)&&choice?.metadata.sourceTag==="ResultTeamRerollUsage"&&
@@ -1285,7 +1797,7 @@ export const LuckReportSchema = z
         pickupResolution.checkpointAfter === context?.checkpointAfter && pickupResolution.movementRemaining === (context?.actorMovementRemaining ?? null),
         "Observed pickup possession needs the successful committed Sure Hands chain and unchanged post-move budget.");
       const dodgeMove = event.metadata.dodgeMovement;
-      const teamMove=event.metadata.teamRerollMovement;
+      const teamMove = event.metadata.teamRerollMovement;
       if(teamMove) {
         const question=sources.get(teamMove.questionSourceId),choice=sources.get(teamMove.decisionSourceId),declaration=sources.get(teamMove.declarationSourceId);
         const doMove=sources.get(teamMove.doMoveSourceId),outcome=sources.get(teamMove.outcomeSourceId);
@@ -1443,7 +1955,7 @@ export const LuckReportSchema = z
           continuation.minimum === expected.minimum && continuation.maximum === expected.maximum,
           "An active continuation requires the owned ordinary Move declaration, verified successor, recorded budget and marking bounds.");
       }
-      const bound=event.contextualBounds;
+      const bound = event.contextualBounds;
       if (bound) {
         const keptDodge=bound.policy === "kept_dodge_terminal_moves";
         const keptRush=bound.policy === "kept_rush_terminal_moves";
@@ -1531,10 +2043,12 @@ export const LuckReportSchema = z
           bound.terminalCheckpointAfter===p.waitingCheckpointAfter,
           "A retained original Rush component needs its ordinary declaration, deterministic checkpoint prefix, adjacent fresh Rush movement, fixed decline, identical kept die and verified self-fall/turnover; it adds no replacement draw, resource cost or point value.");
       }
-      if (bound?.policy === "dodge_skill_reroll" || continuation || dodgeMove || event.contextualImpact?.policy === "dodge_skill_reroll") {
+      if (
+        bound?.policy === "dodge_skill_reroll" || continuation || dodgeMove || event.contextualImpact?.policy === "dodge_skill_reroll"
+      ) {
         const original=event.metadata.rerollOriginalId ? sources.get(event.metadata.rerollOriginalId) : undefined;
         const use=event.metadata.rerollDecisionId ? sources.get(event.metadata.rerollDecisionId) : undefined;
-        const target=event.metadata.difficulty;
+        const target = event.metadata.difficulty;
         require((!continuation || (sources.get(continuation.declarationSourceId)?.metadata.sourceIndex ?? Infinity)<(original?.metadata.sourceIndex ?? -1)) && event.metadata.rollType === 2 && event.metadata.rerollResource === "skill" && event.metadata.rerollSkill === "Dodge" && event.metadata.teamRerollsSpent === 0 &&
           original?.metadata.sourceTag === "ResultRoll" && original.metadata.rollType === 2 && original.playerId === event.playerId && original.teamId === event.teamId &&
           original.metadata.outcomeCode === 0 && original.metadata.mergedRerollAnchorId === event.metadata.sourceId &&
@@ -1543,13 +2057,27 @@ export const LuckReportSchema = z
           original.metadata.dice?.length === 1 && original.metadata.dieTypes?.length === 1 && original.metadata.dieTypes[0] === 0 &&
           Number.isInteger(original.metadata.dice[0]) && original.metadata.dice[0]!>=1 &&
           event.metadata.dice?.length === 1 && event.metadata.dieTypes?.length === 1 && event.metadata.dieTypes[0] === 0 &&
-          Number.isInteger(event.metadata.dice[0]) && event.metadata.dice[0]!>=1 && event.metadata.dice[0]!<=6 && event.actualSuccess === (event.metadata.dice[0]!>=(target ?? 0)) &&
-          typeof target === "number" && Number.isInteger(target) && target>=2 && target<=6 && original.metadata.dice[0]!<target &&
-          use?.metadata.sourceTag === "ResultSkillUsage" && use.metadata.skillUsage?.skillId === 7 && use.metadata.skillUsage.used && use.playerId === event.playerId && use.teamId === event.teamId &&
-          use.metadata.actionId === event.metadata.actionId && original.metadata.actionId === event.metadata.actionId &&
-          (original.metadata.sourceIndex ?? Infinity)<(use.metadata.sourceIndex ?? -1) && (use.metadata.sourceIndex ?? Infinity)<(event.metadata.sourceIndex ?? -1) &&
-          event.probabilitySuccess !== null && near(event.probabilitySuccess,1-((target-1)/6)**2),
-          "A Dodge-skill context policy requires the owned committed reroll, original failed die and two-attempt odds.");
+          Number.isInteger(event.metadata.dice[0]) && event.metadata.dice[0]!>=1 && event.metadata.dice[0]!<=6 &&
+          event.actualSuccess === event.metadata.dice[0]! >= (target ?? 0) &&
+          typeof target === "number" &&
+          Number.isInteger(target) &&
+          target >= 2 &&
+          target <= 6 &&
+          original.metadata.dice[0]! < target &&
+          use?.metadata.sourceTag === "ResultSkillUsage" &&
+          use.metadata.skillUsage?.skillId === 7 &&
+          use.metadata.skillUsage.used &&
+          use.playerId === event.playerId &&
+          use.teamId === event.teamId &&
+          use.metadata.actionId === event.metadata.actionId &&
+          original.metadata.actionId === event.metadata.actionId &&
+          (original.metadata.sourceIndex ?? Infinity)<(use.metadata.sourceIndex ?? -1) &&
+          (use.metadata.sourceIndex ?? Infinity)<(event.metadata.sourceIndex ?? -1) &&
+          event.probabilitySuccess !== null &&
+          near(
+            event.probabilitySuccess,
+            1 - ((target - 1) / 6) ** 2
+          ), "A Dodge-skill context policy requires the owned committed reroll, original failed die and two-attempt odds.");
       }
       const impact = event.contextualImpact;
       if (impact) {
@@ -1615,12 +2143,15 @@ export const LuckReportSchema = z
         "A recorded injury outcome needs its supported direct/embedded source namespace, uniquely affected player, ordered damage step and two D6; it supplies no odds, final posture or luck contribution.");
       if(event.metadata.blockCrowd)
         require(validReportedBlockCrowd(event,sources,report.coverage.sourceRecordCount),"Crowd damage requires one direct defender push, ordered removal/injury stages, confirmed off-pitch observation and no invented odds or armor.");
-      if(event.metadata.crowdPush || event.metadata.crowdRemoval)
-        require(event.scoringStatus === "excluded" && !event.metadata.isRollCandidate && report.events.some(pool=>{
-          const c=pool.metadata.blockCrowd;
-          return !!c && (event.metadata.crowdPush ? c.pushSourceId === event.metadata.sourceId :
-            c.initialRemovalSourceId === event.metadata.sourceId || c.finalRemovalSourceId === event.metadata.sourceId);
-        }),"Crowd push/removal receipts must be referenced non-random evidence, not extra outcomes.");
+      if (event.metadata.crowdPush || event.metadata.crowdRemoval)
+        require(event.scoringStatus === "excluded" && !event.metadata.isRollCandidate &&
+          report.events.some((pool) => {
+            const c = pool.metadata.blockCrowd;
+            return (
+              !!c && (event.metadata.crowdPush ? c.pushSourceId === event.metadata.sourceId :
+            c.initialRemovalSourceId === event.metadata.sourceId || c.finalRemovalSourceId === event.metadata.sourceId)
+            );
+          }), "Crowd push/removal receipts must be referenced non-random evidence, not extra outcomes.");
       if(event.metadata.damage?.observedInjury)
         require(!!event.metadata.injuryObservation && event.metadata.rollType === 11 && !event.metadata.damage.regeneration && !event.metadata.damage.koRecovery,
           "Observed injury subject evidence must retain its own categorical observation, without a recovery or binary-odds claim.");
@@ -1647,30 +2178,38 @@ export const LuckReportSchema = z
           (event.metadata.sourceIndex ?? Infinity) < (selection?.metadata.sourceIndex ?? -1) &&
           (selection?.metadata.sourceIndex ?? Infinity) < (final?.metadata.sourceIndex ?? -1) &&
           skills.length === blockAftermath.skillSourceIds.length && new Set(blockAftermath.skillSourceIds).size === skills.length &&
-          skills.every(skill => {
+          skills.every((skill) => {
             const use = sources.get(skill.sourceId)!;
-            return use.metadata.sourceTag === "ResultSkillUsage" && use.metadata.skillUsage?.used && teamIds.has(use.teamId) &&
+            return (
+              use.metadata.sourceTag === "ResultSkillUsage" && use.metadata.skillUsage?.used && teamIds.has(use.teamId) &&
               (skill.playerId === block.attackerId ? use.teamId === event.teamId : skill.playerId === block.defenderId && use.teamId !== event.teamId) &&
               use.metadata.stepType === 6 && use.metadata.actionId === selection?.metadata.actionId &&
-              (event.metadata.sourceIndex ?? Infinity) < (use.metadata.sourceIndex ?? -1) && (use.metadata.sourceIndex ?? Infinity) < (selection?.metadata.sourceIndex ?? -1);
-          }) && consistentBlockResolution(block.selectedFace, block.finalOutcome, block.attackerId, block.defenderId, skills),
-          "Block consequences require their own ordered selected face, participant skill uses and applied outcome.");
+              (event.metadata.sourceIndex ?? Infinity) < (use.metadata.sourceIndex ?? -1) && (use.metadata.sourceIndex ?? Infinity) < (selection?.metadata.sourceIndex ?? -1)
+            );
+          }) &&
+          consistentBlockResolution(block.selectedFace, block.finalOutcome, block.attackerId, block.defenderId, skills), "Block consequences require their own ordered selected face, participant skill uses and applied outcome.");
         if (block && final) {
           linkedBlockFinals.add(block.finalSourceId!);
           const subjects = knockedDownSubjects(blockAftermath.outcome,block.attackerId,block.defenderId);
           const linked = blockAftermath.damageActionIds.flatMap(id => damageByAction.has(id) ? [damageByAction.get(id)!] : []);
           require(linked.length === blockAftermath.damageActionIds.length && new Set(blockAftermath.damageActionIds).size === linked.length &&
-            new Set(linked.map(step=>step.playerId)).size === linked.length && linked.every(step =>
-              !linkedDamageActions.has(step.actionId) && (subjects.includes(step.playerId) || (event.metadata.blockCrowd?.damageActionId === step.actionId && event.metadata.blockCrowd.subjectId === step.playerId)) &&
+            new Set(linked.map(step=>step.playerId)).size === linked.length &&
+            linked.every(
+              (step) =>
+                !linkedDamageActions.has(step.actionId) && (subjects.includes(step.playerId) || (event.metadata.blockCrowd?.damageActionId === step.actionId && event.metadata.blockCrowd.subjectId === step.playerId)) &&
               (step.playerId === block.attackerId ? step.teamId === event.teamId : step.teamId !== event.teamId && teamIds.has(step.teamId)) &&
-              step.eventIds.some(id=>ids.get(id)?.metadata.damage?.sourceCode === (event.metadata.blockCrowd?.damageActionId === step.actionId ? 2 : 1)) && step.eventIds.every(id=> {
-                const damage = ids.get(id)!;
-                return damage.metadata.sequenceId === final.metadata.sequenceId &&
+              step.eventIds.some(id=>ids.get(id)?.metadata.damage?.sourceCode === (event.metadata.blockCrowd?.damageActionId === step.actionId ? 2 : 1)) &&
+                step.eventIds.every((id) => {
+                  const damage = ids.get(id)!;
+                  return (
+                    damage.metadata.sequenceId === final.metadata.sequenceId &&
                   damage.metadata.locator?.replayStep === final.metadata.locator?.replayStep &&
                   damage.metadata.locator?.stepIndex !== undefined && final.metadata.locator?.stepIndex !== undefined &&
                   damage.metadata.locator.stepIndex > final.metadata.locator.stepIndex && damage.metadata.locator.stepIndex <= final.metadata.locator.stepIndex + 2 &&
-                  (damage.metadata.sourceIndex ?? -1) > (final.metadata.sourceIndex ?? Infinity);
-              })), "Block damage must retain the knocked-down subject, adjacent block-source damage step and original team perspective.");
+                  (damage.metadata.sourceIndex ?? -1) > (final.metadata.sourceIndex ?? Infinity)
+                  );
+                })
+            ), "Block damage must retain the knocked-down subject, adjacent block-source damage step and original team perspective.");
           for (const step of linked) linkedDamageActions.add(step.actionId);
           const expected = summarizeBlockConsequence(event,linked);
           require(blockAftermath.unscoredDamageRolls === expected.unscoredDamageRolls &&
@@ -1910,10 +2449,15 @@ export const LuckReportSchema = z
           new Set(ballChain.bounceSourceIds).size === bounces.length &&
           new Set(ballChain.catchEventIds).size === catches.length &&
           catches.length <= bounces.length && bounces.length <= catches.length + 1 &&
-          bounces.every((bounce, index) => bounce?.metadata.ballTravel &&
+          bounces.every(
+            (bounce, index) =>
+              bounce?.metadata.ballTravel &&
             bounce.metadata.sourceIndex !== undefined &&
-            bounce.metadata.sourceIndex > (index ? bounces[index - 1]?.metadata.sourceIndex ?? Infinity : event.metadata.sourceIndex ?? Infinity)),
-          "Pickup ball chains require ordered, unique observed bounces after the failed check.");
+              bounce.metadata.sourceIndex >
+                (index
+                  ? (bounces[index - 1]?.metadata.sourceIndex ?? Infinity)
+                  : (event.metadata.sourceIndex ?? Infinity))
+          ), "Pickup ball chains require ordered, unique observed bounces after the failed check.");
         for (const [index, caught] of catches.entries()) {
           const bounce = bounces[index];
           const next = bounces[index + 1];

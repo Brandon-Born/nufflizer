@@ -34,7 +34,7 @@ export type BlockEvidence = {
 };
 export type BlockRecord =
   | { kind: "pool"; evidence?: BlockEvidence }
-  | { kind: "summary"; reason: string };
+  | { kind: "summary"; reason: string; poolSourceId?: string };
 
 type RecordLike = Record<string, unknown>;
 function record(value: unknown): RecordLike | undefined {
@@ -271,7 +271,8 @@ export function linkBlockPools(
         if (p?.CanChoseDie === 1 && gamer !== undefined) chain.chooser = gamer;
         records.set(index, {
           kind: "summary",
-          reason: "repeated block pool with no newly rolled indices"
+          reason: "repeated block pool with no newly rolled indices",
+          poolSourceId: last.sourceId
         });
         continue;
       }
@@ -400,6 +401,33 @@ export function linkBlockPools(
       }
       chain.proSkillSourceId = undefined;
     }
+    if (event.sourceTag === "QuestionPushBack" && chain.selected) {
+      const copied = record(p?.BlockRoll),
+        f = face(copied?.Die),
+        last = chain.pools.at(-1)?.pool;
+      if (
+        copied?.RollType === 3 &&
+        f === chain.selected.face &&
+        copied.Outcome === chain.selected.outcome &&
+        last?.sourceId
+      )
+        records.set(index, {
+          kind: "summary",
+          reason: "push-choice copy of the selected block die",
+          poolSourceId: last.sourceId
+        });
+    }
+    if (event.sourceTag === "QuestionBlockSkillUsage") {
+      const copied = record(p?.RollInfos),
+        f = face(copied?.Die),
+        last = chain.pools.at(-1)?.pool;
+      if (copied?.RollType === 3 && f !== undefined && last?.faces.includes(f))
+        records.set(index, {
+          kind: "summary",
+          reason: "skill-choice copy of a linked block die",
+          poolSourceId: last.sourceId
+        });
+    }
     if (event.sourceTag === "ResultBlockRoll") {
       const f = face(p?.Die);
       const last = chain.pools.at(-1)!.pool;
@@ -425,7 +453,8 @@ export function linkBlockPools(
       }
       records.set(index, {
         kind: "summary",
-        reason: "selected die from the linked block pool"
+        reason: "selected die from the linked block pool",
+        poolSourceId: last.sourceId
       });
     }
     if (event.sourceTag === "ResultBlockOutcome") {

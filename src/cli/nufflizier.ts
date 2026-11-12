@@ -30,6 +30,8 @@ import {
   PARTIAL_CONTEXT_SCOPE,
   explainDriveEffectExpiry,
   explainContextCoverage,
+  explainDiceCensus,
+  explainObservedDice,
   explainRecruitmentEvidence
 } from "@/domain/nufflizer/presentation";
 import { runAnalysis } from "@/server/runAnalysis";
@@ -99,6 +101,10 @@ function formatTeamSummary(
     `Roll-candidate coverage: ${(report.coverage.rollCandidates.scoredRate * 100).toFixed(1)}% scored (${report.coverage.rollCandidates.scoredCount} scored, ${report.coverage.rollCandidates.excludedCount} excluded)`,
     `All-event coverage: ${(report.coverage.allEvents.scoredRate * 100).toFixed(1)}% scored (${report.coverage.allEvents.scoredCount} scored, ${report.coverage.allEvents.excludedCount} excluded)`,
     explainContextCoverage(report.coverage.contextEvidence),
+    explainDiceCensus(report.coverage.diceRecords),
+    ...report.events
+      .filter((e) => e.metadata.observedReroll || e.metadata.teamDiceIdentity)
+      .map((e) => `Source ${e.metadata.sourceId}: ${explainObservedDice(e)}`),
     "Partial context component sums:",
     PARTIAL_CONTEXT_SCOPE,
     ...report.contextComponents.flatMap((summary) => [

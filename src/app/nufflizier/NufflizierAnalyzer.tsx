@@ -28,6 +28,8 @@ import {
   formatContextComponentSum,
   PARTIAL_CONTEXT_SCOPE,
   explainInjuryObservation,
+  explainDiceCensus,
+  explainObservedDice,
   explainDriveEffectExpiry,
   explainContextCoverage,
   explainRecruitmentEvidence
@@ -79,6 +81,10 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
             : []
         ) ?? []
       ),
+    [report]
+  );
+  const diceById = useMemo(
+    () => new Map((report?.diceRecords ?? []).map((r) => [r.id, r])),
     [report]
   );
   const eventsById = useMemo(
@@ -390,6 +396,9 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                 <li key={line}>{line}</li>
               ))}
             </ul>
+            <p className="mt-2 text-sm text-amber-100/80">
+              {explainDiceCensus(report.coverage.diceRecords)}
+            </p>
             {Object.keys(report.coverage.excludedByReason).length > 0 ? (
               <p className="mt-2 text-sm text-amber-100">
                 Some events were excluded when replay context was
@@ -836,6 +845,11 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                                 : "n/a"}
                               , weight {moment.explainability.weight}.
                             </p>
+                            {explainObservedDice(moment, diceById) ? (
+                              <p className="mt-1 text-xs text-amber-100/80">
+                                {explainObservedDice(moment, diceById)}
+                              </p>
+                            ) : null}
                             {moment.metadata.injuryObservation ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainInjuryObservation(moment)}

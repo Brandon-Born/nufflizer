@@ -1,3 +1,15 @@
+import {
+  findTeamDiceIdentities,
+  linkBlockDiceCopies,
+  type TeamDiceIdentity
+} from "./diceIdentityLinks";
+import { findObservedRerollDice } from "./observedRerollDice";
+import {
+  addDiceLink,
+  reconcileDiceEvidence,
+  summarizeDiceRecords,
+  type DiceLinks
+} from "./diceEvidence";
 import { findBlockTraitEvidence } from "@/domain/replay/traitContinuity";
 import { enumerateSkillBlock } from "./blockSkillModel";
 import { findKeptDodgeContexts, attachKeptDodgeMoves } from "./keptDodgeMoves";
@@ -871,7 +883,7 @@ function buildNormalizedEvent(
         ? "dodge_skill_reroll"
         : rerollLink?.resource === "skill" && rerollLink.skill === "Sure Hands" ? "sure_hands_reroll" : undefined;
   const contextDeviation =
-    (contextPolicy === "dodge_skill_reroll" || contextPolicy === "sure_hands_reroll")
+    contextPolicy === "dodge_skill_reroll" || contextPolicy === "sure_hands_reroll"
       ? Number(actualSuccess) - probability.baseOdds
       : delta;
   const contextualImpact =
@@ -1063,6 +1075,14 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   );
 
   const events: LuckEvent[] = [];
+  const normalizedByRaw = new Map<ReplayEvent, LuckEvent>();
+  const diceLinks: DiceLinks = new Map();
+  const observedRerollDice = findObservedRerollDice(replay);
+  const teamDiceIdentityByQuestion = new Map(
+    findTeamDiceIdentities(replay).map((p) => [p.question.id, p])
+  );
+  const newTeamDiceIdentities: TeamDiceIdentity[] = [];
+  linkBlockDiceCopies(replay, diceLinks);
   const lonerSkills = new Map<string, 44 | 1008>();
   const lonerChoices = new Map<string, 0 | 1>();
   const blockConsequences: ObservedBlockConsequence[] = [];
@@ -1138,11 +1158,52 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     activationEvidenceSources.add(source);
     activationEvidenceSources.add(expiry.phaseSourceId);
   }
+  for (const proof of observedRerollDice) {
+    activationEvidenceSources.add(proof.question.id!);
+    activationEvidenceSources.add(proof.choice.id!);
+    if (proof.directOriginal)
+      addDiceLink(
+        diceLinks,
+        proof.question.id,
+        proof.originalPath,
+        proof.directOriginal.id,
+        ["Dice"],
+        "summary"
+      );
+    else
+      addDiceLink(
+        diceLinks,
+        proof.question.id,
+        proof.originalPath,
+        proof.final.id,
+        ["Dice"],
+        "policy_original"
+      );
+    if (!proof.used)
+      addDiceLink(
+        diceLinks,
+        proof.final.id,
+        ["Dice"],
+        proof.question.id,
+        proof.originalPath,
+        "summary"
+      );
+    for (const duplicate of proof.duplicates)
+      addDiceLink(
+        diceLinks,
+        duplicate.id,
+        ["Dice"],
+        proof.final.id,
+        ["Dice"],
+        "summary"
+      );
+  }
   const koRecoveryChecks = countKoRecoveryChecks(replay.turns);
   const checkpoints = replay.boardCheckpoints ?? [];
   const epochs = checkpointClockEpochs(checkpoints);
   const eventEpochs = new Map<number, number>();
-  let checkpointCursor = 0, epoch = 0;
+  let checkpointCursor = 0,
+    epoch = 0;
   for (const event of replay.turns.flatMap(t => t.events)) {
     if (event.sourceIndex === undefined) continue;
     while (checkpointCursor < checkpoints.length && checkpoints[checkpointCursor]!.afterSourceIndex < event.sourceIndex)
@@ -1216,6 +1277,103 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       replay.replayVersion,
       rerollLinks
     );
+    for (const [index, record] of blockRecords)
+      if (record.kind === "summary") {
+        const raw = replayTurn.events[index]!;
+        addDiceLink(
+          diceLinks,
+          raw.id,
+          raw.sourceTag === "QuestionPushBack"
+            ? ["BlockRoll", "Die"]
+            : raw.sourceTag === "QuestionBlockSkillUsage"
+              ? ["RollInfos", "Die"]
+              : [raw.sourceTag === "ResultBlockRoll" ? "Die" : "Dice"],
+          record.poolSourceId,
+          ["Dice"],
+          "summary"
+        );
+      }
+    for (const [index, link] of rerollLinks) {
+      const raw = replayTurn.events[index]!;
+      if (
+        raw.sourceTag !== "ResultRoll" ||
+        raw.rollType === 71 ||
+        raw.rollType === 15 ||
+        link.mergedIntoId ||
+        !link.questionId
+      )
+        continue;
+      if (link.originalId)
+        addDiceLink(
+          diceLinks,
+          link.questionId,
+          ["RollInfos", "Dice"],
+          link.originalId,
+          ["Dice"],
+          "summary"
+        );
+      else
+        addDiceLink(
+          diceLinks,
+          link.questionId,
+          ["RollInfos", "Dice"],
+          raw.id,
+          ["Dice"],
+          "policy_original"
+        );
+      if (link.retainedOriginal)
+        addDiceLink(
+          diceLinks,
+          raw.id,
+          ["Dice"],
+          link.questionId,
+          ["RollInfos", "Dice"],
+          "summary"
+        );
+    }
+    for (const rawQuestion of replayTurn.events) {
+      const proof = teamDiceIdentityByQuestion.get(rawQuestion.id);
+      if (!proof) continue;
+      if (
+        diceLinks
+          .get(proof.question.id!)
+          ?.some(
+            (l) =>
+              JSON.stringify(l.path) === JSON.stringify(["RollInfos", "Dice"])
+          )
+      )
+        continue;
+      activationEvidenceSources.add(proof.question.id!);
+      activationEvidenceSources.add(proof.choice.id!);
+      if (proof.directOriginal)
+        addDiceLink(
+          diceLinks,
+          proof.question.id,
+          ["RollInfos", "Dice"],
+          proof.directOriginal.id,
+          ["Dice"],
+          "summary"
+        );
+      else
+        addDiceLink(
+          diceLinks,
+          proof.question.id,
+          ["RollInfos", "Dice"],
+          proof.final.id,
+          ["Dice"],
+          "policy_original"
+        );
+      if (!proof.replacementRolled)
+        addDiceLink(
+          diceLinks,
+          proof.final.id,
+          ["Dice"],
+          proof.question.id,
+          ["RollInfos", "Dice"],
+          "summary"
+        );
+      newTeamDiceIdentities.push(proof);
+    }
     const consequences = findBlockConsequences(
       replayTurn.events,
       blockRecords,
@@ -1234,6 +1392,25 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       replay.replayVersion,
       playerToTeam
     );
+    for (const [index, record] of apothecary) {
+      const raw = replayTurn.events[index]!;
+      addDiceLink(
+        diceLinks,
+        raw.id,
+        ["RollInfos", "Dice"],
+        record.repeatedOriginalSourceId,
+        ["Dice"],
+        "summary"
+      );
+      addDiceLink(
+        diceLinks,
+        raw.id,
+        ["OriginalRoll", "Dice"],
+        record.copiedOriginalSourceId,
+        ["RollInfos", "Dice"],
+        "summary"
+      );
+    }
     const embeddedInjuries = retainEmbeddedInjuries(
       replayTurn.events,
       replay.replayVersion,
@@ -1313,11 +1490,12 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       )
         normalized.metadata.movementTouchdown = touchdown.evidence;
       events.push(normalized);
+      normalizedByRaw.set(event, normalized);
     }
   }
 
   const ballSources=new Map(events.flatMap(e=>e.metadata.sourceId?[[e.metadata.sourceId,e] as const]:[]));
-  attachInjuryObservations(replay,ballSources);
+  attachInjuryObservations(replay, ballSources);
   attachBlockCrowd(replay,ballSources,blockConsequences);
   const damageSteps = summarizeDamageSteps(events);
   if (movementFalls.length > 0) {
@@ -1363,8 +1541,8 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
   for (const turn of replay.turns)
     linkPickupBallConsequences(turn, ballSources);
   attachBounceCatchReactions(bounceCatchReactions,ballSources);
-  attachRetainedCatchPossession(replay,ballSources);
-  attachPickupTurnEnds(pickupTurnEnds,ballSources);
+  attachRetainedCatchPossession(replay, ballSources);
+  attachPickupTurnEnds(pickupTurnEnds, ballSources);
   attachRerollCounterEvidence(rerollCounters,ballSources);
   for(const [source,proof] of combinedMovements) {
     const dodge=ballSources.get(source),rush=ballSources.get(proof.rushSourceId);
@@ -1613,6 +1791,90 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
     }
   }
 
+  const diceRecords = reconcileDiceEvidence(
+    replay,
+    events,
+    normalizedByRaw,
+    diceLinks
+  );
+  const diceByParentPath = new Map(
+    diceRecords.map((r) => [JSON.stringify([r.parentSourceId, r.path]), r])
+  );
+  for (const proof of newTeamDiceIdentities) {
+    const final = normalizedByRaw.get(proof.final),
+      choice = normalizedByRaw.get(proof.choice),
+      original = diceByParentPath.get(
+        JSON.stringify([proof.question.id, ["RollInfos", "Dice"]])
+      );
+    if (!final || !choice || !original || final.scoringStatus !== "excluded")
+      continue;
+    choice.metadata.teamDiceChoice = {
+      questionSourceId: proof.question.id!,
+      used: proof.used,
+      gamerId: Number(proof.choice.payload!.GamerId) as 0 | 1
+    };
+    final.metadata.teamDiceIdentity = {
+      questionSourceId: proof.question.id!,
+      decisionSourceId: proof.choice.id!,
+      originalRecordId: original.id,
+      teamUsed: proof.used,
+      replacementRolled: proof.replacementRolled,
+      originalDie: proof.originalDie,
+      finalDie: proof.finalDie,
+      gateSourceId: proof.gate?.id,
+      gatePassed: proof.gatePassed,
+      gateSkillId: proof.gateSkill?.payload?.Skill as 44 | 1008 | 50 | undefined
+    };
+  }
+  for (const proof of observedRerollDice) {
+    const question = normalizedByRaw.get(proof.question),
+      choice = normalizedByRaw.get(proof.choice),
+      final = normalizedByRaw.get(proof.final);
+    const originalRecord = diceByParentPath.get(
+      JSON.stringify([proof.question.id, proof.originalPath])
+    );
+    if (!question || !choice || !final || !originalRecord) continue;
+    for (const row of [question, choice, final]) {
+      if (row.scoringStatus !== "excluded") continue;
+      row.teamId = proof.teamId;
+      row.teamName = teamNameById.get(proof.teamId) ?? proof.teamId;
+      row.statusReason =
+        "excluded: observed source-linked reroll has no accepted probability/value contract";
+    }
+    question.metadata.observedRerollOffer = {
+      kind: proof.kind,
+      ruleId: proof.ruleId,
+      gamerId: proof.gamerId,
+      originalRecordId: originalRecord.id
+    };
+    choice.metadata.observedRerollChoice = {
+      kind: proof.kind,
+      ruleId: proof.ruleId,
+      used: proof.used,
+      questionSourceId: proof.question.id!
+    };
+    final.metadata.observedReroll = {
+      kind: proof.kind,
+      ruleId: proof.ruleId,
+      used: proof.used,
+      questionSourceId: proof.question.id!,
+      decisionSourceId: proof.choice.id!,
+      ownershipCheckpointAfter: proof.ownershipCheckpointAfter,
+      originalRecordId: originalRecord.id,
+      originalDie: proof.originalDie,
+      finalDie: proof.finalDie
+    };
+    for (const raw of proof.duplicates) {
+      const duplicate = normalizedByRaw.get(raw);
+      if (duplicate) {
+        duplicate.metadata.isRollCandidate = false;
+        duplicate.metadata.repeatedDiceSourceId = proof.final.id;
+        duplicate.statusReason =
+          "excluded: repeated terminal reroll summary in the same action";
+      }
+    }
+  }
+
   const homeAggregate = initialAggregate(homeTeam.id, homeTeam.name);
   const awayAggregate = initialAggregate(awayTeam.id, awayTeam.name);
   const aggregateById = new Map<string, LuckTeamAggregate>([
@@ -1712,7 +1974,9 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       0
     ),
     denominatorDescription:
-      "Roll candidates include unknown families and randomizers. Each linked check counts once. Reported events also include evidence such as block selections and Apothecary decisions. These percentages describe dice coverage only.",
+      "Roll candidates include unsupported outcomes and randomizers after known summary/policy grouping. Raw dice records are separately reconciled; unresolved identities are disclosed. Neither percentage is whole-match confidence.",
+    diceRecords: summarizeDiceRecords(diceRecords),
+    modelVersion: "dice-evidence-1" as const,
     allEvents: {
       scoredCount: allScoredCount,
       excludedCount: allExcludedCount,
@@ -1755,6 +2019,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
       awayTeam: awayAggregate.teamName
     },
     verdict,
+    diceRecords,
     coverage,
     damageSteps,
     contextComponents:summarizeContextComponents(events,[homeAggregate.teamId,awayAggregate.teamId]) as LuckReport["contextComponents"],

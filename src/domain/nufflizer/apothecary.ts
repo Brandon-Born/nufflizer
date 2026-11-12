@@ -17,6 +17,8 @@ export type ApothecaryResolution = {
 export type ApothecaryRecord = {
   roll?: Record<string, unknown>;
   repeatedOriginal?: boolean;
+  repeatedOriginalSourceId?: string;
+  copiedOriginalSourceId?: string;
   resolution?: ApothecaryResolution;
 };
 
@@ -137,7 +139,7 @@ export function linkApothecary(
 ): Map<number, ApothecaryRecord> {
   const records = new Map<number, ApothecaryRecord>();
   let step: ReplayEvent | undefined;
-  const direct = new Set<string>();
+  const direct = new Map<string,string>();
   let pending:
     | {
         subject: string;
@@ -195,7 +197,8 @@ export function linkApothecary(
       const repeatedOriginal = Boolean(
         key && sameStep && owned && direct.has(key)
       );
-      records.set(index, { roll, repeatedOriginal });
+      records.set(index, { roll, repeatedOriginal,
+        repeatedOriginalSourceId: key ? direct.get(key) : undefined });
       pending = undefined;
       const source = event.damageSource;
       if (
@@ -226,6 +229,12 @@ export function linkApothecary(
       const roll = readRoll(payload?.NewRoll, event.damageSource, true);
       records.set(index, { roll });
       const copied = readRoll(payload?.OriginalRoll, event.damageSource, true);
+      // Copy identity is separate from chooser/resource validity. A wrong
+      // chooser invalidates treatment, but cannot make OriginalRoll fresh dice.
+      if (pending && !pending.replacement && !pending.removal && copied &&
+          event.actionId && event.actionId !== pending.lastActionId &&
+          rollKey(copied) === rollKey(pending.original))
+        records.get(index)!.copiedOriginalSourceId = pending.originalSourceId;
       if (
         !pending ||
         pending.replacement ||
@@ -302,7 +311,8 @@ export function linkApothecary(
       owned
     ) {
       const roll = readRoll(payload, event.damageSource);
-      if (roll) direct.add(JSON.stringify([rollKey(roll), roll.Outcome]));
+      if (roll) direct.set(JSON.stringify([rollKey(roll), roll.Outcome]),
+          event.id ?? "");
     }
   }
   return records;

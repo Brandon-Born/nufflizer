@@ -38,6 +38,27 @@ export function formatActualOutcome(
   return event.actualSuccess ? "Success" : "Fail";
 }
 
+export function explainDiceCensus(
+  evidence: LuckReport["coverage"]["diceRecords"]
+): string {
+  return `Dice-field coverage: ${evidence.coveredCount} covered, ${evidence.unscoredCount} unscored, ${evidence.unresolvedCount} with unresolved identity, ${evidence.summaryCount} linked copies and ${evidence.nonrandomCount} no-roll placeholders (${evidence.recordCount} fields; ${evidence.malformedCount} malformed). This counts recorded dice groups, not individual dice, independent opportunities or confidence in the match verdict.`;
+}
+export function explainObservedDice(
+  event: LuckReport["events"][number],
+  records: ReadonlyMap<string, LuckReport["diceRecords"][number]> = new Map()
+): string | null {
+  const record = records.get(event.metadata.diceEvidenceId ?? "");
+  if (record)
+    return `Recorded dice field ${record.path.join(".")}: ${record.dice.map((d) => d.value ?? "unknown").join(", ") || "empty"}. Evidence is ${record.quality}; ${record.disposition === "unresolved" ? "whether this is a new outcome or a copy remains unresolved" : "this observed roll has no accepted probability or value model"}. Actual success and luck remain unknown.`;
+  const r = event.metadata.observedReroll,
+    team = event.metadata.teamDiceIdentity;
+  if (r)
+    return `Recorded ${r.kind === "star" ? "star" : "Pass skill"} reroll: original die ${r.originalDie}, ${r.used ? `used; replacement die ${r.finalDie} is a new draw even if its face matches` : `declined; die ${r.finalDie} repeats the original`}. This identifies the observed dice and choice, not reroll eligibility, success odds or tactical value. No luck score is added.`;
+  if (team)
+    return `Recorded team-reroll decision ${team.teamUsed ? "used" : "declined"}: original die ${team.originalDie}, final die ${team.finalDie}; ${team.replacementRolled ? "a replacement was rolled" : "the original was retained"}.${team.gateSourceId ? ` A separate ${team.gateSkillId === 50 ? "Pro" : "Loner"} gate ${team.gatePassed ? "passed" : "failed"}.` : ""} This is dice identity evidence; resource eligibility and probability/value remain unverified. No luck score is added.`;
+  return null;
+}
+
 export function explainInjuryObservation(event:LuckReport["events"][number]):string|null {
   const observation=event.metadata.injuryObservation;
   if(!observation)return null;
@@ -437,15 +458,18 @@ export function explainPickupBallChain(
   return `The failed pickup led to ${chain.bounceSourceIds.length} recorded bounce${chain.bounceSourceIds.length === 1 ? "" : "s"} and ${chain.catchEventIds.length} linked catch check${chain.catchEventIds.length === 1 ? "" : "s"}. ${catches ? catches + " " : ""}The last recorded landing was [${chain.endingCell.x}, ${chain.endingCell.y}]. Existing dice subtotals by team: ${totals}. These dice contributions are already included in the team totals.${aftermath} The full tactical cost of possession or the turn remains unquantified.`;
 }
 
-
-export function explainBlockSkillModel(event: LuckReport["events"][number]): string | null {
+export function explainBlockSkillModel(
+  event: LuckReport["events"][number]
+): string | null {
   const traits=event.metadata.block?.traitEvidence,model=event.metadata.block?.skillModel;
-  if(!traits)return null;
+  if (!traits) return null;
   const source=`Intrinsic skill evidence for attacker ${traits.attacker.playerId} and defender ${traits.defender.playerId} continues from checkpoints ${traits.attacker.observedCheckpointAfter}/${traits.defender.observedCheckpointAfter} through current roster checkpoint ${traits.attacker.currentCheckpointAfter}. Raw missing fields remain unknown; effects, transformations, changed identity and unsupported transitions break continuity.`;
   if(!model)return `${source} This skill combination has no accepted block outcome model. The displayed dice score remains the separate raw-symbol calculation.`;
-  const relevant=(side:"attacker"|"defender")=>{
+  const relevant = (side: "attacker" | "defender") => {
     const skills=new Set([...(traits[side].traits.innateSkills ?? []),...(traits[side].traits.acquiredSkills ?? [])]);
-    return ([[30,"Block"],[side==="attacker"?57:7,side==="attacker"?"Tackle":"Dodge"],[68,"Wrestle"]] as const).filter(([id])=>skills.has(id)).map(([,name])=>name).join(", ") || "none";
+    return (
+      ([[30,"Block"],[side==="attacker"?57:7,side==="attacker"?"Tackle":"Dodge"],[68,"Wrestle"]] as const).filter(([id])=>skills.has(id)).map(([,name])=>name).join(", ") || "none"
+    );
   };
   return `${source} Continued intrinsic block skills: attacker ${relevant("attacker")}; defender ${relevant("defender")}. Single-pool model: both coaches choose by defender knockdowns minus attacker knockdowns, maximizing for the attacker and minimizing for the defender. Block prevents Both Down knockdowns; Dodge prevents Defender Stumbles unless Tackle applies. ${model.wrestlePolicy==="improve_knockdown_balance"?"Wrestle is used only when it improves the holder's knockdown balance; ties decline Wrestle.":"Wrestle is declined."} Under this fixed policy, the chance of a positive knockdown balance is ${(model.positiveChance*100).toFixed(1)}%; its expected balance is ${model.expectedValue.toFixed(3)} and the rolled pool offers ${model.poolValue}. This is a conditional model of the offered pool, not the coach's actual choice or tactical impact. Prone through Wrestle, pushes, position, ball, reroll resources and later damage are outside this component. It is not added to dice or context totals.`;
 }
