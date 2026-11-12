@@ -859,3 +859,8 @@ The clean streaming checkpoint still exposed a first-cold4s timeout, retained as
 ## 2026-11-11 - Exact Preview acceptance qualified by the remaining large replay
 
 Exact161760c passes CI43155581489 and is Ready on Node22 in the isolated Preview with the durable Free Redis store. Live source hashes/preflight behavior agree; full demo2/demo3 scores match frozen references, and demo2 passes real Chromium upload/export/reset. Current app/platform413 limits,503 BUSY and shared429 despite forwarding spoofing pass. The largest demo1 still returns typed504 TIMEOUT with no report, so hosted acceptance remains partial and NUF-023/other17 open issues are not closed. All1151 local tests, real Redis/build and19 browser flows remain green; fourteen ranges/zero points and comparative abstention are preserved. No paid plan/billing or production/legacy change. The final documentation-only receipt is separately verified in CI.
+
+
+## 2026-11-11 - Exact XML values with less generic conversion
+
+The primary replay parser bypasses generic numeric allocation only for exactly representable ordinary integers/Booleans and proven nonnumeric text, preserving upstream fallback and one-pass entity behavior.54 independent coercion regressions and complete12-demo model equality accompany9.1% median local parse improvement. All1205 tests, Redis/build and19 browser flows pass under unchanged limits. No semantic/schema expansion, context point value or broad issue closure. Exact committed Preview demo1 failure remains until separately retested; no Stripe, new resource, paid plan or production/legacy change.

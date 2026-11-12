@@ -4,6 +4,7 @@ import { ReplayValidationError } from "@/lib/errors";
 import { REPLAY_LIMITS } from "./limits";
 
 function decodeText(value: string): string {
+  if (!value.includes("&")) return value;
   return value.replace(
     /&(amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);/g,
     (match, entity: string) => {
@@ -29,13 +30,46 @@ function decodeText(value: string): string {
     }
   );
 }
+// These ordinary decimal integers are exactly representable and use the
+// fixed leadingZeros=true parser policy. Return their existing parsed type
+// directly, avoiding strnum's generic option/regex/string allocations. Other
+// numeric spellings still go through fast-xml-parser's original coercion.
+function replayTagValue(value: string): string | number | boolean | undefined {
+  const decoded = decodeText(value);
+  // A changed processor value bypasses type parsing in fast-xml-parser. Keep
+  // that behavior for character references and one-pass entity decoding.
+  if (decoded !== value) return decoded;
+  const sign = value[0] === "-" || value[0] === "+" ? 1 : 0;
+  if (value.length > sign && value.length - sign <= 15) {
+    let i = sign;
+    for (; i < value.length; i++) {
+      const code = value.charCodeAt(i);
+      if (code < 48 || code > 57) break;
+    }
+    if (i === value.length) return Number(value);
+  }
+  if (value === "true") return true;
+  if (value === "false") return false;
+  const first = value.charCodeAt(0);
+  if (
+    ((first >= 65 && first <= 90) || (first >= 97 && first <= 122)) &&
+    !value.startsWith("true") &&
+    !value.startsWith("false")
+  ) {
+    // Undefined explicitly tells fast-xml-parser to keep its original text.
+    // This alphabetic prefix cannot be numeric under the fixed policy;
+    // preserve Boolean-prefix whitespace cases for its ordinary fallback.
+    return undefined;
+  }
+  return value;
+}
 export const SAFE_XML_OPTIONS = {
   ignoreAttributes: false,
   attributeNamePrefix: "",
   parseTagValue: true,
   trimValues: true,
   processEntities: false,
-  tagValueProcessor: (_tag: string, value: string) => decodeText(value),
+  tagValueProcessor: (_tag: string, value: string) => replayTagValue(value),
   attributeValueProcessor: (_tag: string, value: string) => decodeText(value)
 } as const;
 
