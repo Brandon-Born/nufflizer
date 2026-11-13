@@ -1,5 +1,6 @@
 import type { ReplayEvent } from "./types";
 import { recordedMentalEffect } from "./mentalEffects";
+import { isInertReplayControl } from "./inertControls";
 
 // These transitions do not rewrite intrinsic player skill lists. Effects,
 // transformations, purchases/removals and unknown messages have separate
@@ -126,6 +127,7 @@ export function scopedTraitEffectPlayer(e: ReplayEvent): string | undefined {
 }
 export function preservesTraitContinuity(e: ReplayEvent) {
   if (e.attributionConflict) return false;
+  if(["Clock","EventPauseActiveTimer","EventActiveTimerChanged","EventGamersAreReady","EventStartActiveTimer"].includes(e.sourceTag))return isInertReplayControl(e);
   if (e.sourceTag === "PlayerStep")
     return (
       e.payload?.Skill === 0 &&

@@ -1,4 +1,5 @@
 import { currentMoveActor, isDeterministicMoveResult, preservesCurrentMoveEnd } from "./currentMoveActor";
+import { isInertReplayControl } from "./inertControls";
 import { buildPlayerOwnershipIndex } from "./attribution";
 import { unmodifiedD6Check } from "./numericCheck";
 import {
@@ -619,7 +620,8 @@ export function reconstructReplayContext(
   replay: ReplayModel,
   confirmedLosses: readonly ConfirmedActivationLoss[] = findConfirmedActivationLosses(
     replay
-  )
+  ),
+  completedBlocks: readonly ActivationEnd[] = []
 ) {
   const result = new Map<string, PreRollEvidence>();
   const dodgeMovements = new Map<string, ObservedDodgeMovement>();
@@ -703,7 +705,7 @@ export function reconstructReplayContext(
     confirmedLosses.map((loss) => [loss.followingActivationSourceId, loss])
   );
   const mentalEnds = new Map(
-    findMentalActivationEnds(replay).map((end) => [end.sourceId, end])
+    [...findMentalActivationEnds(replay), ...completedBlocks].map((end) => [end.sourceId, end])
   );
   let activeEnds = new Map<string, ActivationEnd>();
   let previousMove: { end: ActivationEnd; moved: boolean; deterministic?: boolean; waitCheckpoint?: ReplayBoardCheckpoint } | undefined;
@@ -1262,6 +1264,7 @@ export function reconstructReplayContext(
         mentalActivationPending = false;
         continue;
       }
+      if (isInertReplayControl(event)) continue;
       if (event.type === "step" || event.sourceTag === "BallStep") {
         if(previousMove && (event.sourceTag !== "PlayerStep" || ![0,1,7].includes(event.stepType ?? -1) ||
           event.payload?.Skill !== 0 || event.payload.IsEvaluation !== 0))previousMove.deterministic=false;

@@ -508,6 +508,8 @@ export function explainActivationLoss(
   event: LuckReport["events"][number]
 ): string | null {
   const end = event.metadata.activationEnd;
+  if(end?.kind === "ordinary_block_completed")
+    return `Player ${end.actorId}'s ordinary Block activation ended before player ${end.followingPlayerId} started acting in recorded team turn ${end.teamTurn}. The applied block and following stable-position checkpoint establish the spent activation. Later move opportunities exclude this player; its position and tackle zone are preserved. The confirmation adds no dice roll or extra luck score.`;
   if (end)
     return end.kind === "ordinary_move_completed"
       ? `Player ${end.actorId}'s ordinary Move activation ended when player ${end.followingPlayerId} started acting in recorded team turn ${end.teamTurn}. Its position and tackle zone are preserved.${end.completionCheckpointAfter !== undefined ? " The completed position was confirmed by the following stable checkpoint; no dice were needed for this movement." : ""}${end.rosterCheckpointAfter !== undefined ? " Ownership was verified from the current roster checkpoint; missing initial membership was not inferred from the turn. Later move opportunities exclude this spent activation." : ""}`

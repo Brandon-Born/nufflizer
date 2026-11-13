@@ -1,0 +1,2404 @@
+{
+  "scope": "Exact parent7517712 pre-roll fields for only the changed scored context rows. Versioned regression projection only, not a semantic or availability oracle. Original scored-cohort SHA values are unchanged.",
+  "files": [
+    {
+      "file": "demo-goblins1.bbr",
+      "rows": [
+        {
+          "sourceId": "source-1031",
+          "preRoll": {
+            "checkpointAfter": 1026,
+            "ordinaryMoveAvailability": {
+              "successDestination": {
+                "x": 14,
+                "y": 4
+              },
+              "knownAvailablePlayerIds": [],
+              "unknownPlayerIds": [
+                "37",
+                "38",
+                "39",
+                "41",
+                "43",
+                "44",
+                "45",
+                "47",
+                "49"
+              ]
+            },
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 134,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 3,
+            "turnsRemaining": null,
+            "activationId": "source-1029",
+            "actorCell": {
+              "x": 15,
+              "y": 4
+            },
+            "actorMovementRemaining": 7,
+            "actorCarriesBall": true,
+            "carriedBallCell": {
+              "x": 15,
+              "y": 4
+            },
+            "movementCheckLinked": true,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-1264",
+          "preRoll": {
+            "checkpointAfter": 1241,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 160,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 4,
+            "turnsRemaining": null,
+            "activationId": "source-1244",
+            "actorCell": {
+              "x": 8,
+              "y": 2
+            },
+            "actorMovementRemaining": 0,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        }
+      ]
+    },
+    {
+      "file": "demo1.bbr",
+      "rows": [
+        {
+          "sourceId": "source-1052",
+          "preRoll": {
+            "checkpointAfter": 1045,
+            "ordinaryMoveAvailability": {
+              "successDestination": {
+                "x": 14,
+                "y": 4
+              },
+              "knownAvailablePlayerIds": [],
+              "unknownPlayerIds": [
+                "37",
+                "39",
+                "40",
+                "41",
+                "43",
+                "44",
+                "45",
+                "46",
+                "50"
+              ]
+            },
+            "actorTackleZone": null,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 143,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 3,
+            "turnsRemaining": null,
+            "activationId": "source-1048",
+            "actorCell": {
+              "x": 13,
+              "y": 5
+            },
+            "actorStandUpSourceIndex": 1050,
+            "actorMovementRemaining": 3,
+            "actorCarriesBall": false,
+            "movementCheckLinked": true,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        }
+      ]
+    },
+    {
+      "file": "demo10.bbr",
+      "rows": [
+        {
+          "sourceId": "source-192",
+          "preRoll": {
+            "checkpointAfter": 179,
+            "endedActivationSourceIds": [
+              "source-181"
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 33,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 2,
+            "turnsRemaining": null,
+            "activationId": "source-181",
+            "actorCell": {
+              "x": 12,
+              "y": 3
+            },
+            "actorMovementRemaining": 3,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-390",
+          "preRoll": {
+            "checkpointAfter": 386,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 63,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 3,
+            "turnsRemaining": null,
+            "activationId": "source-388",
+            "actorCell": {
+              "x": 11,
+              "y": 3
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-406",
+          "preRoll": {
+            "checkpointAfter": 402,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 67,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 3,
+            "turnsRemaining": null,
+            "activationId": "source-404",
+            "actorCell": {
+              "x": 12,
+              "y": 5
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-449",
+          "preRoll": {
+            "checkpointAfter": 445,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 76,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 3,
+            "turnsRemaining": null,
+            "activationId": "source-447",
+            "actorCell": {
+              "x": 11,
+              "y": 11
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-712",
+          "preRoll": {
+            "checkpointAfter": 707,
+            "ordinaryMoveAvailability": {
+              "successDestination": {
+                "x": 6,
+                "y": 1
+              },
+              "knownAvailablePlayerIds": [],
+              "unknownPlayerIds": [
+                "37",
+                "38",
+                "40",
+                "41",
+                "42",
+                "43",
+                "46",
+                "47"
+              ]
+            },
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 105,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 4,
+            "turnsRemaining": null,
+            "activationId": "source-710",
+            "actorCell": {
+              "x": 7,
+              "y": 2
+            },
+            "actorMovementRemaining": 8,
+            "actorCarriesBall": true,
+            "carriedBallCell": {
+              "x": 7,
+              "y": 2
+            },
+            "movementCheckLinked": true,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-1026",
+          "preRoll": {
+            "checkpointAfter": 1022,
+            "endedActivationSourceIds": [
+              "source-1024"
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 152,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 5,
+            "turnsRemaining": null,
+            "activationId": "source-1024",
+            "actorCell": {
+              "x": 11,
+              "y": 2
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-1063",
+          "preRoll": {
+            "checkpointAfter": 1038,
+            "ordinaryMoveAvailability": {
+              "successDestination": {
+                "x": 6,
+                "y": 4
+              },
+              "knownAvailablePlayerIds": [],
+              "unknownPlayerIds": [
+                "37",
+                "38",
+                "41",
+                "42",
+                "43",
+                "44",
+                "45",
+                "46",
+                "47",
+                "48"
+              ]
+            },
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 156,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 5,
+            "turnsRemaining": null,
+            "activationId": "source-1040",
+            "actorCell": {
+              "x": 6,
+              "y": 3
+            },
+            "actorMovementRemaining": 0,
+            "actorCarriesBall": null,
+            "movementCheckLinked": true,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-1345",
+          "preRoll": {
+            "checkpointAfter": 1331,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 186,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 6,
+            "turnsRemaining": null,
+            "activationId": "source-1334",
+            "actorCell": {
+              "x": 8,
+              "y": 8
+            },
+            "actorMovementRemaining": 3,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-1938",
+          "preRoll": {
+            "checkpointAfter": 1934,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 274,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 9,
+            "turnsRemaining": 7,
+            "activationId": "source-1936",
+            "actorCell": {
+              "x": 13,
+              "y": 8
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-1967",
+          "preRoll": {
+            "checkpointAfter": 1951,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 278,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 9,
+            "turnsRemaining": 7,
+            "activationId": "source-1953",
+            "actorCell": {
+              "x": 12,
+              "y": 6
+            },
+            "actorMovementRemaining": 2,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-2214",
+          "preRoll": {
+            "checkpointAfter": 2210,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 306,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 10,
+            "turnsRemaining": 6,
+            "activationId": "source-2212",
+            "actorCell": {
+              "x": 12,
+              "y": 7
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-2731",
+          "preRoll": {
+            "checkpointAfter": 2719,
+            "pickupSettlementKnown": false,
+            "endedActivationSourceIds": [
+              "source-2712",
+              "source-2721"
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 376,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 12,
+            "turnsRemaining": 4,
+            "activationId": "source-2721",
+            "actorCell": {
+              "x": 25,
+              "y": 5
+            },
+            "actorMovementRemaining": 5,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-3169",
+          "preRoll": {
+            "checkpointAfter": 3164,
+            "suppressedTackleZones": [
+              {
+                "playerId": "37",
+                "rosterIndex": 1,
+                "teamId": "1",
+                "providerSkillId": 31
+              }
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 431,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 14,
+            "turnsRemaining": 2,
+            "activationId": "source-3167",
+            "actorCell": {
+              "x": 12,
+              "y": 7
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-3195",
+          "preRoll": {
+            "checkpointAfter": 3184,
+            "actorMentalEffectEnd": {
+              "sourceId": "source-3188",
+              "providerSkillId": 31
+            },
+            "actorTackleZone": null,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 435,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 14,
+            "turnsRemaining": 2,
+            "activationId": "source-3187",
+            "actorCell": {
+              "x": 13,
+              "y": 8
+            },
+            "actorMovementRemaining": 5,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-3537",
+          "preRoll": {
+            "checkpointAfter": 3532,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 482,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 16,
+            "turnsRemaining": 0,
+            "activationId": "source-3535",
+            "actorCell": {
+              "x": 12,
+              "y": 7
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-3556",
+          "preRoll": {
+            "checkpointAfter": 3551,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 486,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 16,
+            "turnsRemaining": 0,
+            "activationId": "source-3554",
+            "actorCell": {
+              "x": 14,
+              "y": 12
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        }
+      ]
+    },
+    {
+      "file": "demo11.bbr",
+      "rows": [
+        {
+          "sourceId": "source-3198",
+          "preRoll": {
+            "checkpointAfter": 3186,
+            "pickupSettlementKnown": false,
+            "suppressedTackleZones": [
+              {
+                "playerId": "1",
+                "rosterIndex": 0,
+                "teamId": null,
+                "providerSkillId": 51
+              }
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 368,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 11,
+            "turnsRemaining": 5,
+            "activationId": "source-3188",
+            "actorCell": {
+              "x": 15,
+              "y": 13
+            },
+            "actorMovementRemaining": 4,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-3450",
+          "preRoll": {
+            "checkpointAfter": 3439,
+            "endedActivationSourceIds": [
+              "source-3442"
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 397,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 12,
+            "turnsRemaining": 4,
+            "activationId": "source-3442",
+            "actorCell": {
+              "x": 12,
+              "y": 13
+            },
+            "actorMovementRemaining": 4,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-3616",
+          "preRoll": {
+            "checkpointAfter": 3611,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 420,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 13,
+            "turnsRemaining": 3,
+            "activationId": "source-3614",
+            "actorCell": {
+              "x": 11,
+              "y": 13
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        }
+      ]
+    },
+    {
+      "file": "demo2.bbr",
+      "rows": [
+        {
+          "sourceId": "source-1034",
+          "preRoll": {
+            "checkpointAfter": 1029,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 129,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 3,
+            "turnsRemaining": null,
+            "activationId": "source-1032",
+            "actorCell": {
+              "x": 17,
+              "y": 7
+            },
+            "actorMovementRemaining": 5,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-1594",
+          "preRoll": {
+            "checkpointAfter": 1577,
+            "suppressedTackleZones": [
+              {
+                "playerId": "1",
+                "rosterIndex": 0,
+                "teamId": null,
+                "providerSkillId": 51
+              },
+              {
+                "playerId": "2",
+                "rosterIndex": 0,
+                "teamId": null,
+                "providerSkillId": 51
+              }
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 200,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 5,
+            "turnsRemaining": null,
+            "activationId": "source-1580",
+            "actorCell": {
+              "x": 15,
+              "y": 8
+            },
+            "actorMovementRemaining": 1,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-1870",
+          "preRoll": {
+            "checkpointAfter": 1847,
+            "suppressedTackleZones": [
+              {
+                "playerId": "1",
+                "rosterIndex": 0,
+                "teamId": null,
+                "providerSkillId": 51
+              }
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 228,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 6,
+            "turnsRemaining": null,
+            "activationId": "source-1850",
+            "actorCell": {
+              "x": 17,
+              "y": 12
+            },
+            "actorMovementRemaining": 0,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-1874",
+          "preRoll": {
+            "checkpointAfter": 1847,
+            "suppressedTackleZones": [
+              {
+                "playerId": "1",
+                "rosterIndex": 0,
+                "teamId": null,
+                "providerSkillId": 51
+              }
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 228,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 6,
+            "turnsRemaining": null,
+            "activationId": "source-1850",
+            "actorCell": {
+              "x": 18,
+              "y": 11
+            },
+            "actorMovementRemaining": 0,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-1875",
+          "preRoll": {
+            "checkpointAfter": 1847,
+            "ordinaryMoveAvailability": {
+              "successDestination": {
+                "x": 19,
+                "y": 10
+              },
+              "knownAvailablePlayerIds": [],
+              "unknownPlayerIds": [
+                "39",
+                "40",
+                "41",
+                "42",
+                "45",
+                "46",
+                "47"
+              ]
+            },
+            "suppressedTackleZones": [
+              {
+                "playerId": "1",
+                "rosterIndex": 0,
+                "teamId": null,
+                "providerSkillId": 51
+              }
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 228,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 6,
+            "turnsRemaining": null,
+            "activationId": "source-1850",
+            "actorCell": {
+              "x": 18,
+              "y": 11
+            },
+            "actorMovementRemaining": 0,
+            "actorCarriesBall": false,
+            "movementCheckLinked": true,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        }
+      ]
+    },
+    {
+      "file": "demo3.bbr",
+      "rows": [
+        {
+          "sourceId": "source-596",
+          "preRoll": {
+            "checkpointAfter": 591,
+            "suppressedTackleZones": [
+              {
+                "playerId": "1",
+                "rosterIndex": 0,
+                "teamId": null,
+                "providerSkillId": 51
+              }
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 81,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 2,
+            "turnsRemaining": null,
+            "activationId": "source-594",
+            "actorCell": {
+              "x": 13,
+              "y": 1
+            },
+            "actorMovementRemaining": 5,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-687",
+          "preRoll": {
+            "checkpointAfter": 682,
+            "suppressedTackleZones": [
+              {
+                "playerId": "1",
+                "rosterIndex": 0,
+                "teamId": null,
+                "providerSkillId": 51
+              }
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 95,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 2,
+            "turnsRemaining": null,
+            "activationId": "source-685",
+            "actorCell": {
+              "x": 13,
+              "y": 5
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-701",
+          "preRoll": {
+            "checkpointAfter": 696,
+            "suppressedTackleZones": [
+              {
+                "playerId": "1",
+                "rosterIndex": 0,
+                "teamId": null,
+                "providerSkillId": 51
+              }
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 97,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 2,
+            "turnsRemaining": null,
+            "activationId": "source-699",
+            "actorCell": {
+              "x": 11,
+              "y": 11
+            },
+            "actorMovementRemaining": 5,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-1349",
+          "preRoll": {
+            "checkpointAfter": 1335,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 168,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 4,
+            "turnsRemaining": null,
+            "activationId": "source-1338",
+            "actorCell": {
+              "x": 13,
+              "y": 4
+            },
+            "actorMovementRemaining": 2,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-2235",
+          "preRoll": {
+            "checkpointAfter": 2224,
+            "ordinaryMoveAvailability": {
+              "successDestination": {
+                "x": 8,
+                "y": 4
+              },
+              "knownAvailablePlayerIds": [],
+              "unknownPlayerIds": [
+                "38",
+                "39",
+                "40",
+                "41",
+                "43",
+                "44",
+                "46"
+              ]
+            },
+            "endedActivationSourceIds": [
+              "source-2220",
+              "source-2227"
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 267,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 7,
+            "turnsRemaining": null,
+            "activationId": "source-2227",
+            "actorCell": {
+              "x": 9,
+              "y": 4
+            },
+            "actorMovementRemaining": 3,
+            "actorCarriesBall": false,
+            "movementCheckLinked": true,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-3259",
+          "preRoll": {
+            "checkpointAfter": 3255,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 388,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 11,
+            "turnsRemaining": 5,
+            "activationId": "source-3257",
+            "actorCell": {
+              "x": 12,
+              "y": 3
+            },
+            "actorMovementRemaining": 5,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-3297",
+          "preRoll": {
+            "checkpointAfter": 3288,
+            "ordinaryMoveAvailability": {
+              "successDestination": {
+                "x": 17,
+                "y": 4
+              },
+              "knownAvailablePlayerIds": [],
+              "unknownPlayerIds": [
+                "37",
+                "38",
+                "39",
+                "40",
+                "41",
+                "43",
+                "46",
+                "47"
+              ]
+            },
+            "endedActivationSourceIds": [
+              "source-3281",
+              "source-3290"
+            ],
+            "actorTackleZone": null,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 394,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 11,
+            "turnsRemaining": 5,
+            "activationId": "source-3290",
+            "actorCell": {
+              "x": 18,
+              "y": 4
+            },
+            "actorStandUpSourceIndex": 3292,
+            "actorMovementRemaining": 2,
+            "actorCarriesBall": null,
+            "movementCheckLinked": true,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        }
+      ]
+    },
+    {
+      "file": "demo4.bbr",
+      "rows": [
+        {
+          "sourceId": "source-149",
+          "preRoll": {
+            "checkpointAfter": 145,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 37,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 1,
+            "turnsRemaining": null,
+            "activationId": "source-147",
+            "actorCell": {
+              "x": 13,
+              "y": 9
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-183",
+          "preRoll": {
+            "checkpointAfter": 171,
+            "pickupSettlementKnown": false,
+            "endedActivationSourceIds": [
+              "source-173"
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 42,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 1,
+            "turnsRemaining": null,
+            "activationId": "source-173",
+            "actorCell": {
+              "x": 22,
+              "y": 9
+            },
+            "actorMovementRemaining": 4,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-752",
+          "preRoll": {
+            "checkpointAfter": 742,
+            "endedActivationSourceIds": [
+              "source-744"
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 111,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 3,
+            "turnsRemaining": null,
+            "activationId": "source-744",
+            "actorCell": {
+              "x": 15,
+              "y": 12
+            },
+            "actorMovementRemaining": 5,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-1401",
+          "preRoll": {
+            "checkpointAfter": 1396,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 192,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 5,
+            "turnsRemaining": null,
+            "activationId": "source-1399",
+            "actorCell": {
+              "x": 10,
+              "y": 13
+            },
+            "actorMovementRemaining": 7,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-4161",
+          "preRoll": {
+            "checkpointAfter": 4157,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 555,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 14,
+            "turnsRemaining": 2,
+            "activationId": "source-4159",
+            "actorCell": {
+              "x": 13,
+              "y": 9
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-4192",
+          "preRoll": {
+            "checkpointAfter": 4174,
+            "pickupSettlementKnown": false,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 559,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 14,
+            "turnsRemaining": 2,
+            "activationId": "source-4176",
+            "actorCell": {
+              "x": 24,
+              "y": 8
+            },
+            "actorMovementRemaining": 1,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        }
+      ]
+    },
+    {
+      "file": "demo5.bbr",
+      "rows": [
+        {
+          "sourceId": "source-386",
+          "preRoll": {
+            "checkpointAfter": 381,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 66,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 1,
+            "turnsRemaining": null,
+            "activationId": "source-384",
+            "actorCell": {
+              "x": 13,
+              "y": 2
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-409",
+          "preRoll": {
+            "checkpointAfter": 404,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 70,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 1,
+            "turnsRemaining": null,
+            "activationId": "source-407",
+            "actorCell": {
+              "x": 14,
+              "y": 5
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-703",
+          "preRoll": {
+            "checkpointAfter": 695,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 106,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 2,
+            "turnsRemaining": null,
+            "activationId": "source-698",
+            "actorCell": {
+              "x": 11,
+              "y": 13
+            },
+            "actorMovementRemaining": 5,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-1203",
+          "preRoll": {
+            "checkpointAfter": 1198,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 174,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 4,
+            "turnsRemaining": null,
+            "activationId": "source-1201",
+            "actorCell": {
+              "x": 13,
+              "y": 10
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-1469",
+          "preRoll": {
+            "checkpointAfter": 1465,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 217,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 5,
+            "turnsRemaining": null,
+            "activationId": "source-1467",
+            "actorCell": {
+              "x": 12,
+              "y": 11
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-2275",
+          "preRoll": {
+            "checkpointAfter": 2270,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 329,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 8,
+            "turnsRemaining": null,
+            "activationId": "source-2273",
+            "actorCell": {
+              "x": 12,
+              "y": 10
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-2295",
+          "preRoll": {
+            "checkpointAfter": 2290,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 333,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 8,
+            "turnsRemaining": null,
+            "activationId": "source-2293",
+            "actorCell": {
+              "x": 13,
+              "y": 1
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-2314",
+          "preRoll": {
+            "checkpointAfter": 2309,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 337,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 8,
+            "turnsRemaining": null,
+            "activationId": "source-2312",
+            "actorCell": {
+              "x": 13,
+              "y": 2
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-3272",
+          "preRoll": {
+            "checkpointAfter": 3267,
+            "ordinaryMoveAvailability": {
+              "successDestination": {
+                "x": 18,
+                "y": 6
+              },
+              "knownAvailablePlayerIds": [],
+              "unknownPlayerIds": [
+                "37",
+                "38",
+                "40",
+                "41",
+                "43",
+                "44",
+                "47"
+              ]
+            },
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 461,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 13,
+            "turnsRemaining": 3,
+            "activationId": "source-3270",
+            "actorCell": {
+              "x": 17,
+              "y": 7
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": false,
+            "movementCheckLinked": true,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-3975",
+          "preRoll": {
+            "checkpointAfter": 3970,
+            "ordinaryMoveAvailability": {
+              "successDestination": {
+                "x": 7,
+                "y": 3
+              },
+              "knownAvailablePlayerIds": [],
+              "unknownPlayerIds": [
+                "37",
+                "38",
+                "41",
+                "43",
+                "44",
+                "45",
+                "47"
+              ]
+            },
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 539,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 16,
+            "turnsRemaining": 0,
+            "activationId": "source-3973",
+            "actorCell": {
+              "x": 8,
+              "y": 2
+            },
+            "actorMovementRemaining": 7,
+            "actorCarriesBall": true,
+            "carriedBallCell": {
+              "x": 8,
+              "y": 2
+            },
+            "movementCheckLinked": true,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-3997",
+          "preRoll": {
+            "checkpointAfter": 3970,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 539,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 16,
+            "turnsRemaining": 0,
+            "activationId": "source-3973",
+            "actorCell": {
+              "x": 1,
+              "y": 3
+            },
+            "actorMovementRemaining": 0,
+            "scoringAttempt": {
+              "destination": {
+                "x": 0,
+                "y": 3
+              },
+              "sideCode": 64,
+              "teamTurn": 16,
+              "turnsRemaining": 0,
+              "turnsPerPeriod": 8
+            },
+            "actorCarriesBall": true,
+            "carriedBallCell": {
+              "x": 1,
+              "y": 3
+            },
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        }
+      ]
+    },
+    {
+      "file": "demo6.bbr",
+      "rows": []
+    },
+    {
+      "file": "demo7.bbr",
+      "rows": [
+        {
+          "sourceId": "source-1812",
+          "preRoll": {
+            "checkpointAfter": 1806,
+            "pickupSettlementKnown": false,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 229,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 6,
+            "turnsRemaining": null,
+            "activationId": "source-1808",
+            "actorCell": {
+              "x": 2,
+              "y": 11
+            },
+            "actorMovementRemaining": 5,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-4026",
+          "preRoll": {
+            "checkpointAfter": 4021,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 486,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 12,
+            "turnsRemaining": 4,
+            "activationId": "source-4024",
+            "actorCell": {
+              "x": 18,
+              "y": 9
+            },
+            "actorMovementRemaining": 7,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        }
+      ]
+    },
+    {
+      "file": "demo8.bbr",
+      "rows": [
+        {
+          "sourceId": "source-865",
+          "preRoll": {
+            "checkpointAfter": 860,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 124,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 3,
+            "turnsRemaining": null,
+            "activationId": "source-863",
+            "actorCell": {
+              "x": 13,
+              "y": 8
+            },
+            "actorMovementRemaining": 5,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-895",
+          "preRoll": {
+            "checkpointAfter": 881,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 128,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 3,
+            "turnsRemaining": null,
+            "activationId": "source-884",
+            "actorCell": {
+              "x": 12,
+              "y": 9
+            },
+            "actorMovementRemaining": 3,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-2876",
+          "preRoll": {
+            "checkpointAfter": 2872,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 394,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 14,
+            "turnsRemaining": 2,
+            "activationId": "source-2874",
+            "actorCell": {
+              "x": 10,
+              "y": 2
+            },
+            "actorMovementRemaining": 5,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        }
+      ]
+    },
+    {
+      "file": "demo9.bbr",
+      "rows": [
+        {
+          "sourceId": "source-313",
+          "preRoll": {
+            "checkpointAfter": 309,
+            "endedActivationSourceIds": [
+              "source-287",
+              "source-311"
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 44,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 1,
+            "turnsRemaining": null,
+            "activationId": "source-311",
+            "actorCell": {
+              "x": 13,
+              "y": 5
+            },
+            "actorMovementRemaining": 4,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-352",
+          "preRoll": {
+            "checkpointAfter": 327,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 48,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 1,
+            "turnsRemaining": null,
+            "activationId": "source-329",
+            "actorCell": {
+              "x": 10,
+              "y": 2
+            },
+            "actorMovementRemaining": 0,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-577",
+          "preRoll": {
+            "checkpointAfter": 573,
+            "endedActivationSourceIds": [
+              "source-575"
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 81,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 2,
+            "turnsRemaining": null,
+            "activationId": "source-575",
+            "actorCell": {
+              "x": 12,
+              "y": 3
+            },
+            "actorMovementRemaining": 7,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-594",
+          "preRoll": {
+            "checkpointAfter": 590,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 85,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 2,
+            "turnsRemaining": null,
+            "activationId": "source-592",
+            "actorCell": {
+              "x": 10,
+              "y": 3
+            },
+            "actorMovementRemaining": 7,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-625",
+          "preRoll": {
+            "checkpointAfter": 621,
+            "endedActivationSourceIds": [
+              "source-623"
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 90,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 2,
+            "turnsRemaining": null,
+            "activationId": "source-623",
+            "actorCell": {
+              "x": 9,
+              "y": 3
+            },
+            "actorMovementRemaining": 7,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-651",
+          "preRoll": {
+            "checkpointAfter": 632,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 92,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 2,
+            "turnsRemaining": null,
+            "activationId": "source-634",
+            "actorCell": {
+              "x": 8,
+              "y": 2
+            },
+            "actorMovementRemaining": 2,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-932",
+          "preRoll": {
+            "checkpointAfter": 927,
+            "suppressedTackleZones": [
+              {
+                "playerId": "2",
+                "rosterIndex": 0,
+                "teamId": null,
+                "providerSkillId": 31
+              }
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 129,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 3,
+            "turnsRemaining": null,
+            "activationId": "source-930",
+            "actorCell": {
+              "x": 11,
+              "y": 4
+            },
+            "actorMovementRemaining": 7,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-950",
+          "preRoll": {
+            "checkpointAfter": 945,
+            "suppressedTackleZones": [
+              {
+                "playerId": "2",
+                "rosterIndex": 0,
+                "teamId": null,
+                "providerSkillId": 31
+              }
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 133,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 3,
+            "turnsRemaining": null,
+            "activationId": "source-948",
+            "actorCell": {
+              "x": 12,
+              "y": 5
+            },
+            "actorMovementRemaining": 4,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-1079",
+          "preRoll": {
+            "checkpointAfter": 1074,
+            "suppressedTackleZones": [
+              {
+                "playerId": "2",
+                "rosterIndex": 0,
+                "teamId": null,
+                "providerSkillId": 31
+              }
+            ],
+            "endedActivationSourceIds": [
+              "source-1077"
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 152,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 4,
+            "turnsRemaining": null,
+            "activationId": "source-1077",
+            "actorCell": {
+              "x": 10,
+              "y": 8
+            },
+            "actorMovementRemaining": 4,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-1116",
+          "preRoll": {
+            "checkpointAfter": 1096,
+            "suppressedTackleZones": [
+              {
+                "playerId": "2",
+                "rosterIndex": 0,
+                "teamId": null,
+                "providerSkillId": 31
+              }
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 156,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 4,
+            "turnsRemaining": null,
+            "activationId": "source-1099",
+            "actorCell": {
+              "x": 12,
+              "y": 5
+            },
+            "actorMovementRemaining": 1,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-1784",
+          "preRoll": {
+            "checkpointAfter": 1780,
+            "endedActivationSourceIds": [
+              "source-1782"
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 221,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 7,
+            "turnsRemaining": null,
+            "activationId": "source-1782",
+            "actorCell": {
+              "x": 13,
+              "y": 12
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-1795",
+          "preRoll": {
+            "checkpointAfter": 1791,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 223,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 7,
+            "turnsRemaining": null,
+            "activationId": "source-1793",
+            "actorCell": {
+              "x": 14,
+              "y": 10
+            },
+            "actorMovementRemaining": 7,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-1840",
+          "preRoll": {
+            "checkpointAfter": 1827,
+            "endedActivationSourceIds": [
+              "source-1829"
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 226,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 7,
+            "turnsRemaining": null,
+            "activationId": "source-1829",
+            "actorCell": {
+              "x": 11,
+              "y": 7
+            },
+            "actorMovementRemaining": 3,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-2047",
+          "preRoll": {
+            "checkpointAfter": 2043,
+            "endedActivationSourceIds": [
+              "source-2045"
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 255,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 8,
+            "turnsRemaining": null,
+            "activationId": "source-2045",
+            "actorCell": {
+              "x": 13,
+              "y": 12
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-2068",
+          "preRoll": {
+            "checkpointAfter": 2064,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 259,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 8,
+            "turnsRemaining": null,
+            "activationId": "source-2066",
+            "actorCell": {
+              "x": 13,
+              "y": 3
+            },
+            "actorMovementRemaining": 3,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-2088",
+          "preRoll": {
+            "checkpointAfter": 2081,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 263,
+            "phaseCode": 5,
+            "period": null,
+            "activeTeamId": "1",
+            "teamTurn": 8,
+            "turnsRemaining": null,
+            "activationId": "source-2083",
+            "actorCell": {
+              "x": 13,
+              "y": 10
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-2308",
+          "preRoll": {
+            "checkpointAfter": 2303,
+            "endedActivationSourceIds": [
+              "source-2306"
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 291,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 9,
+            "turnsRemaining": 7,
+            "activationId": "source-2306",
+            "actorCell": {
+              "x": 13,
+              "y": 5
+            },
+            "actorMovementRemaining": 3,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-2328",
+          "preRoll": {
+            "checkpointAfter": 2323,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 295,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 9,
+            "turnsRemaining": 7,
+            "activationId": "source-2326",
+            "actorCell": {
+              "x": 13,
+              "y": 7
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-2601",
+          "preRoll": {
+            "checkpointAfter": 2593,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 323,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 10,
+            "turnsRemaining": 6,
+            "activationId": "source-2596",
+            "actorCell": {
+              "x": 13,
+              "y": 6
+            },
+            "actorMovementRemaining": 2,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-2913",
+          "preRoll": {
+            "checkpointAfter": 2902,
+            "endedActivationSourceIds": [
+              "source-2905"
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 346,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 11,
+            "turnsRemaining": 5,
+            "activationId": "source-2905",
+            "actorCell": {
+              "x": 11,
+              "y": 5
+            },
+            "actorMovementRemaining": 1,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-3211",
+          "preRoll": {
+            "checkpointAfter": 3194,
+            "suppressedTackleZones": [
+              {
+                "playerId": "2",
+                "rosterIndex": 0,
+                "teamId": null,
+                "providerSkillId": 31
+              }
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 377,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 12,
+            "turnsRemaining": 4,
+            "activationId": "source-3197",
+            "actorCell": {
+              "x": 8,
+              "y": 7
+            },
+            "actorMovementRemaining": 2,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-3591",
+          "preRoll": {
+            "checkpointAfter": 3586,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 420,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 13,
+            "turnsRemaining": 3,
+            "activationId": "source-3589",
+            "actorCell": {
+              "x": 10,
+              "y": 8
+            },
+            "actorMovementRemaining": 3,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-3626",
+          "preRoll": {
+            "checkpointAfter": 3621,
+            "endedActivationSourceIds": [
+              "source-3624"
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 425,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 13,
+            "turnsRemaining": 3,
+            "activationId": "source-3624",
+            "actorCell": {
+              "x": 7,
+              "y": 4
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-3639",
+          "preRoll": {
+            "checkpointAfter": 3634,
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 427,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 13,
+            "turnsRemaining": 3,
+            "activationId": "source-3637",
+            "actorCell": {
+              "x": 9,
+              "y": 10
+            },
+            "actorMovementRemaining": 4,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-3669",
+          "preRoll": {
+            "checkpointAfter": 3664,
+            "endedActivationSourceIds": [
+              "source-3667"
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 432,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 13,
+            "turnsRemaining": 3,
+            "activationId": "source-3667",
+            "actorCell": {
+              "x": 7,
+              "y": 12
+            },
+            "actorMovementRemaining": 7,
+            "actorCarriesBall": false,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        },
+        {
+          "sourceId": "source-4349",
+          "preRoll": {
+            "checkpointAfter": 4345,
+            "endedActivationSourceIds": [
+              "source-4347"
+            ],
+            "actorTackleZone": true,
+            "actorRosterTeamId": "1",
+            "checkpointReplayStep": 509,
+            "phaseCode": 5,
+            "period": "second_half",
+            "activeTeamId": "1",
+            "teamTurn": 15,
+            "turnsRemaining": 1,
+            "activationId": "source-4347",
+            "actorCell": {
+              "x": 12,
+              "y": 11
+            },
+            "actorMovementRemaining": 6,
+            "actorCarriesBall": null,
+            "movementCheckLinked": false,
+            "otherUsefulActivations": null,
+            "pickupBounceExposure": null
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -10,7 +10,7 @@ import { buildPlayerOwnershipIndex } from "./attribution";
 import type { ReplayEvent, ReplayModel } from "./types";
 
 export type ActivationEnd = {
-  kind: "ordinary_move_completed" | "bone_head" | "really_stupid";
+  kind: "ordinary_move_completed" | "ordinary_block_completed" | "bone_head" | "really_stupid";
   sourceId: string;
   sourceIndex: number;
   declarationSourceId: string;
@@ -25,6 +25,8 @@ export type ActivationEnd = {
   rosterCheckpointAfter?: number;
   completionCheckpointAfter?: number;
   moveSourceId?: string;
+  blockPoolSourceId?: string;
+  blockSourceId?: string;
   skillSourceId?: string;
   rollSourceId?: string;
   effectSourceId?: string;
@@ -66,7 +68,7 @@ export function applyActivationEnds(
       actor.pitchLocation !== "on_pitch" ||
       actor.cell.x !== end.actorCell.x ||
       actor.cell.y !== end.actorCell.y ||
-      (end.kind !== "ordinary_move_completed" &&
+      ((end.kind === "bone_head" || end.kind === "really_stupid") &&
         (actor.canAct === true || actor.tackleZone === true))
     )
       continue;
@@ -85,7 +87,7 @@ export function applyActivationEnds(
                       ...p,
                       canAct: false,
                       tackleZone:
-                        end.kind === "ordinary_move_completed"
+                        end.kind === "ordinary_move_completed" || end.kind === "ordinary_block_completed"
                           ? p.tackleZone
                           : false
                     }

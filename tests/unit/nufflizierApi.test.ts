@@ -196,6 +196,8 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(push).toMatchObject({status:"modeled",questionSourceId:"source-101",checkpointAfter:98,pitchCheckpointAfter:0,selectedBranch:0,resultSourceIds:["source-103"]});
     if(push.status!=="modeled")throw new Error("missing ordinary push model");expect(push.destinations).toEqual([{x:14,y:9},{x:13,y:10}]);expect(push.branches).toHaveLength(4);
     expect(report.events.find(e=>e.metadata.sourceId==="source-101")).toMatchObject({label:"Recorded push destination choice",scoringStatus:"excluded",weightedDelta:0,metadata:{isRollCandidate:false,pushQuestion:{gamerId:0}}});
+    expect(report.events.find(e=>e.metadata.sourceId==="source-3270")!.metadata.activationEnd).toMatchObject({kind:"ordinary_block_completed",actorId:"41",followingPlayerId:"45",teamTurn:13,periodCode:1,blockSourceId:"source-3265"});
+    expect(report.events.find(e=>e.metadata.sourceId==="source-3272")!.metadata.preRoll!.ordinaryMoveAvailability!.unknownPlayerIds).not.toContain("41");
     const skillPools=report.events.filter(e=>e.metadata.block?.skillModel);
     expect(skillPools.map(e=>e.metadata.sourceId)).toEqual(["source-98","source-132","source-367","source-386","source-409"]);
     expect(report.events.find(e=>e.metadata.sourceId==="source-367")!.metadata.blockPush).toMatchObject({status:"modeled"});

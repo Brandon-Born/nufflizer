@@ -144,7 +144,7 @@ const pushModel=z.discriminatedUnion("status",[
 const blockTraitEvidence = z.strictObject({attacker:currentTraitEvidence,defender:currentTraitEvidence});
 const blockSkillModel = z.strictObject({policy:z.literal("single_pool_knockdown_balance"),wrestlePolicy:z.enum(["decline","improve_knockdown_balance"]),traitEvidence:blockTraitEvidence,faceOutcomes:z.array(z.number().int().min(0).max(6)).length(5),outcomeDistribution:z.array(probability).length(7),expectedValue:finite.min(-1).max(1),poolOutcome:z.number().int().min(0).max(6),poolValue:z.union([z.literal(-1),z.literal(0),z.literal(1)]),positiveChance:probability});
 const activationEnd = z.strictObject({
-  kind: z.enum(["ordinary_move_completed", "bone_head", "really_stupid"]),
+  kind: z.enum(["ordinary_move_completed", "ordinary_block_completed", "bone_head", "really_stupid"]),
   sourceId: text,
   sourceIndex: count,
   declarationSourceId: text,
@@ -159,6 +159,8 @@ const activationEnd = z.strictObject({
   rosterCheckpointAfter: count.optional(),
   completionCheckpointAfter: count.optional(),
   moveSourceId: text.optional(),
+  blockPoolSourceId: text.optional(),
+  blockSourceId: text.optional(),
   skillSourceId: text.optional(),
   rollSourceId: text.optional(),
   effectSourceId: text.optional(),
@@ -1549,12 +1551,12 @@ export const LuckReportSchema = z
           originIndex < end.sourceIndex &&
           end.checkpointAfter <
             end.sourceIndex, "An ended activation requires an earlier declaration and a different following teammate.");
-        if(end.rosterCheckpointAfter !== undefined) require(end.kind === "ordinary_move_completed" &&
+        if(end.rosterCheckpointAfter !== undefined && end.kind === "ordinary_move_completed") require(
           declaration?.metadata.preRoll?.checkpointAfter === end.rosterCheckpointAfter && end.rosterCheckpointAfter < originIndex &&
           declaration.metadata.preRoll.actorRosterTeamId === end.teamId && declaration.metadata.preRoll.activeTeamId === end.teamId &&
           declaration.metadata.preRoll.teamTurn === end.teamTurn,
           "Fresh-roster Move completion needs the original declaration's current roster, active side and clock checkpoint.");
-        if(end.completionCheckpointAfter !== undefined) {
+        if(end.completionCheckpointAfter !== undefined && end.kind === "ordinary_move_completed") {
           const move=linked(end.moveSourceId,"ResultMoveOutcome");
           require(end.kind === "ordinary_move_completed" && !!move &&
             (move.metadata.sourceIndex ?? Infinity)<end.completionCheckpointAfter && end.completionCheckpointAfter<end.sourceIndex &&
@@ -1563,7 +1565,52 @@ export const LuckReportSchema = z
             event.metadata.preRoll.teamTurn===end.teamTurn,
             "A deterministic Move wait needs the later stable-position checkpoint before the next same-team declaration; no dice or value is added.");
         }
-        if (end.kind === "ordinary_move_completed") {
+        if (end.kind === "ordinary_block_completed") {
+          const block = linked(end.blockSourceId, "ResultBlockOutcome"),
+            pool = end.blockPoolSourceId
+              ? sources.get(end.blockPoolSourceId)
+              : undefined;
+          const frame = event.metadata.preRoll,
+            original = declaration?.metadata.preRoll;
+          require(declaration?.metadata.actionCode === 2 &&
+            !!block &&
+            !!pool?.metadata.blockResolution &&
+            !!pool.metadata.block &&
+            pool.metadata.block.attackerId === end.actorId &&
+            pool.teamId === end.teamId &&
+            pool.metadata.block.finalSourceId === end.blockSourceId &&
+            (pool.metadata.sourceIndex ?? -1) > originIndex &&
+            (pool.metadata.sourceIndex ?? Infinity) <
+              (block?.metadata.sourceIndex ?? -1) &&
+            end.rosterCheckpointAfter !== undefined &&
+            end.rosterCheckpointAfter < originIndex &&
+            end.completionCheckpointAfter === end.checkpointAfter &&
+            (block?.metadata.sourceIndex ?? Infinity) <= end.checkpointAfter &&
+            (!frame ||
+              (frame.checkpointAfter === end.checkpointAfter &&
+                frame.phaseCode === 5 &&
+                frame.activeTeamId === end.teamId &&
+                (frame.teamTurn === null || frame.teamTurn === end.teamTurn) &&
+                frame.period ===
+                  (["first_half", "second_half", "extra_time"][
+                    end.periodCode ?? -1
+                  ] ?? null))) &&
+            (!original ||
+              (original.checkpointAfter === end.rosterCheckpointAfter &&
+                original.phaseCode === 5 &&
+                original.activeTeamId === end.teamId &&
+                (original.teamTurn === null ||
+                  original.teamTurn === end.teamTurn))) &&
+            !end.moveSourceId &&
+            !end.policy &&
+            !end.rollSourceId &&
+            !end.effectSourceId &&
+            !end.skillSourceId &&
+            !end.questionSourceId &&
+            !end.decisionSourceId &&
+            !end.lonerSourceId &&
+            !end.lonerSkillSourceId, "An ordinary Block ends only after its source-qualified applied pool, stable position/clock checkpoint and a different teammate's declaration; no inferred tackle-zone loss or extra score.");
+        } else if (end.kind === "ordinary_move_completed") {
           require(declaration?.metadata.actionCode === 1 &&
             !!linked(end.moveSourceId, "ResultMoveOutcome") &&
             !end.policy &&
@@ -1631,6 +1678,9 @@ export const LuckReportSchema = z
                 !end.lonerSkillSourceId, "A kept trait cannot invent a replacement.");
           }
         }
+        if (end.kind !== "ordinary_block_completed")
+          require(!end.blockPoolSourceId &&
+            !end.blockSourceId, "Other activation endings cannot claim a Block commitment.");
       }
       const activationLoss = event.metadata.activationLoss;
       if (activationLoss) {

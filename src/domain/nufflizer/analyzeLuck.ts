@@ -13,6 +13,10 @@ import {
   inventoryDiceRecords
 } from "./diceEvidence";
 import { findBlockTraitEvidence } from "@/domain/replay/traitContinuity";
+import {
+  findBlockActivationEnds,
+  type BlockCommitment
+} from "@/domain/replay/blockActivationEnds";
 import { enumerateSkillBlock } from "./blockSkillModel";
 import { findKeptDodgeContexts, attachKeptDodgeMoves } from "./keptDodgeMoves";
 import {
@@ -1254,7 +1258,37 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     combinedMovements,
     pickupResolutions,
     pickupsAfterMovement
-  } = reconstructReplayContext(inputReplay, activationLosses);
+  } = reconstructReplayContext(
+    inputReplay,
+    activationLosses,
+    findBlockActivationEnds(
+      inputReplay,
+      replay.turns.flatMap((turn) => {
+        const records = linkBlockPools(turn.events, replay.replayVersion);
+        return findBlockConsequences(turn.events, records, ownership).flatMap(
+          (fact) => {
+            let i = fact.nextEventIndex;
+            while (
+              turn.events[i]?.sourceTag === "Carrier" &&
+              turn.events[i]?.checkpointCarrier
+            )
+              i++;
+            const next = turn.events[i];
+            return next?.id
+              ? [
+                  {
+                    poolSourceId: fact.poolSourceId,
+                    finalSourceId: fact.finalSourceId,
+                    nextSourceId: next.id
+                  } satisfies BlockCommitment
+                ]
+              : [];
+          }
+        );
+      }),
+      ownership
+    )
+  );
   const keptDodgeContexts = findKeptDodgeContexts(
     inputReplay,
     contextBySource,
@@ -1337,6 +1371,8 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       end.sourceId,
       end.declarationSourceId,
       end.moveSourceId,
+      end.blockPoolSourceId,
+      end.blockSourceId,
       end.skillSourceId,
       end.rollSourceId,
       end.effectSourceId,
@@ -2021,7 +2057,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     confirmation.label = "Recorded teammate activation";
     confirmation.statusReason =
       "This declaration confirms the prior player's activation has ended in the same recorded team turn.";
-    if (end.kind !== "ordinary_move_completed") {
+    if (end.kind === "bone_head" || end.kind === "really_stupid") {
       const name = end.kind === "bone_head" ? "Bone Head" : "Really Stupid";
       const skill = end.skillSourceId
         ? ballSources.get(end.skillSourceId)

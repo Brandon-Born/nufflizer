@@ -68,6 +68,9 @@ const ownershipCohort = JSON.parse(
 const digest = (v: string | Buffer) =>
   createHash("sha256").update(v).digest("hex");
 const reports = new Map<string, LuckReport>();
+const priorContext=JSON.parse(readFileSync("tests/fixtures/evidence/block-activation-prior-context.json","utf8")) as {
+ files:{file:string;rows:{sourceId:string;preRoll:LuckReport["events"][number]["metadata"]["preRoll"]|null}[]}[]
+};
 let starReplay: ReplayModel, passReplay: ReplayModel;
 beforeAll(() => {
   for (const c of census.files) {
@@ -108,13 +111,23 @@ const oldProjection = (r: LuckReport, file: string) => {
   );
   const ids = new Set(cohort.sourceIds),
     oldTraits = new Set(priorTraits.files.find(c=>c.file===file)!.sourceIds),
+    contexts = new Map(priorContext.files.find(f=>f.file===file)!.rows.map(r=>[r.sourceId,r.preRoll])),
     events = r.events.filter((e) => ids.has(e.metadata.sourceId!)).map(e=>{
-      if (oldTraits.has(e.metadata.sourceId!) || !e.metadata.block?.traitEvidence) return e;
       const copy=structuredClone(e);
+      // Only the versioned pre-roll context fields changed by committed-Block
+      // state are projected back. Their current semantics and exact footprint
+      // have independent source/availability tests; no frozen SHA is reset.
+      if(contexts.has(e.metadata.sourceId!)) {
+        const legacy=contexts.get(e.metadata.sourceId!);
+        if(legacy===null)delete copy.metadata.preRoll;
+        else copy.metadata.preRoll=structuredClone(legacy);
+      }
       // Preserve the frozen earlier receipt membership as well as every other
       // cohort field. New continued-trait evidence has independent source tests.
-      delete copy.metadata.block!.traitEvidence;
-      delete copy.metadata.block!.skillModel;
+      if(!oldTraits.has(e.metadata.sourceId!) && copy.metadata.block?.traitEvidence) {
+        delete copy.metadata.block.traitEvidence;
+        delete copy.metadata.block.skillModel;
+      }
       return copy;
     });
   expect(events).toHaveLength(ids.size);
