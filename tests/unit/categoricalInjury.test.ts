@@ -5,6 +5,9 @@ import { decodeReplayInput } from "@/domain/replay/decodeReplay";
 import { analyzeReplayLuck } from "@/domain/nufflizer/analyzeLuck";
 import { LuckReportSchema } from "@/domain/nufflizer/reportSchema";
 import { injuryOrderDeviation } from "@/domain/nufflizer/categoricalInjury";
+import { findBlockConsequences } from "@/domain/nufflizer/blockConsequences";
+import { linkBlockPools } from "@/domain/nufflizer/blockPools";
+import { createOwnershipTimeline } from "@/domain/replay/ownershipTimeline";
 import {
   explainInjuryObservation,
   formatActualOutcome,
@@ -133,6 +136,76 @@ describe("source-qualified categorical injury scoring", () => {
   });
   it.each([
     "<UnknownInjuryReaction/>",
+    "<ResultSkillUsage><PlayerId>7</PlayerId><Skill>999</Skill><Used>1</Used></ResultSkillUsage>"
+  ])(
+    "retains an initial injury's witnessed cause before later treatment %s",
+    (aftermath) => {
+      const before = injuries(report())[0]!;
+      const r = report({ aftermath });
+      const after = injuries(r)[0];
+      expect(after).toBeDefined();
+      expect(after!.weightedDelta).toBe(before.weightedDelta);
+      expect(after!.metadata.injuryScoring).toEqual(
+        before.metadata.injuryScoring
+      );
+      const cause = after!.metadata.injuryScoring!.cause;
+      expect(cause.kind).toBe("block");
+      if (cause.kind !== "block") throw new Error("Missing block prefix");
+      const pool = r.events.find(
+        (e) => e.metadata.sourceId === cause.poolSourceId
+      )!;
+      // The earlier prefix is not a certificate for the unknown full aftermath.
+      expect(pool.metadata.blockResolution!.damageActionIds).toEqual([]);
+      expect(pool.metadata.activationEnd).toBeUndefined();
+      expect(pool.metadata.blockBallRelease).toBeUndefined();
+      const replay = parseReplayXml(categoricalInjuryXml({ aftermath }));
+      const rawEvents = replay.turns[0]!.events;
+      const fact = findBlockConsequences(
+        rawEvents,
+        linkBlockPools(rawEvents, replay.replayVersion),
+        createOwnershipTimeline(replay)
+      )[0]!;
+      const headerIndex = rawEvents.findIndex(
+        (e) => e.sourceTag === "DamageStep"
+      );
+      expect(fact.damagePrefixes).toEqual([
+        {
+          actionId: after!.metadata.actionId,
+          damageStepSourceIndex: rawEvents[headerIndex]!.sourceIndex
+        }
+      ]);
+      expect(fact.nextEventIndex).toBe(headerIndex);
+      expect(fact.nextStepIndex).toBe(
+        rawEvents[headerIndex]!.locator!.stepIndex
+      );
+      expect(
+        r.damageSteps.find((s) => s.actionId === after!.metadata.actionId)!
+          .scoredRolls
+      ).toBe(2);
+      expect(r.verdict.luckierTeam).toBe("unknown");
+    }
+  );
+  it.each(["source", "subject", "applied", "step", "sequence"])(
+    "does not retain a mismatched %s damage prefix before unknown treatment",
+    (field) => {
+      const replay = parseReplayXml(
+        categoricalInjuryXml({ aftermath: "<UnknownInjuryReaction/>" })
+      );
+      const damage = replay.turns
+        .flatMap((t) => t.events)
+        .find((e) => e.sourceTag === "DamageStep")!;
+      if (field === "source") damage.damageSource = 9;
+      if (field === "subject") damage.targetId = "7";
+      if (field === "applied") damage.payload!.Applied = 0;
+      if (field === "step") damage.locator!.stepIndex! += 1;
+      if (field === "sequence") damage.sequenceId = "other-sequence";
+      expect(
+        injuries(LuckReportSchema.parse(analyzeReplayLuck(replay)))
+      ).toHaveLength(0);
+    }
+  );
+  it.each([
+    "<UnknownInjuryReaction/>",
     "<ResultSkillUsage><PlayerId>7</PlayerId><Skill>13</Skill><Used>1</Used></ResultSkillUsage>"
   ])("does not cross an intervening damage policy %s", (interruption) =>
     expect(injuries(report({ interruption }))).toHaveLength(0)
@@ -143,6 +216,8 @@ describe("source-qualified categorical injury scoring", () => {
     "binary",
     "cause",
     "armor",
+    "applied_source",
+    "damage_prefix",
     "trait",
     "ownership"
   ])("rejects a forged categorical %s contract", (kind) => {
@@ -155,6 +230,10 @@ describe("source-qualified categorical injury scoring", () => {
     if (kind === "cause" && s.cause.kind === "block")
       s.cause.poolSourceId = s.armorSourceId;
     if (kind === "armor") s.armorSourceId = e.metadata.sourceId!;
+    if (kind === "applied_source" && s.cause.kind === "block")
+      s.cause.appliedOutcomeSourceId = s.armorSourceId;
+    if (kind === "damage_prefix" && s.cause.kind === "block")
+      s.cause.damageStepSourceIndex += 1;
     if (kind === "trait" && s.cause.kind === "block")
       s.cause.attackerTraitEvidence!.traits.innateSkills = [13];
     if (kind === "ownership") e.metadata.ownership!.teamId = "1";
@@ -310,6 +389,18 @@ describe("independent categorical injury evidence", () => {
           const final = r.events.find(
             (e) => e.metadata.sourceId === pool.metadata.block!.finalSourceId
           )!;
+          expect(cause.appliedOutcomeSourceId).toBe(final.metadata.sourceId);
+          const rawHeader = replay.turns
+            .flatMap((t) => t.events)
+            .find(
+              (raw) =>
+                raw.sourceTag === "DamageStep" &&
+                raw.locator?.replayStep === damage.replayStep &&
+                raw.locator?.childIndex === damage.childIndex &&
+                raw.locator?.stepIndex === damage.stepIndex
+            )!;
+          expect(rawHeader).toBeDefined();
+          expect(cause.damageStepSourceIndex).toBe(rawHeader.sourceIndex);
           const finalPrefix = witness.prefixes.find(
             (p) =>
               p.replayStep === final.metadata.locator!.replayStep &&

@@ -107,6 +107,9 @@ export type ObservedBlockConsequence = {
   selectedFace: number;
   skills: BlockSkillUse[];
   damageActionIds: string[];
+  // A witnessed damage header survives an unknown later treatment. This is
+  // deliberately separate from the full-action links and continuation cursor.
+  damagePrefixes: { actionId: string; damageStepSourceIndex: number }[];
   outcome: BlockResolution["outcome"];
   // Cursor immediately after the validated resolution/damage prefix, in the
   // containing turn. Consumers must validate the next action independently.
@@ -306,6 +309,7 @@ export function findBlockConsequences(
       continue;
     const final = events[finalIndex]!;
     const damageActionIds: string[] = [],
+      damagePrefixes: ObservedBlockConsequence["damagePrefixes"] = [],
       subjects = knockedDownSubjects(
         outcome,
         block.attackerId,
@@ -358,6 +362,11 @@ export function findBlockConsequences(
         step.attributionConflict
       )
         break;
+      if (step.sourceIndex !== undefined)
+        damagePrefixes.push({
+          actionId: step.actionId,
+          damageStepSourceIndex: step.sourceIndex
+        });
       let end = next + 1,
         supported = true;
       while (end < events.length && events[end]!.actionId === step.actionId) {
@@ -400,6 +409,7 @@ export function findBlockConsequences(
       selectedFace: block.selectedFace,
       skills,
       damageActionIds,
+      damagePrefixes,
       outcome,
       nextEventIndex: next,
       nextStepIndex: stepIndex

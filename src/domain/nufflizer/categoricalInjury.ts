@@ -6,6 +6,7 @@ import {
 } from "@/domain/replay/traitContinuity";
 import type { LuckEvent } from "./types";
 import type { ObservedBlockConsequence } from "./blockConsequences";
+import { knockedDownSubjects } from "./blockConsequences";
 import { LUCK_CATEGORY_WEIGHTS } from "./constants";
 
 // Ordinal dice deviation, not a price for losing the player. Badly Hurt and a
@@ -191,8 +192,11 @@ export function attachCategoricalInjuries(
   if (replay.replayVersion !== "1-4-0-0") return;
   const blockActions = new Map<string, ObservedBlockConsequence[]>();
   for (const block of blocks)
-    for (const id of block.damageActionIds)
-      blockActions.set(id, [...(blockActions.get(id) ?? []), block]);
+    for (const { actionId } of block.damagePrefixes)
+      blockActions.set(actionId, [
+        ...(blockActions.get(actionId) ?? []),
+        block
+      ]);
   const modifierHolders = new Map<string, string>();
   for (const [id, event] of sources) {
     const list = event.metadata.actionId
@@ -250,6 +254,11 @@ export function attachCategoricalInjuries(
           block = pool?.metadata.block;
         if (
           !block ||
+          !candidates[0]!.damagePrefixes.some(
+            (p) =>
+              p.actionId === damage.actionId &&
+              p.damageStepSourceIndex === damage.sourceIndex
+          ) ||
           ![block.attackerId, block.defenderId].includes(injury.playerId!)
         )
           continue;
@@ -266,6 +275,8 @@ export function attachCategoricalInjuries(
         cause = {
           kind: "block",
           poolSourceId: candidates[0]!.poolSourceId,
+          appliedOutcomeSourceId: candidates[0]!.finalSourceId,
+          damageStepSourceIndex: damage.sourceIndex!,
           ...(proof ? { attackerTraitEvidence: proof } : {})
         };
       } else if (!candidates) cause = selfFallCause(turn.events, i, sources);
@@ -385,16 +396,33 @@ export function validReportedCategoricalInjury(
   }
   const pool = sources.get(cause.poolSourceId),
     block = pool?.metadata.block,
-    resolution = pool?.metadata.blockResolution;
+    resolution = pool?.metadata.blockResolution,
+    final = sources.get(cause.appliedOutcomeSourceId),
+    finalStep = final?.metadata.locator?.stepIndex,
+    injuryStep = event.metadata.locator?.stepIndex;
   if (
     !block ||
     !resolution ||
     observation.sourceCode !== 1 ||
     !event.metadata.actionId ||
-    !resolution.damageActionIds.includes(event.metadata.actionId) ||
+    cause.appliedOutcomeSourceId !== block.finalSourceId ||
+    cause.damageStepSourceIndex !== observation.damageStepSourceIndex ||
+    final?.metadata.sourceTag !== "ResultBlockOutcome" ||
+    final.metadata.sequenceId !== event.metadata.sequenceId ||
+    final.metadata.locator?.replayStep !== event.metadata.locator?.replayStep ||
+    final.metadata.locator?.childIndex !== event.metadata.locator?.childIndex ||
+    finalStep === undefined ||
+    injuryStep === undefined ||
+    (injuryStep !== finalStep + 1 &&
+      !(resolution.outcome === "both_down" && injuryStep === finalStep + 2)) ||
+    (final.metadata.sourceIndex ?? Infinity) >= cause.damageStepSourceIndex ||
     (pool?.metadata.sourceIndex ?? Infinity) >=
       observation.damageStepSourceIndex ||
-    ![block.attackerId, block.defenderId].includes(event.playerId!)
+    !knockedDownSubjects(
+      resolution.outcome,
+      block.attackerId,
+      block.defenderId
+    ).includes(event.playerId!)
   )
     return false;
   if (event.playerId === block.attackerId)

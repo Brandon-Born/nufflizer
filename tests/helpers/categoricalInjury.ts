@@ -11,6 +11,7 @@ export function categoricalInjuryXml(
     swapTeams?: boolean;
     fall?: boolean;
     interruption?: string;
+    aftermath?: string;
     state?: number;
   } = {}
 ) {
@@ -52,7 +53,8 @@ export function categoricalInjuryXml(
     [
       "<ResultRoll><Status>1</Status><Requirement>8</Requirement><Difficulty>8</Difficulty><Modifiers/><Dice><Die><DieType>0</DieType><Value>6</Value></Die><Die><DieType>0</DieType><Value>6</Value></Die></Dice><RollType>10</RollType><Outcome>1</Outcome><NewRoll>1</NewRoll></ResultRoll>",
       ...(o.interruption ? [o.interruption] : []),
-      `<ResultInjuryRoll><Status>1</Status><Modifiers/><Dice>${dice.map((d) => `<Die><DieType>0</DieType><Value>${d}</Value></Die>`).join("")}</Dice><Source>${source}</Source><RollType>11</RollType><Outcome>${code}</Outcome></ResultInjuryRoll>`
+      `<ResultInjuryRoll><Status>1</Status><Modifiers/><Dice>${dice.map((d) => `<Die><DieType>0</DieType><Value>${d}</Value></Die>`).join("")}</Dice><Source>${source}</Source><RollType>11</RollType><Outcome>${code}</Outcome></ResultInjuryRoll>`,
+      ...(o.aftermath ? [o.aftermath] : [])
     ]
   );
   return envelope(

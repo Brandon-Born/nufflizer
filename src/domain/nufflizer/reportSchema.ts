@@ -205,7 +205,7 @@ export const LuckEventMetadataSchema = z.strictObject({
   injuryScoring: z.strictObject({
     policy: z.literal("injury_table_order"), armorSourceId: text,
     cause: z.discriminatedUnion("kind", [
-      z.strictObject({kind:z.literal("block"),poolSourceId:text,attackerTraitEvidence:currentTraitEvidence.optional()}),
+      z.strictObject({kind:z.literal("block"),poolSourceId:text,appliedOutcomeSourceId:text,damageStepSourceIndex:count,attackerTraitEvidence:currentTraitEvidence.optional()}),
       z.strictObject({kind:z.literal("self_fall"),rollSourceId:text,moveOutcomeSourceIndex:count,movementStepSourceIndex:count})
     ]),
     lessSevereChance:probability, sameSeverityChance:probability, moreSevereChance:probability
