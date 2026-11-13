@@ -2143,3 +2143,21 @@ Regressions/known gaps:
 Explicit handoff next steps:
 1. Continue NUF-013/012/010's full current-role, trait, conditional-choice/resource and legal push/ball policies. The first-bounce receipt must not be used as ex-ante leverage or to close those broader requirements.
 2. Continue NUF-011/016–019/022 context/chain/state and held-out/calibration acceptance, then integrate NUF-020–023/027 and the final NUF-028 gate. Preserve all issue IDs/dependencies and the12/16 ledger split. No account/provider/Stripe/store, spending/billing/security, deployment/production/legacy, merge or release action occurred.
+
+
+## 2026-11-12 18:06 - Reconcile stale acceptance audit with the ledger
+Goal:
+1. Keep NUF-027's current acceptance map consistent with completed mapping work and the original open policy requirements.
+
+Changes made (files):
+1. `docs/REMEDIATION_BACKLOG.md`: its section labeled current still described schema2.38,11 closed/17 open and an incomplete NUF-009. Reconcile it to schema2.43/dice21/context34,12 closed/16 open, completed mapping acceptance and current conditional injury/trait/first-bounce evidence. Preserve all original issue IDs, dependency lists and acceptance criteria. NUF-010–023/027–028 stay open.
+
+Commands run + outcomes:
+1. Compared the current audit against the authoritative ledger, mapping audit, injury evidence and block-ball evidence. Mapping completion is separated from remaining block/damage/choice/role policy work. Hosting requires separate evidence for the current schema.
+2. Documentation-only follow-up to implementation5eb5d38; its complete local1,972-case/34-flow verification and12-source regression receipts remain the implementation evidence. `git diff --check` passes. No runtime/test/deployment/account change.
+
+Regressions/known gaps:
+1. Correcting the audit does not close NUF-027 or any other open issue; final reconciliation still depends on the original rule/context/hosting gates.
+
+Explicit handoff next steps:
+1. Continue the current-trait/identity, conditional-choice/resource and successor work under original NUF-010–019 criteria, then the surface/corpus/hosting/integration gates. Preserve the12/16 split until independent closure evidence exists.

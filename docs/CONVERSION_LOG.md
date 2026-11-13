@@ -953,3 +953,16 @@ Remaining follow-ups:
 
 Verification evidence:
 1. Full local `corepack pnpm verify`:1,972 unit/API cases in85 unique suites, real Redis, production build and34 Chromium flows pass. All12 pre-existing complete-report projections match archived exact parent bcef189 after excluding only the added source links/travel, identity/time and versions. Odds/contributions/coverage,27 existing partial ranges, zero source-backed points and abstaining verdicts are unchanged. See `BLOCK_BALL_RELEASE_EVIDENCE.md` and the append-only implementation record. No deployment/provider/account/Stripe/store/spending/billing/security/legacy action occurred.
+
+
+## 2026-11-12 - Reconcile the current acceptance audit
+Metadata: commit(s) this documentation follow-up to `5eb5d38`; scope `NUF-027 handoff accuracy`; status `partial`.
+
+Converted items:
+1. Align the stale schema2.38/11-closed audit with the authoritative schema2.43/12-closed ledger, completed NUF-009 and current conditional injury/trait/block-ball evidence. Original requirements and open policy/state/calibration/hosting work are retained.
+
+Remaining follow-ups:
+1. Final NUF-027 reconciliation and all other open original acceptance gates remain;16 issues stay open.
+
+Verification evidence:
+1. Documentation-to-ledger/evidence comparison and `git diff --check`; runtime/tests unchanged from locally verified implementation5eb5d38. No deployment/account/service or billing action.
