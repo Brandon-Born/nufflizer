@@ -27,6 +27,10 @@ export type RerollLink = {
   proGate?: { passed: boolean; successChance: number; skillSourceId: string };
   teamDecisionGamerId?: 0 | 1;
 };
+function orderedSources(first: ReplayEvent, choice: ReplayEvent, last: ReplayEvent): boolean {
+  return [first, choice, last].every(event => Number.isSafeInteger(event.sourceIndex) && event.sourceIndex! >= 0) &&
+    first.sourceIndex! < choice.sourceIndex! && choice.sourceIndex! < last.sourceIndex!;
+}
 function singleD6(roll: Record<string, unknown>): number | undefined {
   const dice = roll.Dice as
     { Die?: { DieType?: unknown; Value?: unknown } } | undefined;
@@ -498,7 +502,7 @@ export function linkTeamRerolls(
         question.payload?.CanUseTeamReroll === 1 &&
         choice.payload?.Used === 1 &&
         !pending.conflictingOriginal &&
-        (!numericFamily || (!numericPolicyExclusion && validFreshReplacement)) &&
+        (!numericFamily || (orderedSources(question,choice,event) && !numericPolicyExclusion && validFreshReplacement)) &&
         (!pending.originalAlreadyReported || matchedReplacement) &&
         event.payload?.Status === 2 &&
         event.payload?.NewRoll === 1;
@@ -659,6 +663,7 @@ export function linkObservedSkillRerolls(
       skill.sourceTag !== "ResultSkillUsage" ||
       final.sourceTag !== "ResultRoll" ||
       final.rollType !== family ||
+      !orderedSources(original, skill, final) ||
       skill.payload?.Used !== 1 ||
       skill.payload.Skill !== rule.code ||
       String(skill.payload.PlayerId) !== original.playerId ||

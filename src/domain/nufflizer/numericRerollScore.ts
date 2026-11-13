@@ -92,6 +92,11 @@ export function validReportedNumericRerollScore(
     first!.metadata.isRollCandidate !== false ||
     choice!.scoringStatus !== "excluded" ||
     choice!.metadata.isRollCandidate !== false ||
+    first!.metadata.sourceIndex === undefined ||
+    choice!.metadata.sourceIndex === undefined ||
+    m.sourceIndex === undefined ||
+    first!.metadata.sourceIndex >= choice!.metadata.sourceIndex ||
+    choice!.metadata.sourceIndex >= m.sourceIndex ||
     !initial ||
     !final ||
     initial.id === final.id ||
@@ -126,10 +131,17 @@ export function validReportedNumericRerollScore(
       initial.parentSourceIndex >= final.parentSourceIndex)
   )
     return false;
-  if(first!.metadata.sourceTag === "ResultRoll" &&
-    (first!.metadata.dice?.length!==1 || first!.metadata.dice[0]!==r.initialFace || first!.metadata.dieTypes?.[0]!==0 ||
-      first!.metadata.outcomeCode!==0 || first!.metadata.difficulty!==target || first!.metadata.requirement!==m.requirement ||
-      JSON.stringify(first!.metadata.modifiers)!==JSON.stringify(m.modifiers))) return false;
+  if (
+    first!.metadata.sourceTag === "ResultRoll" &&
+    (first!.metadata.dice?.length !== 1 ||
+      first!.metadata.dice[0] !== r.initialFace ||
+      first!.metadata.dieTypes?.[0] !== 0 ||
+      first!.metadata.outcomeCode !== 0 ||
+      first!.metadata.difficulty !== target ||
+      first!.metadata.requirement !== m.requirement ||
+      JSON.stringify(first!.metadata.modifiers) !== JSON.stringify(m.modifiers))
+  )
+    return false;
   if (m.rerollResource === "skill") {
     const skill =
       m.rerollSkill === "Dodge"

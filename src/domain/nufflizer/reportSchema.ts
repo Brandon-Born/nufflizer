@@ -1390,7 +1390,10 @@ export const LuckReportSchema = z
     const pushModels=report.events.flatMap(e=>e.metadata.blockPush?.status==="modeled"?[{e,m:e.metadata.blockPush}]:[]);
     const pushQuestions=new Set(pushModels.flatMap(x=>x.m.questionSourceIds)),pushResults=new Set(pushModels.flatMap(x=>x.m.resultSourceIds)),pushFinals=new Set(pushModels.map(x=>x.e.metadata.block!.finalSourceId));
     require(pushFinals.size===pushModels.length && pushQuestions.size===pushModels.reduce((n,x)=>n+x.m.questionSourceIds.length,0) && pushResults.size===pushModels.reduce((n,x)=>n+x.m.resultSourceIds.length,0),"A push decision or displacement must belong to exactly one terminal block.");
-    const numericTeamRerolls=report.events.filter(e=>e.metadata.rerollDraws && e.metadata.rerollResource==="team");
+    const numericRerolls=report.events.filter(e=>e.metadata.rerollDraws);
+    require(new Set(numericRerolls.map(e=>e.metadata.rerollDecisionId)).size===numericRerolls.length,
+      "A numeric reroll decision must belong to exactly one check.");
+    const numericTeamRerolls=numericRerolls.filter(e=>e.metadata.rerollResource==="team");
     const numericTeamOffers=new Map(numericTeamRerolls.map(e=>[e.metadata.rerollQuestionId,e]));
     require(numericTeamOffers.size===numericTeamRerolls.length && new Set(numericTeamRerolls.map(e=>e.metadata.rerollDecisionId)).size===numericTeamRerolls.length,
       "A numeric team-reroll offer and decision must belong to one check.");

@@ -166,7 +166,8 @@ describe("numeric reroll source and receipt integrity", () => {
       d.replacementDelta = -d.baseSuccessChance;
       e.delta = d.initialDelta + d.replacementDelta;
       e.weightedDelta = e.delta * e.explainability.weight;
-      e.explainability.formulaSummary = "weighted delta = [(0 - 0.833) + (0 - 0.833)] x 1.10 = -1.833";
+      e.explainability.formulaSummary =
+        "weighted delta = [(0 - 0.833) + (0 - 0.833)] x 1.10 = -1.833";
     }
     const checked = LuckReportSchema.safeParse(r);
     expect(checked.success).toBe(false);
@@ -303,6 +304,131 @@ describe("numeric reroll source and receipt integrity", () => {
         }
         if (suffix === "fresh")
           expect(r.events.at(-1)!.scoringStatus).toBe("excluded");
+      }
+    }
+  );
+});
+
+describe("numeric own-skill decision conservation", () => {
+  it.each([2, 4, 7])(
+    "rejects reuse of one family%s skill choice across two checks",
+    (family) => {
+      const options = {
+        family,
+        target: 2,
+        first: 1,
+        second: 6,
+        use: true,
+        resource: "skill" as const
+      };
+      const replay = numericRerollPolicy(options),
+        second = numericRerollPolicy(options);
+      for (const e of second.turns[0]!.events) {
+        e.id = `second-${e.id}`;
+        e.sourceIndex! += 100;
+        e.actionId = "second-action";
+        e.sequenceId = "second-sequence";
+        e.locator!.replayStep = 2;
+      }
+      replay.turns[0]!.events.push(...second.turns[0]!.events);
+      replay.turns[0]!.eventCount = replay.turns[0]!.events.length;
+      const report = LuckReportSchema.parse(analyzeReplayLuck(replay));
+      const checks = report.events.filter((e) => e.metadata.rerollDraws);
+      expect(checks).toHaveLength(2);
+      const initial = report.events.find(
+        (e) => e.metadata.sourceId === checks[1]!.metadata.rerollOriginalId
+      )!;
+      checks[1]!.metadata.rerollDecisionId =
+        checks[0]!.metadata.rerollDecisionId;
+      checks[1]!.metadata.actionId = checks[0]!.metadata.actionId;
+      initial.metadata.actionId = checks[0]!.metadata.actionId;
+      // Keep the moment copies coherent so rejection must name the actual
+      // duplicate skill decision, not a stale aggregate/moment side effect.
+      report.keyMoments = report.events
+        .filter((e) => e.scoringStatus === "scored")
+        .sort((a, b) => Math.abs(b.weightedDelta) - Math.abs(a.weightedDelta));
+      const checked = LuckReportSchema.safeParse(report);
+      expect(checked.success).toBe(false);
+      if (!checked.success)
+        expect(
+          checked.error.issues.some(
+            (i) =>
+              i.message ===
+              "A numeric reroll decision must belong to exactly one check."
+          )
+        ).toBe(true);
+    }
+  );
+});
+
+describe("numeric reroll decision source order", () => {
+  it.each([
+    { resource: "team", where: "before" },
+    { resource: "team", where: "after" },
+    { resource: "team", where: "missing" },
+    { resource: "skill", where: "before" },
+    { resource: "skill", where: "after" },
+    { resource: "skill", where: "missing" }
+  ] as const)(
+    "rejects a $resource decision with $where source order",
+    ({ resource, where }) => {
+      const report = analyze({
+        family: 2,
+        target: 2,
+        first: 1,
+        second: 6,
+        use: true,
+        resource
+      });
+      const roll = report.events.find((e) => e.metadata.rerollDraws)!;
+      const choice = report.events.find(
+        (e) => e.metadata.sourceId === roll.metadata.rerollDecisionId
+      )!;
+      if (where === "missing") delete choice.metadata.sourceIndex;
+      else
+        choice.metadata.sourceIndex =
+          where === "before" ? 0 : roll.metadata.sourceIndex! + 10;
+      const checked = LuckReportSchema.safeParse(report);
+      expect(checked.success).toBe(false);
+      if (!checked.success)
+        expect(
+          checked.error.issues.some((i) =>
+            i.message.includes("Numeric reroll luck must count")
+          )
+        ).toBe(true);
+    }
+  );
+});
+
+describe("unindexed or contradictory raw reroll order", () => {
+  it.each(["team", "skill"] as const)(
+    "withholds the %s compound without erasing valid earlier dice",
+    (resource) => {
+      for (const where of ["missing", "before", "after"]) {
+        const replay = numericRerollPolicy({
+          family: 2,
+          target: 2,
+          first: 1,
+          second: 6,
+          use: true,
+          resource
+        });
+        const events = replay.turns[0]!.events,
+          choice = events[1]!,
+          last = events[2]!;
+        if (where === "missing") delete choice.sourceIndex;
+        else
+          choice.sourceIndex = where === "before" ? 0 : last.sourceIndex! + 10;
+        const report = LuckReportSchema.parse(analyzeReplayLuck(replay));
+        expect(report.events.some((e) => e.metadata.rerollDraws)).toBe(false);
+        if (resource === "skill") {
+          const original = report.events.find(
+            (e) => e.metadata.sourceId === events[0]!.id
+          )!;
+          expect(original.scoringStatus).toBe("scored");
+          expect(original.delta).toBeCloseTo(-5 / 6, 12);
+        }
+        expect(report.verdict.luckierTeam).toBe("unknown");
       }
     }
   );

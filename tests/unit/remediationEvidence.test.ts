@@ -246,6 +246,7 @@ describe("NUF-007/012/013/014/015/019 evidence regressions", () => {
           }
         })
       ];
+      events.forEach((event,index)=>{ event.sourceIndex=index+1; });
       const links = linkTeamRerolls(events,undefined,undefined,"1-4-0-0");
       expect(links.has(0)).toBe(false);
       expect(links.get(3)?.twoAttemptPolicy).toBe(Boolean(used));
