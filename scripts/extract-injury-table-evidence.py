@@ -1,7 +1,7 @@
 """Independent raw witnesses and exact BB2020 injury-table arithmetic.
 
 No application imports or eligibility/scoring outputs. The numeric table rows
-are transcribed rule facts (2020 p60 / Thick Skull p85, in-game GR-010).
+are transcribed rule facts (2020 p60 / Thick Skull p80, in-game GR-010).
 """
 import argparse
 import hashlib
@@ -86,7 +86,7 @@ for filename, number, ci, si, mi, supported in selections:
                       subjectId=subject,modelSupported=supported,modifiersExplicitlyEmpty=True,seed=seed,observedSeedLocator=observed_seed_locator,current=current,refreshes=refreshes,
                       step=inv.numeric_projection(step),roll=inv.numeric_projection(roll)))
 output = dict(scope='Raw source witnesses and conditional unmodified injury arithmetic; not actual modifier choice, treatment, final availability or tactical calibration.',
-              rules=dict(edition='BB2020',injuryPage=60,thickSkullPage=85,gameReference='GR-010'),
+              rules=dict(edition='BB2020',injuryPage=60,thickSkullPage=80,gameReference='GR-010'),
               outcomes=['stunned','ko','badly_hurt','casualty'],tables=tables,cases=cases)
 rendered=json.dumps(output,indent=2)+'\n'
 parser=argparse.ArgumentParser();parser.add_argument('--check',action='store_true');args=parser.parse_args()

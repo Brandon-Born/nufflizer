@@ -25,6 +25,7 @@ import {
   explainBlockResolution,
   explainBlockSkillModel,
   formatActualOutcome,
+  formatExpectedOutcome,
   formatContextComponentSum,
   PARTIAL_CONTEXT_SCOPE,
   explainInjuryObservation,
@@ -955,9 +956,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                           </details>
                         </td>
                         <td className="px-2 py-3">
-                          {moment.probabilitySuccess === null
-                            ? "Unknown"
-                            : `${(moment.probabilitySuccess * 100).toFixed(1)}%`}
+                          {formatExpectedOutcome(moment)}
                         </td>
                         <td className="px-2 py-3">
                           {formatActualOutcome(moment)}

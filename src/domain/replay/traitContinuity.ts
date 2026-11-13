@@ -292,6 +292,28 @@ export function findSubjectTraitEvidence(
   return result;
 }
 
+// A separately identified participant need not be the current record's subject
+// (for example, the blocker when the injury record names its victim). Resolve
+// that participant's own time-local ownership; never relabel the event actor.
+export function findParticipantTraitEvidence(
+  replay: ReplayModel,
+  participants: ReadonlyMap<string, string>,
+  owners: OwnershipTimeline
+) {
+  const result = new Map<string, CurrentTraitEvidence>();
+  if (!participants.size) return result;
+  visitCurrentTraits(replay, (event, current, ledger) => {
+    const id = event.id ? participants.get(event.id) : undefined;
+    const evidence = id ? ledger.get(id) : undefined;
+    const owner = id ? owners.resolve(id, event) : undefined;
+    if (event.id && evidence && current?.board?.phaseCode === 5 &&
+      event.sourceIndex !== undefined && current.afterSourceIndex < event.sourceIndex &&
+      owner?.status === "confirmed" && owner.proof.teamId === evidence.teamId)
+      result.set(event.id, structuredClone(evidence));
+  }, owners);
+  return result;
+}
+
 // Decision-time knowledge, after block dice. This must not be used as an
 // earlier pre-roll skill or position observation.
 export function findPushTraitEvidence(replay: ReplayModel, owners?: OwnershipTimeline) {

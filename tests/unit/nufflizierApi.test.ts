@@ -204,9 +204,11 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(report.events.find(e=>e.metadata.sourceId==="source-402")!.metadata.injuryTable?.traitEvidence).toMatchObject({observedCheckpointAfter:0});
     const injuryTableEvent=report.events.find(e=>e.metadata.sourceId==="source-110")!;
     expect(injuryTableEvent.metadata.injuryTable).toMatchObject({rules:"bb2020",policy:"fixed_unmodified_injury",stunty:false,thickSkull:false,counts:[21,9,0,6],traitEvidence:{playerId:"46",teamId:"1",observedCheckpointAfter:0,currentCheckpointAfter:104}});
-    expect(injuryTableEvent.scoringStatus).toBe("excluded");
+    expect(injuryTableEvent.scoringStatus).toBe("scored");
     expect(injuryTableEvent.probabilitySuccess).toBeNull();
-    expect(injuryTableEvent.weightedDelta).toBe(0);
+    expect(injuryTableEvent.actualSuccess).toBeNull();
+    expect(injuryTableEvent.weightedDelta).toBe(-0.625);
+    expect(injuryTableEvent.metadata.injuryScoring).toMatchObject({policy:"injury_table_order",armorSourceId:"source-109",cause:{kind:"block",poolSourceId:"source-98"},lessSevereChance:21/36,sameSeverityChance:9/36,moreSevereChance:6/36});
     expect(report.events.filter(e=>e.metadata.blockBallRelease)).toHaveLength(3);
     const release=report.events.find(e=>e.metadata.sourceId==="source-1324")!.metadata.blockBallRelease!;
     expect(release).toMatchObject({holderId:"40",holderTeamId:"1",beforeCheckpointAfter:1336,from:{x:13,y:2},to:{x:14,y:2},bounceSourceId:"source-1346",after:{checkpointAfter:1347,carrierId:null,isHeld:null}});

@@ -25,6 +25,7 @@ import {
 } from "./retainedRushMoves";
 import { summarizeContextComponents } from "./contextComponents";
 import { attachInjuryObservations } from "./injuryObservation";
+import { attachCategoricalInjuries } from "./categoricalInjury";
 import { attachInjuryTables } from "./injuryTable";
 import { attachBlockPush } from "./blockPush";
 import { attachBlockCrowd } from "./blockCrowd";
@@ -1768,6 +1769,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   );
   attachInjuryObservations(replay, ballSources);
   attachInjuryTables(replay, ballSources, ownership);
+  attachCategoricalInjuries(replay, ballSources, blockConsequences, ownership);
   attachBlockCrowd(replay, ballSources, blockConsequences);
   attachBlockPush(replay, ballSources, blockConsequences, ownership);
   const damageSteps = summarizeDamageSteps(events);
@@ -2390,8 +2392,9 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     modelVersion: DICE_MODEL_VERSION,
     contextModelVersion: CONTEXT_MODEL_VERSION,
     limitations: [
-      "Category mappings remain provisional pending NUF-009 independent game evidence.",
+      "Supported source and dice policies are scoped to their evidence; unknown variants remain unscored.",
       "Block scoring measures linked raw symbol pools; skill-adjusted resolution and unsupported damage variants are retained as evidence.",
+      "Categorical injury luck scores a qualified initial unmodified table, separately from treatment, recovery and match impact.",
       "Context estimates require a reconciled board and a verified terminal roll policy. The mobility/possession scale is a heuristic, not calibrated match impact."
     ],
     id: hashId(idSeed),

@@ -84,6 +84,7 @@ function report(options: Parameters<typeof ownershipReplayXml>[0] = {}) {
 }
 const candidate = (r: LuckReport) =>
   r.events.find((e) => e.metadata.isRollCandidate)!;
+const categoricalWitnesses=JSON.parse(readFileSync("tests/fixtures/evidence/bb3-categorical-injuries.json","utf8")) as {cases:{file:string;locator:unknown;sha256:string}[];math:{stunty:boolean;thickSkull:boolean;rows:{total:number;weighted:string}[]}[]};
 const sourceCache = new Map<
   string,
   { report: LuckReport; replay: ReturnType<typeof parseReplayXml> }
@@ -165,6 +166,14 @@ describe("source-qualified time-local player ownership", () => {
           ).toBe(true);
           expect(members[0][3] === null || members[0][3] === team).toBe(true);
         }
+        if(e.metadata.injuryScoring) {
+          const c=categoricalWitnesses.cases.find(c=>c.file===f.sourceFile && JSON.stringify(c.locator)===JSON.stringify(e.metadata.locator));
+          expect(c, `categorical outcome ${e.metadata.sourceId} needs its independent raw damage prefix`).toBeDefined();
+          expect(c!.sha256).toBe(f.sha256);expect(p.role).toBe("subject");
+          // Exact source, opponent modifier seed and rational tier odds are
+          // independently checked by categoricalInjury.test.ts.
+          continue;
+        }
         const c = rawCases.get(key(e.metadata.locator, e.metadata.sourceTag!));
         const oldIds = new Set(
           priorCohort.files.find((x) => x.file === f.sourceFile)!.sourceIds
@@ -227,6 +236,11 @@ describe("source-qualified time-local player ownership", () => {
         const added = scored
           .filter((e) => !oldIds.has(e.metadata.sourceId!))
           .reduce((sum, e) => {
+            if(e.metadata.injuryScoring){
+              const table=e.metadata.injuryTable!;
+              const row=categoricalWitnesses.math.find(t=>t.stunty===table.stunty&&t.thickSkull===table.thickSkull)!.rows.find(t=>t.total===e.metadata.dice!.reduce((a,b)=>a+b,0))!;
+              const [a,b="1"]=row.weighted.split("/");return sum+Number(a)/Number(b);
+            }
             const math = rawCases.get(
               key(e.metadata.locator, e.metadata.sourceTag!)
             )!.reference!;

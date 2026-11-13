@@ -28,6 +28,11 @@ export function formatContextComponentSum(
     : "No supported context components";
 }
 
+export function formatExpectedOutcome(event: LuckReport["events"][number]): string {
+  return event.metadata.injuryScoring ? "Categorical" : event.probabilitySuccess === null
+    ? "Unknown" : `${(event.probabilitySuccess * 100).toFixed(1)}%`;
+}
+
 export function formatActualOutcome(
   event: LuckReport["events"][number]
 ): string {
@@ -63,6 +68,8 @@ export function explainInjuryObservation(event:LuckReport["events"][number]):str
   const observation=event.metadata.injuryObservation;
   if(!observation)return null;
   const table=explainInjuryTable(event);
+  const scored=event.metadata.injuryScoring;
+  if(scored) return `The recorded injury result for player ${observation.subjectId} is ${recordedInjuryName(observation.outcome)}. The replay establishes an unmodified initial injury roll after ${scored.cause.kind === "block" ? "the applied block" : "the failed movement check"}. Compared with the same fair injury table, ${(scored.moreSevereChance*100).toFixed(1)}% of results are more severe, ${(scored.lessSevereChance*100).toFixed(1)}% less severe, and ${(scored.sameSeverityChance*100).toFixed(1)}% in the same tier. Raw injury luck is the more-severe chance minus the less-severe chance, weighted by ${event.explainability.weight}. Positive favors the injured player's team. Badly Hurt and a pending Casualty roll share one tier; later league damage is not priced. Treatment, recovery and match impact remain separate. ${table ?? ""}`;
   return `The recorded injury result for player ${observation.subjectId} is ${recordedInjuryName(observation.outcome)}. This is a categorical observation, not a success or failure check. ${table ? "The separate table describes the original injury roll with no modifier. Modifier choice and treatment can change the applied result; their full policy and luck value are not established, so no luck contribution is assigned." : "Its odds depend on the applicable injury table, current traits and modifiers; those are not verified here, so no luck contribution is assigned."} This result does not establish final posture, removal, recovery or availability after treatment. Later mitigation and state observations remain separate evidence.${table ? ` ${table}` : ""}`;
 }
 
@@ -71,7 +78,7 @@ export function explainInjuryTable(event:LuckReport["events"][number]):string|nu
   if(!table)return null;
   const names=["Stunned","KO","Badly Hurt","Casualty"];
   const odds=table.counts.map((n,i)=>`${names[i]} ${n}/36 (${(100*n/36).toFixed(1)}%)`).join(", ");
-  return `Conditional unmodified injury table for player ${event.playerId}: ${table.stunty ? "Stunty" : "ordinary"}${table.thickSkull ? " with Thick Skull" : ""}; ${odds}. This enumerates 36 fair 2D6 results with no injury modifier, using complete traits observed at source ${table.traitEvidence.observedCheckpointAfter} and continued to checkpoint ${table.traitEvidence.currentCheckpointAfter}. It is conditional on reaching this injury roll, before treatment or recovery. It does not certify modifier eligibility or the coach's actual policy, final availability, or match impact; no luck score is added.`;
+  return `Conditional unmodified injury table for player ${event.playerId}: ${table.stunty ? "Stunty" : "ordinary"}${table.thickSkull ? " with Thick Skull" : ""}; ${odds}. This enumerates 36 fair 2D6 results with no injury modifier, using complete traits observed at source ${table.traitEvidence.observedCheckpointAfter} and continued to checkpoint ${table.traitEvidence.currentCheckpointAfter}. It is conditional on reaching this injury roll, before treatment or recovery. ${event.metadata.injuryScoring ? "A separate source-qualified receipt establishes the unmodified initial-roll policy and its categorical dice contribution. It does not establish final availability or match impact." : "It does not certify modifier eligibility or the coach's actual policy, final availability, or match impact; no luck score is added."}`;
 }
 
 export function scoredEvidenceForTeam(

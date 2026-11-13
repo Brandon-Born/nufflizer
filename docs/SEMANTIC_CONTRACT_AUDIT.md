@@ -10,7 +10,7 @@ All96 roll names and39 step names match the installed NetGameplay definitions, w
 
 ## Supported probability claims
 
-These are conditional dice policies; exact admission, payload flags, die types, ownership, targets and source linkage remain required. A named family is not automatically supported. The fixture's eight policy records bind each claim to its rule/version, distinct favorable perspective and positive/adversarial tests.
+These are conditional dice policies; exact admission, payload flags, die types, ownership, targets and source linkage remain required. A named family is not automatically supported. The fixture's eight original policy records bind each claim to its rule/version, distinct favorable perspective and positive/adversarial tests.
 
 | Source/family | Semantic and payload scope | Favorable perspective / evidence |
 | --- | --- | --- |
@@ -83,3 +83,10 @@ Counts above are observed output inventories, not independent correctness or com
 |No-threshold unknown random outcomes are not harmless |9/70/999 candidate/unknown-odds/abstention probes; randomizer candidate helper correction and pre-admission census |
 
 The original mapping criteria and required local quality gates have closure evidence in the execution ledger. Exact pushed CI validation is recorded separately in chat. Remaining block skills, modified damage/casualty/treatment, reroll resources, current traits/roles, board/legal successors, calibrated contextual comparisons and final hosted/integrated acceptance stay with their original issue IDs. This is not completion of the analyzer or proof of an even-luck verdict.
+
+
+## Schema2.48 categorical injury policy extension
+
+The eight original frozen policy records above remain unchanged. A separately qualified ninth policy now admits a direct ResultInjuryRoll11 only with its current subject table, time-local ownership, verified own armor break, applied ordinary-block or self-fall cause and fixed unmodified injury policy. Current blocker traits exclude adaptive Mighty Blow1/2 and unknown skill/effect policies; Pro's primary rule explicitly excludes injury rerolls. Raw State1/2/3 cannot select the admission policy. Direct outcomes0/2/4 preserve the existing Stunned/KO/Casualty namespace;3 remains unsupported. The generic named-family contract still does not score every injury.
+
+Independent11-candidate/107-step raw prefixes and four exact rational tier references, full144-face synthetic parser/scoring checks, seven source admissions and adversarial role/choice/namespace/public-schema cases are documented in [CATEGORICAL_INJURY_EVIDENCE.md](CATEGORICAL_INJURY_EVIDENCE.md). The new ordinal dice contribution has zero mean, retains null binary fields and does not price treatment, recovery, casualty effects or match impact. Original mapping acceptance remains closed; broader damage/state/context requirements remain in their original issues.

@@ -153,9 +153,15 @@ describe("conditional injury tables before treatment and recovery", () => {
           )!.counts
         );
         expect(explainInjuryTable(e)).toContain("before treatment or recovery");
-        expect(explainInjuryTable(e)).toContain("no luck score is added");
-        expect(e.delta).toBe(0);
-        expect(e.weightedDelta).toBe(0);
+        const qualified = new Set(["demo10.bbr:26", "demo10.bbr:32", "demo10.bbr:76", "demo10.bbr:90", "demo5.bbr:29", "demo5.bbr:70", "demo8.bbr:45"]);
+        expect(Boolean(e.metadata.injuryScoring)).toBe(qualified.has(`${c.sourceFile}:${c.locator.replayStep}`));
+        if(e.metadata.injuryScoring) {
+          expect(explainInjuryTable(e)).toContain("categorical dice contribution");
+          expect(e.scoringStatus).toBe("scored");
+        } else {
+          expect(explainInjuryTable(e)).toContain("no luck score is added");
+          expect(e.delta).toBe(0);expect(e.weightedDelta).toBe(0);
+        }
       }
     }
   );
@@ -270,7 +276,7 @@ describe("conditional injury tables before treatment and recovery", () => {
     expect(a.weightedDelta).toBe(0);
     expect(b.weightedDelta).toBe(0);
   });
-  it("[cli-worker] prints the source-backed Stunty table without a binary luck score", () => {
+  it("[cli-worker] prints source-backed categorical injury luck without inventing binary success", () => {
     const child = spawnSync(
       process.execPath,
       [
@@ -286,11 +292,12 @@ describe("conditional injury tables before treatment and recovery", () => {
     );
     expect(child.status, child.stderr).toBe(0);
     expect(child.stdout).toContain(
-      "source source-249: Conditional unmodified injury table for player 9: Stunty"
+      "source source-249: The recorded injury result for player 9 is Stunned."
     );
     expect(child.stdout).toContain(
       "Stunned 15/36 (41.7%), KO 11/36 (30.6%), Badly Hurt 4/36 (11.1%), Casualty 6/36 (16.7%)"
     );
-    expect(child.stdout).toContain("no luck score is added");
+    expect(child.stdout).toContain("Positive favors the injured player's team");
+    expect(child.stdout).toContain("Treatment, recovery and match impact remain separate");
   });
 });

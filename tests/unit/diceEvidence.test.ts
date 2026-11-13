@@ -1,3 +1,5 @@
+import { summarizeDamageSteps } from "@/domain/nufflizer/damageSteps";
+import { summarizeBlockConsequence } from "@/domain/nufflizer/blockConsequences";
 import { beforeAll, describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
 import { readFileSync, mkdtempSync, rmSync } from "node:fs";
@@ -109,11 +111,17 @@ const oldProjection = (r: LuckReport, file: string) => {
   expect(cohort.sourceSha256).toBe(
     census.files.find((c) => c.file === file)!.sourceSha256
   );
+  // New categorical injury stages change a linked block's subtotal, never its
+  // original pool deviation. Reconstruct only the earlier subtotal membership
+  // for this frozen historical hash; independent source/rational tests assert
+  // all seven new stage values and their current action/team sums separately.
+  const priorDamage = summarizeDamageSteps(r.events.map(e=>e.metadata.injuryScoring ? {...e,scoringStatus:"excluded" as const,delta:0,weightedDelta:0} : e));
   const ids = new Set(cohort.sourceIds),
     oldTraits = new Set(priorTraits.files.find(c=>c.file===file)!.sourceIds),
     contexts = new Map(priorContext.files.find(f=>f.file===file)!.rows.map(r=>[r.sourceId,r.preRoll])),
     events = r.events.filter((e) => ids.has(e.metadata.sourceId!)).map(e=>{
       const copy=structuredClone(e);
+      if(copy.metadata.blockResolution) Object.assign(copy.metadata.blockResolution,summarizeBlockConsequence(copy,priorDamage.filter(step=>copy.metadata.blockResolution!.damageActionIds.includes(step.actionId))));
       // Only the versioned pre-roll context fields changed by committed-Block
       // state are projected back. Their current semantics and exact footprint
       // have independent source/availability tests; no frozen SHA is reset.

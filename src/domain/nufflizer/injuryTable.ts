@@ -14,7 +14,7 @@ export const INJURY_OUTCOMES = [
 ] as const;
 type InjuryOutcome = (typeof INJURY_OUTCOMES)[number];
 
-// BB2020 p60; Thick Skull p85, corroborated by in-game GR-010.
+// BB2020 p60; Thick Skull p80, corroborated by in-game GR-010.
 // The table is conditional on an injury roll, with no injury modifier applied.
 // Treatment, recovery and later availability are different transitions.
 export function unmodifiedInjuryOutcome(

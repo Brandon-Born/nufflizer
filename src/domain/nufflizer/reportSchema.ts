@@ -7,6 +7,7 @@ import {
   type ContextComponentSummary
 } from "./contextComponents";
 import { directInjuryOutcome } from "./injuryObservation";
+import { validReportedCategoricalInjury } from "./categoricalInjury";
 import { injuryTableForTraits } from "./injuryTable";
 import { validReportedBlockCrowd } from "./blockCrowd";
 import { validReportedBlockBallRelease } from "./blockBallRelease";
@@ -201,6 +202,14 @@ export const LuckEventMetadataSchema = z.strictObject({
     from:pitchCell,to:pitchCell,movementBefore:z.number().int().min(1).max(16).nullable(),
     movementAfter:z.number().int().min(0).max(15).nullable(),carriesBall:z.boolean().nullable(),checkpointAfter:count}).optional(),
   blockSelection:z.strictObject({face:z.number().int().min(0).max(4)}).optional(),
+  injuryScoring: z.strictObject({
+    policy: z.literal("injury_table_order"), armorSourceId: text,
+    cause: z.discriminatedUnion("kind", [
+      z.strictObject({kind:z.literal("block"),poolSourceId:text,attackerTraitEvidence:currentTraitEvidence.optional()}),
+      z.strictObject({kind:z.literal("self_fall"),rollSourceId:text,moveOutcomeSourceIndex:count,movementStepSourceIndex:count})
+    ]),
+    lessSevereChance:probability, sameSeverityChance:probability, moreSevereChance:probability
+  }).optional(),
   injuryTable:injuryTable.optional(),
   injuryObservation:z.strictObject({outcome:z.enum(["stunned","ko","casualty"]),recordKind:z.enum(["direct","embedded_ko"]),subjectId:text,subjectTeamId:text,sourceCode:z.number().int().min(0).max(64),damageStepSourceIndex:count}).optional(),
   crowdPush:z.strictObject({playerId:text,from:pitchCell,to:z.strictObject({x:z.number().int().min(-1).max(26),y:z.number().int().min(-1).max(15)}),resolution:z.literal(3)}).optional(),
@@ -508,7 +517,7 @@ export const LuckEventMetadataSchema = z.strictObject({
   fixedNumericModifiers:z.array(z.strictObject({playerId:z.number().int().min(-1),modifierType:count,skillId:z.number().int().min(-1),effectId:z.literal(-1),value:finite})).max(64).optional(),
   modifiers: numbers.optional(),
   modifiersSum: finite.optional(),
-  probabilityPolicy: z.enum(["single_attempt", "two_attempt", "block_pool"]).optional(),
+  probabilityPolicy: z.enum(["single_attempt", "two_attempt", "block_pool", "categorical_injury"]).optional(),
   rerollUsed: z.boolean().optional(),
   skillsUsed: numbers.optional(),
   normalizationFlags: z.array(text).max(REPLAY_LIMITS.events).optional(),
@@ -1357,7 +1366,8 @@ export const LuckReportSchema = z
       require(validReportedOwnership(event,report,sources,identityMutations),
         "Scored outcomes need source-qualified actor/subject ownership and opposing block roles; a time-local conflict or pending identity cannot contribute favorable luck.");
       const base = event.explainability.baseOdds;
-      if (event.scoringStatus === "scored") {
+      require(validReportedCategoricalInjury(event,sources), "Categorical injury scoring needs a qualified unmodified damage cause, current modifier policy, exact injury-tier probabilities and zero-mean subject-perspective deviation.");
+      if (event.scoringStatus === "scored" && policy !== "categorical_injury") {
         require(
           policy !== undefined && base !== undefined &&
             event.probabilitySuccess !== null &&
@@ -1383,7 +1393,7 @@ export const LuckReportSchema = z
             "Single-attempt and block-pool policies must retain their base chance without implying resource availability."
           );
         }
-      } else {
+      } else if(event.scoringStatus !== "scored") {
         require(policy === undefined, "Unscored evidence cannot claim an applied odds policy.");
       }
       const pro = event.metadata.proGate;
@@ -2295,8 +2305,8 @@ export const LuckReportSchema = z
         "Scored numeric checks require exact supported fixed pre-roll modifier receipts; post-roll, unknown or duplicate modifiers cannot certify these odds.");
       else require(fixed===undefined,"Only a supported scored numeric check carries a fixed-modifier receipt.");
       const injuryObservation=event.metadata.injuryObservation;
-      if(injuryObservation)require(event.type === "injury" && event.scoringStatus === "excluded" && event.metadata.isRollCandidate === true &&
-        event.probabilitySuccess === null && event.actualSuccess === null && event.delta === 0 && event.weightedDelta === 0 &&
+      if(injuryObservation)require(event.type === "injury" && (event.metadata.injuryScoring ? event.scoringStatus === "scored" : event.scoringStatus === "excluded") && event.metadata.isRollCandidate === true &&
+        event.probabilitySuccess === null && event.actualSuccess === null && (event.metadata.injuryScoring || (event.delta === 0 && event.weightedDelta === 0)) &&
         !event.contextualImpact && !event.contextualBounds && !event.possessionBounds && !event.catchPossessionBounds &&
         event.metadata.rollType === 11 && event.metadata.stepType === 2 && event.playerId === injuryObservation.subjectId && event.teamId === injuryObservation.subjectTeamId &&
         teamIds.has(event.teamId) && event.metadata.targetId === event.playerId && !!event.metadata.actionId && !!event.metadata.sequenceId &&
@@ -2305,7 +2315,7 @@ export const LuckReportSchema = z
         directInjuryOutcome(event.metadata.outcomeCode) === injuryObservation.outcome && !event.metadata.embeddedDamageOriginalId && !event.metadata.mergedRerollAnchorId &&
         (injuryObservation.recordKind === "direct" ? event.metadata.sourceTag === "ResultInjuryRoll" : event.metadata.sourceTag === "QuestionKORecovery" && injuryObservation.outcome === "ko") &&
         event.metadata.damage?.observedInjury === true && event.metadata.damage.sourceCode === injuryObservation.sourceCode,
-        "A recorded injury outcome needs its supported direct/embedded source namespace, uniquely affected player, ordered damage step and two D6; it supplies no odds, final posture or luck contribution.");
+        "A recorded injury outcome needs its supported direct/embedded source namespace, uniquely affected player, ordered damage step and two D6; its initial categorical odds are scored only under the separate qualified injury policy; final posture remains unknown.");
       if(event.metadata.injuryTable) {
         const table=event.metadata.injuryTable, proof=table.traitEvidence;
         const expected=injuryTableForTraits(proof,event.metadata.dice??[],injuryObservation?.outcome??"");
@@ -2716,11 +2726,8 @@ export const LuckReportSchema = z
         require(teamIds.has(event.teamId) &&
           event.metadata.isRollCandidate ===
             true, "Scored outcomes require a known team and random-outcome evidence.");
-        require(event.probabilitySuccess !== null &&
-          event.actualSuccess !== null &&
-          Boolean(
-            event.explainability.formulaSummary
-          ), "Scored outcomes require odds, observed result and calculation.");
+        require((event.metadata.injuryScoring || (event.probabilitySuccess !== null && event.actualSuccess !== null)) &&
+          Boolean(event.explainability.formulaSummary), "Scored outcomes require verified binary or categorical odds, observed result and calculation.");
         if (event.probabilitySuccess !== null && event.actualSuccess !== null)
           require(near(
             event.delta,

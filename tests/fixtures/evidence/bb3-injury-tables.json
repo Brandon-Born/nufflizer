@@ -3,7 +3,7 @@
   "rules": {
     "edition": "BB2020",
     "injuryPage": 60,
-    "thickSkullPage": 85,
+    "thickSkullPage": 80,
     "gameReference": "GR-010"
   },
   "outcomes": [

@@ -25,7 +25,7 @@ import {
   explainLonerGate,
   explainBlockResolution,
   explainBlockSkillModel,
-  explainInjuryTable,
+  explainInjuryObservation,
   formatActualOutcome,
   formatContextComponentSum,
   PARTIAL_CONTEXT_SCOPE,
@@ -159,7 +159,7 @@ function formatTeamSummary(
       .slice(0, 20)
       .map(
         (event) =>
-          `Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainInjuryTable(event)}`
+          `Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainInjuryObservation(event)}`
       ),
     ...report.events
       .filter((event) => event.metadata.teamRerollCounter)
@@ -272,6 +272,7 @@ function formatTeamSummary(
         `${moment.scoringStatus} (${moment.statusReason})`,
         moment.explainability.formulaSummary ?? "no formula",
         formatPreRollPosition(moment.metadata.preRoll),
+        explainInjuryObservation(moment),
         explainBlockPush(moment),
         explainOwnership(moment),
         explainPreRollEvidence(moment.metadata.preRoll),
