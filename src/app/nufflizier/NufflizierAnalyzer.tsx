@@ -32,6 +32,7 @@ import {
   explainRegenerationAftermath,
   explainRegenerationReturn,
   explainNumericRerollScore,
+  explainNumericOriginal,
   explainDiceCensus,
   explainObservedDice,
   explainDriveEffectExpiry,
@@ -875,6 +876,11 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                             {moment.metadata.regenerationReturn || moment.metadata.recoveryReturnActivation ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainRegenerationReturn(moment)}
+                              </p>
+                            ) : null}
+                            {moment.metadata.numericOriginal ? (
+                              <p className="mt-1 text-xs text-amber-100/80">
+                                {explainNumericOriginal(moment)}
                               </p>
                             ) : null}
                             {moment.metadata.rerollDraws ? (

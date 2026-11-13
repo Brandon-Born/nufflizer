@@ -3,6 +3,12 @@ import { recordedInjuryName } from "./injuryObservation";
 import type { LuckEventType, LuckReport } from "./types";
 import { LuckEventTypeSchema } from "./reportSchema";
 
+export function explainNumericOriginal(event: LuckReport["events"][number]): string | null {
+  const r=event.metadata.numericOriginal;
+  if(!r) return null;
+  return `Only the recorded first attempt is scored here: ${(event.probabilitySuccess!*100).toFixed(1)}% success chance and ${event.delta.toFixed(3)} dice luck before the category weight. The replay's question records team reroll ${r.canUseTeamReroll ? "available" : "unavailable"} and Pro ${r.canUseProReroll ? "available" : "unavailable"}. These flags do not certify legal eligibility. Any later gate, replacement, resource cost and consequences remain separate; an unverified later policy cannot erase this known first die. A linked copy adds no draw or score.`;
+}
+
 export function explainNumericRerollScore(event:LuckReport["events"][number]):string|null {
   const r=event.metadata.rerollDraws;if(!r)return null;
   const signed=(n:number)=>`${n>0?"+":""}${n.toFixed(3)}`;

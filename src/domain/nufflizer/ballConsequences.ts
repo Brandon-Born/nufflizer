@@ -142,7 +142,8 @@ export function linkPickupBallConsequences(
       )
         break;
       let caught = reported.get(catchRaw.id);
-      if (caught?.scoringStatus !== "scored")
+      // An independently scored original is not the terminal catch policy.
+      if (caught?.scoringStatus !== "scored" || caught.metadata.numericOriginal)
         caught = terminalByQuestion.get(catchRaw.id);
       if (
         !caught ||

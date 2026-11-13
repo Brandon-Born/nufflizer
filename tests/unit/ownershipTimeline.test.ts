@@ -65,6 +65,9 @@ const witness = JSON.parse(
     cases: RawCase[];
   }[];
 };
+const questionWitness = JSON.parse(readFileSync("tests/fixtures/evidence/bb3-numeric-question-originals.json","utf8")) as {
+  files:{file:string;sha256:string;cases:{locator:Locator;step:Record<string,string[]>;question:Record<string,string[]>;initialRoll:Record<string,string[]>}[]}[]
+};
 const priorCohort = JSON.parse(
   readFileSync(
     "tests/fixtures/evidence/bb3-ownership-prior-cohort.json",
@@ -174,6 +177,19 @@ describe("source-qualified time-local player ownership", () => {
           // independently checked by categoricalInjury.test.ts.
           continue;
         }
+        if(e.metadata.numericOriginal){
+          const f2=questionWitness.files.find(x=>x.file===f.sourceFile)!;
+          const c=f2.cases.find(x=>key(x.locator,"QuestionTeamRerollUsage")===key(e.metadata.locator,e.metadata.sourceTag));
+          expect(c,`embedded first outcome ${e.metadata.sourceId} needs its raw question prefix`).toBeDefined();
+          expect(f2.sha256).toBe(f.sha256);expect(p.role).toBe("actor");
+          expect(p.playerId).toBe(c!.step.PlayerId[0]);expect(p.teamId).toBe(c!.question.GamerId[0]);
+          const probability=(7-Number(c!.initialRoll.Difficulty[0]))/6;
+          expect(e.probabilitySuccess).toBeCloseTo(probability,12);expect(e.actualSuccess).toBe(false);
+          expect(e.delta).toBeCloseTo(-probability,12);expect(e.weightedDelta).toBeCloseTo(-probability*1.1,12);
+          // The separate question-evidence suite checks every physical die and
+          // all 83 prefixes. The common roster-proof checks above still apply.
+          continue;
+        }
         const c = rawCases.get(key(e.metadata.locator, e.metadata.sourceTag!));
         const oldIds = new Set(
           priorCohort.files.find((x) => x.file === f.sourceFile)!.sourceIds
@@ -242,6 +258,10 @@ describe("source-qualified time-local player ownership", () => {
               const table=e.metadata.injuryTable!;
               const row=categoricalWitnesses.math.find(t=>t.stunty===table.stunty&&t.thickSkull===table.thickSkull)!.rows.find(t=>t.total===e.metadata.dice!.reduce((a,b)=>a+b,0))!;
               const [a,b="1"]=row.weighted.split("/");return sum+Number(a)/Number(b);
+            }
+            if(e.metadata.numericOriginal){
+              const raw=questionWitness.files.find(x=>x.file===f.sourceFile)!.cases.find(x=>key(x.locator,"QuestionTeamRerollUsage")===key(e.metadata.locator,e.metadata.sourceTag))!;
+              return sum-(7-Number(raw.initialRoll.Difficulty[0]))/6*1.1;
             }
             const raw = rawCases.get(key(e.metadata.locator, e.metadata.sourceTag!))!;
             const math = raw.reference!;

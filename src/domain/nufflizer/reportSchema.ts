@@ -1,3 +1,4 @@
+import { validReportedNumericQuestionOriginal,validReportedNumericQuestionCopy } from "./numericQuestionOriginal";
 import { isFixedNumericModifier } from "./numericCheckContract";
 import { summarizeDiceRecords } from "./diceEvidence";
 import { enumerateSkillBlock } from "./blockSkillModel";
@@ -308,6 +309,8 @@ export const LuckEventMetadataSchema = z.strictObject({
   initialRosterName: z.string().max(320).optional(),
   embeddedDamageOriginalId: text.optional(),
   originalDice: z.unknown().optional(),
+  numericOriginalCopy:z.strictObject({originalSourceId:text,previousSourceId:text}).optional(),
+  numericOriginal: z.strictObject({gamerId:z.union([z.literal(0),z.literal(1)]),canUseTeamReroll:z.boolean(),canUseProReroll:z.boolean()}).optional(),
   rerollOriginalId: text.optional(),
   rerollDraws: z.strictObject({initialSourceId:text,initialFace:z.number().int().min(1).max(6),baseSuccessChance:probability,initialDelta:finite,replacementDelta:finite}).optional(),
   rerollQuestionId: text.optional(),
@@ -1127,7 +1130,15 @@ export const LuckReportSchema = z
             ) &&
             sameSubjects &&
             r.rollType === target.rollType &&
+            (r.parentSourceTag!=="QuestionTeamRerollUsage" || ![1,2,4,7].includes(r.rollType??-1) ||
+              (r.actionId===target.actionId && r.status===1 && r.newRoll===1 && target.status===1 && target.newRoll===1 &&
+               r.locator?.replayStep===target.locator?.replayStep && r.locator?.childIndex===target.locator?.childIndex &&
+               r.locator?.stepIndex===target.locator?.stepIndex)) &&
             equal;
+          const copiedQuestion=r.parentSourceTag==="QuestionTeamRerollUsage" && target.parentSourceTag==="QuestionTeamRerollUsage" &&
+            parentFinal?.metadata.numericOriginalCopy?.originalSourceId===target.parentSourceId && sameSubjects && equal &&
+            r.actionId===target.actionId && r.rollType===target.rollType && [1,2,4,7].includes(r.rollType??-1) &&
+            r.status===1 && r.newRoll===1 && target.status===1 && target.newRoll===1;
           const copiedTreatment =
             r.parentSourceTag === "QuestionApothecaryCasualtyChoice" &&
             target.parentSourceTag === "QuestionApothecaryCasualtyUsage" &&
@@ -1149,6 +1160,7 @@ export const LuckReportSchema = z
               copiedKept ||
               repeatedTerminal ||
               copiedOriginal ||
+              copiedQuestion ||
               copiedTreatment ||
               copiedSnapshot), "Dice copies need a compatible source namespace, participants and an explicit pool/choice relationship; equal faces alone do not identify a summary.");
         }
@@ -1404,6 +1416,10 @@ export const LuckReportSchema = z
       if(event.metadata.pushResult)require(pushResults.has(event.metadata.sourceId??"") && event.metadata.sourceTag==="ResultPushBack" && event.scoringStatus==="excluded" && !event.metadata.isRollCandidate,"A push displacement must link to its one modeled block.");
       if(event.metadata.pushAppliedFollow!==undefined)require(pushFinals.has(event.metadata.sourceId??"") && event.metadata.sourceTag==="ResultBlockOutcome","Recorded follow-up must belong to the modeled applied block.");
       const policy = event.metadata.probabilityPolicy;
+      require(validReportedNumericQuestionCopy(event,sources,initialRerollDiceBySource),
+        "A copied numeric question must retain the immediately preceding same-step menu and one earlier original die, without another draw or score.");
+      require(validReportedNumericQuestionOriginal(event,initialRerollDiceBySource),
+        "An embedded numeric original must bind its one fresh failed initial die, recorded offer, owner and single-attempt arithmetic without a later-policy or context claim.");
       require(validReportedNumericRerollScore(event,sources,initialRerollDiceBySource,rootDiceBySource),
         "Numeric reroll luck must count its two source-qualified actual draws exactly once, separately from the whole-check policy chance.");
       require(validReportedOwnership(event,report,sources,identityMutations),
@@ -2340,7 +2356,7 @@ export const LuckReportSchema = z
       }
       if (event.metadata.blockSelection) require(event.metadata.sourceTag === "ResultBlockRoll" && !event.metadata.isRollCandidate && event.scoringStatus === "excluded", "An observed selected block face is a deterministic summary of a linked pool.");
       const fixed=event.metadata.fixedNumericModifiers;
-      const numeric=event.scoringStatus==="scored" && event.metadata.sourceTag==="ResultRoll" && [1,2,4,7].includes(event.metadata.rollType??-1);
+      const numeric=event.scoringStatus==="scored" && (event.metadata.sourceTag==="ResultRoll" || !!event.metadata.numericOriginal) && [1,2,4,7].includes(event.metadata.rollType??-1);
       if(numeric)require(!!fixed && fixed.length===(event.metadata.modifiers??[]).length &&
         new Set(fixed.map(m=>JSON.stringify([m.playerId,m.modifierType,m.skillId,m.effectId]))).size===fixed.length &&
         fixed.every((m,i)=>isFixedNumericModifier(event.metadata.rollType!,{PlayerId:m.playerId,ModifierType:m.modifierType,Skill:m.skillId,Effect:m.effectId,Value:m.value}) && m.value===event.metadata.modifiers![i]) &&

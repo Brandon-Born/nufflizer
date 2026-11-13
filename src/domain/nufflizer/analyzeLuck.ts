@@ -1,3 +1,4 @@
+import { findNumericQuestionOriginals, findNumericQuestionCopies, type NumericQuestionOriginal } from "./numericQuestionOriginal";
 import {
   findTeamDiceIdentities,
   linkBlockDiceCopies,
@@ -400,9 +401,11 @@ function buildNormalizedEvent(
   apothecary: ApothecaryRecord | undefined,
   embeddedInjury: EmbeddedInjuryRecord | undefined,
   koRecoveryChecks: ReadonlyMap<string, number>,
-  armorCountInStep: number | undefined
+  armorCountInStep: number | undefined,
+  questionOriginal?: NumericQuestionOriginal
 ): LuckEvent | null {
   const payload =
+    questionOriginal?.roll ??
     embeddedInjury?.roll ??
     apothecary?.roll ??
     (isRecord(event.payload) ? event.payload : undefined);
@@ -427,10 +430,11 @@ function buildNormalizedEvent(
       : undefined;
   if (preRoll) delete preRoll.pickupMoveAvailability;
   const rollType = event.rollType ?? toNumber(payload?.RollType);
+  const numericEvent = questionOriginal ? {...event, sourceTag:"ResultRoll", rollType, payload} : event;
   const rollLabel =
     replayVersion === "1-4-0-0"
       ? labelForRollType(
-          event.sourceTag,
+          numericEvent.sourceTag,
           rollType,
           event.rollLabel ?? "unknown"
         )
@@ -592,14 +596,14 @@ function buildNormalizedEvent(
   }
 
   let classification = classifyRollContext({
-    sourceTag: event.sourceTag,
+    sourceTag: numericEvent.sourceTag,
     stepType: event.stepType,
     rollType,
     requirement,
     difficulty,
     diceCount: dice.length
   });
-  const isRollCandidate = embeddedInjury
+  const isRollCandidate = questionOriginal ? true : embeddedInjury
     ? Boolean(embeddedInjury.roll && !embeddedInjury.repeatedOriginalId)
     : apothecary
       ? Boolean(apothecary.roll && !apothecary.repeatedOriginal)
@@ -766,7 +770,7 @@ function buildNormalizedEvent(
     rerollLink?.exclusionReason ??
     numericCheckExclusion(
       replayVersion,
-      { ...event, rollType },
+      { ...numericEvent, rollType },
       twoAttemptPolicy,
       rerollLink?.retainedOriginal
     );
@@ -1125,7 +1129,8 @@ function buildNormalizedEvent(
       modifiersSum: modifiers.reduce((sum, value) => sum + value, 0),
       ...rerollMetadata,
       rerollDraws,
-      fixedNumericModifiers: fixedNumericModifierEvidence(event),
+      fixedNumericModifiers: fixedNumericModifierEvidence(numericEvent),
+      numericOriginal: questionOriginal?.receipt,
       skillsUsed,
       normalizationFlags,
       normalizationNotes,
@@ -1230,6 +1235,12 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   const replay = applyCurrentOwnership(inputReplay, ownership);
   // Inventory and bound all observed fields before probability admission.
   const diceInventory = inventoryDiceRecords(replay);
+  const rawById=new Map(diceInventory.orderedSources.map(e=>[e.id,e]));
+  const questionScan=findNumericQuestionOriginals(diceInventory.orderedSources,replay.replayVersion,ownership);
+  const originalByRaw=new Map([...questionScan.originals].map(([i,p])=>[diceInventory.orderedSources[i]!,p] as const));
+  const copiesByRaw=new Map([...findNumericQuestionCopies(diceInventory.orderedSources,questionScan)].map(([i,p])=>[diceInventory.orderedSources[i]!,p] as const));
+  const ambiguousQuestionIds=new Set([...questionScan.ambiguousQuestions].flatMap(i=>diceInventory.orderedSources[i]?.id?[diceInventory.orderedSources[i]!.id!]:[]));
+  const ambiguousInitialIds=new Set([...questionScan.ambiguousInitials].flatMap(e=>e.id?[e.id]:[]));
   const [homeTeam, awayTeam] = selectMatchTeams(replay);
   const teamNameById = new Map<string, string>(
     replay.teams.map((team) => [team.id, team.name] satisfies [string, string])
@@ -1237,6 +1248,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
 
   const events: LuckEvent[] = [];
   const normalizedByRaw = new Map<ReplayEvent, LuckEvent>();
+  const questionCandidates: {turn:ReplayTurn;event:ReplayEvent;eventIndex:number;original:NumericQuestionOriginal}[]=[];
   const diceLinks: DiceLinks = new Map();
   const observedRerollDice = findObservedRerollDice(replay);
   const armorModifierUses = findMightyBlowArmorUses(replay, ownership);
@@ -1477,6 +1489,20 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   }
 
   for (const replayTurn of replay.turns) {
+    const questionOriginals=new Map<number,NumericQuestionOriginal>();
+    const questionCopies=new Map<number,{original:ReplayEvent;previous:ReplayEvent;emittedOriginal?:ReplayEvent}>();
+    for(const [i,raw] of replayTurn.events.entries()){
+      const original=originalByRaw.get(raw),copy=copiesByRaw.get(raw);
+      if(original)questionOriginals.set(i,original);
+      if(copy)questionCopies.set(i,copy);
+      const emitted=questionScan.emittedCopies.get(raw);
+      if(emitted){addDiceLink(diceLinks,raw.id,["RollInfos","Dice"],emitted.id,["Dice"],"summary");activationEvidenceSources.add(raw.id!);}
+    }
+    for(const [index,copy] of questionCopies){
+      const raw=replayTurn.events[index]!;
+      addDiceLink(diceLinks,raw.id,["RollInfos","Dice"],copy.original.id,["RollInfos","Dice"],"summary");
+      activationEvidenceSources.add(raw.id!);
+    }
     const fall =
       replay.replayVersion === "1-4-0-0"
         ? findMovementFall(replayTurn)
@@ -1502,7 +1528,9 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       replayTurn.events,
       eventEpochs,
       ownership,
-      replay.replayVersion
+      replay.replayVersion,
+      questionCopies,
+      ambiguousQuestionIds
     );
     linkObservedSkillRerolls(
       replayTurn.events,
@@ -1510,6 +1538,13 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       ownership,
       rerollLinks
     );
+    const ambiguousFinalIds=new Set([...rerollLinks].flatMap(([i,link])=>
+      link.originalId && ambiguousInitialIds.has(link.originalId) && replayTurn.events[i]?.id ? [replayTurn.events[i]!.id!] : []));
+    for(const [i,link] of rerollLinks)if((link.originalId && ambiguousInitialIds.has(link.originalId)) ||
+      (link.mergedIntoId && ambiguousFinalIds.has(link.mergedIntoId)))rerollLinks.set(i,{twoAttemptPolicy:false,rerollUsed:false,
+        exclusionReason:"an earlier unanswered original makes this new initial emission's identity ambiguous"});
+    for(const [i,raw] of replayTurn.events.entries())if(questionScan.ambiguousInitials.has(raw))rerollLinks.set(i,{twoAttemptPolicy:false,rerollUsed:false,
+      exclusionReason:"an earlier unanswered original makes this new initial emission's identity ambiguous"});
     for (const link of rerollLinks.values())
       if (
         (link.skill === "Dodge" || link.skill === "Sure Hands") &&
@@ -1580,16 +1615,12 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
         !link.questionId
       )
         continue;
-      if (link.originalId)
-        addDiceLink(
-          diceLinks,
-          link.questionId,
-          ["RollInfos", "Dice"],
-          link.originalId,
-          ["Dice"],
-          "summary"
-        );
-      else if (!link.mergedIntoId)
+      if (link.originalId) {
+        const copiedQuestion=rawById.get(link.originalId)?.sourceTag==="QuestionTeamRerollUsage";
+        addDiceLink(diceLinks,link.questionId,["RollInfos","Dice"],link.originalId,
+          copiedQuestion?["RollInfos","Dice"]:["Dice"],"summary");
+        if(copiedQuestion)addDiceLink(diceLinks,link.originalId,["RollInfos","Dice"],raw.id,["Dice"],"policy_original");
+      } else if (!link.mergedIntoId)
         addDiceLink(
           diceLinks,
           link.questionId,
@@ -1720,6 +1751,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       if (
         !apothecary.has(eventIndex) &&
         !embeddedInjuries.has(eventIndex) &&
+        !questionOriginals.has(eventIndex) &&
         !activationEvidenceSources.has(event.id ?? "") &&
         !(
           event.sourceTag === "ResultUseAction" &&
@@ -1830,6 +1862,33 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
         normalized.metadata.movementTouchdown = touchdown.evidence;
       events.push(normalized);
       normalizedByRaw.set(event, normalized);
+      const copy=questionCopies.get(eventIndex);
+      if(copy){
+        normalized.metadata.numericOriginalCopy={originalSourceId:copy.original.id!,previousSourceId:copy.previous.id!};
+        normalized.metadata.isRollCandidate=false;
+        normalized.label="Repeated original die in reroll question";
+        normalized.statusReason="excluded: adjacent repeated question retains the same original die, without another draw or score";
+      }
+      const original=questionOriginals.get(eventIndex);
+      if(original)questionCandidates.push({turn:replayTurn,event,eventIndex,original});
+    }
+  }
+
+  // Keep the existing score owner for qualified groups and known original
+  // copies. An excluded later policy is not an owner of the initial score.
+  const noContext=new Map<string,PreRollEvidence>();
+  for(const {turn,event,eventIndex,original} of questionCandidates){
+    const link=diceLinks.get(event.id!)?.find(l=>JSON.stringify(l.path)===JSON.stringify(["RollInfos","Dice"]));
+    const target=link ? rawById.get(link.target.sourceId) : undefined;
+    if(link?.kind==="summary" || (target && normalizedByRaw.get(target)?.scoringStatus==="scored"))continue;
+    const row=normalizedByRaw.get(event);
+    const scored=buildNormalizedEvent(replay.replayVersion,turn,event,eventIndex,teamNameById,ownership,
+      undefined,noContext,undefined,undefined,undefined,undefined,new Map(),undefined,original);
+    if(row && scored?.scoringStatus==="scored"){
+      scored.label=`Original ${scored.label}`;
+      scored.statusReason="scored: the recorded first die, before any reroll decision; later policy and consequences are separate";
+      scored.metadata.initialRosterName=row.metadata.initialRosterName;
+      Object.assign(row,scored);
     }
   }
 

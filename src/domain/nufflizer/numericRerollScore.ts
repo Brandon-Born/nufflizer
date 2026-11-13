@@ -183,6 +183,12 @@ export function validReportedNumericRerollScore(
   )
     return false;
   if (!m.rerollOriginalId) return first === q;
+  if(first!.metadata.sourceTag==="QuestionTeamRerollUsage")return (
+    q!.metadata.numericOriginalCopy?.originalSourceId===m.rerollOriginalId &&
+    first!.metadata.sourceIndex! < q!.metadata.sourceIndex! &&
+    q!.metadata.sourceIndex! < choice!.metadata.sourceIndex! &&
+    choice!.metadata.sourceIndex! < m.sourceIndex!
+  );
   const o = first!.metadata,
     l = o.locator,
     ql = q!.metadata.locator;

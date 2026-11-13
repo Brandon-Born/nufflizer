@@ -287,9 +287,12 @@ export function linkTeamRerolls(
   events: ReplayEvent[],
   checkpointEpochs?: ReadonlyMap<number, number>,
   owners?:OwnershipLookup,
-  replayVersion?: string
+  replayVersion?: string,
+  questionCopies?: ReadonlyMap<number,{original:ReplayEvent;emittedOriginal?:ReplayEvent}>,
+  ambiguousQuestionIds?: ReadonlySet<string>
 ): Map<number, RerollLink> {
   const links = new Map<number, RerollLink>();
+  const indices=new Map(events.map((event,index)=>[event,index]));
   const roleOwner=(event:ReplayEvent)=>{
     if(!owners || !event.playerId || event.attributionConflict)return;
     const known=ownerAt(owners,event.playerId,event);
@@ -306,6 +309,7 @@ export function linkTeamRerolls(
   const initialRollsInStep = new Map<string, { index: number; unique: boolean }>();
   const emittedFamiliesInStep = new Set<string>();
   const completedTeamChecks = new Map<string, number>();
+  const seenQuestions = new Set<string>();
   let lastInitialIndex: number | undefined;
   let pending:
     | {
@@ -314,6 +318,7 @@ export function linkTeamRerolls(
         originalAlreadyReported: boolean;
         emittedOriginalIndex?: number;
         conflictingOriginal: boolean;
+        copiedQuestionOriginal?:ReplayEvent;
       }
     | undefined;
   function sameAction(a: ReplayEvent, b: ReplayEvent): boolean {
@@ -383,12 +388,18 @@ export function linkTeamRerolls(
         Record<string, unknown> | undefined;
       const emitted = original && event.actionId !== undefined
         ? initialRollsInStep.get(originalKey(event, original.RollType, original)) : undefined;
+      const questionKey=familyKey(event,original?.RollType);
+      const repeatedQuestion=seenQuestions.has(questionKey) || ambiguousQuestionIds?.has(event.id??"")===true;
+      const copiedQuestionOriginal=questionCopies?.get(index)?.original;
+      seenQuestions.add(questionKey);
       pending = {
         question: event,
-        originalAlreadyReported: !!emitted,
-        conflictingOriginal: !!original && !emitted && emittedFamiliesInStep.has(familyKey(event,original.RollType)),
-        emittedOriginalIndex: replayVersion === "1-4-0-0" && emitted?.unique &&
-          lastInitialIndex === emitted.index ? emitted.index : undefined
+        originalAlreadyReported: !!emitted || !!questionCopies?.get(index)?.emittedOriginal,
+        copiedQuestionOriginal,
+        conflictingOriginal: (repeatedQuestion && !copiedQuestionOriginal) || (!!original && !emitted && emittedFamiliesInStep.has(familyKey(event,original.RollType))),
+        emittedOriginalIndex: questionCopies?.get(index)?.emittedOriginal
+          ? indices.get(questionCopies.get(index)!.emittedOriginal!)
+          : replayVersion === "1-4-0-0" && emitted?.unique && lastInitialIndex === emitted.index ? emitted.index : undefined
       };
       initialRollsInStep.clear();
       emittedFamiliesInStep.clear();
@@ -541,7 +552,7 @@ export function linkTeamRerolls(
         questionId: question.id,
         decisionId: choice.id,
         originalDice: roll?.Dice,
-        originalId: (fullTeam || kept) && matchedEmitted ? emitted!.id : undefined,
+        originalId: (fullTeam || kept) && matchedEmitted ? emitted!.id : (fullTeam || kept) && pending.copiedQuestionOriginal ? pending.copiedQuestionOriginal.id : undefined,
         mergedIntoId: kept && matchedEmitted ? emitted!.id : undefined,
         teamDecisionGamerId: fullTeam ? question.payload!.GamerId as 0 | 1 : undefined,
         resource: fullTeam ? "team" : undefined,

@@ -155,6 +155,13 @@ describe("POST /api/nufflizier/analyze", () => {
           e.metadata.locator?.replayStep === 194 &&
           e.metadata.teamRerollMovement
       )!;
+    const original=report.events.find(e=>e.metadata.sourceId==="source-4546")!;
+    expect(original.metadata.numericOriginal).toEqual({gamerId:1,canUseTeamReroll:false,canUseProReroll:true});
+    expect(original.scoringStatus).toBe("scored");expect(original.probabilitySuccess).toBeCloseTo(2/3,12);
+    expect(original.delta).toBeCloseTo(-2/3,12);expect(original.weightedDelta).toBeCloseTo(-11/15,12);
+    expect(original.metadata.fixedNumericModifiers).toEqual([{playerId:14,modifierType:3,skillId:-1,effectId:-1,value:-1}]);
+    expect(report.events.find(e=>e.metadata.sourceId==="source-4551")?.metadata.isRollCandidate).toBe(false);
+    expect(report.diceRecords.find(d=>d.parentSourceId==="source-4546" && d.path.join(".")==="RollInfos.Dice")?.disposition).toBe("covered_roll");
     const crowd=report.events.find(e=>e.metadata.blockCrowd?.subjectId === "38")!,proof=crowd.metadata.blockCrowd!;
     expect(crowd.metadata.sourceId).toBe("source-3716");expect(proof.after).toMatchObject({checkpointAfter:3730,cell:{x:-1,y:-1},canAct:true,tackleZone:true,statusCode:null});
     expect(crowd.metadata.blockResolution!.unscoredDamageRolls).toBe(1);
