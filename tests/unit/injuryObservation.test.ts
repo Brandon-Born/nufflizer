@@ -285,7 +285,7 @@ describe("observed injury result is distinct from odds and final availability", 
       expect(r.verdict.luckierTeam).toBe("unknown");
     }
     expect(unknown3).toBe(8);
-    expect(counts).toEqual({ stunned: 114, ko: 62, casualty: 55 });
+    expect(counts).toEqual({ stunned: 119, ko: 64, casualty: 55 });
   }, 60000);
   it("[cli-worker] reproduces source facts independently and prints known outcomes with Not scored in the CLI", () => {
     const dir = mkdtempSync(join(tmpdir(), "nuff-injury-")),

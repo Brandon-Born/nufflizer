@@ -70,6 +70,24 @@ describe("POST /api/nufflizier/analyze", () => {
       falls = report.events.filter(
         (e) => e.metadata.movementFall?.combinedRushSourceId
       );
+    const newlyOwned = report.events.find(
+      (e) => e.metadata.sourceId === "source-2737"
+    )!;
+    expect(newlyOwned).toMatchObject({
+      teamId: "0",
+      playerId: "14",
+      scoringStatus: "scored",
+      probabilitySuccess: 7 / 12,
+      metadata: {
+        ownership: {
+          role: "subject",
+          basis: "current_roster",
+          identitySourceId: "source-29",
+          teamId: "0"
+        }
+      }
+    });
+    expect(newlyOwned.weightedDelta).toBeLessThan(0);
     const rushes=report.events.filter(e=>e.contextualBounds?.policy === "team_reroll_rush_moves");
     const retained=report.events.find(e=>e.metadata.sourceId==="source-2704")!;
     expect(retained.contextualBounds).toMatchObject({policy:"kept_rush_terminal_moves",minimumMoves:0,maximumMoves:9,successChance:5/6,lower:-15/2,upper:0});

@@ -32,7 +32,8 @@ import {
   explainObservedDice,
   explainDriveEffectExpiry,
   explainContextCoverage,
-  explainRecruitmentEvidence
+  explainRecruitmentEvidence,
+  explainOwnership
 } from "@/domain/nufflizer/presentation";
 import { readAnalysisResponse } from "@/lib/readAnalysisResponse";
 import { REPLAY_LIMITS } from "@/domain/replay/limits";
@@ -845,6 +846,11 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                                 : "n/a"}
                               , weight {moment.explainability.weight}.
                             </p>
+                            {explainOwnership(moment) ? (
+                              <p className="mt-2 text-xs text-slate-300">
+                                {explainOwnership(moment)}
+                              </p>
+                            ) : null}
                             {explainObservedDice(moment, diceById) ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainObservedDice(moment, diceById)}

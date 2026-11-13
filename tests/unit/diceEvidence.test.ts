@@ -49,6 +49,19 @@ const census = JSON.parse(readFileSync(fixture, "utf8")) as {
 const prior = JSON.parse(
   readFileSync("tests/fixtures/evidence/dice-census-prior-scores.json", "utf8")
 ) as { files: { file: string; sha256: string }[] };
+const ownershipCohort = JSON.parse(
+  readFileSync(
+    "tests/fixtures/evidence/bb3-ownership-prior-cohort.json",
+    "utf8"
+  )
+) as {
+  files: {
+    file: string;
+    sourceSha256: string;
+    priorProjectionSha256: string;
+    sourceIds: string[];
+  }[];
+};
 const digest = (v: string | Buffer) =>
   createHash("sha256").update(v).digest("hex");
 const reports = new Map<string, LuckReport>();
@@ -82,29 +95,81 @@ const faces = (value: unknown = 1) => ({ Die: die(value) });
 const resummarize = (r: LuckReport) => {
   r.coverage.diceRecords = summarizeDiceRecords(r.diceRecords);
 };
-const oldProjection = (r: LuckReport) => ({
-  // This hash predates modifier and block-ball receipts. Preserve every
-  // original field; added receipts have separate source/forgery probes.
-  events: r.events
-    .filter((e) => e.scoringStatus === "scored")
-    .map((e) => ({
+const oldProjection = (r: LuckReport, file: string) => {
+  const cohort = ownershipCohort.files.find((c) => c.file === file)!;
+  expect(cohort.priorProjectionSha256).toBe(
+    prior.files.find((c) => c.file === file)!.sha256
+  );
+  expect(cohort.sourceSha256).toBe(
+    census.files.find((c) => c.file === file)!.sourceSha256
+  );
+  const ids = new Set(cohort.sourceIds),
+    events = r.events.filter((e) => ids.has(e.metadata.sourceId!));
+  expect(events).toHaveLength(ids.size);
+  expect(events.every((e) => e.scoringStatus === "scored")).toBe(true);
+  const teams = structuredClone(r.teams);
+  for (const t of teams) {
+    t.luckScore = 0;
+    t.impactCount = 0;
+    t.impactScore = 0;
+    t.impactByType = { dodge: 0, ball_handling: 0 };
+    for (const k of Object.keys(t.categoryScores))
+      t.categoryScores[k as keyof typeof t.categoryScores] = 0;
+  }
+  const category = {
+    block: "block",
+    armor_break: "armorBreak",
+    injury: "injury",
+    dodge: "dodge",
+    ball_handling: "ballHandling",
+    argue_call: "argueCall",
+    movement_risk: "movementRisk"
+  } as const;
+  for (const e of events) {
+    const t = teams.find((t) => t.teamId === e.teamId)!;
+    t.luckScore += e.weightedDelta;
+    if (e.type !== "unknown")
+      t.categoryScores[category[e.type]] += e.weightedDelta;
+    if (
+      e.contextualImpact &&
+      (e.type === "dodge" || e.type === "ball_handling")
+    ) {
+      t.impactCount++;
+      t.impactScore += e.contextualImpact.contribution;
+      t.impactByType[e.type] += e.contextualImpact.contribution;
+    }
+  }
+  return {
+    // This hash predates modifier and block-ball receipts. Preserve every
+    // original cohort's fields and totals. Newly attributed outcomes have their
+    // own independently decoded role/dice references; no hash is reset.
+    events: events.map((e) => ({
       ...e,
       metadata: Object.fromEntries(
         Object.entries(e.metadata).filter(
-          ([key]) => !["fixedNumericModifiers","blockBallRelease"].includes(key)
+          ([key]) =>
+            ![
+              "fixedNumericModifiers",
+              "blockBallRelease",
+              "ownership"
+            ].includes(key)
         )
       )
     })),
-  contextComponents: r.contextComponents,
-  verdict: r.verdict,
-  teams: r.teams.map((t) =>
-    Object.fromEntries(
-      Object.entries(t).filter(
-        ([k]) => !["eventCount", "excludedCount", "coverage"].includes(k)
+    contextComponents: r.contextComponents,
+    verdict: {
+      ...r.verdict,
+      scoreGap: Math.abs(teams[0].luckScore - teams[1].luckScore)
+    },
+    teams: teams.map((t) =>
+      Object.fromEntries(
+        Object.entries(t).filter(
+          ([k]) => !["eventCount", "excludedCount", "coverage"].includes(k)
+        )
       )
     )
-  )
-});
+  };
+};
 describe("independent source dice census", () => {
   it("reproduces the frozen stdlib extraction without importing the application", () => {
     const temp = mkdtempSync(join(tmpdir(), "dice-census-"));
@@ -175,9 +240,9 @@ describe("independent source dice census", () => {
   it.each(prior.files)(
     "preserves all prior scored events, context components and team values in $file",
     (c) => {
-      expect(digest(JSON.stringify(oldProjection(reports.get(c.file)!)))).toBe(
-        c.sha256
-      );
+      expect(
+        digest(JSON.stringify(oldProjection(reports.get(c.file)!, c.file)))
+      ).toBe(c.sha256);
     }
   );
   it("audits 5112 fields, 74 previously hidden outer draws and nine no-roll placeholders", () => {
@@ -1114,8 +1179,22 @@ describe("rare unknowns and checkpoint boundaries", () => {
   });
 });
 
-describe("incomplete named emissions cannot reuse an older snapshot anchor",()=>{
- it.each(["<EventWeatherRoll/>",`<EventWeatherRoll><Dice><Die><Value>4</Value></Die></Dice><Dice><Die><Value>5</Value></Die></Dice></EventWeatherRoll>`])("invalidates the old anchor after %s",incomplete=>{
-  const r=analyzeNufflizerInput(envelope(`<ReplayStep>${weather()}${incomplete}<BoardState>${lastWeather()}</BoardState></ReplayStep>`)),s=r.diceRecords.find(d=>d.parentKind==="snapshot")!;expect(s.disposition).toBe("unresolved");expect(s.aliasOf).toBeUndefined();expect(r.coverage.rollFamilies.find(f=>f.sourceTag==="BoardState")?.unresolvedIdentityCount).toBe(1);
- });
+describe("incomplete named emissions cannot reuse an older snapshot anchor", () => {
+  it.each([
+    "<EventWeatherRoll/>",
+    `<EventWeatherRoll><Dice><Die><Value>4</Value></Die></Dice><Dice><Die><Value>5</Value></Die></Dice></EventWeatherRoll>`
+  ])("invalidates the old anchor after %s", (incomplete) => {
+    const r = analyzeNufflizerInput(
+        envelope(
+          `<ReplayStep>${weather()}${incomplete}<BoardState>${lastWeather()}</BoardState></ReplayStep>`
+        )
+      ),
+      s = r.diceRecords.find((d) => d.parentKind === "snapshot")!;
+    expect(s.disposition).toBe("unresolved");
+    expect(s.aliasOf).toBeUndefined();
+    expect(
+      r.coverage.rollFamilies.find((f) => f.sourceTag === "BoardState")
+        ?.unresolvedIdentityCount
+    ).toBe(1);
+  });
 });

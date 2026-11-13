@@ -186,11 +186,17 @@ describe("UI-backed numeric check contracts, replay 1-4-0-0", () => {
         0,
         rollEvent({ sourceTag: "UnknownRecord" })
       );
-    if (variant === "missing owner") replay.playerOwnershipKeys = [];
+    if (variant === "missing owner") {
+      replay.playerOwnershipKeys = [];
+      for (const cp of replay.boardCheckpoints ?? [])
+        for (const team of cp.board?.teams ?? []) team.players = [];
+    }
     const catches = analyzeReplayLuck(replay).events.filter(
       (event) => event.metadata.rollType === 7
     );
-    expect(catches[0]!.probabilitySuccess).toBeCloseTo(5 / 6, 12);
+    if (variant === "missing owner")
+      expect(catches[0]!.probabilitySuccess).toBeNull();
+    else expect(catches[0]!.probabilitySuccess).toBeCloseTo(5 / 6, 12);
     expect(catches[1]!.scoringStatus).toBe("excluded");
   });
   it("scores UI-093's natural-six Catch using the explicit effective target", () => {
@@ -246,7 +252,9 @@ describe("UI-backed numeric check contracts, replay 1-4-0-0", () => {
       scoringStatus: "excluded",
       probabilitySuccess: null
     });
-    expect(result.events.every((e) => e.metadata.probabilityPolicy!=="two_attempt")).toBe(true);
+    expect(
+      result.events.every((e) => e.metadata.probabilityPolicy !== "two_attempt")
+    ).toBe(true);
   });
   it.each([
     { Die: { DieType: 99, Value: 1 } },

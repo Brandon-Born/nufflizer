@@ -448,7 +448,10 @@ describe("occupied-bounce fresh catch possession envelope", () => {
       const r = analyzeNufflizerInput(
         readFileSync(`demo-replays/${file}`, "utf8")
       );
-      count += r.events.filter((e) => e.catchPossessionBounds?.policy === "fresh_catch_failure_envelope").length;
+      count += r.events.filter(
+        (e) =>
+          e.catchPossessionBounds?.policy === "fresh_catch_failure_envelope"
+      ).length;
       expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
       expect(r.verdict.luckierTeam).toBe("unknown");
     }
@@ -533,7 +536,20 @@ describe("occupied-bounce fresh catch possession envelope", () => {
         });
       const report = LuckReportSchema.parse(analyzeReplayLuck(r.replay));
       expect(report.events.some((e) => e.metadata.pickupTurnEnd)).toBe(false);
-      expect(check(report).catchPossessionBounds!.upper).toBeCloseTo(5 / 3, 12);
+      if (change === "checkpoint") {
+        // An out-of-order checkpoint list cannot establish time-local owners.
+        const catchRoll = report.events.find(
+          (e) => e.metadata.sourceId === r.caught.id
+        )!;
+        expect(catchRoll.scoringStatus).toBe("excluded");
+        expect(catchRoll.metadata.ownershipConflict?.reason).toBe(
+          "unverified_transition"
+        );
+      } else
+        expect(check(report).catchPossessionBounds!.upper).toBeCloseTo(
+          5 / 3,
+          12
+        );
     }
   );
   it.each([

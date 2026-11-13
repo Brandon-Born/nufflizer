@@ -66,11 +66,11 @@ describe("bounded pre-roll context (NUF-016–019)", () => {
     );
   });
   it.each([{ omittedAvailability: true }, { interruption: true }])(
-    "uses dice only when pre-roll evidence is incomplete: %j",
+    "withholds tactical state and honors unknown ownership barriers: %j",
     (options) => {
       const r = analyzeNufflizerInput(contextReplayXml(options));
       expect(r.events.find((e) => e.type === "dodge")).toMatchObject({
-        scoringStatus: "scored"
+        scoringStatus: options.interruption ? "excluded" : "scored"
       });
       expect(r.events.every((e) => e.contextualImpact === undefined)).toBe(
         true

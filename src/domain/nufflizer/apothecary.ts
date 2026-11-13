@@ -1,3 +1,4 @@
+import { ownerAt, type OwnershipLookup } from "@/domain/replay/ownershipTimeline";
 import type { ReplayEvent } from "@/domain/replay/types";
 
 const USAGE = "QuestionApothecaryCasualtyUsage";
@@ -135,7 +136,7 @@ function sameCell(a: unknown, b: unknown) {
 export function linkApothecary(
   events: readonly ReplayEvent[],
   version: string | undefined,
-  owners: ReadonlyMap<string, string>
+  owners: OwnershipLookup
 ): Map<number, ApothecaryRecord> {
   const records = new Map<number, ApothecaryRecord>();
   let step: ReplayEvent | undefined;
@@ -165,7 +166,7 @@ export function linkApothecary(
     )
       continue;
     const subject = subjectOf(event);
-    const owner = subject ? owners.get(subject) : undefined;
+    const owner = subject ? ownerAt(owners,subject,event) : undefined;
     const isStep = tag === "DamageStep";
     if (isStep) {
       if (

@@ -16,12 +16,45 @@ function number(value: unknown): number | undefined {
 function list(value: unknown): unknown[] {
   return value === undefined ? [] : Array.isArray(value) ? value : [value];
 }
+function smallBuyerIdentifier(value: unknown): 0 | 1 | undefined {
+  return value === 0 || value === "0"
+    ? 0
+    : value === 1 || value === "1"
+      ? 1
+      : undefined;
+}
+
+// Public replays also serialize a non-slot identifier in GamerId. The player
+// namespace remains usable; that identifier never establishes a team/chooser.
+export function recruitmentIdentityObservation(event: ReplayEvent) {
+  if (!["EventBuyMercenary", "EventRemoveMercenary"].includes(event.sourceTag))
+    return;
+  const player = number(event.payload?.MercenaryId);
+  if (player === undefined) return;
+  const buyerNumber = smallBuyerIdentifier(event.payload?.GamerId),
+    type = number(event.payload?.MercenaryType);
+  return {
+    operation:
+      event.sourceTag === "EventBuyMercenary"
+        ? ("purchase" as const)
+        : ("removal_record" as const),
+    playerId: String(player),
+    ...(type === undefined ? {} : { playerTypeId: type }),
+    buyerIdKind:
+      buyerNumber !== undefined
+        ? ("small_numeric" as const)
+        : event.payload?.GamerId === undefined
+          ? ("missing" as const)
+          : ("uninterpreted" as const),
+    ...(buyerNumber === undefined ? {} : { gamerId: buyerNumber })
+  };
+}
 export function mercenaryIdentity(event: ReplayEvent) {
   if (!["EventBuyMercenary", "EventRemoveMercenary"].includes(event.sourceTag))
     return;
   const playerId = number(event.payload?.MercenaryId),
     playerTypeId = number(event.payload?.MercenaryType),
-    gamerId = number(event.payload?.GamerId);
+    gamerId = smallBuyerIdentifier(event.payload?.GamerId);
   if (
     playerId === undefined ||
     playerTypeId === undefined ||
@@ -89,7 +122,7 @@ export function observeRecruitmentPurchases(replay: ReplayModel) {
     }
     if (event.sourceTag !== "EventBuyMercenary") continue;
     const type = number(p?.MercenaryType),
-      gamer = number(p?.GamerId);
+      gamer = smallBuyerIdentifier(p?.GamerId);
     if (type === undefined || (gamer !== 0 && gamer !== 1)) {
       previous.delete(playerId);
       removal.delete(playerId);

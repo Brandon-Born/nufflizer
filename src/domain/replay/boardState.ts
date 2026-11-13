@@ -13,6 +13,9 @@ export type ObservedCell = { x: number | null; y: number | null };
 export type ObservedPlayer = {
   traitsDataPresent?: boolean;
   traitsDataTeamId?: number | null;
+  // Identity fields are observed separately from skill-list validity.
+  traitsDataPlayerId?: number | null;
+  traitsPlayerTypeId?: number | null;
   effectsKnownEmpty?: boolean;
   ordinaryMovePolicyKnown?: boolean;
   plainBallPolicyKnown?: boolean;
@@ -159,6 +162,8 @@ export function observeBoardCheckpoint(
                   return {
                     traitsDataPresent: Object.hasOwn(p, "Data"),
                     traitsDataTeamId: nonnegative(record(p.Data).TeamId),
+                    traitsDataPlayerId: nonnegative(record(p.Data).Id),
+                    traitsPlayerTypeId: nonnegative(record(p.Data).IdPlayerTypes),
                     effectsKnownEmpty: p.Effects === "",
                     mentalEffect,
                     traits,

@@ -33,7 +33,8 @@ import {
   explainContextCoverage,
   explainDiceCensus,
   explainObservedDice,
-  explainRecruitmentEvidence
+  explainRecruitmentEvidence,
+  explainOwnership
 } from "@/domain/nufflizer/presentation";
 import { runAnalysis } from "@/server/runAnalysis";
 
@@ -88,7 +89,9 @@ function formatTeamSummary(
       return `- ${type}: ${count} excluded`;
     }
   );
-  const injuryObservations=report.events.filter(event=>event.metadata.injuryObservation);
+  const injuryObservations = report.events.filter(
+    (event) => event.metadata.injuryObservation
+  );
   const topExclusions = Object.entries(report.coverage.excludedByReason)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
@@ -124,18 +127,51 @@ function formatTeamSummary(
         ? ["Further component groups are retained in JSON."]
         : [])
     ]),
-    ...(injuryObservations.length ? [
-      `Recorded injury results: ${injuryObservations.length}. These observed labels have unverified odds and are not luck scores or final player availability.`,
-      ...injuryObservations.slice(0,20).map(event=>
-        `Player ${event.playerId}; source ${event.metadata.sourceId}: ${formatActualOutcome(event)}; Not scored.`),
-      ...(injuryObservations.length>20 ? ["Further recorded injury results are retained in JSON."] : [])
-    ] : []),
-    ...report.events.filter(event=>event.metadata.injuryTable).slice(0,20)
-      .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainInjuryTable(event)}`),
-    ...report.events.filter((event) => event.metadata.teamRerollCounter).slice(0,20)
-      .map((event) => `Player ${event.playerId ?? "unknown"}; source ${event.metadata.sourceId ?? event.id}: ${explainRerollCounter(event)}`),
-    ...report.events.filter(event=>event.metadata.block?.traitEvidence).slice(0,20)
-      .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainBlockSkillModel(event)}`),
+    ...(injuryObservations.length
+      ? [
+          `Recorded injury results: ${injuryObservations.length}. These observed labels have unverified odds and are not luck scores or final player availability.`,
+          ...injuryObservations
+            .slice(0, 20)
+            .map(
+              (event) =>
+                `Player ${event.playerId}; source ${event.metadata.sourceId}: ${formatActualOutcome(event)}; Not scored.`
+            ),
+          ...(injuryObservations.length > 20
+            ? ["Further recorded injury results are retained in JSON."]
+            : [])
+        ]
+      : []),
+    ...report.events
+      .filter(
+        (e) =>
+          e.metadata.ownershipConflict ||
+          e.metadata.identityMutation ||
+          (e.metadata.ownership &&
+            e.metadata.ownership.basis !== "initial_roster")
+      )
+      .slice(0, 20)
+      .map((e) => `Source ${e.metadata.sourceId}: ${explainOwnership(e)}`),
+    ...report.events
+      .filter((event) => event.metadata.injuryTable)
+      .slice(0, 20)
+      .map(
+        (event) =>
+          `Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainInjuryTable(event)}`
+      ),
+    ...report.events
+      .filter((event) => event.metadata.teamRerollCounter)
+      .slice(0, 20)
+      .map(
+        (event) =>
+          `Player ${event.playerId ?? "unknown"}; source ${event.metadata.sourceId ?? event.id}: ${explainRerollCounter(event)}`
+      ),
+    ...report.events
+      .filter((event) => event.metadata.block?.traitEvidence)
+      .slice(0, 20)
+      .map(
+        (event) =>
+          `Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainBlockSkillModel(event)}`
+      ),
     ...report.events
       .filter((event) => event.metadata.blockResolution)
       .slice(0, 20)
@@ -143,16 +179,32 @@ function formatTeamSummary(
         explainBlockResolution(event, report.teams, sourcesById)!
       ),
     ...report.events
-      .filter((event) => event.contextualBounds || event.possessionBounds || event.catchPossessionBounds)
+      .filter(
+        (event) =>
+          event.contextualBounds ||
+          event.possessionBounds ||
+          event.catchPossessionBounds
+      )
       .slice(0, 20)
       .map(
         (event) =>
           `Player ${event.playerId ?? "unknown"}; source ${event.metadata.sourceId ?? event.id}: ${explainContextBounds(event)}`
       ),
     ...report.events
-      .filter((event) => event.metadata.dodgeMovement || event.metadata.pickupResolution || event.metadata.teamRerollMovement || event.metadata.pickupAfterMovement || event.metadata.combinedMovement || event.metadata.movementFall?.combinedRushSourceId)
+      .filter(
+        (event) =>
+          event.metadata.dodgeMovement ||
+          event.metadata.pickupResolution ||
+          event.metadata.teamRerollMovement ||
+          event.metadata.pickupAfterMovement ||
+          event.metadata.combinedMovement ||
+          event.metadata.movementFall?.combinedRushSourceId
+      )
       .slice(0, 20)
-      .map((event) => `Player ${event.playerId ?? "unknown"}; source ${event.metadata.sourceId ?? event.id}: ${explainMovementOutcome(event.metadata)}`),
+      .map(
+        (event) =>
+          `Player ${event.playerId ?? "unknown"}; source ${event.metadata.sourceId ?? event.id}: ${explainMovementOutcome(event.metadata)}`
+      ),
     ...report.events
       .filter((event) => event.metadata.lonerGate)
       .slice(0, 20)
@@ -217,6 +269,7 @@ function formatTeamSummary(
         `${moment.scoringStatus} (${moment.statusReason})`,
         moment.explainability.formulaSummary ?? "no formula",
         formatPreRollPosition(moment.metadata.preRoll),
+        explainOwnership(moment),
         explainPreRollEvidence(moment.metadata.preRoll),
         explainContextImpact(moment),
         explainContextBounds(moment),

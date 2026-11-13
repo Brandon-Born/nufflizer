@@ -1,3 +1,4 @@
+import { ownerAt, type OwnershipLookup } from "@/domain/replay/ownershipTimeline";
 import type { ReplayEvent } from "@/domain/replay/types";
 import type { BlockRecord } from "./blockPools";
 import type { LuckEvent } from "./types";
@@ -136,7 +137,7 @@ const damageTags = new Set([
 export function findBlockConsequences(
   events: readonly ReplayEvent[],
   blocks: ReadonlyMap<number, BlockRecord>,
-  owners: ReadonlyMap<string, string>
+  owners: OwnershipLookup
 ): ObservedBlockConsequence[] {
   const indices = new Map(
     events.flatMap((e, i) => (e.id ? [[e.id, i] as const] : []))
@@ -183,12 +184,14 @@ export function findBlockConsequences(
       step.payload.IsEvaluation !== 0
     )
       continue;
-    const attackerTeam = owners.get(block.attackerId),
-      defenderTeam = owners.get(block.defenderId);
+    const attackerTeam = ownerAt(owners,block.attackerId,poolEvent),
+      defenderTeam = ownerAt(owners,block.defenderId,poolEvent);
     if (
       !attackerTeam ||
       !defenderTeam ||
       attackerTeam === defenderTeam ||
+      ownerAt(owners,block.attackerId,events[finalIndex]!)!==attackerTeam ||
+      ownerAt(owners,block.defenderId,events[finalIndex]!)!==defenderTeam ||
       block.attackerId === block.defenderId
     )
       continue;
@@ -224,7 +227,7 @@ export function findBlockConsequences(
       if (event.sourceTag === "ResultSkillUsage") {
         const skillId = event.payload?.Skill,
           playerId = String(event.payload?.PlayerId),
-          teamId = owners.get(playerId);
+          teamId = ownerAt(owners,playerId,event);
         if (
           typeof skillId !== "number" ||
           ![7, 30, 57, 68].includes(skillId) ||

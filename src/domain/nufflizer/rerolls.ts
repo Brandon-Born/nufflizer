@@ -1,3 +1,4 @@
+import { ownerAt, type OwnershipLookup } from "@/domain/replay/ownershipTimeline";
 import { verifyLonerTest } from "@/domain/replay/loner";
 import type { ReplayEvent } from "@/domain/replay/types";
 import { numericCheckExclusion } from "./numericCheckContract";
@@ -52,7 +53,7 @@ function isFailedSingleD6(roll: Record<string, unknown>): boolean {
 export function linkLonerGates(
   events: readonly ReplayEvent[],
   version: string | undefined,
-  owners: ReadonlyMap<string, string>,
+  owners: OwnershipLookup,
   links: Map<number, RerollLink>
 ): void {
   if (version !== "1-4-0-0") return;
@@ -76,7 +77,7 @@ export function linkLonerGates(
     )
       continue;
     const actor = roll.stepActorId;
-    const owner = owners.get(actor);
+    const owner = ownerAt(owners,actor,roll);
     const choice = events[index - 2];
     const skill = events[index - 1];
     const gamerId = choice?.payload?.GamerId;
@@ -126,7 +127,7 @@ export function linkLonerGates(
 export function linkProGates(
   events: readonly ReplayEvent[],
   version: string | undefined,
-  owners: ReadonlyMap<string, string>,
+  owners: OwnershipLookup,
   links: Map<number, RerollLink>
 ): void {
   if (version !== "1-4-0-0") return;
@@ -204,7 +205,7 @@ export function linkProGates(
           : index) - 1
       ];
     const actor = roll.stepActorId;
-    const owner = actor ? owners.get(actor) : undefined;
+    const owner = actor ? ownerAt(owners,actor,roll) : undefined;
     const p = roll.payload;
     if (
       roll.sourceTag !== "ResultRoll" ||
@@ -279,9 +280,22 @@ function sameRoll(
 // Match the explicit actor/step/target/roll contract; proximity alone is never sufficient.
 export function linkTeamRerolls(
   events: ReplayEvent[],
-  checkpointEpochs?: ReadonlyMap<number, number>
+  checkpointEpochs?: ReadonlyMap<number, number>,
+  owners?:OwnershipLookup
 ): Map<number, RerollLink> {
   const links = new Map<number, RerollLink>();
+  const roleOwner=(event:ReplayEvent)=>{
+    if(!owners || !event.playerId)return;
+    const known=ownerAt(owners,event.playerId,event);if(known)return known;
+    // The simple numeric contract also admits an explicit source TeamId.
+    // It cannot override an overlap, current conflict or pending replacement.
+    if("resolve" in owners) {
+      const result=owners.resolve(event.playerId,event);
+      if(result.status === "unresolved" && result.reason === "missing_evidence" && !event.attributionConflict &&
+        event.actorTeamSource === "explicit" && (event.actorTeamId === "0" || event.actorTeamId === "1") &&
+        (!event.teamId || event.teamId===event.actorTeamId))return event.actorTeamId;
+    }
+  };
   const initialRollsInStep = new Set<string>();
   let pending:
     | {
@@ -417,7 +431,12 @@ export function linkTeamRerolls(
         roll.NewRoll === 1 &&
         roll.Outcome === 0 &&
         isFailedSingleD6(roll);
+      const owner=roleOwner(event);
+      const owned=!owners || !!(owner && question.playerId && choice.playerId &&
+        roleOwner(question)===owner && roleOwner(choice)===owner &&
+        (question.payload?.GamerId===0 || question.payload?.GamerId===1) && String(question.payload.GamerId)===owner);
       const fullTeam =
+        owned &&
         validOriginal &&
         question.payload?.CanUseTeamReroll === 1 &&
         choice.payload?.Used === 1 &&
@@ -425,6 +444,7 @@ export function linkTeamRerolls(
         event.payload?.Status === 2 &&
         event.payload?.NewRoll === 1;
       const kept =
+        owned &&
         validOriginal &&
         choice.payload?.Used === 0 &&
         event.payload.Status === 1 &&
@@ -436,7 +456,7 @@ export function linkTeamRerolls(
       links.set(index, {
         retainedOriginal,
         exclusionReason:
-          choice.payload?.Used === 0 && !retainedOriginal
+          !owned ? "reroll participants require matching roster owners and a verified team slot at the original offer, decision and result" : choice.payload?.Used === 0 && !retainedOriginal
             ? kept
               ? "retained original already reported; repeated summary is not another attempt"
               : "declined reroll summary does not match valid original dice"
@@ -506,7 +526,7 @@ const SKILL_CHECKS = new Map<
 export function linkObservedSkillRerolls(
   events: ReplayEvent[],
   replayVersion: string | undefined,
-  playerToTeam: ReadonlyMap<string, string>,
+  playerToTeam: OwnershipLookup,
   links: Map<number, RerollLink>,
   terminalDodgeSourceId?: string
 ): void {
@@ -551,7 +571,7 @@ export function linkObservedSkillRerolls(
     const final = events[index + 2];
     const first = original.payload;
     const replacement = final?.payload;
-    const owner = playerToTeam.get(original.playerId);
+    const owner = ownerAt(playerToTeam,original.playerId,original);
     if (
       !owner ||
       !first ||

@@ -1,7 +1,8 @@
+import { preservesTraitContinuity } from "./traitTransitions";
 import type { ReplayEvent, ReplayModel } from "./types";
 import type { ObservedPlayerTraits } from "./playerTraits";
 import type { ObservedBoard, ReplayBoardCheckpoint } from "./boardState";
-import { buildPlayerOwnershipIndex } from "./attribution";
+import { createOwnershipTimeline, type OwnershipTimeline } from "./ownershipTimeline";
 
 export type CurrentTraitEvidence = {
   playerId: string;
@@ -20,105 +21,8 @@ export type BlockTraitEvidence = {
   defender: CurrentTraitEvidence;
 };
 
-// These transitions do not rewrite intrinsic player skill lists. Effects,
-// transformations, purchases/removals and unknown messages have separate
-// invalidation barriers below. This is not general snapshot field inheritance.
-const nonMutating = new Set([
-  "Carrier",
-  "EventMatchStart",
-  "EventFanFactor",
-  "EventWeatherRoll",
-  "EventJourneyMen",
-  "EventInducementsData",
-  "EventNewInducementsTurn",
-  "EventActiveGamerChanged",
-  "EventPauseActiveTimer",
-  "EventActiveTimerChanged",
-  "EventGamersAreReady",
-  "EventStartActiveTimer",
-  "EventRulesEngineStandBy",
-  "EventAddInducement",
-  "EventRemoveInducement",
-  "EventEndInducements",
-  "EventNewGamePhase",
-  "EventQuestionKickingChoice",
-  "EventKickingChoice",
-  "EventSetupMovePitchPlayer",
-  "EventSetupBringPlayerOn",
-  "EventSetupTakePlayerOut",
-  "EventSetupSubstitutePlayers",
-  "EventQuickSnapMove",
-  "EventTimeOut",
-  "EventBrilliantCoaching",
-  "EventCheeringFans",
-  "EventBlitz",
-  "EventQuestionHighKick",
-  "EventHighKick",
-  "EventEndTurn",
-  "EventSetUpConfiguration",
-  "EventLegalKickers",
-  "EventKickOffTable",
-  "EventQuestionSolidDefence",
-  "EventSolidDefence",
-  "EventQuestionQuickSnap",
-  "EventQuickSnap",
-  "EventMatchEnd",
-  "EventGameFinished",
-  "EventTouchdown",
-  "BallStep",
-  "ResultRoll",
-  "ResultDoMove",
-  "ResultMoveOutcome",
-  "ResultNoRollSuccess",
-  "ResultStandUp",
-  "QuestionBlockDice",
-  "ResultBlockRoll",
-  "ResultBlockOutcome",
-  "QuestionBlockSkillUsage",
-  "QuestionPushBack",
-  "ResultPushBack",
-  "QuestionFollowUp",
-  "ResultFollowUp",
-  "QuestionTeamRerollUsage",
-  "ResultTeamRerollUsage",
-  "QuestionProUsage",
-  "QuestionDodgeUsage",
-  "QuestionTouchBack",
-  "ResultTouchBack",
-  "ResultInjuryRoll",
-  "ResultCasualtyRoll",
-  "QuestionKORecovery",
-  "QuestionApothecaryCasualtyUsage",
-  "QuestionApothecaryInjuryUsage",
-  "ResultApothecaryUsage",
-  "QuestionCatchUsage",
-  "QuestionSureHandsUsage"
-]);
-const passiveUses = new Set([
-  6, 7, 13, 15, 19, 27, 30, 38, 44, 50, 57, 61, 63, 68, 75, 81, 1008
-]);
-export function preservesTraitContinuity(e: ReplayEvent) {
-  if (e.attributionConflict) return false;
-  if (e.sourceTag === "PlayerStep")
-    return (
-      e.payload?.Skill === 0 &&
-      e.payload.IsEvaluation === 0 &&
-      e.stepType !== undefined &&
-      [0, 1, 4, 5, 6, 7, 8, 9, 10, 11, 29, 35].includes(e.stepType)
-    );
-  if (e.sourceTag === "DamageStep")
-    return e.payload?.Skill === 0 && e.payload.IsEvaluation === 0;
-  if (e.sourceTag === "ResultUseAction")
-    return (
-      e.actionCode !== undefined && [1, 2, 3, 4, 5, 6].includes(e.actionCode)
-    );
-  if (e.sourceTag === "ResultSkillUsage")
-    return (
-      passiveUses.has(Number(e.payload?.Skill)) &&
-      [0, 1].includes(Number(e.payload?.Used))
-    );
-  return nonMutating.has(e.sourceTag);
-}
+export { preservesTraitContinuity } from "./traitTransitions";
+
 function complete(p: ObservedPlayerTraits | null) {
   return (
     p !== null &&
@@ -160,10 +64,10 @@ function visitCurrentTraits(
     event: ReplayEvent,
     current: ReplayBoardCheckpoint | undefined,
     ledger: ReadonlyMap<string, CurrentTraitEvidence>
-  ) => void
+  ) => void,
+  owners:OwnershipTimeline=createOwnershipTimeline(replay)
 ) {
   if (replay.replayVersion !== "1-4-0-0") return;
-  const owners = buildPlayerOwnershipIndex(replay).playerToTeam;
   const known = replay.teams.map((t) => t.id);
   const ledger = new Map<string, CurrentTraitEvidence>();
   const emptyPrayers = new Map<number, number>();
@@ -220,7 +124,7 @@ function visitCurrentTraits(
           !team.effectsKnownEmpty ||
           !emptyPrayers.has(team.rosterIndex) ||
           !player.effectsKnownEmpty ||
-          owners.get(id) !== teamId
+          (()=>{const proof=owners.atIndex(id,cp.afterSourceIndex+1);return proof.status!=="confirmed" || proof.proof.teamId!==teamId;})()
         ) {
           ledger.delete(id);
           continue;
@@ -324,7 +228,7 @@ function visitCurrentTraits(
     }
 }
 
-export function findBlockTraitEvidence(replay: ReplayModel) {
+export function findBlockTraitEvidence(replay: ReplayModel,owners?:OwnershipTimeline) {
   const result = new Map<string, BlockTraitEvidence>();
   visitCurrentTraits(replay, (event, current, ledger) => {
     if (
@@ -352,7 +256,7 @@ export function findBlockTraitEvidence(replay: ReplayModel) {
           defender: structuredClone(defender)
         });
     }
-  });
+  },owners);
   return result;
 }
 
@@ -360,7 +264,8 @@ export function findBlockTraitEvidence(replay: ReplayModel) {
 // physical state, raw pre-roll field or ownership is restored by this lookup.
 export function findSubjectTraitEvidence(
   replay: ReplayModel,
-  subjects: ReadonlyMap<string, string>
+  subjects: ReadonlyMap<string, string>,
+  owners?:OwnershipTimeline
 ) {
   const result = new Map<string, CurrentTraitEvidence>();
   if (!subjects.size) return result;
@@ -380,6 +285,6 @@ export function findSubjectTraitEvidence(
       event.actorTeamSource !== "turn_inferred"
     )
       result.set(event.id, structuredClone(evidence));
-  });
+  },owners);
   return result;
 }

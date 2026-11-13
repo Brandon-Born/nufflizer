@@ -966,3 +966,18 @@ Remaining follow-ups:
 
 Verification evidence:
 1. Documentation-to-ledger/evidence comparison and `git diff --check`; runtime/tests unchanged from locally verified implementation5eb5d38. No deployment/account/service or billing action.
+
+
+## 2026-11-12 - Time-local ownership and source ID namespaces
+Metadata: commit(s) this change set, parent `e1659596aa02d06e66230e75b0d43ac6df0c5c87`; scope `NUF-013 with010–012/014/016/021/022 dependencies`; status `partial`.
+
+Converted items:
+1. Schema2.44/dice-only-22/context35 uses an ordered ownership index for supported actor, damage/recovery-subject, defender and controller checks. Fresh roster evidence can qualify unnamed/new identities; scoped identity mutations, current contradictions and unknown transitions prevent stale ownership. Buyer identifiers are preserved only as redacted representation metadata and never stand in for team/chooser slots.
+2. Scored outcomes export validated ownership receipts, with opposing block roles and latest-prior identity cross-links. UI/CLI share clear evidence/conflict explanations. Intrinsic traits and tactical state retain their separate guards; ownership alone adds no skills, activations, context point or resource claim.
+3. Independent stdlib extraction joins6,798 raw rosters/147 selected core witnesses/four mutation records across12 hashes.101 newly scored outcomes have independent role/dice arithmetic;2,122 old outcomes and the unchanged frozen cohort SHA projections remain. Seven additional raw-joined injury labels stay unscored. All27 ranges/zero source-backed points and abstaining verdicts remain.
+
+Remaining follow-ups:
+1. Arbitrary identity/temporary-control/trait policies, full block/damage/choice and tactical integration, context/calibration and current-schema hosting retain original acceptance requirements. NUF-013 stays in progress;12 issues remain closed/16 open. No original requirement or dependency is removed.
+
+Verification evidence:
+1. Local lint/types,2,029 unit/API cases in86 unique suites (1,994 pure +25 serial CLI +10 isolated HTTP), real Redis, production build and all35 Chromium flows pass. The sandbox initially blocked the temporary Redis connection; authorized local-service verification passes. The first browser run found an ambiguous new test locator; the corrected full35-flow rerun passes. See `OWNERSHIP_EVIDENCE.md` and the append-only execution log for commands and scope. No hosted/provider/account/Stripe/store/spending/billing/security/production/legacy/merge/release action occurred.

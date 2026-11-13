@@ -1,4 +1,6 @@
-import { readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { ownershipReplayXml } from "../helpers/ownershipReplay";
+import { readFileSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
@@ -11,6 +13,71 @@ import {
 import { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
 
 describe("nufflizier CLI/API parity", () => {
+  it("[cli-worker] retains current roles and unresolved stale defenders in text and JSON", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "nuff-ownership-"));
+    try {
+      for (const conflict of [false, true]) {
+        const replayPath = path.join(directory, "source.xml");
+        writeFileSync(
+          replayPath,
+          ownershipReplayXml(
+            conflict
+              ? { kind: "block", defenderTeam: 0 }
+              : { kind: "block", initialActor: "missing" }
+          )
+        );
+        const run = (format: string) =>
+          spawnSync(
+            process.execPath,
+            [
+              "--import",
+              "tsx",
+              "src/cli/nufflizier.ts",
+              "analyze",
+              replayPath,
+              "--format",
+              format
+            ],
+            { encoding: "utf8" }
+          );
+        const json = run("json");
+        expect(json.status, json.stderr).toBe(0);
+        const r = JSON.parse(json.stdout),
+          e = r.events.find(
+            (e: { metadata: { isRollCandidate: boolean } }) =>
+              e.metadata.isRollCandidate
+          );
+        const text = run("text");
+        expect(text.status, text.stderr).toBe(0);
+        if (conflict) {
+          expect(e.metadata.ownershipConflict).toMatchObject({
+            role: "defender",
+            reason: "current_roster_conflict"
+          });
+          expect(e.scoringStatus).toBe("excluded");
+          expect(text.stdout).toContain(
+            "Ownership unresolved for defender player 7"
+          );
+        } else {
+          expect(e.metadata.ownership).toMatchObject({
+            basis: "current_roster",
+            teamId: "0",
+            defender: { teamId: "1" }
+          });
+          expect(text.stdout).toContain(
+            "current roster observation before this outcome"
+          );
+          expect(text.stdout).toContain(
+            "Ownership alone does not establish current skills"
+          );
+        }
+        expect(r.verdict.luckierTeam).toBe("unknown");
+      }
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  }, 20000);
+
   it("[cli-worker] keeps verdict and core aggregates aligned for the same replay", () => {
     const replayPath = path.resolve(
       process.cwd(),

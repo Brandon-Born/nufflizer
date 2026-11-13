@@ -10,6 +10,7 @@ import { directInjuryOutcome } from "./injuryObservation";
 import { injuryTableForTraits } from "./injuryTable";
 import { validReportedBlockCrowd } from "./blockCrowd";
 import { validReportedBlockBallRelease } from "./blockBallRelease";
+import { validReportedOwnership, indexIdentityMutations } from "./ownershipEvidence";
 import { bounceDestination } from "@/domain/replay/pickupSuccessors";
 import { continuationOptionBounds } from "@/domain/replay/activeMoveContinuation";
 import { estimateDodgeImpactBounds, estimateTeamDodgeMoveBounds, estimateTeamRushMoveBounds, estimateKeptRushMoveBounds, estimateKeptDodgeMoveBounds, estimateNumericImpact, estimatePickupPossessionBounds, estimateFreshCatchPossession, estimateKeptCatchPossession } from "./contextImpact";
@@ -43,6 +44,8 @@ const count = z.number().int().min(0).max(REPLAY_LIMITS.events);
 const text = z.string().max(REPLAY_LIMITS.decodedBytes);
 const probability = finite.min(0).max(1);
 const numbers = z.array(finite).max(REPLAY_LIMITS.xmlNodes);
+const playerOwnership=z.strictObject({playerId:text,teamId:text,basis:z.enum(["initial_roster","current_roster","confirmed_recruitment"]),
+  checkpointAfter:count.optional(),identitySourceId:text.optional(),playerTypeId:z.number().int().nonnegative().optional()});
 const pitchCell = z.strictObject({
   x: z.number().int().min(0).max(25),
   y: z.number().int().min(0).max(14)
@@ -233,6 +236,15 @@ export const LuckEventMetadataSchema = z.strictObject({
   }).optional(),
   mercenary: z.strictObject({ operation: z.enum(["purchase", "removal_record"]), playerId: text,
     playerTypeId: z.number().int().nonnegative(), gamerId: z.number().int().min(0).max(1) }).optional(),
+  identityMutation:z.strictObject({operation:z.enum(["purchase","removal_record"]),playerId:text,playerTypeId:z.number().int().nonnegative().optional(),
+    buyerIdKind:z.enum(["small_numeric","uninterpreted","missing"]),gamerId:z.union([z.literal(0),z.literal(1)]).optional()}).optional(),
+  ownership:z.strictObject({role:z.enum(["actor","subject","team"]),playerId:text.optional(),teamId:text,
+    basis:z.enum(["initial_roster","current_roster","confirmed_recruitment","explicit_team"]),
+    checkpointAfter:count.optional(),identitySourceId:text.optional(),playerTypeId:z.number().int().nonnegative().optional(),sourceTeamId:text.optional(),
+    defender:playerOwnership.optional()}).optional(),
+  ownershipConflict:z.strictObject({role:z.enum(["actor","subject","defender"]),playerId:text,
+    reason:z.enum(["initial_overlap","current_roster_conflict","pending_identity","invalid_current_identity","unverified_transition"]),
+    initialTeamId:text.optional(),observedTeamId:text.optional(),checkpointAfter:count.optional(),identitySourceId:text.optional()}).optional(),
   ballTravel: z.strictObject({ from: pitchCell, to: pitchCell }).optional(),
   ballCatchCell: pitchCell.optional(),
   pickupBallChain: z.strictObject({
@@ -1317,8 +1329,11 @@ export const LuckReportSchema = z
       [...reasons].every(
         ([reason, n]) => report.coverage.excludedByReason[reason] === n
       ), "Exclusion reasons must conserve excluded records.");
+    const identityMutations = indexIdentityMutations(report.events);
     for (const event of report.events) {
       const policy = event.metadata.probabilityPolicy;
+      require(validReportedOwnership(event,report,sources,identityMutations),
+        "Scored outcomes need source-qualified actor/subject ownership and opposing block roles; a time-local conflict or pending identity cannot contribute favorable luck.");
       const base = event.explainability.baseOdds;
       if (event.scoringStatus === "scored") {
         require(

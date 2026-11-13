@@ -1,0 +1,711 @@
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { describe, expect, it } from "vitest";
+import { parseReplayXml } from "@/domain/replay/parseXml";
+import { decodeReplayInput } from "@/domain/replay/decodeReplay";
+import {
+  createOwnershipTimeline,
+  applyCurrentOwnership
+} from "@/domain/replay/ownershipTimeline";
+import { analyzeReplayLuck } from "@/domain/nufflizer/analyzeLuck";
+import { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
+import { LuckReportSchema } from "@/domain/nufflizer/reportSchema";
+import type { LuckEvent, LuckReport } from "@/domain/nufflizer/types";
+import { ownershipReplayXml } from "../helpers/ownershipReplay";
+import { contextReplayXml } from "../helpers/contextReplay";
+
+type Locator = {
+  replayStep?: number | null;
+  childIndex?: number | null;
+  stepIndex?: number;
+  messageIndex?: number;
+};
+type RawCase = {
+  locator: Locator;
+  sourceTag: string;
+  playerId: string;
+  role: "actor" | "subject";
+  defenderId?: string;
+  before: {
+    locator: Locator;
+    teamIds: (number | null)[];
+    participants: {
+      playerId: string;
+      teamId: string | null;
+      members: unknown[];
+    }[];
+  };
+  roll: Record<string, unknown>;
+  reference: {
+    numerator: number;
+    denominator: number;
+    actualSuccess: boolean;
+    policy: string;
+  } | null;
+};
+const witness = JSON.parse(
+  readFileSync("tests/fixtures/evidence/bb3-current-ownership.json", "utf8")
+) as {
+  files: {
+    sourceFile: string;
+    sha256: string;
+    initialPlayerIds: string[];
+    rosters: {
+      locator: Locator;
+      teamIds: (number | null)[];
+      players: [number, string, number | null, number | null, number | null][];
+    }[];
+    mutations: {
+      locator: Locator;
+      operation: string;
+      playerId: string;
+      buyerIdKind: string;
+    }[];
+    cases: RawCase[];
+  }[];
+};
+const priorCohort = JSON.parse(
+  readFileSync(
+    "tests/fixtures/evidence/bb3-ownership-prior-cohort.json",
+    "utf8"
+  )
+) as { files: { file: string; sourceIds: string[] }[] };
+const key = (l: Locator | undefined, tag: string) =>
+  JSON.stringify([
+    l?.replayStep,
+    l?.childIndex,
+    l?.stepIndex ?? null,
+    l?.messageIndex ?? null,
+    tag
+  ]);
+function report(options: Parameters<typeof ownershipReplayXml>[0] = {}) {
+  return analyzeNufflizerInput(ownershipReplayXml(options));
+}
+const candidate = (r: LuckReport) =>
+  r.events.find((e) => e.metadata.isRollCandidate)!;
+const sourceCache = new Map<
+  string,
+  { report: LuckReport; replay: ReturnType<typeof parseReplayXml> }
+>();
+function source(file: string) {
+  if (!sourceCache.has(file)) {
+    const replay = parseReplayXml(
+      decodeReplayInput(readFileSync(`demo-replays/${file}`, "utf8")).xml
+    );
+    sourceCache.set(file, {
+      replay,
+      report: LuckReportSchema.parse(analyzeReplayLuck(replay))
+    });
+  }
+  return sourceCache.get(file)!;
+}
+
+describe("source-qualified time-local player ownership", () => {
+  it("reproduces independent XML roster, identifier namespace and dice references", () => {
+    const p = spawnSync(
+      "python3",
+      ["scripts/extract-current-ownership.py", "--check"],
+      { encoding: "utf8" }
+    );
+    expect(p.status, p.stderr).toBe(0);
+  });
+  it.each(witness.files)(
+    "reconciles all newly owned outcomes against $sourceFile's raw parent and math",
+    (f) => {
+      expect(
+        createHash("sha256")
+          .update(readFileSync(`demo-replays/${f.sourceFile}`))
+          .digest("hex")
+      ).toBe(f.sha256);
+      const { report: r, replay } = source(f.sourceFile),
+        rawCases = new Map(
+          f.cases.map((c) => [key(c.locator, c.sourceTag), c])
+        );
+      // Check each public proof against its actual raw snapshot, including
+      // initial players renewed after an unknown transition. No future snapshot
+      // or most-recent omission substitutes for that positive observation.
+      for (const e of r.events.filter((e) => e.scoringStatus === "scored")) {
+        const p = e.metadata.ownership!;
+        for (const proof of [p, ...(p.defender ? [p.defender] : [])]) {
+          if (proof.basis === "explicit_team") continue;
+          const cp =
+            proof.checkpointAfter === undefined
+              ? undefined
+              : replay.boardCheckpoints!.find(
+                  (cp) => cp.afterSourceIndex === proof.checkpointAfter
+                );
+          if (proof.checkpointAfter !== undefined) {
+            expect(cp, e.metadata.sourceId).toBeDefined();
+            expect(cp!.afterSourceIndex).toBeLessThan(e.metadata.sourceIndex!);
+          }
+          const raw = f.rosters.find(
+            (x) =>
+              key(x.locator, "") ===
+              key(
+                cp
+                  ? { replayStep: cp.replayStep, childIndex: cp.childIndex }
+                  : { replayStep: null, childIndex: null },
+                ""
+              )
+          )!;
+          expect(raw, e.metadata.sourceId).toBeDefined();
+          const members = raw.players.filter((x) => x[1] === proof.playerId);
+          expect(members).toHaveLength(1);
+          const team =
+            raw.teamIds[members[0][0]] ??
+            Number(
+              r.teams.find(
+                (t) => Number(t.teamId) !== raw.teamIds[1 - members[0][0]]
+              )!.teamId
+            );
+          expect(proof.teamId).toBe(String(team));
+          expect(
+            members[0][2] === null || members[0][2] === Number(proof.playerId)
+          ).toBe(true);
+          expect(members[0][3] === null || members[0][3] === team).toBe(true);
+        }
+        const c = rawCases.get(key(e.metadata.locator, e.metadata.sourceTag!));
+        const oldIds = new Set(
+          priorCohort.files.find((x) => x.file === f.sourceFile)!.sourceIds
+        );
+        if (!oldIds.has(e.metadata.sourceId!))
+          expect(
+            c,
+            `new outcome ${e.metadata.sourceId} needs independent role/dice evidence`
+          ).toBeDefined();
+        if (!c) continue;
+        expect(p.role).toBe(c.role);
+        expect(p.playerId).toBe(c.playerId);
+        const math = c.reference!;
+        expect(math, e.metadata.sourceId).not.toBeNull();
+        expect(e.metadata.probabilityPolicy).toBe(math.policy);
+        expect(e.actualSuccess).toBe(math.actualSuccess);
+        const probability = math.numerator / math.denominator;
+        expect(e.probabilitySuccess).toBeCloseTo(probability, 12);
+        const weight = {
+          block: 0.75,
+          armor_break: 1,
+          injury: 1.5,
+          dodge: 1.1,
+          ball_handling: 1.1,
+          movement_risk: 1
+        }[
+          e.type as
+            | "block"
+            | "armor_break"
+            | "dodge"
+            | "ball_handling"
+            | "movement_risk"
+        ];
+        expect(weight).toBeDefined();
+        expect(e.weightedDelta).toBeCloseTo(
+          (Number(math.actualSuccess) - probability) * weight,
+          12
+        );
+        if (e.metadata.block) {
+          const value = (c.roll.GamerId as string[] | undefined)?.[0];
+          if (e.metadata.block.chooserGamerId !== undefined)
+            expect(String(e.metadata.block.chooserTeamId)).toBe(value);
+          expect(e.metadata.block.chooserTeamId).toBe(
+            e.metadata.block.pool.attackerChooses
+              ? p.teamId
+              : p.defender!.teamId
+          );
+        }
+      }
+      const oldIds = new Set(
+        priorCohort.files.find((x) => x.file === f.sourceFile)!.sourceIds
+      );
+      for (const team of r.teams) {
+        const scored = r.events.filter(
+          (e) => e.scoringStatus === "scored" && e.teamId === team.teamId
+        );
+        const oldSum = scored
+          .filter((e) => oldIds.has(e.metadata.sourceId!))
+          .reduce((sum, e) => sum + e.weightedDelta, 0);
+        const added = scored
+          .filter((e) => !oldIds.has(e.metadata.sourceId!))
+          .reduce((sum, e) => {
+            const math = rawCases.get(
+              key(e.metadata.locator, e.metadata.sourceTag!)
+            )!.reference!;
+            const weight =
+              e.type === "block"
+                ? 0.75
+                : e.type === "injury"
+                  ? 1.5
+                  : ["dodge", "ball_handling"].includes(e.type)
+                    ? 1.1
+                    : 1;
+            return (
+              sum +
+              (Number(math.actualSuccess) - math.numerator / math.denominator) *
+                weight
+            );
+          }, 0);
+        expect(team.luckScore).toBeCloseTo(oldSum + added, 10);
+      }
+      for (const m of f.mutations) {
+        const found = r.events.find(
+          (e) =>
+            key(e.metadata.locator, e.metadata.sourceTag!) ===
+            key(
+              m.locator,
+              m.operation === "purchase"
+                ? "EventBuyMercenary"
+                : "EventRemoveMercenary"
+            )
+        );
+        // Buyer identifiers are not roster owners or controller slots.
+        expect(found?.metadata.identityMutation).toMatchObject({
+          playerId: m.playerId,
+          buyerIdKind: m.buyerIdKind
+        });
+        if (m.buyerIdKind !== "small_numeric")
+          expect(found?.metadata.identityMutation?.gamerId).toBeUndefined();
+      }
+      expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
+      expect(r.verdict.luckierTeam).toBe("unknown");
+    },
+    30000
+  );
+  it("never mutates parser attribution or physical checkpoints", () => {
+    const r = parseReplayXml(ownershipReplayXml({ initialActor: "missing" })),
+      before = JSON.stringify(r);
+    const timeline = createOwnershipTimeline(r),
+      view = applyCurrentOwnership(r, timeline);
+    expect(JSON.stringify(r)).toBe(before);
+    expect(view.turns).not.toBe(r.turns);
+    expect(
+      candidate(LuckReportSchema.parse(analyzeReplayLuck(r))).metadata.ownership
+    ).toMatchObject({ basis: "current_roster", teamId: "0" });
+    expect(JSON.stringify(r)).toBe(before);
+  });
+  it.each(["numeric", "block", "armor"] as const)(
+    "a fresh unnamed member qualifies the %s role without inventing tactical state",
+    (kind) => {
+      const r = report({
+          initialActor: "missing",
+          kind,
+          currentData: false,
+          unknownCells: true
+        }),
+        e = candidate(r);
+      expect(e.scoringStatus).toBe("scored");
+      expect(e.metadata.ownership).toMatchObject({
+        role: kind === "armor" ? "subject" : "actor",
+        basis: "current_roster",
+        teamId: "0",
+        playerId: "42"
+      });
+      expect(e.metadata.initialRosterName).toBeUndefined();
+      expect(e.contextualImpact).toBeUndefined();
+      expect(e.metadata.preRoll?.actorTraits).toBeUndefined();
+    }
+  );
+  it("rejects a stale opposing block defender after current membership contradicts it", () => {
+    const r = report({ kind: "block", defenderTeam: 0 }),
+      e = candidate(r);
+    expect(e).toMatchObject({
+      teamId: "unresolved",
+      scoringStatus: "excluded",
+      probabilitySuccess: null,
+      weightedDelta: 0,
+      metadata: {
+        ownershipConflict: {
+          role: "defender",
+          playerId: "7",
+          reason: "current_roster_conflict",
+          initialTeamId: "1",
+          observedTeamId: "0"
+        }
+      }
+    });
+    expect(r.coverage.rollCandidates).toMatchObject({
+      scoredCount: 0,
+      excludedCount: 1
+    });
+    expect(r.verdict.status).toBe("insufficient_evidence");
+  });
+  it("does not resurrect initial ownership when a later checkpoint omits conflicting membership", () => {
+    const e = candidate(report({ actorTeam: 1, omittedAfterConflict: true }));
+    expect(e.scoringStatus).toBe("excluded");
+    expect(e.teamId).toBe("unresolved");
+    expect(e.metadata.ownershipConflict).toMatchObject({
+      role: "actor",
+      reason: "current_roster_conflict",
+      initialTeamId: "0",
+      observedTeamId: "1",
+      checkpointAfter: 1
+    });
+  });
+  it.each(["numeric", "block", "armor"] as const)(
+    "a confirmed replacement resolves reused identity for %s",
+    (kind) => {
+      const r = report({
+          kind,
+          actorTeam: 1,
+          initialDefender: 0,
+          defenderTeam: 0,
+          purchase: "numeric"
+        }),
+        e = candidate(r);
+      expect(e.scoringStatus).toBe("scored");
+      expect(e.teamId).toBe("1");
+      expect(e.metadata.ownership).toMatchObject({
+        basis: "confirmed_recruitment",
+        teamId: "1",
+        playerTypeId: 9,
+        identitySourceId: "source-2",
+        checkpointAfter: 2
+      });
+      expect(e.metadata.initialRosterName).toBeUndefined();
+      expect(e.contextualImpact).toBeUndefined();
+      if (kind === "block")
+        expect(e.metadata.ownership?.defender).toMatchObject({
+          playerId: "7",
+          teamId: "0"
+        });
+    }
+  );
+  it("unknown buyer namespaces leave ownership to the fresh roster and do not leak identifiers", () => {
+    const r = report({
+      initialActor: "missing",
+      actorTeam: 1,
+      initialDefender: 0,
+      defenderTeam: 0,
+      purchase: "opaque",
+      candidate: false,
+      currentData: false
+    });
+    expect(candidate(r).metadata.ownership).toMatchObject({
+      basis: "current_roster",
+      teamId: "1",
+      identitySourceId: "source-2"
+    });
+    expect(
+      r.events.find((e) => e.metadata.identityMutation)?.metadata
+        .identityMutation
+    ).toMatchObject({ buyerIdKind: "uninterpreted", playerId: "42" });
+    expect(r.recruitments).toHaveLength(0);
+    expect(JSON.stringify(r)).not.toContain("opaque-buyer-identifier");
+  });
+  it("a future replacement roster cannot resolve an earlier attempt", () => {
+    const e = candidate(
+      report({ initialActor: "missing", purchase: "numeric", futureOnly: true })
+    );
+    expect(e.scoringStatus).toBe("excluded");
+    expect(e.metadata.ownershipConflict?.reason).toBe("pending_identity");
+    expect(e.probabilitySuccess).toBeNull();
+  });
+  it.each([
+    "overlap",
+    "wrong-data-id",
+    "unknown-mutation",
+    "unsupported-version"
+  ])("preserves unresolved coverage for %s", (kind) => {
+    const options = {
+      initialActor:
+        kind === "overlap" ? ("overlap" as const) : ("missing" as const),
+      wrongDataId: kind === "wrong-data-id",
+      unknownAfter: kind === "unknown-mutation"
+    };
+    if (kind === "unsupported-version")
+      expect(() => report({ ...options, version: "future" })).toThrow(
+        /Unsupported replay version/
+      );
+    const replay = parseReplayXml(ownershipReplayXml(options));
+    if (kind === "unsupported-version") replay.replayVersion = "future";
+    const e = candidate(LuckReportSchema.parse(analyzeReplayLuck(replay)));
+    expect(e.scoringStatus).toBe("excluded");
+    expect(e.weightedDelta).toBe(0);
+    expect(e.metadata.isRollCandidate).toBe(true);
+  });
+  it.each(["effects", "transformation"])(
+    "%s do not turn owned IDs into inherited skill or availability evidence",
+    (kind) => {
+      const r = report({
+          kind: "block",
+          unknownEffects: kind === "effects",
+          unknownTransformations: kind === "transformation"
+        }),
+        e = candidate(r);
+      expect(e.scoringStatus).toBe("scored");
+      expect(e.metadata.ownership?.role).toBe("actor");
+      expect(e.metadata.block?.skillModel).toBeUndefined();
+      expect(e.metadata.block?.traitEvidence).toBeUndefined();
+      expect(e.contextualImpact).toBeUndefined();
+    }
+  );
+  it("both-down armor belongs to each victim and cannot reward damage to that victim's team", () => {
+    const r = report({ kind: "both_down" }),
+      armor = r.events.filter((e) => e.metadata.damage);
+    expect(
+      armor.map((e) => [e.playerId, e.teamId, e.metadata.ownership?.role])
+    ).toEqual([
+      ["42", "0", "subject"],
+      ["7", "1", "subject"]
+    ]);
+    expect(
+      armor.every((e) => e.actualSuccess === false && e.weightedDelta < 0)
+    ).toBe(true);
+    expect(r.teams[0].luckScore).toBeCloseTo(-0.25 - 21 / 36, 12);
+    expect(r.teams[1].luckScore).toBeCloseTo(-21 / 36, 12);
+  });
+  it("opponent choice is separate from the attacker and recipient-only questions do not confer control", () => {
+    const chosen = candidate(report({ kind: "block", defenderChooses: true }));
+    expect(chosen.metadata.ownership?.teamId).toBe("0");
+    expect(chosen.metadata.block).toMatchObject({
+      chooserTeamId: "1",
+      chooserGamerId: 1
+    });
+    const waiting = candidate(
+      report({ kind: "block", recipient: 1, canChoose: false })
+    );
+    expect(waiting.scoringStatus).toBe("scored");
+    expect(waiting.metadata.block?.chooserGamerId).toBeUndefined();
+    expect(waiting.metadata.block?.chooserTeamId).toBe("0");
+    const bad = candidate(
+      report({ kind: "block", recipient: 1, canChoose: true })
+    );
+    expect(bad.scoringStatus).toBe("excluded");
+    expect(bad.statusReason).toContain("chooser slot conflicts");
+  });
+  it("a mismatched reroll slot cannot finance the actor's composite success chance", () => {
+    const xml = contextReplayXml().replaceAll(
+      "<GamerId>0</GamerId>",
+      "<GamerId>1</GamerId>"
+    );
+    // Encoded source messages must be changed before encoding, so mutate the
+    // decoded model while retaining its independently supplied roster facts.
+    const replay = parseReplayXml(xml);
+    for (const e of replay.turns.flatMap((t) => t.events))
+      if (
+        ["QuestionTeamRerollUsage", "ResultTeamRerollUsage"].includes(
+          e.sourceTag
+        )
+      )
+        e.payload!.GamerId = 1;
+    const r = LuckReportSchema.parse(analyzeReplayLuck(replay)),
+      e = candidate(r);
+    expect(e.scoringStatus).toBe("excluded");
+    expect(e.probabilitySuccess).toBeNull();
+    expect(e.statusReason).toContain("matching roster owners");
+  });
+  it("swapping actual roster sides swaps reported perspectives, not outcome meaning", () => {
+    const a = report({ kind: "both_down" }),
+      b = report({
+        kind: "both_down",
+        initialActor: 1,
+        actorTeam: 1,
+        initialDefender: 0,
+        defenderTeam: 0
+      });
+    const rolls = (r: LuckReport) =>
+      r.events
+        .filter((e) => e.scoringStatus === "scored")
+        .map((e) => [
+          e.playerId,
+          e.teamId,
+          e.actualSuccess,
+          e.probabilitySuccess,
+          e.weightedDelta
+        ]);
+    expect(rolls(b)).toEqual(
+      rolls(a).map(([p, t, ...rest]) => [p, t === "0" ? "1" : "0", ...rest])
+    );
+    expect(b.teams[1].luckScore).toBe(a.teams[0].luckScore);
+    expect(b.teams[0].luckScore).toBe(a.teams[1].luckScore);
+  });
+
+  it("unknown transitions invalidate even an initial owner's historical claim until a fresh roster renews it", () => {
+    const e = candidate(report({ unknownAfter: true }));
+    expect(e.metadata.ownershipConflict).toMatchObject({
+      reason: "unverified_transition",
+      initialTeamId: "0"
+    });
+    expect(e.scoringStatus).toBe("excluded");
+    const renewed = candidate(
+      report({ unknownAfter: true, renewAfterUnknown: true })
+    );
+    expect(renewed.scoringStatus).toBe("scored");
+    expect(renewed.metadata.ownership?.basis).toBe("current_roster");
+  });
+  it("a small numeric buyer identifier is not a roster-team slot", () => {
+    const r = report({
+      actorTeam: 1,
+      initialDefender: 0,
+      defenderTeam: 0,
+      purchase: "numeric",
+      buyerNumeric: 0
+    });
+    expect(candidate(r).metadata.ownership).toMatchObject({
+      basis: "confirmed_recruitment",
+      teamId: "1"
+    });
+    expect(r.recruitments[0]).toMatchObject({
+      gamerId: 0,
+      rosterTeamId: "1",
+      candidateTeamId: 1
+    });
+  });
+  it.each(["unknown-step", "unknown-layout", "malformed-purchase"])(
+    "%s cannot carry a stale roster proof",
+    (kind) => {
+      const replay = parseReplayXml(ownershipReplayXml());
+      const steps = replay.turns.flatMap((t) => t.events),
+        step = steps.find((e) => e.sourceTag === "PlayerStep")!;
+      if (kind === "unknown-step") step.stepType = 999;
+      if (kind === "unknown-layout") step.payload!.UnverifiedMutation = 1;
+      if (kind === "malformed-purchase") {
+        step.sourceTag = "EventBuyMercenary";
+        step.payload = { MercenaryId: "unknown" };
+      }
+      const e = candidate(LuckReportSchema.parse(analyzeReplayLuck(replay)));
+      expect(e.scoringStatus).toBe("excluded");
+      expect(e.metadata.ownershipConflict?.reason).toBe(
+        "unverified_transition"
+      );
+    }
+  );
+
+  it.each(["unknown-team", "duplicate-team"])(
+    "a %s namespace in a current roster is a conflict",
+    (kind) => {
+      const replay = parseReplayXml(ownershipReplayXml());
+      replay.boardCheckpoints!.at(-1)!.board!.teams[0].explicitTeamId =
+        kind === "unknown-team" ? 999 : 1;
+      const e = candidate(LuckReportSchema.parse(analyzeReplayLuck(replay)));
+      expect(e.scoringStatus).toBe("excluded");
+      expect(e.metadata.ownershipConflict?.reason).toBe(
+        "invalid_current_identity"
+      );
+    }
+  );
+  it("a source-confirmed new identity resolves a formerly overlapping ID", () => {
+    const e = candidate(
+      report({ initialActor: "overlap", purchase: "numeric" })
+    );
+    expect(e.scoringStatus).toBe("scored");
+    expect(e.metadata.ownership).toMatchObject({
+      basis: "confirmed_recruitment",
+      identitySourceId: "source-2",
+      teamId: "0"
+    });
+  });
+  it.each([7, 42])(
+    "a recorded removal only invalidates its own player ID (%s)",
+    (id) => {
+      const xml = ownershipReplayXml().replace(
+          "<EventExecuteSequence>",
+          `<EventRemoveMercenary><MercenaryId>${id}</MercenaryId></EventRemoveMercenary><EventExecuteSequence>`
+        ),
+        e = candidate(analyzeNufflizerInput(xml));
+      expect(e.scoringStatus).toBe(id === 42 ? "excluded" : "scored");
+      if (id === 42)
+        expect(e.metadata.ownershipConflict?.reason).toBe("pending_identity");
+    }
+  );
+
+  it("public receipts cannot erase a pending identity or relabel its owner as initial", () => {
+    const r = structuredClone(report({ purchase: "numeric", kind: "block" })),
+      e = candidate(r);
+    e.metadata.ownership!.basis = "initial_roster";
+    delete e.metadata.ownership!.checkpointAfter;
+    delete e.metadata.ownership!.identitySourceId;
+    delete e.metadata.ownership!.playerTypeId;
+    r.keyMoments = r.keyMoments.map((m) =>
+      structuredClone(r.events.find((x) => x.id === m.id)!)
+    );
+    expect(LuckReportSchema.safeParse(r).success).toBe(false);
+    const clean = structuredClone(report({ purchase: "numeric" })),
+      mutation = clean.events.find((x) => x.metadata.mercenary)!;
+    delete mutation.metadata.identityMutation;
+    expect(LuckReportSchema.safeParse(clean).success).toBe(false);
+  });
+
+  const forged: [string, (e: LuckEvent, r: LuckReport) => void][] = [
+    [
+      "removed required proof",
+      (e) => {
+        delete e.metadata.ownership;
+      }
+    ],
+    [
+      "different beneficiary",
+      (e) => {
+        e.metadata.ownership!.teamId = "1";
+      }
+    ],
+    [
+      "different subject",
+      (e) => {
+        e.metadata.ownership!.playerId = "7";
+      }
+    ],
+    [
+      "wrong role",
+      (e) => {
+        e.metadata.ownership!.role = "subject";
+      }
+    ],
+    [
+      "future current checkpoint",
+      (e) => {
+        e.metadata.ownership!.checkpointAfter = e.metadata.sourceIndex!;
+      }
+    ],
+    [
+      "initial proof with a current pointer",
+      (e) => {
+        e.metadata.ownership!.basis = "initial_roster";
+      }
+    ],
+    [
+      "invented purchase",
+      (e) => {
+        e.metadata.ownership!.basis = "confirmed_recruitment";
+        e.metadata.ownership!.identitySourceId = "missing";
+      }
+    ],
+    [
+      "wrong identity mutation",
+      (e) => {
+        e.metadata.ownership!.identitySourceId = e.metadata.sourceId;
+      }
+    ],
+    [
+      "conflicting defender",
+      (e) => {
+        e.metadata.ownership!.defender!.teamId = e.teamId;
+      }
+    ],
+    [
+      "missing defender",
+      (e) => {
+        delete e.metadata.ownership!.defender;
+      }
+    ],
+    [
+      "chooser mismatch",
+      (e) => {
+        e.metadata.block!.chooserGamerId = 1;
+      }
+    ]
+  ];
+  it.each(forged)(
+    "rejects coherent public-report tampering: %s",
+    (_, mutate) => {
+      const r = structuredClone(
+          report({ kind: "block", initialActor: "missing" })
+        ),
+        e = candidate(r);
+      mutate(e, r);
+      r.keyMoments = r.keyMoments.map((m) =>
+        structuredClone(r.events.find((e) => e.id === m.id)!)
+      );
+      expect(LuckReportSchema.safeParse(r).success).toBe(false);
+    }
+  );
+});

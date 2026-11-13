@@ -152,6 +152,13 @@ describe("continued intrinsic traits before an offered block pool", () => {
       traits: { playerTypeId: 9, innateSkills: [30] }
     });
   });
+  it("qualifies complete current owned identities without initial ownership keys or readable names",()=>{
+    const r=replay();r.playerOwnershipKeys=[];
+    const proof=findBlockTraitEvidence(r).get("pool")!;
+    expect(proof.attacker).toMatchObject({playerId:"42",teamId:"0",observedCheckpointAfter:0,currentCheckpointAfter:3,
+      traits:{dataPlayerId:42,playerTypeId:8,innateSkills:[],acquiredSkills:[]}});
+    expect(proof.defender).toMatchObject({playerId:"7",teamId:"1"});
+  });
   it.each([
     "team-effects",
     "global-effects",
@@ -176,7 +183,6 @@ describe("continued intrinsic traits before an offered block pool", () => {
     "missing-seed",
     "future-seed",
     "unknown-rosters",
-    "unmapped-player",
     "inferred-owner",
     "unordered-checkpoints"
   ])("withholds %s", (kind) => {
@@ -233,7 +239,6 @@ describe("continued intrinsic traits before an offered block pool", () => {
     }
     if (kind === "unknown-rosters")
       cp.board!.teams.forEach((t) => (t.explicitTeamId = null));
-    if (kind === "unmapped-player") r.playerOwnershipKeys = [];
     if (kind === "inferred-owner")
       r.turns[0]!.events[1]!.actorTeamSource = "turn_inferred";
     if (kind === "unordered-checkpoints") r.boardCheckpoints!.reverse();

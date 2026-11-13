@@ -1,4 +1,5 @@
 import type { ReplayModel } from "@/domain/replay/types";
+import type { OwnershipTimeline } from "@/domain/replay/ownershipTimeline";
 import {
   findSubjectTraitEvidence,
   type CurrentTraitEvidence
@@ -92,7 +93,8 @@ export function injuryTableForTraits(
 
 export function attachInjuryTables(
   replay: ReplayModel,
-  sources: ReadonlyMap<string, LuckEvent>
+  sources: ReadonlyMap<string, LuckEvent>,
+  owners?:OwnershipTimeline
 ) {
   const raw = new Map(
     replay.turns.flatMap((t) => t.events).map((e) => [e.id, e])
@@ -109,7 +111,7 @@ export function attachInjuryTables(
         : []
     )
   );
-  const evidence = findSubjectTraitEvidence(replay, subjects);
+  const evidence = findSubjectTraitEvidence(replay, subjects,owners);
   for (const [id, traits] of evidence) {
     const event = sources.get(id)!;
     if (

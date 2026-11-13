@@ -1,3 +1,4 @@
+import { ownerAt, type OwnershipLookup } from "@/domain/replay/ownershipTimeline";
 import type { ReplayEvent } from "@/domain/replay/types";
 
 export type EmbeddedInjuryRecord = {
@@ -51,7 +52,7 @@ function key(roll: Record<string, unknown>) {
 export function retainEmbeddedInjuries(
   events: readonly ReplayEvent[],
   replayVersion: string | undefined,
-  owners: ReadonlyMap<string, string>
+  owners: OwnershipLookup
 ): Map<number, EmbeddedInjuryRecord> {
   const records = new Map<number, EmbeddedInjuryRecord>();
   let actionId: string | undefined;
@@ -66,7 +67,7 @@ export function retainEmbeddedInjuries(
     const observed =
       replayVersion === "1-4-0-0" && Boolean(observedInjury(roll));
     const subject = event.stepActorId;
-    const owner = subject ? owners.get(subject) : undefined;
+    const owner = subject ? ownerAt(owners,subject,event) : undefined;
     const linked =
       observed &&
       event.stepTag === "DamageStep" &&

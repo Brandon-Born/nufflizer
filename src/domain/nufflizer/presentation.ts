@@ -112,6 +112,44 @@ export function explainRecruitmentEvidence(
   return `Recorded mercenary purchase events: ${records.length}; linked roster observations: ${records.filter((r) => r.rosterTeamId !== null).length}. ${reused} ${reused === 1 ? "record reuses" : "records reuse"} an earlier player ID. Selected trait lists describe separate purchases; current skill eligibility remains unverified.`;
 }
 
+// Roster identity is independent of skill, activation and tactical-state proof.
+export function explainOwnership(
+  event: LuckReport["events"][number]
+): string | null {
+  const {
+    ownership: p,
+    ownershipConflict: c,
+    identityMutation: m
+  } = event.metadata;
+  if (c) {
+    const reason = {
+      initial_overlap: "both initial rosters list this ID",
+      current_roster_conflict:
+        "current membership contradicts the earlier roster",
+      pending_identity:
+        "a replacement or removal has no qualified following identity",
+      invalid_current_identity:
+        "current roster or player identity fields conflict",
+      unverified_transition:
+        "an unknown transition interrupts ownership evidence"
+    }[c.reason];
+    return `Ownership unresolved for ${c.role} player ${c.playerId}: ${reason}. This outcome stays in coverage and adds no luck score.`;
+  }
+  if (m)
+    return `Recorded ${m.operation === "purchase" ? "purchase" : "removal"} for player ${m.playerId}. The buyer identifier is separate from roster team and choice-controller slots; it does not establish ownership.`;
+  if (!p) return null;
+  const role = p.role === "subject" ? "affected player" : "actor";
+  const describe = (q: typeof p | NonNullable<typeof p.defender>) =>
+    q.basis === "initial_roster"
+      ? "the initial roster"
+      : q.basis === "explicit_team"
+        ? "the explicit source team field"
+        : q.basis === "confirmed_recruitment"
+          ? `a recorded recruitment and its first qualified roster observation (${q.identitySourceId})`
+          : `a current roster observation before this outcome`;
+  return `Ownership: ${role} player ${p.playerId ?? "unknown"} belongs to team ${p.teamId}, established by ${describe(p)}.${p.defender ? ` Defender player ${p.defender.playerId} belongs to opposing team ${p.defender.teamId}, established by ${describe(p.defender)}.` : ""}${event.metadata.block ? ` The ${event.metadata.block.pool.attackerChooses ? "attacker" : "defender"} controls this block choice; the dice score uses the attacker's perspective.` : p.role === "subject" ? " Damage and recovery use the affected player's team perspective." : ""} Ownership alone does not establish current skills, usable activations or tactical value.`;
+}
+
 export function formatPlayerObservation(
   event: LuckReport["events"][number]
 ): string {

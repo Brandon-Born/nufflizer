@@ -162,7 +162,12 @@ describe("confirmed player activation losses (NUF-016/017/018/022)", () => {
     (options) => {
       const r = analyzeNufflizerInput(foulAppearanceContextXml(options));
       expect(gate(r).metadata.activationLoss).toBeUndefined();
-      expect(dodge(r).contextualImpact).toBeUndefined();
+      const outcome = r.events.find((e) => e.metadata.rollType === 2)!;
+      expect(outcome.contextualImpact).toBeUndefined();
+      if (options.interrupt)
+        expect(outcome.metadata.ownershipConflict?.reason).toBe(
+          "unverified_transition"
+        );
     }
   );
   it.each([

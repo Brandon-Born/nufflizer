@@ -98,6 +98,22 @@ describe("observed pickup/bounce/catch branches (NUF-016/018/022)", () => {
           event.actorTeamId = "1";
           event.teamId = "1";
         }
+    // Change the actual current observations too; a historical-only swap
+    // must not override contradictory present-day membership.
+    for (const cp of model.boardCheckpoints ?? []) {
+      const board = cp.board;
+      if (!board) continue;
+      const home =
+        board.teams.find((t) => t.explicitTeamId === 0) ?? board.teams[0];
+      const away =
+        board.teams.find((t) => t.explicitTeamId === 1) ?? board.teams[1];
+      if (!home || !away) continue;
+      const player = home.players.find((p) => p.id === 9);
+      if (!player) continue;
+      home.players = home.players.filter((p) => p.id !== 9);
+      player.traitsDataTeamId = 1;
+      away.players.push(player);
+    }
     const r = LuckReportSchema.parse(analyzeReplayLuck(model));
     const chain = at(r, 186).metadata.pickupBallChain!;
     expect(chain.diceByTeam["0"]).toBeCloseTo((-1.1 * 2) / 3, 12);
