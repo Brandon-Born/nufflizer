@@ -386,6 +386,9 @@ export function explainBlockResolution(
     resolution.outcome === "wrestled_prone"
       ? "Wrestle does not add a knockdown armor check; a separate ball consequence can still matter."
       : null,
+    event.metadata.blockBallRelease
+      ? `Player ${event.metadata.blockBallRelease.holderId} held the ball at [${event.metadata.blockBallRelease.from.x},${event.metadata.blockBallRelease.from.y}] in the last recorded checkpoint before this prone resolution. The first recorded bounce travels to [${event.metadata.blockBallRelease.to.x},${event.metadata.blockBallRelease.to.y}]. ${event.metadata.blockBallRelease.after?.isHeld === false ? "The immediate snapshot explicitly records the ball as not held." : "Later possession is unconfirmed; omitted holder flags do not establish a loose ball or a new carrier."} This source link adds no dice score or tactical value.`
+      : null,
     resolution.damageActionIds.length
       ? `${resolution.damageActionIds.length} immediately linked damage step${resolution.damageActionIds.length === 1 ? "" : "s"} retain${resolution.damageActionIds.length === 1 ? "s" : ""} each victim's team perspective.`
       : "No damage step is linked by this bounded contract.",

@@ -939,3 +939,17 @@ Schema2.41 adds separate fixed-unmodified ordinary/Stunty and Thick Skull catego
 ## 2026-11-12 — NUF-009 mapping acceptance and fixed numeric modifier receipts
 
 Schema2.42/dice-only-21/context33 closes the original NUF-009 mapping audit with independently reproduced96 roll/39 step names,41 declared source contracts, eight scoped policies, six declaration witnesses and complete12-source inventories. UI-034 exposes Action4 before a typed ThrowTeamMateStep13; the unverified cross-namespace Action7 label and trait permission are removed. ThrowIn9 remains provisional. Known fixed pre-roll numeric modifier receipts now reject unknown, duplicate and post-roll choices instead of accepting any reconciled target, and the public schema enforces the same evidence. All prior source values/coverage/27 ranges/zero points/verdicts are preserved.101 new acceptance cases plus existing133 dice regressions pass; full local1,917 unit/API cases, real Redis/build and33 Chromium flows pass.12 broad issues now have closure evidence/16 remain open. This completes the mapping audit, not block/injury/reroll/role/state/context/calibration or final hosted/integrated support. No deployment, provider/account/store/Stripe or spending/billing/security action occurred.
+
+
+## 2026-11-12 - First recorded block-carrier bounce
+Metadata: commit(s) this change set, parent `bcef1896c4e07faaf421ccd78d78567ddc123699`; scope `NUF-010/013/016/018/021/022 observed aftermath`; status `partial`.
+
+Converted items:
+1. Schema2.43/context34 links a source-confirmed prone carrier and last explicit held-ball checkpoint to the first adjacent D8 bounce, sharing UI/CLI explanation and JSON provenance.19 public chains across ten files retain nullable immediate holder flags; synthetic Wrestle adds no armor. D8 rows stay excluded and add no score.
+2. Independent numeric evidence, seven original-file joins, paired UI-096, unsupported-input/cross-link tests, existing real-worker demo5 upload acceptance and desktop/mobile presentation coverage advance the original requirements.
+
+Remaining follow-ups:
+1. Full legal block/push/surf/ball alternatives, trait/role/resource/state continuity, damage treatment/recovery, contextual/calibration and current-schema hosted acceptance remain open. This observed first motion does not prove later possession, turnover or tactical value. No backlog issue closes;12 remain closed/16 open.
+
+Verification evidence:
+1. Full local `corepack pnpm verify`:1,972 unit/API cases in85 unique suites, real Redis, production build and34 Chromium flows pass. All12 pre-existing complete-report projections match archived exact parent bcef189 after excluding only the added source links/travel, identity/time and versions. Odds/contributions/coverage,27 existing partial ranges, zero source-backed points and abstaining verdicts are unchanged. See `BLOCK_BALL_RELEASE_EVIDENCE.md` and the append-only implementation record. No deployment/provider/account/Stripe/store/spending/billing/security/legacy action occurred.

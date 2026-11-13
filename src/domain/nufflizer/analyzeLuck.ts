@@ -20,6 +20,7 @@ import { summarizeContextComponents } from "./contextComponents";
 import { attachInjuryObservations } from "./injuryObservation";
 import { attachInjuryTables } from "./injuryTable";
 import { attachBlockCrowd } from "./blockCrowd";
+import { attachBlockBallReleases } from "./blockBallRelease";
 import { attachRetainedCatchPossession } from "./retainedCatchPossession";
 import { teamMovementContinuity } from "@/domain/replay/teamMovementContinuity";
 import { findBounceCatchReactions, attachBounceCatchReactions } from "./catchPossession";
@@ -1655,6 +1656,7 @@ export function analyzeReplayLuck(replay: ReplayModel): LuckReport {
         event.metadata.skillUsage = { skillId: skill.skillId, used: true };
     }
   }
+  attachBlockBallReleases(replay,ballSources,blockConsequences);
   for (const loss of activationLosses) {
     const roll = ballSources.get(loss.rollSourceId),
       skill = ballSources.get(loss.skillSourceId);

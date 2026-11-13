@@ -107,6 +107,10 @@ export type ObservedBlockConsequence = {
   skills: BlockSkillUse[];
   damageActionIds: string[];
   outcome: BlockResolution["outcome"];
+  // Cursor immediately after the validated resolution/damage prefix, in the
+  // containing turn. Consumers must validate the next action independently.
+  nextEventIndex: number;
+  nextStepIndex: number;
 };
 const allowedResolutionTags = new Set([
   "QuestionBlockDice",
@@ -393,7 +397,9 @@ export function findBlockConsequences(
       selectedFace: block.selectedFace,
       skills,
       damageActionIds,
-      outcome
+      outcome,
+      nextEventIndex: next,
+      nextStepIndex: stepIndex
     });
   }
   return results;

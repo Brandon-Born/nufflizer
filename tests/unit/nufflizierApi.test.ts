@@ -181,6 +181,10 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(injuryTableEvent.scoringStatus).toBe("excluded");
     expect(injuryTableEvent.probabilitySuccess).toBeNull();
     expect(injuryTableEvent.weightedDelta).toBe(0);
+    expect(report.events.filter(e=>e.metadata.blockBallRelease)).toHaveLength(3);
+    const release=report.events.find(e=>e.metadata.sourceId==="source-1324")!.metadata.blockBallRelease!;
+    expect(release).toMatchObject({holderId:"40",holderTeamId:"1",beforeCheckpointAfter:1336,from:{x:13,y:2},to:{x:14,y:2},bounceSourceId:"source-1346",after:{checkpointAfter:1347,carrierId:null,isHeld:null}});
+    expect(report.events.find(e=>e.metadata.sourceId===release.bounceSourceId)).toMatchObject({scoringStatus:"excluded",probabilitySuccess:null,weightedDelta:0,metadata:{ballTravel:{from:{x:13,y:2},to:{x:14,y:2}}}});
     for(const pool of skillPools) {
       expect(pool.metadata.block!.skillModel!.expectedValue).toBeCloseTo(19/36,12);
       expect(pool.metadata.block!.skillModel!.positiveChance).toBeCloseTo(5/9,12);

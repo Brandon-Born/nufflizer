@@ -9,6 +9,7 @@ import {
 import { directInjuryOutcome } from "./injuryObservation";
 import { injuryTableForTraits } from "./injuryTable";
 import { validReportedBlockCrowd } from "./blockCrowd";
+import { validReportedBlockBallRelease } from "./blockBallRelease";
 import { bounceDestination } from "@/domain/replay/pickupSuccessors";
 import { continuationOptionBounds } from "@/domain/replay/activeMoveContinuation";
 import { estimateDodgeImpactBounds, estimateTeamDodgeMoveBounds, estimateTeamRushMoveBounds, estimateKeptRushMoveBounds, estimateKeptDodgeMoveBounds, estimateNumericImpact, estimatePickupPossessionBounds, estimateFreshCatchPossession, estimateKeptCatchPossession } from "./contextImpact";
@@ -194,6 +195,12 @@ export const LuckEventMetadataSchema = z.strictObject({
     from:pitchCell,to:z.strictObject({x:z.number().int().min(-1).max(26),y:z.number().int().min(-1).max(15)}),damageActionId:text,beforeCheckpointAfter:count,
     after:z.strictObject({checkpointAfter:count,cell:z.strictObject({x:z.literal(-1),y:z.literal(-1)}),situationCode:z.union([z.literal(1),z.literal(2)]),
       statusCode:z.number().int().nullable(),canAct:z.boolean().nullable(),tackleZone:z.boolean().nullable()})}).optional(),
+  blockBallRelease:z.strictObject({holderId:text,holderTeamId:text,beforeCheckpointAfter:count,
+    from:pitchCell,to:pitchCell,bounceSourceId:text,
+    after:z.strictObject({checkpointAfter:count,
+      cell:z.strictObject({x:z.number().int().min(0).max(25).nullable(),y:z.number().int().min(0).max(14).nullable()}),
+      carrierId:z.number().int().nonnegative().nullable(),isHeld:z.boolean().nullable()}).optional()
+  }).optional(),
   blockResolution: z.strictObject({
     outcome:z.enum(["attacker_down","both_down","wrestled_prone","both_stay_up","push","defender_down","defender_pushed_down"]),
     skillSourceIds:z.array(text).max(4),damageActionIds:z.array(text).max(2),
@@ -2301,6 +2308,9 @@ export const LuckReportSchema = z
             "Block subtotals reference the terminal pool and existing damage contributions once per team.");
         }
       }
+      if (event.metadata.blockBallRelease)
+        require(validReportedBlockBallRelease(event,sources),
+          "A block ball release requires the prone carrier, preceding held-ball checkpoint, adjacent ordinary damage prefix and the first recorded D8 bounce; omitted after-state holder flags remain unknown.");
       const fall = event.metadata.movementFall;
       if (fall) {
         const step = damageByAction.get(fall.damageActionId);
