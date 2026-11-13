@@ -153,6 +153,10 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(original.delta).toBeCloseTo(-2/3,12);expect(original.weightedDelta).toBeCloseTo(-11/15,12);
     expect(original.metadata.fixedNumericModifiers).toEqual([{playerId:14,modifierType:3,skillId:-1,effectId:-1,value:-1}]);
     expect(report.events.find(e=>e.metadata.sourceId==="source-4551")?.metadata.isRollCandidate).toBe(false);
+    const kept=report.events.find(e=>e.metadata.sourceId==="source-4551")!;
+    expect(kept.metadata.failedNumericRetry).toMatchObject({kind:"pro",originalSourceId:"source-4546",choiceSourceId:"source-4548",skillSourceId:"source-4549",gateSourceId:"source-4550"});
+    expect(kept.metadata.failedNumericRetry!.fixedPolicySuccessChance).toBeCloseTo(22/27,12);
+    expect(kept.metadata.teamRerollsSpent).toBeUndefined();expect(report.events.find(e=>e.metadata.sourceId===kept.metadata.failedNumericRetry!.gateSourceId)!.metadata.teamRerollsSpent).toBe(0);expect(kept.scoringStatus).toBe("excluded");expect(kept.probabilitySuccess).toBeNull();expect(kept.weightedDelta).toBe(0);
     expect(report.diceRecords.find(d=>d.parentSourceId==="source-4546" && d.path.join(".")==="RollInfos.Dice")?.disposition).toBe("covered_roll");
     const crowd=report.events.find(e=>e.metadata.blockCrowd?.subjectId === "38")!,proof=crowd.metadata.blockCrowd!;
     expect(crowd.metadata.sourceId).toBe("source-3716");expect(proof.after).toMatchObject({checkpointAfter:3730,cell:{x:-1,y:-1},canAct:true,tackleZone:true,statusCode:null});

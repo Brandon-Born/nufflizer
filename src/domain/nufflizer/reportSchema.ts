@@ -1,3 +1,4 @@
+import { validReportedFailedNumericRetry } from "./failedNumericRetry";
 import { validReportedCatchRerollResume } from "./catchRerollResume";
 import { validReportedNumericQuestionOriginal,validReportedNumericQuestionCopy } from "./numericQuestionOriginal";
 import { isFixedNumericModifier } from "./numericCheckContract";
@@ -328,6 +329,9 @@ export const LuckEventMetadataSchema = z.strictObject({
   }).optional(),
   numericOriginalCopy:z.strictObject({originalSourceId:text,previousSourceId:text}).optional(),
   numericOriginal: z.strictObject({gamerId:z.union([z.literal(0),z.literal(1)]),canUseTeamReroll:z.boolean(),canUseProReroll:z.boolean()}).optional(),
+  failedNumericRetry: z.strictObject({kind:z.enum(["loner","pro"]), originalSourceId:text, choiceSourceId:text,
+    skillSourceId:text, gateSourceId:text, baseSuccessChance:probability, gateSuccessChance:probability,
+    fixedPolicySuccessChance:probability}).optional(),
   rerollOriginalId: text.optional(),
   rerollDraws: z.strictObject({initialSourceId:text,initialFace:z.number().int().min(1).max(6),baseSuccessChance:probability,initialDelta:finite,replacementDelta:finite}).optional(),
   rerollQuestionId: text.optional(),
@@ -1420,6 +1424,12 @@ export const LuckReportSchema = z
     const pushQuestions=new Set(pushModels.flatMap(x=>x.m.questionSourceIds)),pushResults=new Set(pushModels.flatMap(x=>x.m.resultSourceIds)),pushFinals=new Set(pushModels.map(x=>x.e.metadata.block!.finalSourceId));
     require(pushFinals.size===pushModels.length && pushQuestions.size===pushModels.reduce((n,x)=>n+x.m.questionSourceIds.length,0) && pushResults.size===pushModels.reduce((n,x)=>n+x.m.resultSourceIds.length,0),"A push decision or displacement must belong to exactly one terminal block.");
     const numericRerolls=report.events.filter(e=>e.metadata.rerollDraws);
+    const failedRetries=report.events.filter(e=>e.metadata.failedNumericRetry);
+    for(const key of ["originalSourceId","choiceSourceId","skillSourceId","gateSourceId"] as const)
+      require(new Set(failedRetries.map(e=>e.metadata.failedNumericRetry![key])).size===failedRetries.length,
+        "A failed numeric retry requires exclusive original, choice, skill and gate sources.");
+    require(failedRetries.every(e=>!numericRerolls.some(n=>n.metadata.rerollDecisionId===e.metadata.failedNumericRetry!.choiceSourceId ||
+      n.metadata.rerollDecisionId===e.metadata.failedNumericRetry!.skillSourceId)),"A failed gated policy cannot reuse a scored retry decision.");
     require(new Set(numericRerolls.map(e=>e.metadata.rerollDecisionId)).size===numericRerolls.length,
       "A numeric reroll decision must belong to exactly one check.");
     const numericTeamRerolls=numericRerolls.filter(e=>e.metadata.rerollResource==="team");
@@ -1433,6 +1443,8 @@ export const LuckReportSchema = z
       if(event.metadata.pushResult)require(pushResults.has(event.metadata.sourceId??"") && event.metadata.sourceTag==="ResultPushBack" && event.scoringStatus==="excluded" && !event.metadata.isRollCandidate,"A push displacement must link to its one modeled block.");
       if(event.metadata.pushAppliedFollow!==undefined)require(pushFinals.has(event.metadata.sourceId??"") && event.metadata.sourceTag==="ResultBlockOutcome","Recorded follow-up must belong to the modeled applied block.");
       const policy = event.metadata.probabilityPolicy;
+      require(validReportedFailedNumericRetry(event,sources,rootDiceBySource),
+        "A failed numeric retry must retain its exclusive ordered first/choice/skill/gate/kept evidence, exact conditional arithmetic and resource spend, without an applied policy score.");
       require(validReportedNumericQuestionCopy(event,sources,initialRerollDiceBySource),
         "A copied numeric question must retain the immediately preceding same-step menu and one earlier original die, without another draw or score.");
       require(validReportedNumericQuestionOriginal(event,initialRerollDiceBySource),

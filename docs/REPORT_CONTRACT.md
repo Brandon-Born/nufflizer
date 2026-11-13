@@ -2,7 +2,7 @@
 
 Updated 2026-11-13. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.55`, dice model `dice-only-28` and context model `mobility-possession-41`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.56`, dice model `dice-only-29` and context model `mobility-possession-41`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -658,3 +658,8 @@ Required `catchRerollResume` qualifies the observed stationary Catch question→
 The receipt retains source/locator order, nullable raw period/physical flags, team-turn counters, explicit roster team IDs and the distinct active player/catcher. Its active roster slot must map to the observed owner; missing IDs do not become defaults. One used team reroll is separate from its tactical price or an unobserved later counter. Both actual draw deviations contribute once; whole fixed-policy odds stay separate. No pre-roll/context estimate is implied. A common check also binds every admitted numeric score's category to its recorded Rush/Dodge/Pickup/Catch family, rejecting coherent equal-weight relabeling.
 
 The one independent raw wait prefix, all six replacement cuts and540 synthetic choice trees qualify the scope; prior110 reroll groups and2,233 earlier scored objects stay unchanged. The source1715 first transfers into source1722's two-draw group, retaining total2,234 scored checks and adding one covered replacement (111 numeric rerolls).27 ranges/zero public points and whole-match abstentions remain. See [Catch continuation evidence](CATCH_REROLL_RESUME_EVIDENCE.md). Full original policy/state/context/calibration and hosted acceptance remains open.
+
+
+## Schema2.56 / dice-only-29: failed numeric retry receipts
+
+`failedNumericRetry` links the excluded kept Dodge to its independently scored original, explicit team choice, skill use and failed Loner/Pro gate. Base/gate/fixed-policy chances use `p + (1-p)*g*p` for one conditional full-die retry. These are explanatory conditional policy odds, never applied event odds or a tactical resource price. Original first scores, unscored gates and physical summary aliases remain separate. One team resource is spent on failed Loner; Pro uses no team resource. The schema checks exclusive ordered actors/roles, gate freshness/thresholds, kept aliases, source namespace and arithmetic. Unknown/mixed policies remain unsupported. See [independent evidence](FAILED_NUMERIC_RETRY_EVIDENCE.md); original NUF-012/014/021/022/027 remain in progress.

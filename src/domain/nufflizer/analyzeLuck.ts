@@ -1,3 +1,4 @@
+import { findFailedNumericRetries } from "./failedNumericRetry";
 import { findCatchRerollResumes } from "./catchRerollResume";
 import { findNumericQuestionOriginals, findNumericQuestionCopies, type NumericQuestionOriginal } from "./numericQuestionOriginal";
 import {
@@ -1260,6 +1261,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   const teamDiceIdentityByQuestion = new Map(
     findTeamDiceIdentities(replay).map((p) => [p.question.id, p])
   );
+  const failedNumericRetries = findFailedNumericRetries(replay,[...teamDiceIdentityByQuestion.values()],originalByRaw,ownership);
   const newTeamDiceIdentities: TeamDiceIdentity[] = [];
   linkBlockDiceCopies(replay, diceLinks);
   linkApothecaryDiceCopies(replay, diceLinks);
@@ -1282,6 +1284,10 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     ])
   );
   const rerollCounters = findRerollCounterEvidence(inputReplay);
+  for(const {identity:p} of failedNumericRetries) {
+    activationEvidenceSources.add(p.choice.id!);
+    activationEvidenceSources.add(p.gateSkill!.id!);
+  }
   for (const source of armorModifierUses.keys()) activationEvidenceSources.add(source);
   for (const source of recoveryState.controls.keys()) activationEvidenceSources.add(source);
   for (const source of recoveryReturns.activations.keys()) activationEvidenceSources.add(source);
@@ -2336,6 +2342,23 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       gatePassed: proof.gatePassed,
       gateSkillId: proof.gateSkill?.payload?.Skill as 44 | 1008 | 50 | undefined
     };
+  }
+  for(const {identity:p,receipt} of failedNumericRetries) {
+    const kept=normalizedByRaw.get(p.final), first=normalizedByRaw.get(p.question),
+      choice=normalizedByRaw.get(p.choice), skill=normalizedByRaw.get(p.gateSkill!), gate=normalizedByRaw.get(p.gate!);
+    if(!kept?.metadata.teamDiceIdentity || !first?.metadata.numericOriginal || !choice || !skill || !gate ||
+      first.scoringStatus!=="scored" || kept.scoringStatus!=="excluded" || gate.scoringStatus!=="excluded")continue;
+    skill.metadata.skillUsage={skillId:Number(p.gateSkill!.payload!.Skill),used:true};
+    if(receipt.kind==="pro") {
+      skill.label="Recorded Pro use";
+      skill.statusReason="Recorded use of Pro before its separate gate; no team reroll was spent on this choice.";
+      gate.metadata.proGate={passed:false,successChance:2/3,skillSourceId:p.gateSkill!.id!};
+      gate.metadata.rerollResource="skill";
+      gate.metadata.teamRerollsSpent=0;
+      gate.metadata.rerollUsed=false;
+      gate.actualSuccess=false;
+    }
+    kept.metadata.failedNumericRetry=receipt;
   }
   for (const proof of observedRerollDice) {
     const question = normalizedByRaw.get(proof.question),

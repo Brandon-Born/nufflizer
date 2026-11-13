@@ -31,6 +31,7 @@ import {
   explainNumericRerollScore,
   explainNumericOriginal,
   explainCatchRerollResume,
+  explainFailedNumericRetry,
   formatActualOutcome,
   formatContextComponentSum,
   PARTIAL_CONTEXT_SCOPE,
@@ -165,6 +166,8 @@ function formatTeamSummary(
       .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainRegenerationReturn(event)}`),
     ...report.events.filter(event=>event.metadata.catchRerollResume).slice(0,20)
       .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainCatchRerollResume(event)}`),
+    ...report.events.filter(event=>event.metadata.failedNumericRetry).slice(0,20)
+      .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainFailedNumericRetry(event)}`),
     ...report.events.filter(event=>event.metadata.numericOriginal).slice(0,20)
       .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainNumericOriginal(event)}`),
     ...report.events.filter(event=>event.metadata.rerollDraws).slice(0,20)
@@ -293,6 +296,7 @@ function formatTeamSummary(
         explainNumericRerollScore(moment),
         explainNumericOriginal(moment),
         explainCatchRerollResume(moment),
+        explainFailedNumericRetry(moment),
         explainBlockPush(moment),
         explainOwnership(moment),
         explainPreRollEvidence(moment.metadata.preRoll),

@@ -3,6 +3,13 @@ import { recordedInjuryName } from "./injuryObservation";
 import type { LuckEventType, LuckReport } from "./types";
 import { LuckEventTypeSchema } from "./reportSchema";
 
+export function explainFailedNumericRetry(event: LuckReport["events"][number]): string | null {
+  const r=event.metadata.failedNumericRetry;
+  if(!r)return null;
+  const name=r.kind==="loner"?"Loner":"Pro";
+  return `${name} failed, so the recorded original Dodge was kept. No fresh Dodge die was rolled. ${r.kind==="loner"?"One team reroll was spent despite the failed gate.":"Pro was used; no team reroll was spent."} For a fixed policy of taking this one gated retry after a first failure, the whole-check success chance would be ${(100*r.fixedPolicySuccessChance).toFixed(1)}%: first success, or first failure followed by a passing gate and successful retry. The single Dodge chance is ${(100*r.baseSuccessChance).toFixed(1)}%; the gate chance is ${(100*r.gateSuccessChance).toFixed(1)}%. These conditional policy odds add no score. The first die (${r.originalSourceId}) keeps its existing contribution; gate ${r.gateSourceId} remains unscored and this kept summary adds no draw. General eligibility, other retry policies and tactical resource cost remain unquantified.`;
+}
+
 export function explainCatchRerollResume(event: LuckReport["events"][number]): string | null {
   const r=event.metadata.catchRerollResume;if(!r)return null;
   return `This Catch resumes after the ready signal (source ${r.readySourceIndex}) and timer restart (source ${r.timerSourceIndex}). ${r.controller.changeSourceIndex===null?"The preceding checkpoint already records this controller.":`An explicit controller change at source ${r.controller.changeSourceIndex} precedes the question.`} The menu and resumed snapshots retain the same catcher, square, controller and observed team-turn counters, with ${r.menu.teamRerolls} team reroll${r.menu.teamRerolls===1?"":"s"} before the decision. The board's active player is ${r.menu.activePlayerId??"unknown"}; this Catch belongs to player ${event.playerId}. ${r.menu.periodCode===null?"Period remains unknown.":"The period is recorded separately."} ${r.menu.actorCanAct===null?"Action availability remains unknown.":"The recorded action flag does not establish full legal eligibility."} These pre-decision observations do not fill a missing later counter. The recorded choice spends one team reroll; its tactical cost and later consequences are separate.`;
@@ -77,7 +84,7 @@ export function explainObservedDice(
   if (r)
     return `Recorded ${r.kind === "star" ? "star" : "Pass skill"} reroll: original die ${r.originalDie}, ${r.used ? `used; replacement die ${r.finalDie} is a new draw even if its face matches` : `declined; die ${r.finalDie} repeats the original`}. This identifies the observed dice and choice, not reroll eligibility, success odds or tactical value. No luck score is added.`;
   if (team)
-    return `Recorded team-reroll decision ${team.teamUsed ? "used" : "declined"}: original die ${team.originalDie}, final die ${team.finalDie}; ${team.replacementRolled ? "a replacement was rolled" : "the original was retained"}.${team.gateSourceId ? ` A separate ${team.gateSkillId === 50 ? "Pro" : "Loner"} gate ${team.gatePassed ? "passed" : "failed"}.` : ""} This is dice identity evidence; resource eligibility and probability/value remain unverified. No luck score is added.`;
+    return `Recorded team-reroll decision ${team.teamUsed ? "used" : "declined"}: original die ${team.originalDie}, final die ${team.finalDie}; ${team.replacementRolled ? "a replacement was rolled" : "the original was retained"}.${team.gateSourceId ? ` A separate ${team.gateSkillId === 50 ? "Pro" : "Loner"} gate ${team.gatePassed ? "passed" : "failed"}.` : ""} ${event.metadata.failedNumericRetry ? "This receipt establishes dice identity; conditional policy arithmetic is explained separately. General resource eligibility and tactical value remain unverified." : "This is dice identity evidence; resource eligibility and probability/value remain unverified."} No luck score is added.`;
   return null;
 }
 

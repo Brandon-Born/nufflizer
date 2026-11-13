@@ -34,6 +34,7 @@ import {
   explainNumericRerollScore,
   explainNumericOriginal,
   explainCatchRerollResume,
+  explainFailedNumericRetry,
   explainDiceCensus,
   explainObservedDice,
   explainDriveEffectExpiry,
@@ -877,6 +878,11 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                             {moment.metadata.regenerationReturn || moment.metadata.recoveryReturnActivation ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainRegenerationReturn(moment)}
+                              </p>
+                            ) : null}
+                            {moment.metadata.failedNumericRetry ? (
+                              <p className="mt-1 text-xs text-amber-100/80">
+                                {explainFailedNumericRetry(moment)}
                               </p>
                             ) : null}
                             {moment.metadata.catchRerollResume ? (
