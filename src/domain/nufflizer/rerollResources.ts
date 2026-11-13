@@ -13,6 +13,14 @@ const count = z.number().int().min(0).max(REPLAY_LIMITS.events);
 const observedCode = z.number().int().min(0).max(Number.MAX_SAFE_INTEGER);
 const text = z.string().max(REPLAY_LIMITS.decodedBytes);
 const gamer = z.union([z.literal(0), z.literal(1)]);
+const decisionWaitSchema = z.strictObject({
+  activeGamerSourceId: text,
+  pauseSourceId: text,
+  timerSourceId: text,
+  resumedStepSourceId: text,
+  // The captured empty controller notification does not mean controller zero.
+  controller: z.null()
+});
 export const RecordedRerollChoiceSchema = z.strictObject({
   gamerId: gamer.nullable(),
   used: z.boolean().nullable(),
@@ -41,6 +49,7 @@ const decisionSchema = z.strictObject({
     "invalid_offer",
     "source_or_owner_conflict"
   ]),
+  decisionWait: decisionWaitSchema.nullable(),
   clock: z
     .strictObject({
       checkpointAfter: count,
@@ -65,7 +74,7 @@ const decisionSchema = z.strictObject({
     .nullable()
 });
 export const RerollResourcesSchema = z.strictObject({
-  modelVersion: z.literal("recorded-reroll-resources-1"),
+  modelVersion: z.literal("recorded-reroll-resources-2"),
   decisions: z.array(decisionSchema).max(REPLAY_LIMITS.events),
   decisionCount: count,
   recordedUsedCount: count,
@@ -160,6 +169,95 @@ function identityCheckpoint(cp: ReplayBoardCheckpoint | undefined) {
   );
 }
 
+const object = (v: unknown): Record<string, unknown> | undefined =>
+  v !== null && typeof v === "object" && !Array.isArray(v)
+    ? (v as Record<string, unknown>)
+    : undefined;
+function empty(v: unknown) {
+  return !!object(v) && Object.keys(object(v)!).length === 0;
+}
+function menuWaitControl(e: ReplayEvent, ordinal: number) {
+  if (ordinal === 0)
+    return e.sourceTag === "EventActiveGamerChanged" && empty(e.payload);
+  if (ordinal === 1)
+    return e.sourceTag === "EventPauseActiveTimer" && empty(e.payload);
+  const p = e.payload,
+    timer = object(p?.NewTimer);
+  // Direct XML controls retain text, unlike decoded MessageData numbers.
+  const exact = (v: unknown, n: number) => v === n || v === String(n);
+  return (
+    ordinal === 2 &&
+    e.sourceTag === "EventActiveTimerChanged" &&
+    !!p &&
+    Object.keys(p).length === 2 &&
+    exact(p.IsPaused, 1) &&
+    !!timer &&
+    Object.keys(timer).length === 3 &&
+    exact(timer.Duration, 30) &&
+    exact(timer.Type, 2) &&
+    exact(timer.Value, 30)
+  );
+}
+
+// This matches a recorded identity continuation, not a legal action or retry
+// policy. CellTo is a choice parameter and may change while that menu is open.
+function sameWaitHeader(
+  a: ReplayEvent | undefined,
+  b: ReplayEvent | undefined
+) {
+  const key = (e: ReplayEvent | undefined) => {
+    const p = e?.payload;
+    const cell = (v: unknown) => {
+      const c = object(v);
+      return (
+        !!c &&
+        Object.keys(c).length === 2 &&
+        Number.isSafeInteger(c.X) &&
+        Number(c.X) >= 0 &&
+        Number(c.X) <= 25 &&
+        Number.isSafeInteger(c.Y) &&
+        Number(c.Y) >= 0 &&
+        Number(c.Y) <= 14
+      );
+    };
+    if (
+      e?.sourceTag !== "PlayerStep" ||
+      !p ||
+      p.IsEvaluation !== 0 ||
+      p.State !== 1 ||
+      ![11, 32].includes(Number(p.StepType)) ||
+      String(p.PlayerId) !== e.playerId ||
+      String(p.TargetId) !== e.targetId ||
+      p.StepType !== e.stepType ||
+      p.Skill !== (p.StepType === 11 ? -1 : 80) ||
+      !cell(p.CellFrom) ||
+      !cell(p.CellTo) ||
+      Object.keys(p).some(
+        (k) =>
+          ![
+            "Probability",
+            "PlayerId",
+            "TargetId",
+            "IsEvaluation",
+            "StepType",
+            "CellFrom",
+            "CellTo",
+            "State",
+            "Skill"
+          ].includes(k)
+      )
+    )
+      return;
+    return JSON.stringify(
+      Object.entries(p)
+        .filter(([k]) => k !== "Probability" && k !== "CellTo")
+        .sort(([a], [b]) => a.localeCompare(b))
+    );
+  };
+  const first = key(a);
+  return first !== undefined && first === key(b);
+}
+
 // One transaction per recorded team choice, including choices whose action
 // remains unscored. This does not simulate eligibility, resets or resource value.
 export function findRerollResources(
@@ -174,8 +272,11 @@ export function findRerollResources(
   // Ball/tackle-zone uncertainty does not invalidate roster identity. It also
   // must not collapse known clock changes to a shared "unknown" epoch.
   const epochs = new Map<ReplayBoardCheckpoint, number>();
+  const identityEpochs = new Map<ReplayBoardCheckpoint, number>();
   let signature: string | undefined,
-    currentEpoch = 0;
+    identitySignature: string | undefined,
+    currentEpoch = 0,
+    currentIdentityEpoch = 0;
   for (const cp of checkpoints) {
     const b = cp.board;
     const next =
@@ -191,13 +292,36 @@ export function findRerollResources(
     if (next === undefined || next !== signature) currentEpoch++;
     signature = next;
     epochs.set(cp, currentEpoch);
+    const identity =
+      identityCheckpoint(cp) && b
+        ? JSON.stringify([
+            b.phaseCode,
+            b.periodCode,
+            b.activeTeamIndex,
+            b.teams.map((t) => [t.rosterIndex, t.explicitTeamId, t.gameTurn])
+          ])
+        : undefined;
+    if (identity === undefined || identity !== identitySignature)
+      currentIdentityEpoch++;
+    identitySignature = identity;
+    identityEpochs.set(cp, currentIdentityEpoch);
   }
   const byTeam = teamIds.map((teamId) => ({ teamId, used: 0, notUsed: 0 }));
   const decisions: RerollResources["decisions"] = [];
   let cursor = 0,
-    epoch = 0;
+    epoch = 0,
+    identityEpoch = 0;
   let last: (typeof checkpoints)[number] | undefined;
-  let pending: { question: ReplayEvent; epoch: number } | undefined;
+  let pending:
+    | {
+        question: ReplayEvent;
+        epoch: number;
+        identityEpoch: number;
+        controls: ReplayEvent[];
+        resumed?: ReplayEvent;
+        start: number;
+      }
+    | undefined;
   let candidate: ReplayEvent | undefined;
   let candidateNamespace = false;
   const namespace = (
@@ -256,10 +380,17 @@ export function findRerollResources(
     ) {
       last = checkpoints[cursor++]!;
       epoch = epochs.get(last)!;
+      identityEpoch = identityEpochs.get(last)!;
     }
     if (e.type === "step") steps.set(e.actionId, e);
     if (recordedRerollOffer(e)) {
-      pending = { question: e, epoch };
+      pending = {
+        question: e,
+        epoch,
+        identityEpoch,
+        controls: [],
+        start: eventIndex
+      };
       candidate = e;
       candidateNamespace =
         namespace(e, recordedRerollOffer(e)!.gamerId) !== null;
@@ -270,6 +401,35 @@ export function findRerollResources(
       if (!pending) continue;
       const q = pending.question;
       const resume = catchResumes.get(q.id ?? "");
+      const previous = pending.controls.at(-1) ?? q;
+      if (
+        eventIndex - pending.start <= 12 &&
+        e.id &&
+        previous.id &&
+        Number.isSafeInteger(e.sourceIndex) &&
+        Number.isSafeInteger(previous.sourceIndex) &&
+        e.sourceIndex! > previous.sourceIndex! &&
+        !pending.resumed &&
+        menuWaitControl(e, pending.controls.length)
+      ) {
+        pending.controls.push(e);
+        continue;
+      }
+      if (pending.controls.length) {
+        if (e.checkpointCarrier && e.sourceTag === "Carrier") continue;
+        if (
+          pending.controls.length === 3 &&
+          !pending.resumed &&
+          e.type === "step" &&
+          sameParticipant(q, e) &&
+          sameWaitHeader(steps.get(q.actionId), e)
+        ) {
+          pending.resumed = e;
+          continue;
+        }
+        pending = undefined;
+        continue;
+      }
       if (
         (e.checkpointCarrier && e.sourceTag === "Carrier") ||
         (e.type === "step" && sameParticipant(q, e)) ||
@@ -297,6 +457,38 @@ export function findRerollResources(
     const originalHeader = q && steps.get(q.actionId);
     const resume = q && catchResumes.get(q.id ?? "");
     const currentNamespace = namespace(e, raw.gamerId);
+    const wait =
+      pending?.controls.length === 3 &&
+      pending.resumed &&
+      eventIndex - pending.start <= 12 &&
+      pending.identityEpoch === identityEpoch &&
+      !!last &&
+      last.afterSourceIndex < pending.controls[0]!.sourceIndex! &&
+      e.actionId === pending.resumed.actionId &&
+      e.locator?.messageIndex === 0 &&
+      pending.resumed.locator?.messageIndex === undefined &&
+      q?.locator?.replayStep !== undefined &&
+      [...pending.controls, pending.resumed, e].every(
+        (event, i) =>
+          event.locator?.replayStep === q.locator!.replayStep! + 1 &&
+          event.locator?.childIndex === Math.min(i + 1, 4) &&
+          (i >= 3 || event.locator.stepIndex === undefined)
+      ) &&
+      [q, ...pending.controls, pending.resumed, e].every(
+        (event, i, all) =>
+          !!event?.id &&
+          Number.isSafeInteger(event.sourceIndex) &&
+          event.sourceIndex! >= 0 &&
+          (i === 0 || all[i - 1]!.sourceIndex! < event.sourceIndex!)
+      )
+        ? {
+            activeGamerSourceId: pending.controls[0]!.id!,
+            pauseSourceId: pending.controls[1]!.id!,
+            timerSourceId: pending.controls[2]!.id!,
+            resumedStepSourceId: pending.resumed.id!,
+            controller: null
+          }
+        : null;
     if (!indexed) reason = "unindexed_source";
     else if (replay.replayVersion !== "1-4-0-0") reason = "unsupported_version";
     else if (raw.gamerId === null || raw.used === null || !raw.validFields)
@@ -328,7 +520,10 @@ export function findRerollResources(
       !candidateNamespace ||
       !currentNamespace ||
       !(
-        (pending?.epoch === epoch && last?.board !== null) ||
+        (pending?.controls.length === 0 &&
+          pending.epoch === epoch &&
+          last?.board !== null) ||
+        wait ||
         resume?.choice === e
       )
     )
@@ -362,6 +557,7 @@ export function findRerollResources(
       teamId: linked ? teamId : null,
       status: linked ? "linked" : "unresolved",
       reason,
+      decisionWait: linked ? wait : null,
       clock,
       namespace: linked ? currentNamespace : null
     });
@@ -376,7 +572,7 @@ export function findRerollResources(
   }
   const linkedCount = decisions.filter((d) => d.status === "linked").length;
   return {
-    modelVersion: "recorded-reroll-resources-1",
+    modelVersion: "recorded-reroll-resources-2",
     decisions,
     decisionCount: decisions.length,
     recordedUsedCount: events.filter(
@@ -464,6 +660,24 @@ export function validReportedRerollResources(
   const questions = new Set<string>();
   const totals = new Map(teamIds.map((id) => [id, { used: 0, notUsed: 0 }]));
   const spentDecisions = new Set<string>();
+  const controllerChanges = events
+    .filter(
+      (e) =>
+        e.metadata.sourceTag === "EventActiveGamerChanged" &&
+        e.metadata.sourceIndex !== undefined
+    )
+    .map((e) => e.metadata.sourceIndex!)
+    .sort((a, b) => a - b);
+  const crossesController = (from: number, to: number) => {
+    let lo = 0,
+      hi = controllerChanges.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >>> 1;
+      if (controllerChanges[mid]! <= from) lo = mid + 1;
+      else hi = mid;
+    }
+    return controllerChanges[lo] !== undefined && controllerChanges[lo]! < to;
+  };
   const nextDecisions = new Map(
     ledger.decisions
       .slice(0, -1)
@@ -508,12 +722,57 @@ export function validReportedRerollResources(
         d.reason === "matching_offer" ||
         d.teamId !== null ||
         d.clock !== null ||
-        d.namespace !== null
+        d.namespace !== null ||
+        d.decisionWait !== null
       )
         return false;
       continue;
     }
     const offer = q?.metadata.recordedRerollOffer;
+    if (
+      q?.metadata.sourceIndex !== undefined &&
+      d.sourceIndex !== null &&
+      crossesController(q.metadata.sourceIndex, d.sourceIndex) &&
+      !d.decisionWait
+    )
+      return false;
+    if (d.decisionWait) {
+      const w = d.decisionWait,
+        controls = [
+          w.activeGamerSourceId,
+          w.pauseSourceId,
+          w.timerSourceId,
+          w.resumedStepSourceId
+        ].map((id) => sources.get(id));
+      if (
+        !q ||
+        !controls.every(
+          (control, j) =>
+            control &&
+            control.metadata.sourceTag ===
+              [
+                "EventActiveGamerChanged",
+                "EventPauseActiveTimer",
+                "EventActiveTimerChanged",
+                "PlayerStep"
+              ][j] &&
+            control.scoringStatus === "excluded" &&
+            control.delta === 0 &&
+            control.weightedDelta === 0 &&
+            control.metadata.sourceIndex !== undefined &&
+            (j === 0
+              ? q.metadata.sourceIndex !== undefined &&
+                q.metadata.sourceIndex < control.metadata.sourceIndex
+              : controls[j - 1]!.metadata.sourceIndex! <
+                control.metadata.sourceIndex) &&
+            control.metadata.sourceIndex < (d.sourceIndex ?? -1)
+        ) ||
+        controls[3]?.playerId !== e.playerId ||
+        controls[3]?.metadata.stepType !== e.metadata.stepType ||
+        controls[3]?.metadata.targetId !== e.metadata.targetId
+      )
+        return false;
+    }
     if (
       d.sourceIndex === null ||
       d.decisionSourceId === null ||

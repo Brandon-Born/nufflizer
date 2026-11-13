@@ -264,7 +264,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -462,7 +463,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -713,7 +715,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -911,7 +914,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -1109,7 +1113,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -1375,7 +1380,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -1616,7 +1622,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -1814,7 +1821,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -2012,7 +2020,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -2210,7 +2219,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         }
       ]
     },
@@ -2394,7 +2404,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -2609,7 +2620,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -2807,7 +2819,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -2985,7 +2998,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -3221,7 +3235,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -3419,7 +3434,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -3597,7 +3613,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -3795,7 +3812,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -3973,7 +3991,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -4256,7 +4275,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -4434,7 +4454,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -4612,7 +4633,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -4790,7 +4812,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -4988,7 +5011,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -5186,7 +5210,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -5422,7 +5447,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -5600,7 +5626,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -5778,7 +5805,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -5976,7 +6004,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -6154,7 +6183,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -6414,7 +6444,8 @@
             "BoardState",
             "Clock",
             "ThrowTeamMateStep"
-          ]
+          ],
+          "interveningControls":[]
         }
       ]
     },
@@ -6686,7 +6717,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -6937,7 +6969,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -7143,7 +7176,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -7321,7 +7355,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -7499,7 +7534,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -7677,7 +7713,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -7855,7 +7892,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -8053,7 +8091,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         }
       ]
     },
@@ -8257,7 +8296,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -8488,7 +8528,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -8756,7 +8797,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -8934,7 +8976,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -9132,7 +9175,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -9310,7 +9354,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -9488,7 +9533,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -9686,7 +9732,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -9864,7 +9911,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -10100,7 +10148,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -10278,7 +10327,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -10456,7 +10506,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -10692,7 +10743,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -10870,7 +10922,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -11068,7 +11121,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         }
       ]
     },
@@ -11252,7 +11306,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -11430,7 +11485,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -11662,7 +11718,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -11860,7 +11917,8 @@
             "BoardState",
             "Clock",
             "AccuracyStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -12038,7 +12096,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -12236,7 +12295,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -12451,7 +12511,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -12649,7 +12710,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -12847,7 +12909,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -13045,7 +13108,8 @@
             "BoardState",
             "Clock",
             "AccuracyStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -13223,7 +13287,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -13401,7 +13466,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -13599,7 +13665,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -13797,7 +13864,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -13975,7 +14043,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -14153,7 +14222,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -14351,7 +14421,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -14529,7 +14600,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -14707,7 +14779,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -14905,7 +14978,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -15136,7 +15210,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -15314,7 +15389,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         }
       ]
     },
@@ -15518,7 +15594,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -15696,7 +15773,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -15874,7 +15952,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -16052,7 +16131,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -16250,7 +16330,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -16428,7 +16509,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -16606,7 +16688,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -16804,7 +16887,8 @@
             "BoardState",
             "Clock",
             "AccuracyStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -17019,7 +17103,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -17255,7 +17340,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -17433,7 +17519,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -17631,7 +17718,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -17809,7 +17897,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -18060,7 +18149,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -18258,7 +18348,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -18436,7 +18527,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         }
       ]
     },
@@ -18620,7 +18712,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -18798,7 +18891,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -19019,7 +19113,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -19255,7 +19350,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -19461,7 +19557,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -19639,7 +19736,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -19821,6 +19919,22 @@
             "BoardState",
             "Clock",
             "PlayerStep"
+          ],
+          "interveningControls":[
+            {
+              "replayStep":238,
+              "childIndex":1,
+              "projection":{
+                "EventGamersAreReady":""
+              }
+            },
+            {
+              "replayStep":238,
+              "childIndex":2,
+              "projection":{
+                "EventStartActiveTimer":""
+              }
+            }
           ]
         },
         {
@@ -20019,7 +20133,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -20197,7 +20312,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -20412,7 +20528,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -20648,7 +20765,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -20846,7 +20964,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -21024,7 +21143,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -21222,7 +21342,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -21400,7 +21521,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -21578,7 +21700,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         }
       ]
     },
@@ -21762,7 +21885,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -22030,7 +22154,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -22208,7 +22333,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -22386,7 +22512,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -22632,7 +22759,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -22810,7 +22938,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -22988,7 +23117,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -23286,7 +23416,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -23484,7 +23615,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -23725,7 +23857,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -23903,7 +24036,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -24081,7 +24215,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -24332,7 +24467,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -24568,7 +24704,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         }
       ]
     },
@@ -24752,7 +24889,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -24983,7 +25121,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -25201,6 +25340,46 @@
             "EventPauseActiveTimer",
             "EventActiveTimerChanged",
             "PlayerStep"
+          ],
+          "interveningControls":[
+            {
+              "replayStep":149,
+              "childIndex":1,
+              "projection":{
+                "EventActiveGamerChanged":""
+              }
+            },
+            {
+              "replayStep":149,
+              "childIndex":2,
+              "projection":{
+                "EventPauseActiveTimer":""
+              }
+            },
+            {
+              "replayStep":149,
+              "childIndex":3,
+              "projection":{
+                "EventActiveTimerChanged":{
+                  "NewTimer":[
+                    {
+                      "Duration":[
+                        "30"
+                      ],
+                      "Type":[
+                        "2"
+                      ],
+                      "Value":[
+                        "30"
+                      ]
+                    }
+                  ],
+                  "IsPaused":[
+                    "1"
+                  ]
+                }
+              }
+            }
           ]
         },
         {
@@ -25417,7 +25596,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -25615,7 +25795,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -25813,7 +25994,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -26049,7 +26231,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -26265,7 +26448,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -26501,7 +26685,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -26759,7 +26944,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -26957,7 +27143,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -27135,7 +27322,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         }
       ]
     },
@@ -27387,7 +27575,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -27565,7 +27754,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -27743,7 +27933,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -27941,7 +28132,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -28139,7 +28331,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -28317,7 +28510,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -28525,7 +28719,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -28723,7 +28918,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -28969,7 +29165,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -29200,7 +29397,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -29378,7 +29576,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -29593,7 +29792,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -29771,7 +29971,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -29949,7 +30150,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -30130,6 +30332,46 @@
             "EventPauseActiveTimer",
             "EventActiveTimerChanged",
             "PlayerStep"
+          ],
+          "interveningControls":[
+            {
+              "replayStep":645,
+              "childIndex":1,
+              "projection":{
+                "EventActiveGamerChanged":""
+              }
+            },
+            {
+              "replayStep":645,
+              "childIndex":2,
+              "projection":{
+                "EventPauseActiveTimer":""
+              }
+            },
+            {
+              "replayStep":645,
+              "childIndex":3,
+              "projection":{
+                "EventActiveTimerChanged":{
+                  "NewTimer":[
+                    {
+                      "Duration":[
+                        "30"
+                      ],
+                      "Type":[
+                        "2"
+                      ],
+                      "Value":[
+                        "30"
+                      ]
+                    }
+                  ],
+                  "IsPaused":[
+                    "1"
+                  ]
+                }
+              }
+            }
           ]
         }
       ]
@@ -30387,7 +30629,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -30565,7 +30808,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -30763,7 +31007,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -30979,7 +31224,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -31157,7 +31403,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -31335,7 +31582,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -31513,7 +31761,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -31745,7 +31994,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -31923,7 +32173,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -32121,7 +32372,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -32367,7 +32619,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -32545,7 +32798,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -32803,7 +33057,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -32981,7 +33236,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -33179,7 +33435,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -33377,7 +33634,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         }
       ]
     },
@@ -33641,7 +33899,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -33819,7 +34078,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -33997,7 +34257,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -34175,7 +34436,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -34426,7 +34688,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -34604,7 +34867,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -34782,7 +35046,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         },
         {
           "choice":{
@@ -35018,7 +35283,8 @@
             "BoardState",
             "Clock",
             "PlayerStep"
-          ]
+          ],
+          "interveningControls":[]
         }
       ]
     }

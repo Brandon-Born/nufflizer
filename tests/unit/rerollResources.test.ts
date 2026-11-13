@@ -93,8 +93,7 @@ describe("recorded reroll resource transactions", () => {
       const ledger = report.rerollResources;
       expect(ledger.decisionCount).toBe(f.decisions.length);
       const unqualified = (raw: (typeof f.decisions)[number]) =>
-        !!raw.choice.step.ThrowTeamMateStep ||
-        raw.interveningTags.includes("EventActiveGamerChanged");
+        !!raw.choice.step.ThrowTeamMateStep;
       expect(ledger.unresolvedCount).toBe(
         f.decisions.filter(unqualified).length
       );
@@ -605,7 +604,7 @@ describe("recorded reroll resource transactions", () => {
   );
 });
 
-it.each(["demo1.bbr", "demo11.bbr"])(
+it.each(["demo1.bbr", "demo11.bbr", "demo6.bbr", "demo7.bbr"])(
   "[cli-worker] exports every %s resource choice independently of top moments",
   (file) => {
     const sample = evidence.files.find((f) => f.file === file)!;
@@ -635,6 +634,10 @@ it.each(["demo1.bbr", "demo11.bbr"])(
     expect(r.rerollResources.unresolvedCount).toBe(
       file === "demo1.bbr" ? 1 : 0
     );
+    if (["demo6.bbr", "demo7.bbr"].includes(file))
+      expect(
+        r.rerollResources.decisions.filter((d) => d.decisionWait)
+      ).toHaveLength(1);
     const text = run("text");
     expect(text.status, text.stderr).toBe(0);
     expect(text.stdout).toContain(
@@ -645,6 +648,8 @@ it.each(["demo1.bbr", "demo11.bbr"])(
     expect(text.stdout).toContain(
       "This decision adds no random outcome or luck score"
     );
+    if (["demo6.bbr", "demo7.bbr"].includes(file))
+      expect(text.stdout).toContain("controller remains unknown");
   },
   30000
 );

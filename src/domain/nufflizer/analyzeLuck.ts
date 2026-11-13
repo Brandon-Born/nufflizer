@@ -1255,6 +1255,8 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   const ambiguousQuestionIds=new Set([...questionScan.ambiguousQuestions].flatMap(i=>diceInventory.orderedSources[i]?.id?[diceInventory.orderedSources[i]!.id!]:[]));
   const ambiguousInitialIds=new Set([...questionScan.ambiguousInitials].flatMap(e=>e.id?[e.id]:[]));
   const [homeTeam, awayTeam] = selectMatchTeams(replay);
+  const rerollResources = findRerollResources(replay, ownership, catchResumes,
+    [homeTeam.id, awayTeam.id]);
   const teamNameById = new Map<string, string>(
     replay.teams.map((team) => [team.id, team.name] satisfies [string, string])
   );
@@ -1294,6 +1296,11 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     ])
   );
   const rerollCounters = findRerollCounterEvidence(inputReplay);
+  for (const d of rerollResources.decisions) if (d.decisionWait) {
+    const w = d.decisionWait;
+    for (const id of [w.activeGamerSourceId, w.pauseSourceId, w.timerSourceId,
+      w.resumedStepSourceId]) activationEvidenceSources.add(id);
+  }
   for(const {identity:p} of failedNumericRetries) {
     activationEvidenceSources.add(p.choice.id!);
     activationEvidenceSources.add(p.gateSkill!.id!);
@@ -2575,7 +2582,10 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     )
   } satisfies LuckReport["coverage"];
   const recruitments = observeRecruitmentPurchases(replay);
-  const rerollResources = findRerollResources(replay, ownership, catchResumes, [homeAggregate.teamId, awayAggregate.teamId], normalizedByRaw);
+  const rawChoices = replay.turns.flatMap(t => t.events).filter(e => recordedRerollChoice(e));
+  for (const [i, raw] of rawChoices.entries())
+    rerollResources.decisions[i]!.decisionEventId = normalizedByRaw.get(raw)?.id ??
+      rerollResources.decisions[i]!.decisionEventId;
   for(const event of events){
     const choice=event.metadata.recordedRerollChoice;
     if(choice && event.label==="Unknown excluded from score")event.label=choice.used===null

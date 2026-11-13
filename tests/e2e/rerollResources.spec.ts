@@ -4,6 +4,20 @@ import { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
 
 for (const c of [
   {
+    file: "demo6",
+    count: 12,
+    unresolved: 0,
+    source: "source-971",
+    line: "The controller remains unknown"
+  },
+  {
+    file: "demo7",
+    count: 15,
+    unresolved: 0,
+    source: "source-5448",
+    line: "The controller remains unknown"
+  },
+  {
     file: "demo1",
     count: 21,
     unresolved: 1,
@@ -74,7 +88,9 @@ for (const c of [
     await expect(row).toContainText(
       c.file === "demo11"
         ? "Recorded team reroll not used"
-        : "Recorded team reroll use"
+        : c.file === "demo6"
+          ? "Recorded team reroll spend"
+          : "Recorded team reroll use"
     );
     await row.locator("summary").click();
     await expect(row).toContainText(c.line);
@@ -100,7 +116,7 @@ for (const c of [
     const saved = JSON.parse(
       readFileSync((await (await pending).path())!, "utf8")
     );
-    expect(saved.schemaVersion).toBe("2.58");
+    expect(saved.schemaVersion).toBe("2.59");
     expect(saved.rerollResources).toEqual(report.rerollResources);
     expect(saved.verdict.luckierTeam).toBe("unknown");
     await page.getByRole("button", { name: "Reset filters" }).click();

@@ -30,12 +30,16 @@ for path in sorted(Path("demo-replays").glob("*.bbr")):
     root = inv.parse_xml(inv.decode_replay(path))
     pending = None
     intervening = []
+    controls = []
     decisions = []
     for rn, outer in enumerate(root.findall("ReplayStep"), 1):
         for ci, child in enumerate(outer):
             if child.tag != "EventExecuteSequence":
                 if pending is not None:
                     intervening.append(child.tag)
+                    if child.tag not in ("BoardState", "Clock"):
+                        controls.append(dict(replayStep=rn, childIndex=ci,
+                                             projection={child.tag: project(child)}))
                 continue
             for si, entry in enumerate(child.iter("StepResult")):
                 step = inv.decode_message(entry.findtext("./Step/MessageData"))
@@ -48,10 +52,13 @@ for path in sorted(Path("demo-replays").glob("*.bbr")):
                     if node.tag in ("QuestionTeamRerollUsage", "QuestionBlockDice"):
                         pending = row
                         intervening = []
+                        controls = []
                     elif node.tag == "ResultTeamRerollUsage":
-                        decisions.append(dict(choice=row, precedingQuestion=pending, interveningTags=intervening))
+                        decisions.append(dict(choice=row, precedingQuestion=pending, interveningTags=intervening,
+                                              interveningControls=controls))
                         pending = None
                         intervening = []
+                        controls = []
                     elif pending is not None:
                         intervening.append(node.tag)
     files.append(dict(file=path.name, sha256=hashlib.sha256(path.read_bytes()).hexdigest(), decisions=decisions))

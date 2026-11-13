@@ -393,6 +393,7 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(response.status, JSON.stringify(payload).slice(0, 200)).toBe(200);
     const report = LuckReportSchema.parse(payload),
       ranges = report.events.filter((e) => e.possessionBounds);
+    expect(report.rerollResources.decisions.find(d=>d.decisionSourceId==="source-971")).toMatchObject({status:"linked", teamId:"1", decisionWait:{controller:null,activeGamerSourceId:"source-967",pauseSourceId:"source-968",timerSourceId:"source-969",resumedStepSourceId:"source-970"}});
     expect(ranges.map((e) => e.metadata.locator?.replayStep)).toEqual([
       99, 306
     ]);
@@ -500,6 +501,7 @@ describe("POST /api/nufflizier/analyze", () => {
     const response=await POST(new Request("http://localhost/api/nufflizier/analyze",{method:"POST",body:form}));
     const body=await response.json();expect(response.status,JSON.stringify(body).slice(0,200)).toBe(200);
     const report=LuckReportSchema.parse(body),e=report.events.find(e=>e.metadata.sourceId==="source-3098")!;
+    expect(report.rerollResources.decisions.find(d=>d.decisionSourceId==="source-5448")).toMatchObject({status:"linked",teamId:"1",decisionWait:{controller:null,activeGamerSourceId:"source-5444",pauseSourceId:"source-5445",timerSourceId:"source-5446",resumedStepSourceId:"source-5447"}});
     const recovery=report.events.find(e=>e.metadata.sourceId==="source-1746")!;
     expect(recovery.weightedDelta).toBe(-0.75);expect(recovery.metadata.regenerationAftermath).toMatchObject({checkpointAfter:1747,controlSourceIds:["source-1747"],observation:{cell:{x:-1,y:-1},situationCode:4,statusCode:4,canAct:null}});
     expect(recovery.metadata.regenerationReturn).toBeUndefined(); // Failed recovery is not a successful return trace.
