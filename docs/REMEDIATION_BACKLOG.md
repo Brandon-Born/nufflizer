@@ -352,7 +352,7 @@ Primary starting references: [parser entity-expansion DoS](https://github.com/Na
 
 ## Current acceptance audit
 
-Updated2026-11-12 for schema2.46/dice-only-22/context mobility-possession-37. Every original issue, dependency and acceptance criterion above is retained. Thirteen issues are closed and fifteen remain open. An open broad issue is not a reason to stop its independently actionable engineering. This table separates implementation work from precise absent evidence and final acceptance; it does not replace the ledger.
+Updated2026-11-12 for schema2.47/dice-only-22/context mobility-possession-38. Every original issue, dependency and acceptance criterion above is retained. Thirteen issues are closed and fifteen remain open. An open broad issue is not a reason to stop its independently actionable engineering. This table separates implementation work from precise absent evidence and final acceptance; it does not replace the ledger.
 
 | ID | Existing acceptance evidence | Remaining input or acceptance gap | Next actionable work |
 | --- | --- | --- | --- |
