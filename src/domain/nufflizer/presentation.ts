@@ -64,6 +64,12 @@ export function explainObservedDice(
   return null;
 }
 
+export function explainRegenerationAftermath(event:LuckReport["events"][number]):string|null {
+  const a=event.metadata.regenerationAftermath;
+  if(!a)return null;
+  return `After Regeneration ${event.actualSuccess ? "succeeded" : "failed"}, the first supported snapshot shows player ${event.playerId} off the pitch in ${a.observation.situationCode === 1 ? "reserves" : "the injured box"} (checkpoint after source ${a.checkpointAfter}). The earlier removal alone did not determine this recovery result. ${a.observation.canAct===null ? "The snapshot omits the action-availability flag; it stays unknown." : `The action-availability flag is recorded as ${a.observation.canAct}; an off-pitch flag does not establish a legal activation.`} ${a.observation.statusCode===null ? "The omitted status flag also stays unknown. " : ""}This does not prove immediate re-entry, a useful activation or final match availability. No extra luck score or contextual value is added.`;
+}
+
 export function explainInjuryObservation(event:LuckReport["events"][number]):string|null {
   const observation=event.metadata.injuryObservation;
   if(!observation)return null;

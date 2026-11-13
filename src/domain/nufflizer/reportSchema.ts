@@ -26,6 +26,7 @@ import { REPLAY_LIMITS } from "@/domain/replay/limits";
 import { summarizeRollFamilies } from "./rollCoverage";
 import { summarizeDamageSteps } from "./damageSteps";
 import { validReportedArmorModifierUse } from "./armorModifierBudget";
+import { validReportedRecoveryControl,validReportedRegenerationAftermath } from "./regenerationAftermath";
 import { summarizeContextEvidence } from "./contextCoverage";
 import { observedBounceDirection } from "./ballConsequences";
 import { summarizeMovementFall } from "./movementConsequences";
@@ -250,6 +251,15 @@ export const LuckEventMetadataSchema = z.strictObject({
 
   skillUsage: z.strictObject({ skillId: z.number().int().nonnegative(), used: z.boolean() }).optional(),
   armorModifierUse:z.strictObject({skillId:z.literal(13),armorSourceId:text,damageStepSourceIndex:count,subjectId:text,subjectTeamId:text}).optional(),
+  recoveryControl:z.discriminatedUnion("kind",[
+    z.strictObject({kind:z.literal("standby"),phase:z.literal(5),gamerId:z.union([z.literal(0),z.literal(1)]).nullable()}),
+    z.strictObject({kind:z.literal("end"),reason:z.literal(2),gamerId:z.union([z.literal(0),z.literal(1)])}),
+    z.strictObject({kind:z.literal("gamer"),gamerId:z.union([z.literal(0),z.literal(1)])}),
+    z.strictObject({kind:z.literal("pause")}),
+    z.strictObject({kind:z.literal("timer"),duration:finite.nonnegative().max(Number.MAX_SAFE_INTEGER),timerType:count,value:finite.nonnegative().max(Number.MAX_SAFE_INTEGER),team:z.union([z.literal(0),z.literal(1)]).optional(),isPaused:z.union([z.literal(0),z.literal(1)]).optional()})
+  ]).optional(),
+  regenerationAftermath:z.strictObject({beforeCheckpointAfter:count,checkpointAfter:count,replayStep:z.number().int().positive(),childIndex:count,rosterIndex:z.union([z.literal(0),z.literal(1)]),
+    controlSourceIds:z.array(text).min(1).max(5),observation:z.strictObject({cell:z.strictObject({x:z.literal(-1),y:z.literal(-1)}),situationCode:z.union([z.literal(1),z.literal(4)]),statusCode:z.number().int().nullable(),canAct:z.boolean().nullable(),tackleZone:z.boolean().nullable()})}).optional(),
   activationLoss: z.strictObject({
     rollSourceId: text, rollSourceIndex: count, declarationSourceId: text, skillSourceId: text,
     followingActivationSourceId: text, followingSourceIndex: count, followingPlayerId: text,
@@ -2308,6 +2318,7 @@ export const LuckReportSchema = z
         "Scored numeric checks require exact supported fixed pre-roll modifier receipts; post-roll, unknown or duplicate modifiers cannot certify these odds.");
       else require(fixed===undefined,"Only a supported scored numeric check carries a fixed-modifier receipt.");
       const injuryObservation=event.metadata.injuryObservation;
+      require(validReportedRecoveryControl(event)&&validReportedRegenerationAftermath(event,sources,report.coverage.sourceRecordCount),"Regeneration aftermath requires its first same-frame owned off-pitch observation and the exact supported ordered control bridge, separately from dice and availability.");
       require(validReportedArmorModifierUse(event,sources),"A recorded Mighty Blow armor use requires its separate holder, adjacent affected subject and exact committed +1 armor evidence without odds or a score.");
       if(injuryObservation)require(event.type === "injury" && (event.metadata.injuryScoring ? event.scoringStatus === "scored" : event.scoringStatus === "excluded") && event.metadata.isRollCandidate === true &&
         event.probabilitySuccess === null && event.actualSuccess === null && (event.metadata.injuryScoring || (event.delta === 0 && event.weightedDelta === 0)) &&

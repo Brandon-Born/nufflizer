@@ -29,6 +29,7 @@ import {
   formatContextComponentSum,
   PARTIAL_CONTEXT_SCOPE,
   explainInjuryObservation,
+  explainRegenerationAftermath,
   explainDiceCensus,
   explainObservedDice,
   explainDriveEffectExpiry,
@@ -862,6 +863,11 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                             {moment.metadata.injuryObservation ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainInjuryObservation(moment)}
+                              </p>
+                            ) : null}
+                            {moment.metadata.regenerationAftermath ? (
+                              <p className="mt-1 text-xs text-amber-100/80">
+                                {explainRegenerationAftermath(moment)}
                               </p>
                             ) : null}
                             {moment.contextualImpact ? (

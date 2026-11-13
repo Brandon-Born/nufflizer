@@ -27,6 +27,7 @@ import { summarizeContextComponents } from "./contextComponents";
 import { attachInjuryObservations } from "./injuryObservation";
 import { attachCategoricalInjuries } from "./categoricalInjury";
 import { findMightyBlowArmorUses } from "./armorModifierBudget";
+import { findRegenerationAftermath } from "./regenerationAftermath";
 import { attachInjuryTables } from "./injuryTable";
 import { attachBlockPush } from "./blockPush";
 import { attachBlockCrowd } from "./blockCrowd";
@@ -1221,6 +1222,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   const diceLinks: DiceLinks = new Map();
   const observedRerollDice = findObservedRerollDice(replay);
   const armorModifierUses = findMightyBlowArmorUses(replay, ownership);
+  const recoveryState = findRegenerationAftermath(replay, ownership);
   const teamDiceIdentityByQuestion = new Map(
     findTeamDiceIdentities(replay).map((p) => [p.question.id, p])
   );
@@ -1247,6 +1249,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   );
   const rerollCounters = findRerollCounterEvidence(inputReplay);
   for (const source of armorModifierUses.keys()) activationEvidenceSources.add(source);
+  for (const source of recoveryState.controls.keys()) activationEvidenceSources.add(source);
   for (const [source, proof] of rerollCounters) {
     activationEvidenceSources.add(source);
     activationEvidenceSources.add(proof.questionSourceId);
@@ -1725,6 +1728,10 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
         continue;
       }
       const armorUse = armorModifierUses.get(event.id ?? "");
+      const recoveryControl = recoveryState.controls.get(event.id ?? "");
+      if(recoveryControl)normalized.metadata.recoveryControl=recoveryControl;
+      const recoveryAfter = recoveryState.aftermath.get(event.id ?? "");
+      if(recoveryAfter && normalized.metadata.damage?.regeneration && normalized.scoringStatus==="scored")normalized.metadata.regenerationAftermath=recoveryAfter;
       if (armorUse) {
         normalized.metadata.armorModifierUse = armorUse;
         normalized.metadata.skillUsage = {skillId:13,used:true};
