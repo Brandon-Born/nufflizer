@@ -30,6 +30,7 @@ import {
   explainRegenerationReturn,
   explainNumericRerollScore,
   explainNumericOriginal,
+  explainCatchRerollResume,
   formatActualOutcome,
   formatContextComponentSum,
   PARTIAL_CONTEXT_SCOPE,
@@ -162,6 +163,8 @@ function formatTeamSummary(
       .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainRegenerationAftermath(event)}`),
     ...report.events.filter(event=>event.metadata.regenerationReturn).slice(0,20)
       .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainRegenerationReturn(event)}`),
+    ...report.events.filter(event=>event.metadata.catchRerollResume).slice(0,20)
+      .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainCatchRerollResume(event)}`),
     ...report.events.filter(event=>event.metadata.numericOriginal).slice(0,20)
       .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainNumericOriginal(event)}`),
     ...report.events.filter(event=>event.metadata.rerollDraws).slice(0,20)
@@ -289,6 +292,7 @@ function formatTeamSummary(
         explainRegenerationReturn(moment),
         explainNumericRerollScore(moment),
         explainNumericOriginal(moment),
+        explainCatchRerollResume(moment),
         explainBlockPush(moment),
         explainOwnership(moment),
         explainPreRollEvidence(moment.metadata.preRoll),

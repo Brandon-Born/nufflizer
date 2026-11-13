@@ -79,7 +79,10 @@ describe("independent public numeric-reroll draw evidence", () => {
         ),
         byLocator = new Map(r.events.map((e) => [key(e.metadata.locator), e]));
       const actual = r.events.filter((e) => e.metadata.rerollDraws);
-      expect(actual).toHaveLength(f.cases.length);
+      expect(actual.filter(e=>e.metadata.catchRerollResume).map(e=>e.metadata.sourceId)).toEqual(f.file==="demo4.bbr"?["source-1722"]:[]);
+      // These frozen 110 direct-prefix witnesses remain unchanged. The one
+      // ready/start continuation has its own independent raw witness suite.
+      expect(actual.filter(e=>!e.metadata.catchRerollResume)).toHaveLength(f.cases.length);
       for (const c of f.cases) {
         const e = byLocator.get(key(c.replacement.locator))!,
           first = byLocator.get(key(c.initial.locator))!,

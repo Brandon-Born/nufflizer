@@ -3,6 +3,11 @@ import { recordedInjuryName } from "./injuryObservation";
 import type { LuckEventType, LuckReport } from "./types";
 import { LuckEventTypeSchema } from "./reportSchema";
 
+export function explainCatchRerollResume(event: LuckReport["events"][number]): string | null {
+  const r=event.metadata.catchRerollResume;if(!r)return null;
+  return `This Catch resumes after the ready signal (source ${r.readySourceIndex}) and timer restart (source ${r.timerSourceIndex}). ${r.controller.changeSourceIndex===null?"The preceding checkpoint already records this controller.":`An explicit controller change at source ${r.controller.changeSourceIndex} precedes the question.`} The menu and resumed snapshots retain the same catcher, square, controller and observed team-turn counters, with ${r.menu.teamRerolls} team reroll${r.menu.teamRerolls===1?"":"s"} before the decision. The board's active player is ${r.menu.activePlayerId??"unknown"}; this Catch belongs to player ${event.playerId}. ${r.menu.periodCode===null?"Period remains unknown.":"The period is recorded separately."} ${r.menu.actorCanAct===null?"Action availability remains unknown.":"The recorded action flag does not establish full legal eligibility."} These pre-decision observations do not fill a missing later counter. The recorded choice spends one team reroll; its tactical cost and later consequences are separate.`;
+}
+
 export function explainNumericOriginal(event: LuckReport["events"][number]): string | null {
   const r=event.metadata.numericOriginal;
   if(!r) return null;

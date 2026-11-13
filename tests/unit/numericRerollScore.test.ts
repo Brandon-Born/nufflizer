@@ -433,3 +433,34 @@ describe("unindexed or contradictory raw reroll order", () => {
     }
   );
 });
+
+it.each([1, 2, 4, 7])(
+  "rejects a coherently relabeled family%s numeric score",
+  (family) => {
+    const r = analyze({ family, target: 3, first: 1, second: 6, use: true }),
+      e = r.events.find((e) => e.scoringStatus === "scored")!,
+      old = e.type;
+    e.type =
+      family === 1 ? "armor_break" : family === 2 ? "ball_handling" : "dodge";
+    r.coverage.scoredByType[old]--;
+    r.coverage.scoredByType[e.type]++;
+    const team = r.teams.find((t) => t.teamId === e.teamId)!;
+    const before =
+        family === 1 ? "movementRisk" : family === 2 ? "dodge" : "ballHandling",
+      after =
+        family === 1 ? "armorBreak" : family === 2 ? "ballHandling" : "dodge";
+    team.categoryScores[before] -= e.weightedDelta;
+    team.categoryScores[after] += e.weightedDelta;
+    r.keyMoments = r.events
+      .filter((e) => e.scoringStatus === "scored")
+      .sort((a, b) => Math.abs(b.weightedDelta) - Math.abs(a.weightedDelta));
+    const parsed = LuckReportSchema.safeParse(r);
+    expect(parsed.success).toBe(false);
+    if (!parsed.success)
+      expect(
+        parsed.error.issues.some((i) =>
+          i.message.includes("A scored numeric check's category must match")
+        )
+      ).toBe(true);
+  }
+);

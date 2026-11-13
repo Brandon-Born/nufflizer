@@ -36,7 +36,7 @@ const key = (l: Partial<Locator> | undefined) =>
 const n = (p: Projection, k: string) => Number(p[k]?.[0]);
 const newSources: Record<string, string[]> = {
   "demo11.bbr": ["source-4546"],
-  "demo4.bbr": ["source-1715"],
+  "demo4.bbr": [],
   "demo9.bbr": ["source-3154"]
 };
 describe("independent embedded numeric original source evidence", () => {
@@ -89,7 +89,7 @@ describe("independent embedded numeric original source evidence", () => {
         expect(n(roll, "Outcome")).toBe(0);
         expect(n(die, "DieType")).toBe(0);
         expect(face).toBeLessThan(target);
-        if (newSources[f.file]?.includes(q.metadata.sourceId!)) {
+        if (["source-4546","source-1715","source-3154"].includes(q.metadata.sourceId!)) {
           expect(q.metadata.initialRosterName).toBe(
             f.file === "demo9.bbr" ? undefined : "Player 16"
           );

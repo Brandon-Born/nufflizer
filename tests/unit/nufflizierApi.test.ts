@@ -2,19 +2,11 @@
 // suite, preserving the production4s deadline without unrelated CPU contention.
 import { LuckReportSchema } from "@/domain/nufflizer/reportSchema";
 import { readFileSync } from "node:fs";
-import path from "node:path";
 
 import { describe, expect, it, vi } from "vitest";
 
 import { envelope, sequence, rollXml } from "../helpers/replay";
 import { POST } from "@/app/api/nufflizier/analyze/route";
-
-function readFixture(name: string): string {
-  return readFileSync(
-    path.resolve(process.cwd(), "tests", "fixtures", "replays", name),
-    "utf-8"
-  );
-}
 
 describe("POST /api/nufflizier/analyze", () => {
   it("exports demo1's original failed Catch envelope through the real bounded worker", async () => {
@@ -255,12 +247,12 @@ describe("POST /api/nufflizier/analyze", () => {
     });
     expect(report.teams.every((t) => t.impactCount === 0)).toBe(true);
   }, 20000);
-  it("returns a valid nufflizier report payload", async () => {
+  it("returns a valid report including the resumed real Catch and its two draws", async () => {
     const formData = new FormData();
     formData.append(
       "replay",
-      new File([readFixture("sample-basic.xml")], "sample-basic.xml", {
-        type: "application/xml"
+      new File([readFileSync("demo-replays/demo4.bbr")], "source4.bbr", {
+        type: "application/octet-stream"
       })
     );
 
@@ -287,6 +279,12 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(payload).toHaveProperty("weightTable");
     expect(payload).toHaveProperty("howScoredSummary");
 
+    const report=LuckReportSchema.parse(payload),catchRoll=report.events.find(e=>e.metadata.sourceId==="source-1722")!;
+    expect(catchRoll.scoringStatus).toBe("scored");expect(catchRoll.probabilitySuccess).toBeCloseTo(8/9,12);expect(catchRoll.weightedDelta).toBeCloseTo(-11/30,12);
+    expect(catchRoll.metadata.catchRerollResume).toMatchObject({readySourceIndex:1717,timerSourceIndex:1718,menu:{checkpointAfter:1715,activeGamerId:1,activePlayerId:46,teamTurns:[5,6],periodCode:null,teamRerolls:1},resumed:{checkpointAfter:1718,periodCode:null,teamRerolls:1}});
+    expect(catchRoll.metadata.teamRerollsSpent).toBe(1);expect(catchRoll.metadata.preRoll).toBeUndefined();expect(catchRoll.contextualImpact).toBeUndefined();
+    expect(report.events.find(e=>e.metadata.sourceId==="source-1715")!.scoringStatus).toBe("excluded");
+
     const keyMoments = payload.keyMoments as
       Array<{ explainability?: Record<string, unknown> }> | undefined;
     expect(Array.isArray(keyMoments)).toBe(true);
@@ -294,7 +292,7 @@ describe("POST /api/nufflizier/analyze", () => {
       expect(keyMoments[0]?.explainability).toHaveProperty("formulaSummary");
       expect(keyMoments[0]?.explainability).toHaveProperty("inputsSummary");
     }
-  });
+  },20000);
 
   it("exports actual3+ gate, conditional fresh pools and drive expiries through the upload worker", async () => {
     const formData = new FormData();

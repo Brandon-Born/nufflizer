@@ -1,3 +1,4 @@
+import { findCatchRerollResumes } from "./catchRerollResume";
 import { findNumericQuestionOriginals, findNumericQuestionCopies, type NumericQuestionOriginal } from "./numericQuestionOriginal";
 import {
   findTeamDiceIdentities,
@@ -413,7 +414,7 @@ function buildNormalizedEvent(
     rerollLink?.originalId ?? rerollLink?.questionId ?? event.id ?? ""
   );
   const preRoll =
-    recordedPreRoll && event.sourceTag !== "QuestionTeamRerollUsage"
+    recordedPreRoll && !rerollLink?.catchResume && event.sourceTag !== "QuestionTeamRerollUsage"
       ? {
           ...recordedPreRoll,
           pickupSuccessors:
@@ -463,6 +464,7 @@ function buildNormalizedEvent(
     lonerGate: rerollLink?.lonerGate,
     proGate: rerollLink?.proGate,
     rerollPolicy: rerollLink?.policy,
+    catchRerollResume: rerollLink?.catchResume,
     mergedRerollAnchorId: rerollLink?.mergedIntoId
   };
   const normalizationFlags: string[] = [];
@@ -1237,6 +1239,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   const diceInventory = inventoryDiceRecords(replay);
   const rawById=new Map(diceInventory.orderedSources.map(e=>[e.id,e]));
   const questionScan=findNumericQuestionOriginals(diceInventory.orderedSources,replay.replayVersion,ownership);
+  const catchResumes=findCatchRerollResumes(replay,diceInventory.orderedSources,questionScan.originals,ownership);
   const originalByRaw=new Map([...questionScan.originals].map(([i,p])=>[diceInventory.orderedSources[i]!,p] as const));
   const copiesByRaw=new Map([...findNumericQuestionCopies(diceInventory.orderedSources,questionScan)].map(([i,p])=>[diceInventory.orderedSources[i]!,p] as const));
   const ambiguousQuestionIds=new Set([...questionScan.ambiguousQuestions].flatMap(i=>diceInventory.orderedSources[i]?.id?[diceInventory.orderedSources[i]!.id!]:[]));
@@ -1530,7 +1533,8 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       ownership,
       replay.replayVersion,
       questionCopies,
-      ambiguousQuestionIds
+      ambiguousQuestionIds,
+      catchResumes
     );
     linkObservedSkillRerolls(
       replayTurn.events,

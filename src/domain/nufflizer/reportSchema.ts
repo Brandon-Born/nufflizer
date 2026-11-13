@@ -1,3 +1,4 @@
+import { validReportedCatchRerollResume } from "./catchRerollResume";
 import { validReportedNumericQuestionOriginal,validReportedNumericQuestionCopy } from "./numericQuestionOriginal";
 import { isFixedNumericModifier } from "./numericCheckContract";
 import { summarizeDiceRecords } from "./diceEvidence";
@@ -187,6 +188,16 @@ const activationEnd = z.strictObject({
 });
 const rerollCounterObservation=z.strictObject({checkpointAfter:count,replayStep:z.number().int().positive(),childIndex:count,
   teamId:text,teamTurn:z.number().int().positive(),periodCode:z.number().int().min(0).max(2).nullable(),count:z.number().int().min(0).max(16)});
+const catchResumeSnapshot = z.strictObject({
+  checkpointAfter: count, replayStep: count, childIndex: count,
+  phaseCode: z.literal(5), periodCode: count.nullable(), turnsPerPeriod: count,
+  activeTeamIndex: z.union([z.literal(0),z.literal(1)]),
+  activeGamerId: z.union([z.literal(0),z.literal(1)]), activePlayerId: count.nullable(),
+  teamTurns: z.tuple([count,count]), teamRerolls: count,
+  teamIds: z.tuple([z.union([z.literal(0),z.literal(1)]).nullable(),z.union([z.literal(0),z.literal(1)]).nullable()]),
+  actorCell: pitchCell, actorCanAct: z.boolean().nullable(), actorTackleZone: z.boolean().nullable(),
+  actorStatus: count.nullable(), actorSituation: count.nullable()
+});
 export const LuckEventMetadataSchema = z.strictObject({
   combinedMovement:z.strictObject({stepSourceId:text,policy:z.enum(["fresh_rush_then_dodge","team_rush_then_dodge"]),questionSourceId:text.optional(),decisionSourceId:text.optional(),gamerId:z.union([z.literal(0),z.literal(1)]).optional(),
     rushSourceId:text,dodgeSourceId:text,doMoveSourceId:text,outcomeSourceId:text,originalCheckpointAfter:count,checkpointAfter:count,from:pitchCell,to:pitchCell,
@@ -309,6 +320,12 @@ export const LuckEventMetadataSchema = z.strictObject({
   initialRosterName: z.string().max(320).optional(),
   embeddedDamageOriginalId: text.optional(),
   originalDice: z.unknown().optional(),
+  catchRerollResume: z.strictObject({
+    controller: z.strictObject({beforeCheckpointAfter:count,beforeGamerId:z.union([z.literal(0),z.literal(1)]).nullable(),changeSourceIndex:count.nullable()}),
+    questionStepSourceIndex: count, continuationStepSourceIndex: count,
+    readySourceIndex: count, timerSourceIndex: count,
+    menu: catchResumeSnapshot, resumed: catchResumeSnapshot
+  }).optional(),
   numericOriginalCopy:z.strictObject({originalSourceId:text,previousSourceId:text}).optional(),
   numericOriginal: z.strictObject({gamerId:z.union([z.literal(0),z.literal(1)]),canUseTeamReroll:z.boolean(),canUseProReroll:z.boolean()}).optional(),
   rerollOriginalId: text.optional(),
@@ -1420,6 +1437,8 @@ export const LuckReportSchema = z
         "A copied numeric question must retain the immediately preceding same-step menu and one earlier original die, without another draw or score.");
       require(validReportedNumericQuestionOriginal(event,initialRerollDiceBySource),
         "An embedded numeric original must bind its one fresh failed initial die, recorded offer, owner and single-attempt arithmetic without a later-policy or context claim.");
+      require(validReportedCatchRerollResume(event,sources,report.coverage.sourceRecordCount),
+        "A resumed Catch reroll requires its exact readiness/timer prefix, observed controller/turn/actor snapshots and one ordered team decision; unknown period or availability stays unknown.");
       require(validReportedNumericRerollScore(event,sources,initialRerollDiceBySource,rootDiceBySource),
         "Numeric reroll luck must count its two source-qualified actual draws exactly once, separately from the whole-check policy chance.");
       require(validReportedOwnership(event,report,sources,identityMutations),
@@ -2357,6 +2376,8 @@ export const LuckReportSchema = z
       if (event.metadata.blockSelection) require(event.metadata.sourceTag === "ResultBlockRoll" && !event.metadata.isRollCandidate && event.scoringStatus === "excluded", "An observed selected block face is a deterministic summary of a linked pool.");
       const fixed=event.metadata.fixedNumericModifiers;
       const numeric=event.scoringStatus==="scored" && (event.metadata.sourceTag==="ResultRoll" || !!event.metadata.numericOriginal) && [1,2,4,7].includes(event.metadata.rollType??-1);
+      if(numeric)require(event.type===(event.metadata.rollType===1?"movement_risk":event.metadata.rollType===2?"dodge":"ball_handling"),
+        "A scored numeric check's category must match its recorded Rush, Dodge, Pickup or Catch family.");
       if(numeric)require(!!fixed && fixed.length===(event.metadata.modifiers??[]).length &&
         new Set(fixed.map(m=>JSON.stringify([m.playerId,m.modifierType,m.skillId,m.effectId]))).size===fixed.length &&
         fixed.every((m,i)=>isFixedNumericModifier(event.metadata.rollType!,{PlayerId:m.playerId,ModifierType:m.modifierType,Skill:m.skillId,Effect:m.effectId,Value:m.value}) && m.value===event.metadata.modifiers![i]) &&

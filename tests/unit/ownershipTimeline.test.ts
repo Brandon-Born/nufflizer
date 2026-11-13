@@ -65,6 +65,18 @@ const witness = JSON.parse(
     cases: RawCase[];
   }[];
 };
+const catchResumeWitness=JSON.parse(readFileSync("tests/fixtures/evidence/bb3-catch-resume.json","utf8")) as {
+ files:{file:string;sha256:string;cases:{initialRoll:Record<string,string[]>;continuation:{tag:string;locator:Locator;payload:Record<string,unknown>}[]}[]}[]
+};
+function resumedCatchMath(file:string,e:LuckEvent){
+ const f=catchResumeWitness.files.find(f=>f.file===file)!,c=f.cases.find(c=>c.continuation.some(x=>x.tag==="ResultRoll"&&key(x.locator,"ResultRoll")===key(e.metadata.locator,e.metadata.sourceTag)))!;
+ expect(c,`resumed Catch ${e.metadata.sourceId} needs its independent raw continuation`).toBeDefined();
+ const target=Number(c.initialRoll.Difficulty[0]),p=(7-target)/6;
+ const result=c.continuation.find(x=>x.tag==="ResultRoll")!.payload;
+ const dice=(result.Dice as {Die:{Value:string[]}[]}[])[0].Die[0];
+ const success=Number(Number(dice.Value[0])>=target);
+ return {probability:1-(1-p)**2,delta:success-2*p,success:!!success};
+}
 const questionWitness = JSON.parse(readFileSync("tests/fixtures/evidence/bb3-numeric-question-originals.json","utf8")) as {
   files:{file:string;sha256:string;cases:{locator:Locator;step:Record<string,string[]>;question:Record<string,string[]>;initialRoll:Record<string,string[]>}[]}[]
 };
@@ -177,6 +189,14 @@ describe("source-qualified time-local player ownership", () => {
           // independently checked by categoricalInjury.test.ts.
           continue;
         }
+        if(e.metadata.catchRerollResume){
+          const math=resumedCatchMath(f.sourceFile,e);
+          expect(p.role).toBe("actor");expect(p.playerId).toBe("41");expect(p.teamId).toBe("1");
+          expect(catchResumeWitness.files.find(x=>x.file===f.sourceFile)!.sha256).toBe(f.sha256);
+          expect(e.metadata.probabilityPolicy).toBe("two_attempt");expect(e.actualSuccess).toBe(math.success);
+          expect(e.probabilitySuccess).toBeCloseTo(math.probability,12);expect(e.delta).toBeCloseTo(math.delta,12);expect(e.weightedDelta).toBeCloseTo(math.delta*1.1,12);
+          continue;
+        }
         if(e.metadata.numericOriginal){
           const f2=questionWitness.files.find(x=>x.file===f.sourceFile)!;
           const c=f2.cases.find(x=>key(x.locator,"QuestionTeamRerollUsage")===key(e.metadata.locator,e.metadata.sourceTag));
@@ -259,6 +279,7 @@ describe("source-qualified time-local player ownership", () => {
               const row=categoricalWitnesses.math.find(t=>t.stunty===table.stunty&&t.thickSkull===table.thickSkull)!.rows.find(t=>t.total===e.metadata.dice!.reduce((a,b)=>a+b,0))!;
               const [a,b="1"]=row.weighted.split("/");return sum+Number(a)/Number(b);
             }
+            if(e.metadata.catchRerollResume)return sum+resumedCatchMath(f.sourceFile,e).delta*1.1;
             if(e.metadata.numericOriginal){
               const raw=questionWitness.files.find(x=>x.file===f.sourceFile)!.cases.find(x=>key(x.locator,"QuestionTeamRerollUsage")===key(e.metadata.locator,e.metadata.sourceTag))!;
               return sum-(7-Number(raw.initialRoll.Difficulty[0]))/6*1.1;

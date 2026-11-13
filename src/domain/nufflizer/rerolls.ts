@@ -1,3 +1,4 @@
+import type { CatchRerollResume } from "./catchRerollResume";
 import { ownerAt, type OwnershipLookup } from "@/domain/replay/ownershipTimeline";
 import { verifyLonerTest } from "@/domain/replay/loner";
 import type { ReplayEvent } from "@/domain/replay/types";
@@ -5,6 +6,7 @@ import { numericCheckExclusion } from "./numericCheckContract";
 
 export type RerollLink = {
   twoAttemptPolicy: boolean;
+  catchResume?: CatchRerollResume["receipt"];
   rerollUsed: boolean;
   questionId?: string;
   originalDice?: unknown;
@@ -289,7 +291,8 @@ export function linkTeamRerolls(
   owners?:OwnershipLookup,
   replayVersion?: string,
   questionCopies?: ReadonlyMap<number,{original:ReplayEvent;emittedOriginal?:ReplayEvent}>,
-  ambiguousQuestionIds?: ReadonlySet<string>
+  ambiguousQuestionIds?: ReadonlySet<string>,
+  catchResumes?: ReadonlyMap<string,CatchRerollResume>
 ): Map<number, RerollLink> {
   const links = new Map<number, RerollLink>();
   const indices=new Map(events.map((event,index)=>[event,index]));
@@ -408,6 +411,7 @@ export function linkTeamRerolls(
     }
     if (
       pending &&
+      !catchResumes?.get(pending.question.id??"")?.span.has(event) &&
       checkpointEpochs &&
       checkpointEpochs.get(event.sourceIndex ?? -1) !==
         checkpointEpochs.get(pending.question.sourceIndex ?? -1)
@@ -440,6 +444,8 @@ export function linkTeamRerolls(
     // break the link; proximity or a later matching actor is insufficient.
     // A checkpoint's repeated carrier marker is an observation, not another
     // roll, choice or ball mutation. An actual unmarked Carrier still breaks.
+    const resume=catchResumes?.get(pending.question.id??"");
+    if(resume && (resume.ready===event || resume.timer===event))continue;
     if (event.sourceTag === "Carrier" && event.checkpointCarrier) continue;
     if (event.sourceTag === "PlayerStep" && sameAction(pending.question, event))
       continue;
@@ -505,6 +511,10 @@ export function linkTeamRerolls(
       const numericPolicyExclusion=numericFamily
         ? numericCheckExclusion(replayVersion,{...question,sourceTag:"ResultRoll",rollType:event.rollType,payload:roll},false) ?? numericCheckExclusion(replayVersion,event,true)
         : undefined;
+      const missingCatchResume = event.rollType === 7 &&
+        question.locator?.replayStep !== undefined && event.locator?.replayStep !== undefined &&
+        event.locator.replayStep > question.locator.replayStep + 1 &&
+        !(resume?.final === event && resume.choice === choice);
       const fullTeam =
         !!question.id && !!choice.id && !!event.id &&
         (question.payload?.GamerId === 0 || question.payload?.GamerId === 1) &&
@@ -512,6 +522,7 @@ export function linkTeamRerolls(
         validOriginal &&
         question.payload?.CanUseTeamReroll === 1 &&
         choice.payload?.Used === 1 &&
+        !missingCatchResume &&
         !pending.conflictingOriginal &&
         (!numericFamily || (orderedSources(question,choice,event) && !numericPolicyExclusion && validFreshReplacement)) &&
         (!pending.originalAlreadyReported || matchedReplacement) &&
@@ -545,9 +556,10 @@ export function linkTeamRerolls(
               ? "retained original already reported; repeated summary is not another attempt"
               : "declined reroll summary does not match valid original dice"
             : choice.payload?.Used === 1 && !fullTeam
-              ? numericPolicyExclusion ?? "committed reroll lacks a matching source-qualified original and fresh replacement"
+              ? missingCatchResume ? "Catch across additional replay frames requires a source-qualified readiness/controller continuation" : numericPolicyExclusion ?? "committed reroll lacks a matching source-qualified original and fresh replacement"
               : undefined,
         twoAttemptPolicy: fullTeam,
+        catchResume: fullTeam && resume?.final===event && resume.choice===choice ? resume.receipt : undefined,
         rerollUsed: choice.payload?.Used === 1,
         questionId: question.id,
         decisionId: choice.id,

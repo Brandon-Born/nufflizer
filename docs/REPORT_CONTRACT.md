@@ -2,7 +2,7 @@
 
 Updated 2026-11-13. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.54`, dice model `dice-only-27` and context model `mobility-possession-41`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.55`, dice model `dice-only-28` and context model `mobility-possession-41`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -649,3 +649,12 @@ A prefix-qualified numeric original can be scored at its own `QuestionTeamReroll
 Canonical adjacent repeated questions use `numericOriginalCopy` and physical summary aliases; copies add no draw/score and must retain ordered same-step/source/role/controller proof. The shared schema checks the real source/path, freshness, face, fixed modifiers, ownership, exact formula and absence of fabricated spending/policy/context claims. A first Catch is not treated as a terminal possession result. Unknown fields in an otherwise known prefix also prevent admission.
 
 Independent83-question prefixes across12 SHA-bound sources and120 first-face cases qualify the scope. Complete parent comparison retains all2,231 earlier scored objects and110 reroll groups, adds exactly three originals (total2,234), removes two kept-summary candidates and exposes two already-counted original-question records. All27 ranges/zero context points and whole-match abstentions remain. See [original-die evidence](NUMERIC_QUESTION_ORIGINAL_EVIDENCE.md). Original broad acceptance and current-schema hosted verification remain open.
+
+
+## Schema2.55 / dice-only-28 / mobility-possession-41: resumed Catch
+
+Required `catchRerollResume` qualifies the observed stationary Catch question→menu checkpoint→empty ready/start→unchanged wait checkpoint→matching continuation→used team choice→fresh result. Its explicit prior controller boundary/change must resolve the controller before the question. Only this proof transports the pending question across those source controls and a post-question controller-observation refresh. Unknown/gated/changed/longer unsupported spans preserve a known first and withhold compound support.
+
+The receipt retains source/locator order, nullable raw period/physical flags, team-turn counters, explicit roster team IDs and the distinct active player/catcher. Its active roster slot must map to the observed owner; missing IDs do not become defaults. One used team reroll is separate from its tactical price or an unobserved later counter. Both actual draw deviations contribute once; whole fixed-policy odds stay separate. No pre-roll/context estimate is implied. A common check also binds every admitted numeric score's category to its recorded Rush/Dodge/Pickup/Catch family, rejecting coherent equal-weight relabeling.
+
+The one independent raw wait prefix, all six replacement cuts and540 synthetic choice trees qualify the scope; prior110 reroll groups and2,233 earlier scored objects stay unchanged. The source1715 first transfers into source1722's two-draw group, retaining total2,234 scored checks and adding one covered replacement (111 numeric rerolls).27 ranges/zero public points and whole-match abstentions remain. See [Catch continuation evidence](CATCH_REROLL_RESUME_EVIDENCE.md). Full original policy/state/context/calibration and hosted acceptance remains open.
