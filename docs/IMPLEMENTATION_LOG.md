@@ -2534,3 +2534,14 @@ Final local validation and conservation:
 4. All29 original work/acceptance packets and ledger IDs/priorities/work/dependencies/statuses match the parent; the current audit now distinguishes the accepted failed core prefixes from still-unscored gates and unqualified successful/mixed policies. Append-only logs retain full parent prefixes. Fresh intended-remote fetch is0/0 divergent before publication; whitespace checks pass. Exact final commit CI is checked after the authorized commit/push, without closing any broad issue on a pending run.
 
 The goal remains active:14 done/14 in_progress/1 open. Full mixed/restricted reroll policies, fair gated scoring, turn resources, unique-outcome/causal coverage, playable state/legal successors, calibrated context and current-schema hosted/integrated acceptance remain original work. No provider/account/Stripe/billing/deployment/production/legacy action occurred.
+
+
+## 2026-11-13 - Pro unused-resource wording follow-up
+
+Exact fedf636ea7216a4d84660911ee4159256e0701b2 CI43471117926 completed/success. Downloaded complete logs independently confirm2,632 pure+31 serial CLI+10 isolated HTTP=2,673 cases, real Redis/build and45 Chromium flows, plus frozen install/audit/lint/types. Receipts:`/tmp/nufflizier-failed-retry-ci.json`, `-ci.log`, `-ci-clean.log` and `-ci-watch.log`.
+
+Late visual review identifies a copy error in the inherited identity sentence: demo11's team option is explicitly unavailable, so Used0 establishes “not used,” not the decline of an available resource. The shared helper now says “Recorded team reroll not used” only for this qualified Pro receipt. The existing two source tests, Pro browser flow and actual Pro CLI text case assert that wording. Applied odds, raw controls, all JSON fields, physical dice, resource-spend ownership, score/context totals and model/schema versions are unchanged.
+
+Focused two-source tests, lint and typecheck pass. Production `PLAYWRIGHT_BROWSERS_PATH=/tmp/nufflizier-remediation-browsers corepack pnpm test:e2e` rebuilds the worker/app and passes all45 flows (`/tmp/nufflizier-failed-retry-copy-e2e.log`). Both actual CLI JSON/text cases pass serially against that rebuilt worker. The initial mobile screenshot contains an incomplete lower paint despite the DOM assertions; an immediate isolated Pro-flow rerun passes1/1 and produces a complete readable screenshot, visually inspected alongside desktop. Log:`/tmp/nufflizier-failed-retry-copy-mobile-recheck.log`; same external screenshot paths. No arbitrary delay or product-layout change is introduced. Other engines/viewports and hosted2.56 remain unverified.
+
+This follow-up retains14 done/15 incomplete and every original acceptance packet. Exact new-head CI is followed after the authorized commit/push; no original issue is closed on a pending run. The goal stays active.

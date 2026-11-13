@@ -7,7 +7,10 @@ import { parseReplayXml } from "@/domain/replay/parseXml";
 import { analyzeReplayLuck } from "@/domain/nufflizer/analyzeLuck";
 import { LuckReportSchema } from "@/domain/nufflizer/reportSchema";
 import { gatedRetryChance } from "@/domain/nufflizer/failedNumericRetry";
-import { explainFailedNumericRetry } from "@/domain/nufflizer/presentation";
+import {
+  explainFailedNumericRetry,
+  explainObservedDice
+} from "@/domain/nufflizer/presentation";
 import { findFailedNumericRetries } from "@/domain/nufflizer/failedNumericRetry";
 import { findTeamDiceIdentities } from "@/domain/nufflizer/diceIdentityLinks";
 import { findNumericQuestionOriginals } from "@/domain/nufflizer/numericQuestionOriginal";
@@ -224,6 +227,12 @@ describe("failed gated numeric retry policies", () => {
       const text = explainFailedNumericRetry(row(c.kept))!;
       expect(text).toContain(c.kind === "loner" ? "77.8%" : "81.5%");
       expect(text).toContain("No fresh Dodge die was rolled");
+      if (c.kind === "pro") {
+        expect(explainObservedDice(row(c.kept))).toContain(
+          "Recorded team reroll not used"
+        );
+        expect(explainObservedDice(row(c.kept))).not.toContain("declined");
+      }
       expect(text).toContain("conditional policy odds add no score");
       expect(text).toContain(
         c.kind === "loner"
@@ -412,6 +421,10 @@ it.each(cases)(
       `source source-${c.kept}: ${c.kind === "loner" ? "Loner" : "Pro"} failed`
     );
     expect(text.stdout).toContain("conditional policy odds add no score");
+    if (c.kind === "pro")
+      expect(text.stdout).toContain(
+        `Source source-${c.kept}: Recorded team reroll not used`
+      );
     expect(text.stdout).toContain(
       c.spent ? "One team reroll was spent" : "no team reroll was spent"
     );

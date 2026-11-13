@@ -69,6 +69,10 @@ for (const c of [
       `${c.name} failed, so the recorded original Dodge was kept`
     );
     await expect(row).toContainText("No fresh Dodge die was rolled");
+    if (c.kind === "pro") {
+      await expect(row).toContainText("Recorded team reroll not used");
+      await expect(row).not.toContainText("declined");
+    }
     await expect(row).toContainText(c.odds);
     await expect(row).toContainText(
       c.spent ? "One team reroll was spent" : "no team reroll was spent"
