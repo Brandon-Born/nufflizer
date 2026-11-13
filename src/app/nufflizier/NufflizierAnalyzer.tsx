@@ -33,7 +33,8 @@ import {
   explainDriveEffectExpiry,
   explainContextCoverage,
   explainRecruitmentEvidence,
-  explainOwnership
+  explainOwnership,
+  explainBlockPush
 } from "@/domain/nufflizer/presentation";
 import { readAnalysisResponse } from "@/lib/readAnalysisResponse";
 import { REPLAY_LIMITS } from "@/domain/replay/limits";
@@ -846,6 +847,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                                 : "n/a"}
                               , weight {moment.explainability.weight}.
                             </p>
+                            {explainBlockPush(moment) ? <p className="mt-2 text-xs text-amber-100/80">{explainBlockPush(moment)}</p> : null}
                             {explainOwnership(moment) ? (
                               <p className="mt-2 text-xs text-slate-300">
                                 {explainOwnership(moment)}

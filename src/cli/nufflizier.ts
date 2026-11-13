@@ -34,7 +34,8 @@ import {
   explainDiceCensus,
   explainObservedDice,
   explainRecruitmentEvidence,
-  explainOwnership
+  explainOwnership,
+  explainBlockPush
 } from "@/domain/nufflizer/presentation";
 import { runAnalysis } from "@/server/runAnalysis";
 
@@ -127,6 +128,8 @@ function formatTeamSummary(
         ? ["Further component groups are retained in JSON."]
         : [])
     ]),
+    `Push decisions: ${report.events.filter(e=>e.metadata.sourceTag==="QuestionPushBack").length} source menus; ${report.events.filter(e=>e.metadata.blockPush?.status==="modeled").length} modeled ordinary position alternatives. These are coach decisions with no added luck score.`,
+    ...report.events.filter(e=>e.metadata.blockPush?.status==="modeled").slice(0,20).map(e=>`Source ${e.metadata.sourceId}: ${explainBlockPush(e)}`),
     ...(injuryObservations.length
       ? [
           `Recorded injury results: ${injuryObservations.length}. These observed labels have unverified odds and are not luck scores or final player availability.`,
@@ -269,6 +272,7 @@ function formatTeamSummary(
         `${moment.scoringStatus} (${moment.statusReason})`,
         moment.explainability.formulaSummary ?? "no formula",
         formatPreRollPosition(moment.metadata.preRoll),
+        explainBlockPush(moment),
         explainOwnership(moment),
         explainPreRollEvidence(moment.metadata.preRoll),
         explainContextImpact(moment),

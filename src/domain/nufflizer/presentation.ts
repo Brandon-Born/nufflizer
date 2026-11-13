@@ -112,6 +112,45 @@ export function explainRecruitmentEvidence(
   return `Recorded mercenary purchase events: ${records.length}; linked roster observations: ${records.filter((r) => r.rosterTeamId !== null).length}. ${reused} ${reused === 1 ? "record reuses" : "records reuse"} an earlier player ID. Selected trait lists describe separate purchases; current skill eligibility remains unverified.`;
 }
 
+export function explainBlockPush(
+  event: LuckReport["events"][number],
+): string | null {
+  const model = event.metadata.blockPush;
+  if (model?.status === "unsupported") {
+    const reasons = {
+      missing_current_state:
+        "current positions or standard-pitch configuration are incomplete",
+      unknown_push_policy:
+        "current push/follow-up skills or effects are unknown or outside this policy",
+      source_choice_mismatch:
+        "the recorded menu or addressed slot does not match the ordinary model",
+      unverified_push_chain: "the source displacement chain does not reconcile",
+      unverified_source_order:
+        "the position frame is interrupted by an unverified transition",
+      cyclic_chain: "a cyclic chain is outside the verified scope",
+      branch_limit: "the full alternative tree exceeds the bounded model",
+    };
+    return `Ordinary push alternatives not modeled: ${reasons[model.reason]}. The existing block dice score is separate; missing alternatives add no tactical value.`;
+  }
+  if (model?.status === "modeled") {
+    const selected = model.branches[model.selectedBranch]!,
+      moves = selected.moves
+        .map(
+          (m) =>
+            `player ${m.playerId} [${m.from.x},${m.from.y}] to [${m.to.x},${m.to.y}]${m.destination === "crowd" ? " into the crowd" : ""}`,
+        )
+        .join("; ");
+    return `After die selection, the recorded menu offers ${model.destinations.length} destination squares. The ordinary model has ${model.branches.length} position branches, including follow-up or staying put. Recorded displacement: ${moves}; the blocker ${selected.follow ? "followed" : "stayed put"}. These coach choices carry no random probability or extra luck score. Positions use checkpoint ${model.checkpointAfter}, with standard-pitch configuration established at ${model.pitchCheckpointAfter}; this is not pre-roll leverage. Ball/terrain reactions, knockdown/damage, injury, turnover and tactical value remain outside this position-only model.`;
+  }
+  const q = event.metadata.pushQuestion;
+  if (q)
+    return `Observed push menu addressed to slot ${q.gamerId}: ${q.offered.map((c) => `[${c.x},${c.y}]`).join(", ")}. The copied block die adds no random outcome. A recorded menu alone does not establish current skill eligibility or a tactical score.`;
+  const r = event.metadata.pushResult;
+  if (r)
+    return `Recorded push of player ${r.playerId}: [${r.from.x},${r.from.y}] to [${r.to.x},${r.to.y}]. This displacement adds no random outcome or extra luck score.`;
+  return null;
+}
+
 // Roster identity is independent of skill, activation and tactical-state proof.
 export function explainOwnership(
   event: LuckReport["events"][number]

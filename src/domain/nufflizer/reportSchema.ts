@@ -10,6 +10,7 @@ import { directInjuryOutcome } from "./injuryObservation";
 import { injuryTableForTraits } from "./injuryTable";
 import { validReportedBlockCrowd } from "./blockCrowd";
 import { validReportedBlockBallRelease } from "./blockBallRelease";
+import { validReportedBlockPush } from "./blockPush";
 import { validReportedOwnership, indexIdentityMutations } from "./ownershipEvidence";
 import { bounceDestination } from "@/domain/replay/pickupSuccessors";
 import { continuationOptionBounds } from "@/domain/replay/activeMoveContinuation";
@@ -132,6 +133,14 @@ const playerTraits = z.strictObject({
 });
 const currentTraitEvidence = z.strictObject({playerId:text,teamId:text,rosterIndex:z.number().int().min(0).max(1),observedCheckpointAfter:count,currentCheckpointAfter:count,prayersCheckpointAfter:count,onPitch:z.boolean(),tackleZone:z.boolean().nullable(),statusCode:z.number().int().nonnegative().nullable(),traits:playerTraits});
 const injuryTable = z.strictObject({rules:z.literal("bb2020"),policy:z.literal("fixed_unmodified_injury"),stunty:z.boolean(),thickSkull:z.boolean(),traitEvidence:currentTraitEvidence,counts:z.array(z.number().int().min(0).max(36)).length(4),probabilities:z.array(probability).length(4)});
+const pushMove=z.strictObject({playerId:text,teamId:text,from:pitchCell,to:bounceCell,destination:z.enum(["pitch","crowd"])});
+const pushBranch=z.strictObject({moves:z.array(pushMove).min(1).max(64),follow:z.boolean(),positions:z.array(z.strictObject({playerId:text,teamId:text,cell:pitchCell.nullable()})).min(1).max(65)});
+const pushModel=z.discriminatedUnion("status",[
+  z.strictObject({status:z.literal("unsupported"),questionSourceId:text,reason:z.enum(["missing_current_state","unknown_push_policy","source_choice_mismatch","unverified_push_chain","unverified_source_order","cyclic_chain","branch_limit"])}),
+  z.strictObject({status:z.literal("modeled"),questionSourceId:text,questionSourceIds:z.array(text).min(1).max(64),checkpointAfter:count,pitchCheckpointAfter:count,policy:z.literal("ordinary_push_positions"),
+    players:z.array(z.strictObject({id:text,teamId:text,cell:pitchCell,ordinaryPolicy:z.boolean()})).min(2).max(64),traitEvidence:z.array(currentTraitEvidence).max(64),
+    destinations:z.array(bounceCell).min(1).max(3),branches:z.array(pushBranch).min(2).max(256),selectedBranch:z.number().int().min(0).max(255),resultSourceIds:z.array(text).min(1).max(64)})
+]);
 const blockTraitEvidence = z.strictObject({attacker:currentTraitEvidence,defender:currentTraitEvidence});
 const blockSkillModel = z.strictObject({policy:z.literal("single_pool_knockdown_balance"),wrestlePolicy:z.enum(["decline","improve_knockdown_balance"]),traitEvidence:blockTraitEvidence,faceOutcomes:z.array(z.number().int().min(0).max(6)).length(5),outcomeDistribution:z.array(probability).length(7),expectedValue:finite.min(-1).max(1),poolOutcome:z.number().int().min(0).max(6),poolValue:z.union([z.literal(-1),z.literal(0),z.literal(1)]),positiveChance:probability});
 const activationEnd = z.strictObject({
@@ -236,6 +245,10 @@ export const LuckEventMetadataSchema = z.strictObject({
   }).optional(),
   mercenary: z.strictObject({ operation: z.enum(["purchase", "removal_record"]), playerId: text,
     playerTypeId: z.number().int().nonnegative(), gamerId: z.number().int().min(0).max(1) }).optional(),
+  blockPush:pushModel.optional(),
+  pushQuestion:z.strictObject({from:pitchCell,offered:z.array(bounceCell).min(1).max(8),gamerId:z.union([z.literal(0),z.literal(1)])}).optional(),
+  pushResult:z.strictObject({playerId:text,from:pitchCell,to:bounceCell,resolution:z.literal(3)}).optional(),
+  pushAppliedFollow:z.boolean().optional(),
   identityMutation:z.strictObject({operation:z.enum(["purchase","removal_record"]),playerId:text,playerTypeId:z.number().int().nonnegative().optional(),
     buyerIdKind:z.enum(["small_numeric","uninterpreted","missing"]),gamerId:z.union([z.literal(0),z.literal(1)]).optional()}).optional(),
   ownership:z.strictObject({role:z.enum(["actor","subject","team"]),playerId:text.optional(),teamId:text,
@@ -1329,8 +1342,15 @@ export const LuckReportSchema = z
       [...reasons].every(
         ([reason, n]) => report.coverage.excludedByReason[reason] === n
       ), "Exclusion reasons must conserve excluded records.");
+    const pushModels=report.events.flatMap(e=>e.metadata.blockPush?.status==="modeled"?[{e,m:e.metadata.blockPush}]:[]);
+    const pushQuestions=new Set(pushModels.flatMap(x=>x.m.questionSourceIds)),pushResults=new Set(pushModels.flatMap(x=>x.m.resultSourceIds)),pushFinals=new Set(pushModels.map(x=>x.e.metadata.block!.finalSourceId));
+    require(pushFinals.size===pushModels.length && pushQuestions.size===pushModels.reduce((n,x)=>n+x.m.questionSourceIds.length,0) && pushResults.size===pushModels.reduce((n,x)=>n+x.m.resultSourceIds.length,0),"A push decision or displacement must belong to exactly one terminal block.");
     const identityMutations = indexIdentityMutations(report.events);
     for (const event of report.events) {
+      if(event.metadata.blockPush)require(validReportedBlockPush(event,sources,teamIds),"Push alternatives must reconcile ordinary geometry, complete current policies, the ordered source menus/selected displacement and follow-up, without assigning chance to coach choices.");
+      if(event.metadata.pushQuestion)require(event.metadata.sourceTag==="QuestionPushBack" && event.scoringStatus==="excluded" && !event.metadata.isRollCandidate,"An observed push menu is non-random source evidence; only a separately validated model can interpret its legal alternatives.");
+      if(event.metadata.pushResult)require(pushResults.has(event.metadata.sourceId??"") && event.metadata.sourceTag==="ResultPushBack" && event.scoringStatus==="excluded" && !event.metadata.isRollCandidate,"A push displacement must link to its one modeled block.");
+      if(event.metadata.pushAppliedFollow!==undefined)require(pushFinals.has(event.metadata.sourceId??"") && event.metadata.sourceTag==="ResultBlockOutcome","Recorded follow-up must belong to the modeled applied block.");
       const policy = event.metadata.probabilityPolicy;
       require(validReportedOwnership(event,report,sources,identityMutations),
         "Scored outcomes need source-qualified actor/subject ownership and opposing block roles; a time-local conflict or pending identity cannot contribute favorable luck.");

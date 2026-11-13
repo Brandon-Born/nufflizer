@@ -288,3 +288,14 @@ export function findSubjectTraitEvidence(
   },owners);
   return result;
 }
+
+// Decision-time knowledge, after block dice. This must not be used as an
+// earlier pre-roll skill or position observation.
+export function findPushTraitEvidence(replay: ReplayModel, owners?: OwnershipTimeline) {
+  const result = new Map<string, { checkpointAfter: number; players: CurrentTraitEvidence[] }>();
+  visitCurrentTraits(replay, (event, current, ledger) => {
+    if(event.sourceTag!=="QuestionPushBack" || !event.id || !current) return;
+    result.set(event.id, {checkpointAfter:current.afterSourceIndex,players:Array.from(ledger.values()).filter(p=>p.onPitch)});
+  }, owners);
+  return result;
+}

@@ -192,6 +192,10 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(response.status, JSON.stringify(payload).slice(0, 200)).toBe(200);
     const report = LuckReportSchema.parse(payload),
       moves = report.events.filter((e) => e.metadata.teamRerollMovement);
+    const push=report.events.find(e=>e.metadata.sourceId==="source-98")!.metadata.blockPush!;
+    expect(push).toMatchObject({status:"modeled",questionSourceId:"source-101",checkpointAfter:98,pitchCheckpointAfter:0,selectedBranch:0,resultSourceIds:["source-103"]});
+    if(push.status!=="modeled")throw new Error("missing ordinary push model");expect(push.destinations).toEqual([{x:14,y:9},{x:13,y:10}]);expect(push.branches).toHaveLength(4);
+    expect(report.events.find(e=>e.metadata.sourceId==="source-101")).toMatchObject({label:"Recorded push destination choice",scoringStatus:"excluded",weightedDelta:0,metadata:{isRollCandidate:false,pushQuestion:{gamerId:0}}});
     const skillPools=report.events.filter(e=>e.metadata.block?.skillModel);
     expect(skillPools.map(e=>e.metadata.sourceId)).toEqual(["source-98","source-132"]);
     const injuryTableEvent=report.events.find(e=>e.metadata.sourceId==="source-110")!;

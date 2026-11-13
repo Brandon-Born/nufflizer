@@ -46,6 +46,8 @@ export type ObservedBoard = {
   effectsKnownEmpty?: boolean;
   stable: boolean | null;
   pitchLayout: "standard" | "small" | null;
+  pitchLayoutObserved?: boolean;
+  standardPitchCompatible?: boolean;
   periodCode: number | null;
   phaseCode: number | null;
   turnsPerPeriod: number | null;
@@ -125,6 +127,25 @@ function pitchLayout(raw: RecordLike): ObservedBoard["pitchLayout"] {
     })
   );
   return ends.length === 2 && complete ? "standard" : null;
+}
+
+// A partial configuration can corroborate a previously explicit standard
+// layout; it cannot establish one. Omitted coordinates are still null in every
+// observation. All supplied bounds and the small-pitch flag must agree.
+function standardPitchCompatible(raw: RecordLike) {
+  if(Object.hasOwn(raw,"UseSmallPitch") && flag(raw.UseSmallPitch)!==false)return false;
+  if(!Object.hasOwn(raw,"PitchZones"))return true;
+  const zones=array(record(raw.PitchZones).PitchZone).map(record);
+  const ends=zones.filter(z=>integer(z.ZoneType)===1);
+  if(zones.length>64 || ends.length!==2)return false;
+  const point=(value:unknown,x:number,y:number)=>{
+    if(value===undefined||value==="")return true;
+    if(!value||typeof value!=="object"||Array.isArray(value))return false;
+    const v=value as RecordLike;
+    return Object.keys(v).every(k=>k==="X"||k==="Y") && (!Object.hasOwn(v,"X")||integer(v.X)===x) && (!Object.hasOwn(v,"Y")||integer(v.Y)===y);
+  };
+  const agrees=(z:RecordLike,x:number)=>point(z.BottomLeft,x,0)&&point(z.TopRight,x,14);
+  return agrees(ends[0]!,0)&&agrees(ends[1]!,25)||agrees(ends[1]!,0)&&agrees(ends[0]!,25);
 }
 
 export function observeBoardCheckpoint(
@@ -230,6 +251,8 @@ export function observeBoardCheckpoint(
       effectsKnownEmpty: raw.Effects === "",
       stable: flag(raw.IsStable),
       pitchLayout: pitchLayout(raw),
+      pitchLayoutObserved: Object.hasOwn(raw,"UseSmallPitch") || Object.hasOwn(raw,"PitchZones"),
+      standardPitchCompatible: standardPitchCompatible(raw),
       periodCode: nonnegative(raw.Period),
       phaseCode: nonnegative(raw.CurrentPhase),
       turnsPerPeriod: nonnegative(raw.TurnsPerPeriod),

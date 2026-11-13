@@ -151,7 +151,8 @@ const oldProjection = (r: LuckReport, file: string) => {
             ![
               "fixedNumericModifiers",
               "blockBallRelease",
-              "ownership"
+              "ownership",
+                  "blockPush"
             ].includes(key)
         )
       )

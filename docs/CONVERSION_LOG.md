@@ -981,3 +981,18 @@ Remaining follow-ups:
 
 Verification evidence:
 1. Local lint/types,2,029 unit/API cases in86 unique suites (1,994 pure +25 serial CLI +10 isolated HTTP), real Redis, production build and all35 Chromium flows pass. The sandbox initially blocked the temporary Redis connection; authorized local-service verification passes. The first browser run found an ambiguous new test locator; the corrected full35-flow rerun passes. See `OWNERSHIP_EVIDENCE.md` and the append-only execution log for commands and scope. No hosted/provider/account/Stripe/store/spending/billing/security/production/legacy/merge/release action occurred.
+
+
+## 2026-11-12 - Ordinary push position alternatives and retained menus
+Metadata: commit(s) this change set, parent `b8fb6ca40b2c3d117774459dce5cf5ce27c877fe`; scope `NUF-010/013/016–018/021/022`; status `partial`.
+
+Converted items:
+1. Schema2.45/context36 adds a pure bounded ordinary push/chain-push/crowd/follow-up position solver, plus three post-die source-qualified direct menu models. Complete current positions, known roster membership, continued ordinary traits/effects, compatible source configuration, actual menus/controller slots and applied displacements/follow-up are reconciled. Unknown branches/cycles/limits are withheld rather than truncated. Dice-only-22 is unchanged.
+2. All706 original push menus become non-random source rows, with valid observed numeric menus retained independently of model eligibility. Unexpected extra dice still get their own unscored nested candidate. Shared UI/CLI explanations identify coach choices without probabilities, score or pre-roll leverage. Existing demo5 API admission and actual-source CLI cover the same validated report.
+3. Independent stdlib extraction preserves all12 source hashes/706 menus and nearby raw roster/trait observations; a separate dot-product geometry reference and rendered primary-rule diagrams support the ordinary scope. UI-059 independently distinguishes the opponent die chooser from the blocker's addressed push menu. Sixty-nine new acceptance cases cover source/pure/negative/tampering/CLI behavior.
+
+Remaining follow-ups:
+1. Full pre-roll playable states, special push/choice/skill policies, ball/terrain/damage/turnover/resources and calibrated contextual values retain their original requirements. This position-only component does not resume the main reducer or close an issue. Twelve remain closed/sixteen open. The current audit also corrects its stale231 injury-label count to the238 already verified after parentb8fb6ca; those observations remain unscored.
+
+Verification evidence:
+1. Final local `corepack pnpm verify` passes lint/types,2,098 unit/API cases in87 unique suites (2,062 pure +26 serial real CLI +10 isolated real HTTP), real Redis, production build and36 Chromium flows. Raw source count/dice identities/candidate coverage and all2,223 prior scores/metadata/odds/contributions,27 ranges/zero source-backed points/abstentions remain. The complete12-report comparison reconciles only new menus/receipts and their explicit counters/links/summary lines; no prior frozen scored SHA is reset. Maximum JSON2,442,523 bytes under the unchanged4MB bound. See `PUSH_SUCCESSOR_EVIDENCE.md` and the execution ledger for exact scope, failures corrected, commands and screenshots. No hosted/provider/account/store/Stripe, spending/billing/security, production/legacy, merge or release action occurred.

@@ -22,6 +22,7 @@ import {
 import { summarizeContextComponents } from "./contextComponents";
 import { attachInjuryObservations } from "./injuryObservation";
 import { attachInjuryTables } from "./injuryTable";
+import { attachBlockPush } from "./blockPush";
 import { attachBlockCrowd } from "./blockCrowd";
 import { attachBlockBallReleases } from "./blockBallRelease";
 import {
@@ -1653,6 +1654,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
         !isDirectResultOrQuestion(event) &&
         ![
           "ResultBlockOutcome",
+          "QuestionPushBack",
           "ResultPushBack",
           "ResultPlayerRemoval",
           "ResultNoRollSuccess",
@@ -1681,6 +1683,13 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       );
       if (!normalized) {
         continue;
+      }
+      if(event.sourceTag==="QuestionPushBack" && !normalized.metadata.isRollCandidate){
+        normalized.label="Recorded push destination choice";
+        normalized.statusReason="A coach's push menu is source evidence; its copied block die adds no random outcome or luck score.";
+        normalized.actualSuccess=null;
+        normalized.metadata.normalizationFlags=normalized.metadata.normalizationFlags?.filter(f=>f!=="missing_target_threshold");
+        normalized.metadata.normalizationNotes=normalized.metadata.normalizationNotes?.filter(n=>n!=="difficulty and requirement were both missing");
       }
       const traitEvidence = event.id ? blockTraits.get(event.id) : undefined;
       if (normalized.metadata.block && traitEvidence) {
@@ -1724,6 +1733,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   attachInjuryObservations(replay, ballSources);
   attachInjuryTables(replay, ballSources, ownership);
   attachBlockCrowd(replay, ballSources, blockConsequences);
+  attachBlockPush(replay, ballSources, blockConsequences, ownership);
   const damageSteps = summarizeDamageSteps(events);
   if (movementFalls.length > 0) {
     const damageByAction = new Map(
