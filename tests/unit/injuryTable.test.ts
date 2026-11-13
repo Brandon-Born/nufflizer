@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 import { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
 import { analyzeReplayLuck } from "@/domain/nufflizer/analyzeLuck";
 import { parseReplayXml } from "@/domain/replay/parseXml";
+import { decodeReplayInput } from "@/domain/replay/decodeReplay";
 import { LuckReportSchema } from "@/domain/nufflizer/reportSchema";
 import {
   enumerateUnmodifiedInjury,
@@ -35,6 +36,10 @@ const evidence = JSON.parse(
       messageIndex: number;
     };
     seed: { innateSkills: number[]; acquiredSkills: number[] };
+    observedSeedLocator: {
+      replayStep: number | null;
+      childIndex: number | null;
+    };
   }[];
 };
 function report(input = injuryTableXml()) {
@@ -124,7 +129,20 @@ describe("conditional injury tables before treatment and recovery", () => {
         expect(table.traitEvidence.traits.acquiredSkills).toEqual(
           c.seed.acquiredSkills
         );
-        expect(table.traitEvidence.observedCheckpointAfter).toBe(0);
+        const replay = parseReplayXml(
+          decodeReplayInput(
+            readFileSync(`demo-replays/${c.sourceFile}`, "utf8")
+          ).xml,
+          { omitRawReplaySteps: true }
+        );
+        const cp = replay.boardCheckpoints!.find(
+          (cp) =>
+            cp.afterSourceIndex === table.traitEvidence.observedCheckpointAfter
+        )!;
+        expect({
+          replayStep: cp.replayStep,
+          childIndex: cp.childIndex
+        }).toEqual(c.observedSeedLocator);
         expect(table.traitEvidence.currentCheckpointAfter).toBeLessThan(
           e.metadata.injuryObservation!.damageStepSourceIndex
         );

@@ -2,7 +2,7 @@
 
 Updated 2026-11-12. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.42`, dice model `dice-only-21` and context model `mobility-possession-33`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.46`, dice model `dice-only-22` and context model `mobility-possession-37`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -583,3 +583,10 @@ Dice-only-22 is unchanged. The report now retains706 previously skipped source `
 The three admitted public models (demo10/source99; demo5/source98/source132) follow die selection. They cannot be used as earlier pre-roll leverage or as a complete playable board. Ordinary chain/crowd geometry has rule-derived synthetic coverage, with cycles/unknown policies and combinatorial overflow withheld rather than truncated. Source configuration can corroborate an explicit initial standard pitch without filling omitted raw coordinates. Missing current positions, known roster members, skills or effects withhold the model. Ball/terrain reactions, knockdown/damage, turnovers, special push policies, resources and tactical values remain outside it.
 
 All2,223 earlier scored outcomes/odds/contributions, raw dice identities/dispositions,27 partial ranges, zero source-backed context point estimates and whole-match abstentions remain. The largest JSON is2,442,523 bytes under the unchanged4MB bound. See [the push evidence](PUSH_SUCCESSOR_EVIDENCE.md) for source/rule scope, full-field parent comparison,69 new acceptance cases, real API/CLI and desktop/mobile verification, and retained original requirements. No backlog issue closes on this position component alone.
+
+
+## Schema2.46 / mobility-possession-37: scoped intrinsic transitions
+
+Complete intrinsic seeds may continue across exact six-skill use, experience-award and empty-pitch-roll stunned-reset contracts. Accepted Confused44/provider31/51 effect records invalidate only their holder; they do not restore that holder or change raw physical state. Every recognized skill use now requires an explicit numeric holder, binary Used and exact field shape, including older passive families. Unknown/malformed/additional-field/conflicting transitions retain barriers. Current roster/effect/transformation/prayer guards remain independent. The public receipt shape is unchanged; its seed/current source pointers retain their separate meaning.
+
+All12 reports now have73 continued block-trait receipts,15 separately labeled fixed-policy block distributions,12 post-die ordinary push models and9 conditional injury tables. These add no binary/dice/context contribution or whole-match comparison. Existing2,223 scored outcomes, raw support denominators,27 ranges and zero source-backed point estimates remain. The shared schema rejects earlier versions rather than silently applying the expanded continuity scope. See [the transition contract and independent evidence](TRAIT_TRANSITION_EVIDENCE.md). NUF-013's [original attribution acceptance](ATTRIBUTION_ACCEPTANCE_AUDIT.md) is complete; effective-trait/choice, legal successor and contextual/calibration requirements remain in their separate original issues.

@@ -128,6 +128,10 @@
         "innateSkills": [],
         "acquiredSkills": []
       },
+      "observedSeedLocator": {
+        "replayStep": null,
+        "childIndex": null
+      },
       "current": {
         "replayStep": 22,
         "childIndex": 2,
@@ -407,6 +411,10 @@
         ],
         "acquiredSkills": []
       },
+      "observedSeedLocator": {
+        "replayStep": null,
+        "childIndex": null
+      },
       "current": {
         "replayStep": 25,
         "childIndex": 2,
@@ -685,6 +693,10 @@
         "playerTypeId": 1008,
         "innateSkills": [],
         "acquiredSkills": []
+      },
+      "observedSeedLocator": {
+        "replayStep": null,
+        "childIndex": null
       },
       "current": {
         "replayStep": 28,
@@ -967,6 +979,10 @@
           44
         ],
         "acquiredSkills": []
+      },
+      "observedSeedLocator": {
+        "replayStep": null,
+        "childIndex": null
       },
       "current": {
         "replayStep": 47,
@@ -1252,6 +1268,10 @@
           7
         ],
         "acquiredSkills": []
+      },
+      "observedSeedLocator": {
+        "replayStep": null,
+        "childIndex": null
       },
       "current": {
         "replayStep": 44,
@@ -1539,6 +1559,10 @@
         ],
         "acquiredSkills": []
       },
+      "observedSeedLocator": {
+        "replayStep": null,
+        "childIndex": null
+      },
       "current": {
         "replayStep": 59,
         "childIndex": 2,
@@ -1798,6 +1822,1435 @@
         ],
         "Outcome": [
           "0"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo1.bbr",
+      "sha256": "1e637c37bfa46907c4ee0ffa4492f54a862a0dd1b2b0c1e367ec9e2f3dc8bf18",
+      "locator": {
+        "replayStep": 36,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "subjectId": "4",
+      "modelSupported": true,
+      "modifiersExplicitlyEmpty": true,
+      "seed": {
+        "teamId": "0",
+        "rosterIndex": 0,
+        "prayersKnownEmpty": true,
+        "dataPlayerId": 4,
+        "playerTypeId": 6,
+        "innateSkills": [
+          57,
+          30,
+          63
+        ],
+        "acquiredSkills": [
+          38
+        ]
+      },
+      "observedSeedLocator": {
+        "replayStep": 1,
+        "childIndex": 11
+      },
+      "current": {
+        "replayStep": 35,
+        "childIndex": 2,
+        "rosterIndex": 0,
+        "boardEffectsKnownEmpty": true,
+        "teamEffectsKnownEmpty": true,
+        "transformationsKnownAbsent": true,
+        "playerEffectsKnownEmpty": true,
+        "player": {
+          "Gfi": [
+            "2"
+          ],
+          "Id": [
+            "4"
+          ],
+          "CanAct": [
+            "1"
+          ],
+          "Cell": [
+            {
+              "Y": [
+                "5"
+              ],
+              "X": [
+                "12"
+              ]
+            }
+          ],
+          "LastCell": [
+            {
+              "Y": [
+                "6"
+              ],
+              "X": [
+                "12"
+              ]
+            }
+          ],
+          "TackleZone": [
+            "1"
+          ],
+          "MovePoint": [
+            "4"
+          ]
+        }
+      },
+      "refreshes": [
+        {
+          "replayStep": 1,
+          "childIndex": 11,
+          "rosterIndex": 0,
+          "boardEffectsKnownEmpty": true,
+          "teamEffectsKnownEmpty": true,
+          "transformationsKnownAbsent": true,
+          "playerEffectsKnownEmpty": true,
+          "player": {
+            "Gfi": [
+              "2"
+            ],
+            "Id": [
+              "4"
+            ],
+            "CanAct": [
+              "1"
+            ],
+            "Cell": [
+              {
+                "Y": [
+                  "-1"
+                ],
+                "X": [
+                  "-1"
+                ]
+              }
+            ],
+            "LastCell": [
+              {
+                "Y": [
+                  "-1"
+                ],
+                "X": [
+                  "-1"
+                ]
+              }
+            ],
+            "TackleZone": [
+              "1"
+            ],
+            "MovePoint": [
+              "4"
+            ],
+            "Data": [
+              {
+                "AcquiredSkills": [
+                  {
+                    "AcquiredSkillsItem": [
+                      "38"
+                    ]
+                  }
+                ],
+                "Level": [
+                  "2"
+                ],
+                "Characteristics": [
+                  {
+                    "PlayerCharacteristic": [
+                      {
+                        "Value": [
+                          "4"
+                        ]
+                      },
+                      {
+                        "Characteristic": [
+                          "1"
+                        ],
+                        "Value": [
+                          "3"
+                        ]
+                      },
+                      {
+                        "Characteristic": [
+                          "2"
+                        ],
+                        "Value": [
+                          "4"
+                        ]
+                      },
+                      {
+                        "Characteristic": [
+                          "3"
+                        ],
+                        "Value": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "Characteristic": [
+                          "4"
+                        ],
+                        "Value": [
+                          "10"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Number": [
+                  "6"
+                ],
+                "Experience": [
+                  "2"
+                ],
+                "InnateSkills": [
+                  {
+                    "InnateSkillsItem": [
+                      "57",
+                      "30",
+                      "63"
+                    ]
+                  }
+                ],
+                "Customization": [
+                  {
+                    "Parts": [
+                      {}
+                    ]
+                  }
+                ],
+                "Value": [
+                  "90000"
+                ],
+                "Id": [
+                  "4"
+                ],
+                "IdPlayerTypes": [
+                  "6"
+                ]
+              }
+            ],
+            "Situation": [
+              "1"
+            ]
+          }
+        }
+      ],
+      "step": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "4"
+        ],
+        "TargetId": [
+          "4"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "5"
+            ],
+            "X": [
+              "12"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "5"
+            ],
+            "X": [
+              "12"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "roll": {
+        "Status": [
+          "1"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "5"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "2"
+                ]
+              }
+            ]
+          }
+        ],
+        "Source": [
+          "1"
+        ],
+        "RollType": [
+          "11"
+        ],
+        "Outcome": [
+          "0"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo10.bbr",
+      "sha256": "7895a4dfb4e8a69686336946171fadc5e3daf7bf8ecc8b720c7b8522f7744d8f",
+      "locator": {
+        "replayStep": 32,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "subjectId": "5",
+      "modelSupported": true,
+      "modifiersExplicitlyEmpty": true,
+      "seed": {
+        "teamId": "0",
+        "rosterIndex": 0,
+        "prayersKnownEmpty": true,
+        "dataPlayerId": 5,
+        "playerTypeId": 1077,
+        "innateSkills": [
+          19
+        ],
+        "acquiredSkills": []
+      },
+      "observedSeedLocator": {
+        "replayStep": null,
+        "childIndex": null
+      },
+      "current": {
+        "replayStep": 31,
+        "childIndex": 2,
+        "rosterIndex": 0,
+        "boardEffectsKnownEmpty": true,
+        "teamEffectsKnownEmpty": true,
+        "transformationsKnownAbsent": true,
+        "playerEffectsKnownEmpty": true,
+        "player": {
+          "Gfi": [
+            "2"
+          ],
+          "Id": [
+            "5"
+          ],
+          "CanAct": [
+            "1"
+          ],
+          "Cell": [
+            {
+              "Y": [
+                "5"
+              ],
+              "X": [
+                "11"
+              ]
+            }
+          ],
+          "LastCell": [
+            {
+              "Y": [
+                "5"
+              ],
+              "X": [
+                "12"
+              ]
+            }
+          ],
+          "TackleZone": [
+            "1"
+          ],
+          "MovePoint": [
+            "4"
+          ]
+        }
+      },
+      "refreshes": [
+        {
+          "replayStep": 1,
+          "childIndex": 11,
+          "rosterIndex": 0,
+          "boardEffectsKnownEmpty": true,
+          "teamEffectsKnownEmpty": true,
+          "transformationsKnownAbsent": true,
+          "playerEffectsKnownEmpty": true,
+          "player": {
+            "Gfi": [
+              "2"
+            ],
+            "Id": [
+              "5"
+            ],
+            "CanAct": [
+              "1"
+            ],
+            "Cell": [
+              {
+                "Y": [
+                  "-1"
+                ],
+                "X": [
+                  "-1"
+                ]
+              }
+            ],
+            "LastCell": [
+              {
+                "Y": [
+                  "-1"
+                ],
+                "X": [
+                  "-1"
+                ]
+              }
+            ],
+            "TackleZone": [
+              "1"
+            ],
+            "MovePoint": [
+              "4"
+            ],
+            "Data": [
+              {
+                "Level": [
+                  "1"
+                ],
+                "Characteristics": [
+                  {
+                    "PlayerCharacteristic": [
+                      {
+                        "Value": [
+                          "4"
+                        ]
+                      },
+                      {
+                        "Characteristic": [
+                          "1"
+                        ],
+                        "Value": [
+                          "3"
+                        ]
+                      },
+                      {
+                        "Characteristic": [
+                          "2"
+                        ],
+                        "Value": [
+                          "4"
+                        ]
+                      },
+                      {
+                        "Characteristic": [
+                          "4"
+                        ],
+                        "Value": [
+                          "9"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Number": [
+                  "5"
+                ],
+                "InnateSkills": [
+                  {
+                    "InnateSkillsItem": [
+                      "19"
+                    ]
+                  }
+                ],
+                "Customization": [
+                  {
+                    "Parts": [
+                      {}
+                    ]
+                  }
+                ],
+                "Value": [
+                  "40000"
+                ],
+                "Id": [
+                  "5"
+                ],
+                "IdPlayerTypes": [
+                  "1077"
+                ]
+              }
+            ],
+            "Situation": [
+              "1"
+            ]
+          }
+        }
+      ],
+      "step": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "5"
+        ],
+        "TargetId": [
+          "5"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "5"
+            ],
+            "X": [
+              "11"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "5"
+            ],
+            "X": [
+              "11"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "roll": {
+        "Status": [
+          "1"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "5"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "4"
+                ]
+              }
+            ]
+          }
+        ],
+        "Source": [
+          "1"
+        ],
+        "RollType": [
+          "11"
+        ],
+        "Outcome": [
+          "2"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo10.bbr",
+      "sha256": "7895a4dfb4e8a69686336946171fadc5e3daf7bf8ecc8b720c7b8522f7744d8f",
+      "locator": {
+        "replayStep": 76,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "subjectId": "6",
+      "modelSupported": true,
+      "modifiersExplicitlyEmpty": true,
+      "seed": {
+        "teamId": "0",
+        "rosterIndex": 0,
+        "prayersKnownEmpty": true,
+        "dataPlayerId": 6,
+        "playerTypeId": 1077,
+        "innateSkills": [
+          19
+        ],
+        "acquiredSkills": []
+      },
+      "observedSeedLocator": {
+        "replayStep": null,
+        "childIndex": null
+      },
+      "current": {
+        "replayStep": 75,
+        "childIndex": 2,
+        "rosterIndex": 0,
+        "boardEffectsKnownEmpty": true,
+        "teamEffectsKnownEmpty": true,
+        "transformationsKnownAbsent": true,
+        "playerEffectsKnownEmpty": true,
+        "player": {
+          "Gfi": [
+            "2"
+          ],
+          "Id": [
+            "6"
+          ],
+          "CanAct": [
+            "1"
+          ],
+          "Cell": [
+            {
+              "Y": [
+                "13"
+              ],
+              "X": [
+                "10"
+              ]
+            }
+          ],
+          "LastCell": [
+            {
+              "Y": [
+                "12"
+              ],
+              "X": [
+                "11"
+              ]
+            }
+          ],
+          "TackleZone": [
+            "1"
+          ],
+          "MovePoint": [
+            "4"
+          ]
+        }
+      },
+      "refreshes": [
+        {
+          "replayStep": 1,
+          "childIndex": 11,
+          "rosterIndex": 0,
+          "boardEffectsKnownEmpty": true,
+          "teamEffectsKnownEmpty": true,
+          "transformationsKnownAbsent": true,
+          "playerEffectsKnownEmpty": true,
+          "player": {
+            "Gfi": [
+              "2"
+            ],
+            "Id": [
+              "6"
+            ],
+            "CanAct": [
+              "1"
+            ],
+            "Cell": [
+              {
+                "Y": [
+                  "-1"
+                ],
+                "X": [
+                  "-1"
+                ]
+              }
+            ],
+            "LastCell": [
+              {
+                "Y": [
+                  "-1"
+                ],
+                "X": [
+                  "-1"
+                ]
+              }
+            ],
+            "TackleZone": [
+              "1"
+            ],
+            "MovePoint": [
+              "4"
+            ],
+            "Data": [
+              {
+                "Level": [
+                  "1"
+                ],
+                "Characteristics": [
+                  {
+                    "PlayerCharacteristic": [
+                      {
+                        "Value": [
+                          "4"
+                        ]
+                      },
+                      {
+                        "Characteristic": [
+                          "1"
+                        ],
+                        "Value": [
+                          "3"
+                        ]
+                      },
+                      {
+                        "Characteristic": [
+                          "2"
+                        ],
+                        "Value": [
+                          "4"
+                        ]
+                      },
+                      {
+                        "Characteristic": [
+                          "4"
+                        ],
+                        "Value": [
+                          "9"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Number": [
+                  "6"
+                ],
+                "Experience": [
+                  "2"
+                ],
+                "InnateSkills": [
+                  {
+                    "InnateSkillsItem": [
+                      "19"
+                    ]
+                  }
+                ],
+                "Customization": [
+                  {
+                    "Parts": [
+                      {}
+                    ]
+                  }
+                ],
+                "Value": [
+                  "40000"
+                ],
+                "Id": [
+                  "6"
+                ],
+                "IdPlayerTypes": [
+                  "1077"
+                ]
+              }
+            ],
+            "Situation": [
+              "1"
+            ]
+          }
+        }
+      ],
+      "step": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "6"
+        ],
+        "TargetId": [
+          "6"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "13"
+            ],
+            "X": [
+              "10"
+            ]
+          }
+        ],
+        "State": [
+          "3"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "13"
+            ],
+            "X": [
+              "10"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "roll": {
+        "Status": [
+          "1"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "6"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "4"
+                ]
+              }
+            ]
+          }
+        ],
+        "Source": [
+          "1"
+        ],
+        "RollType": [
+          "11"
+        ],
+        "Outcome": [
+          "4"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo10.bbr",
+      "sha256": "7895a4dfb4e8a69686336946171fadc5e3daf7bf8ecc8b720c7b8522f7744d8f",
+      "locator": {
+        "replayStep": 90,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "subjectId": "44",
+      "modelSupported": true,
+      "modifiersExplicitlyEmpty": true,
+      "seed": {
+        "teamId": "1",
+        "rosterIndex": 1,
+        "prayersKnownEmpty": true,
+        "dataPlayerId": 44,
+        "playerTypeId": 1029,
+        "innateSkills": [
+          59,
+          7
+        ],
+        "acquiredSkills": []
+      },
+      "observedSeedLocator": {
+        "replayStep": null,
+        "childIndex": null
+      },
+      "current": {
+        "replayStep": 89,
+        "childIndex": 2,
+        "rosterIndex": 1,
+        "boardEffectsKnownEmpty": true,
+        "teamEffectsKnownEmpty": true,
+        "transformationsKnownAbsent": true,
+        "playerEffectsKnownEmpty": true,
+        "player": {
+          "Gfi": [
+            "2"
+          ],
+          "Id": [
+            "44"
+          ],
+          "CanAct": [
+            "1"
+          ],
+          "Cell": [
+            {
+              "Y": [
+                "2"
+              ],
+              "X": [
+                "6"
+              ]
+            }
+          ],
+          "LastCell": [
+            {
+              "Y": [
+                "-1"
+              ],
+              "X": [
+                "-1"
+              ]
+            }
+          ],
+          "TackleZone": [
+            "1"
+          ],
+          "MovePoint": [
+            "8"
+          ]
+        }
+      },
+      "refreshes": [
+        {
+          "replayStep": 1,
+          "childIndex": 11,
+          "rosterIndex": 1,
+          "boardEffectsKnownEmpty": true,
+          "teamEffectsKnownEmpty": true,
+          "transformationsKnownAbsent": true,
+          "playerEffectsKnownEmpty": true,
+          "player": {
+            "Gfi": [
+              "2"
+            ],
+            "Id": [
+              "44"
+            ],
+            "CanAct": [
+              "1"
+            ],
+            "Cell": [
+              {
+                "Y": [
+                  "-1"
+                ],
+                "X": [
+                  "-1"
+                ]
+              }
+            ],
+            "LastCell": [
+              {
+                "Y": [
+                  "-1"
+                ],
+                "X": [
+                  "-1"
+                ]
+              }
+            ],
+            "TackleZone": [
+              "1"
+            ],
+            "MovePoint": [
+              "8"
+            ],
+            "Data": [
+              {
+                "Level": [
+                  "1"
+                ],
+                "Characteristics": [
+                  {
+                    "PlayerCharacteristic": [
+                      {
+                        "Value": [
+                          "8"
+                        ]
+                      },
+                      {
+                        "Characteristic": [
+                          "1"
+                        ],
+                        "Value": [
+                          "2"
+                        ]
+                      },
+                      {
+                        "Characteristic": [
+                          "2"
+                        ],
+                        "Value": [
+                          "3"
+                        ]
+                      },
+                      {
+                        "Characteristic": [
+                          "3"
+                        ],
+                        "Value": [
+                          "4"
+                        ]
+                      },
+                      {
+                        "Characteristic": [
+                          "4"
+                        ],
+                        "Value": [
+                          "8"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Number": [
+                  "8"
+                ],
+                "InnateSkills": [
+                  {
+                    "InnateSkillsItem": [
+                      "59",
+                      "7"
+                    ]
+                  }
+                ],
+                "TeamId": [
+                  "1"
+                ],
+                "Customization": [
+                  {
+                    "Parts": [
+                      {}
+                    ]
+                  }
+                ],
+                "Value": [
+                  "60000"
+                ],
+                "Id": [
+                  "44"
+                ],
+                "IdPlayerTypes": [
+                  "1029"
+                ]
+              }
+            ],
+            "Situation": [
+              "1"
+            ]
+          }
+        }
+      ],
+      "step": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "44"
+        ],
+        "TargetId": [
+          "44"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "2"
+            ],
+            "X": [
+              "6"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "2"
+            ],
+            "X": [
+              "6"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "roll": {
+        "Status": [
+          "1"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "1"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "3"
+                ]
+              }
+            ]
+          }
+        ],
+        "Source": [
+          "1"
+        ],
+        "RollType": [
+          "11"
+        ],
+        "Outcome": [
+          "0"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo5.bbr",
+      "sha256": "e55514b2b7c24fe5a41a8955119e194d25197ad284230b9d25faca0827a457e0",
+      "locator": {
+        "replayStep": 70,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "subjectId": "6",
+      "modelSupported": true,
+      "modifiersExplicitlyEmpty": true,
+      "seed": {
+        "teamId": "0",
+        "rosterIndex": 0,
+        "prayersKnownEmpty": true,
+        "dataPlayerId": 6,
+        "playerTypeId": 1031,
+        "innateSkills": [],
+        "acquiredSkills": []
+      },
+      "observedSeedLocator": {
+        "replayStep": null,
+        "childIndex": null
+      },
+      "current": {
+        "replayStep": 69,
+        "childIndex": 2,
+        "rosterIndex": 0,
+        "boardEffectsKnownEmpty": true,
+        "teamEffectsKnownEmpty": true,
+        "transformationsKnownAbsent": true,
+        "playerEffectsKnownEmpty": true,
+        "player": {
+          "Gfi": [
+            "2"
+          ],
+          "Id": [
+            "6"
+          ],
+          "CanAct": [
+            "1"
+          ],
+          "Cell": [
+            {
+              "Y": [
+                "3"
+              ],
+              "X": [
+                "11"
+              ]
+            }
+          ],
+          "LastCell": [
+            {
+              "Y": [
+                "3"
+              ],
+              "X": [
+                "12"
+              ]
+            }
+          ],
+          "TackleZone": [
+            "1"
+          ],
+          "MovePoint": [
+            "6"
+          ]
+        }
+      },
+      "refreshes": [
+        {
+          "replayStep": 1,
+          "childIndex": 11,
+          "rosterIndex": 0,
+          "boardEffectsKnownEmpty": true,
+          "teamEffectsKnownEmpty": true,
+          "transformationsKnownAbsent": true,
+          "playerEffectsKnownEmpty": true,
+          "player": {
+            "Gfi": [
+              "2"
+            ],
+            "Id": [
+              "6"
+            ],
+            "CanAct": [
+              "1"
+            ],
+            "Cell": [
+              {
+                "Y": [
+                  "-1"
+                ],
+                "X": [
+                  "-1"
+                ]
+              }
+            ],
+            "LastCell": [
+              {
+                "Y": [
+                  "-1"
+                ],
+                "X": [
+                  "-1"
+                ]
+              }
+            ],
+            "TackleZone": [
+              "1"
+            ],
+            "MovePoint": [
+              "6"
+            ],
+            "Data": [
+              {
+                "Level": [
+                  "1"
+                ],
+                "Characteristics": [
+                  {
+                    "PlayerCharacteristic": [
+                      {
+                        "Value": [
+                          "6"
+                        ]
+                      },
+                      {
+                        "Characteristic": [
+                          "1"
+                        ],
+                        "Value": [
+                          "4"
+                        ]
+                      },
+                      {
+                        "Characteristic": [
+                          "2"
+                        ],
+                        "Value": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "Characteristic": [
+                          "3"
+                        ],
+                        "Value": [
+                          "6"
+                        ]
+                      },
+                      {
+                        "Characteristic": [
+                          "4"
+                        ],
+                        "Value": [
+                          "10"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Number": [
+                  "6"
+                ],
+                "Customization": [
+                  {
+                    "Parts": [
+                      {}
+                    ]
+                  }
+                ],
+                "Value": [
+                  "85000"
+                ],
+                "Id": [
+                  "6"
+                ],
+                "IdPlayerTypes": [
+                  "1031"
+                ]
+              }
+            ],
+            "Situation": [
+              "1"
+            ]
+          }
+        }
+      ],
+      "step": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "6"
+        ],
+        "TargetId": [
+          "6"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "3"
+            ],
+            "X": [
+              "11"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "3"
+            ],
+            "X": [
+              "11"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "roll": {
+        "Status": [
+          "1"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "4"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "5"
+                ]
+              }
+            ]
+          }
+        ],
+        "Source": [
+          "1"
+        ],
+        "RollType": [
+          "11"
+        ],
+        "Outcome": [
+          "2"
         ]
       }
     }

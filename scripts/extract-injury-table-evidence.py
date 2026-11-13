@@ -33,7 +33,10 @@ tables = [dict(stunty=s, thickSkull=t, totalOutcomes=r,
           for s, t, r in rows]
 selections = [('demo10.bbr',23,1,1,2,True), ('demo10.bbr',26,1,1,1,True),
               ('demo5.bbr',29,1,1,1,True), ('demo5.bbr',48,1,1,1,False),
-              ('demo8.bbr',45,1,10,1,True), ('demo8.bbr',60,1,1,1,False)]
+              ('demo8.bbr',45,1,10,1,True), ('demo8.bbr',60,1,1,1,False),
+              ('demo1.bbr',36,1,1,1,True), ('demo10.bbr',32,1,1,1,True),
+              ('demo10.bbr',76,1,1,1,True), ('demo10.bbr',90,1,1,1,True),
+              ('demo5.bbr',70,1,1,1,True)]
 cases = []
 for filename, number, ci, si, mi, supported in selections:
     path = Path('demo-replays') / filename
@@ -57,6 +60,7 @@ for filename, number, ci, si, mi, supported in selections:
     assert seed and seed['prayersKnownEmpty'] and seed['dataPlayerId'] == int(subject)
     current = None
     refreshes = []
+    observed_seed_locator = dict(replayStep=None, childIndex=None)
     for rn, outer in enumerate(root.findall('ReplayStep'),1):
         for cn, child in enumerate(outer):
             if (rn,cn) >= (number,ci): break
@@ -70,12 +74,16 @@ for filename, number, ci, si, mi, supported in selections:
                                    transformationsKnownAbsent=empty(team.find('TransformedPlayers')),
                                    playerEffectsKnownEmpty=empty(player.find('Effects')),
                                    player=inv.numeric_projection(player))
-                    if player.find('Data') is not None: refreshes.append(current)
+                    if player.find('Data') is not None:
+                        refreshes.append(current)
+                        data=player.find('Data')
+                        if all(data.find(k) is not None for k in ['Id','IdPlayerTypes','InnateSkills','AcquiredSkills']):
+                            observed_seed_locator=dict(replayStep=rn,childIndex=cn)
         if rn >= number: break
     assert current and all(current[k] for k in ['boardEffectsKnownEmpty','teamEffectsKnownEmpty','transformationsKnownAbsent','playerEffectsKnownEmpty'])
     cases.append(dict(sourceFile=filename,sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
                       locator=dict(replayStep=number,childIndex=ci,stepIndex=si,messageIndex=mi),
-                      subjectId=subject,modelSupported=supported,modifiersExplicitlyEmpty=True,seed=seed,current=current,refreshes=refreshes,
+                      subjectId=subject,modelSupported=supported,modifiersExplicitlyEmpty=True,seed=seed,observedSeedLocator=observed_seed_locator,current=current,refreshes=refreshes,
                       step=inv.numeric_projection(step),roll=inv.numeric_projection(roll)))
 output = dict(scope='Raw source witnesses and conditional unmodified injury arithmetic; not actual modifier choice, treatment, final availability or tactical calibration.',
               rules=dict(edition='BB2020',injuryPage=60,thickSkullPage=85,gameReference='GR-010'),

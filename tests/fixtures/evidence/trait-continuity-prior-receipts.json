@@ -1,0 +1,79 @@
+{
+  "scope": "Exact parent ff9238e block-trait receipt membership, only for preserving older frozen cohort fields; not independent semantic acceptance.",
+  "files": [
+    {
+      "file": "demo-goblins1.bbr",
+      "sourceIds": []
+    },
+    {
+      "file": "demo1.bbr",
+      "sourceIds": [
+        "source-121"
+      ]
+    },
+    {
+      "file": "demo10.bbr",
+      "sourceIds": [
+        "source-99",
+        "source-119",
+        "source-122"
+      ]
+    },
+    {
+      "file": "demo11.bbr",
+      "sourceIds": []
+    },
+    {
+      "file": "demo2.bbr",
+      "sourceIds": []
+    },
+    {
+      "file": "demo3.bbr",
+      "sourceIds": []
+    },
+    {
+      "file": "demo4.bbr",
+      "sourceIds": []
+    },
+    {
+      "file": "demo5.bbr",
+      "sourceIds": [
+        "source-98",
+        "source-116",
+        "source-132",
+        "source-261",
+        "source-283"
+      ]
+    },
+    {
+      "file": "demo6.bbr",
+      "sourceIds": [
+        "source-188",
+        "source-202"
+      ]
+    },
+    {
+      "file": "demo7.bbr",
+      "sourceIds": []
+    },
+    {
+      "file": "demo8.bbr",
+      "sourceIds": [
+        "source-97",
+        "source-112",
+        "source-123",
+        "source-126",
+        "source-197",
+        "source-411",
+        "source-436",
+        "source-477",
+        "source-498",
+        "source-524"
+      ]
+    },
+    {
+      "file": "demo9.bbr",
+      "sourceIds": []
+    }
+  ]
+}

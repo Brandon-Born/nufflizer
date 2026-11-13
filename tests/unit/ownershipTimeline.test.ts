@@ -518,6 +518,14 @@ describe("source-qualified time-local player ownership", () => {
     expect(b.teams[1].luckScore).toBe(a.teams[0].luckScore);
     expect(b.teams[0].luckScore).toBe(a.teams[1].luckScore);
   });
+  it("swapping display labels cannot change attribution or favorability", () => {
+    const xml=ownershipReplayXml({kind:"both_down",names:true});
+    const a=analyzeNufflizerInput(xml), b=analyzeNufflizerInput(xml.replace("<name>Home</name>","<name>Away</name>").replace("<name>Away</name></Team></Teams>","<name>Home</name></Team></Teams>"));
+    expect(b.teams.map(t=>t.teamName)).toEqual(a.teams.map(t=>t.teamName).reverse());
+    const meaning=(r:LuckReport)=>r.events.map(e=>({source:e.metadata.sourceId,player:e.playerId,team:e.teamId,ownership:e.metadata.ownership,damage:e.metadata.damage,block:e.metadata.block,success:e.actualSuccess,chance:e.probabilitySuccess,value:e.weightedDelta}));
+    expect(meaning(b)).toEqual(meaning(a));
+    expect(b.teams.map(t=>[t.teamId,t.luckScore,t.categoryScores])).toEqual(a.teams.map(t=>[t.teamId,t.luckScore,t.categoryScores]));
+  });
 
   it("unknown transitions invalidate even an initial owner's historical claim until a fresh roster renews it", () => {
     const e = candidate(report({ unknownAfter: true }));

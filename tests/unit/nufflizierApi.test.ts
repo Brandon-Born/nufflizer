@@ -197,7 +197,9 @@ describe("POST /api/nufflizier/analyze", () => {
     if(push.status!=="modeled")throw new Error("missing ordinary push model");expect(push.destinations).toEqual([{x:14,y:9},{x:13,y:10}]);expect(push.branches).toHaveLength(4);
     expect(report.events.find(e=>e.metadata.sourceId==="source-101")).toMatchObject({label:"Recorded push destination choice",scoringStatus:"excluded",weightedDelta:0,metadata:{isRollCandidate:false,pushQuestion:{gamerId:0}}});
     const skillPools=report.events.filter(e=>e.metadata.block?.skillModel);
-    expect(skillPools.map(e=>e.metadata.sourceId)).toEqual(["source-98","source-132"]);
+    expect(skillPools.map(e=>e.metadata.sourceId)).toEqual(["source-98","source-132","source-367","source-386","source-409"]);
+    expect(report.events.find(e=>e.metadata.sourceId==="source-367")!.metadata.blockPush).toMatchObject({status:"modeled"});
+    expect(report.events.find(e=>e.metadata.sourceId==="source-402")!.metadata.injuryTable?.traitEvidence).toMatchObject({observedCheckpointAfter:0});
     const injuryTableEvent=report.events.find(e=>e.metadata.sourceId==="source-110")!;
     expect(injuryTableEvent.metadata.injuryTable).toMatchObject({rules:"bb2020",policy:"fixed_unmodified_injury",stunty:false,thickSkull:false,counts:[21,9,0,6],traitEvidence:{playerId:"46",teamId:"1",observedCheckpointAfter:0,currentCheckpointAfter:104}});
     expect(injuryTableEvent.scoringStatus).toBe("excluded");
@@ -208,8 +210,8 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(release).toMatchObject({holderId:"40",holderTeamId:"1",beforeCheckpointAfter:1336,from:{x:13,y:2},to:{x:14,y:2},bounceSourceId:"source-1346",after:{checkpointAfter:1347,carrierId:null,isHeld:null}});
     expect(report.events.find(e=>e.metadata.sourceId===release.bounceSourceId)).toMatchObject({scoringStatus:"excluded",probabilitySuccess:null,weightedDelta:0,metadata:{ballTravel:{from:{x:13,y:2},to:{x:14,y:2}}}});
     for(const pool of skillPools) {
-      expect(pool.metadata.block!.skillModel!.expectedValue).toBeCloseTo(19/36,12);
-      expect(pool.metadata.block!.skillModel!.positiveChance).toBeCloseTo(5/9,12);
+      expect(pool.metadata.block!.skillModel!.expectedValue).toBeCloseTo(["source-98","source-132"].includes(pool.metadata.sourceId!)?19/36:1/6,12);
+      expect(pool.metadata.block!.skillModel!.positiveChance).toBeCloseTo(["source-98","source-132"].includes(pool.metadata.sourceId!)?5/9:1/3,12);
       expect(pool.metadata.block!.traitEvidence!.attacker.observedCheckpointAfter).toBe(0);
       expect(pool.metadata.preRoll?.actorTraits).toBeUndefined();
     }

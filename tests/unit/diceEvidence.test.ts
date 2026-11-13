@@ -49,6 +49,9 @@ const census = JSON.parse(readFileSync(fixture, "utf8")) as {
 const prior = JSON.parse(
   readFileSync("tests/fixtures/evidence/dice-census-prior-scores.json", "utf8")
 ) as { files: { file: string; sha256: string }[] };
+const priorTraits = JSON.parse(readFileSync("tests/fixtures/evidence/trait-continuity-prior-receipts.json", "utf8")) as {
+  files: { file: string; sourceIds: string[] }[];
+};
 const ownershipCohort = JSON.parse(
   readFileSync(
     "tests/fixtures/evidence/bb3-ownership-prior-cohort.json",
@@ -104,7 +107,16 @@ const oldProjection = (r: LuckReport, file: string) => {
     census.files.find((c) => c.file === file)!.sourceSha256
   );
   const ids = new Set(cohort.sourceIds),
-    events = r.events.filter((e) => ids.has(e.metadata.sourceId!));
+    oldTraits = new Set(priorTraits.files.find(c=>c.file===file)!.sourceIds),
+    events = r.events.filter((e) => ids.has(e.metadata.sourceId!)).map(e=>{
+      if (oldTraits.has(e.metadata.sourceId!) || !e.metadata.block?.traitEvidence) return e;
+      const copy=structuredClone(e);
+      // Preserve the frozen earlier receipt membership as well as every other
+      // cohort field. New continued-trait evidence has independent source tests.
+      delete copy.metadata.block!.traitEvidence;
+      delete copy.metadata.block!.skillModel;
+      return copy;
+    });
   expect(events).toHaveLength(ids.size);
   expect(events.every((e) => e.scoringStatus === "scored")).toBe(true);
   const teams = structuredClone(r.teams);

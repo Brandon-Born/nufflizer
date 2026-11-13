@@ -431,7 +431,7 @@ describe("source-qualified ordinary push decision model", () => {
         )!;
         expect(raw).toBeDefined();
         expect(raw.reference).not.toBeNull();
-        expect(points(m.destinations)).toEqual(raw.reference!.destinations);
+        expect(points(m.destinations)).toEqual(raw.reference!.destinations.slice().sort());
         expect(points(m.destinations)).toEqual([...raw.offered].sort());
         const cp = input.boardCheckpoints!.find(
             (cp) => cp.afterSourceIndex === m.checkpointAfter
@@ -510,10 +510,13 @@ describe("source-qualified ordinary push decision model", () => {
     },
     30000
   );
-  it("admits the three current full-source menus with source-selected push and optional follow branches", () => {
+  it("retains the initial menus and admits continued-trait menus with source-selected push and optional follow branches", () => {
     expect(modeled(sourceReport()).map((e) => e.metadata.sourceId)).toEqual([
       "source-98",
-      "source-132"
+      "source-132",
+      "source-338",
+      "source-367",
+      "source-386"
     ]);
     const e = modeled(sourceReport())[0],
       m = e.metadata.blockPush!;
@@ -661,13 +664,16 @@ describe("source-qualified ordinary push decision model", () => {
     const report = LuckReportSchema.parse(JSON.parse(json.stdout));
     expect(modeled(report).map((e) => e.metadata.sourceId)).toEqual([
       "source-98",
-      "source-132"
+      "source-132",
+      "source-338",
+      "source-367",
+      "source-386"
     ]);
     const text = run("text");
     expect(text.status, text.stderr).toBe(0);
     expect(text.stdout).toContain(explainBlockPush(modeled(report)[0])!);
     expect(text.stdout).toContain(
-      "68 source menus; 2 modeled ordinary position alternatives"
+      "68 source menus; 5 modeled ordinary position alternatives"
     );
     expect(report.teams.every((t) => t.impactCount === 0)).toBe(true);
   }, 20000);

@@ -1,4 +1,4 @@
-import { preservesTraitContinuity } from "./traitTransitions";
+import { preservesTraitContinuity, scopedTraitEffectPlayer } from "./traitTransitions";
 import type { ReplayEvent, ReplayModel } from "./types";
 import type { ObservedPlayerTraits } from "./playerTraits";
 import type { ObservedBoard, ReplayBoardCheckpoint } from "./boardState";
@@ -211,6 +211,7 @@ function visitCurrentTraits(
         observe(current);
       }
       visit(event, current, ledger);
+      const affectedByEffect = scopedTraitEffectPlayer(event);
       if (
         [
           "EventBuyMercenary",
@@ -221,6 +222,8 @@ function visitCurrentTraits(
         event.playerId
       ) {
         ledger.delete(event.playerId);
+      } else if (affectedByEffect !== undefined) {
+        ledger.delete(affectedByEffect);
       } else if (!preservesTraitContinuity(event)) {
         ledger.clear();
         emptyPrayers.clear();

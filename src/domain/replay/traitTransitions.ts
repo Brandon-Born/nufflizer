@@ -1,4 +1,5 @@
 import type { ReplayEvent } from "./types";
+import { recordedMentalEffect } from "./mentalEffects";
 
 // These transitions do not rewrite intrinsic player skill lists. Effects,
 // transformations, purchases/removals and unknown messages have separate
@@ -77,6 +78,52 @@ const nonMutating = new Set([
 const passiveUses = new Set([
   6, 7, 13, 15, 19, 27, 30, 38, 44, 50, 57, 61, 63, 68, 75, 81, 1008
 ]);
+// These source-specific uses affect a test, displacement or follow-up, not
+// learned skill lists. This does not grant their effective gameplay policy.
+const intrinsicOnlyUses = new Set([10, 31, 35, 36, 51, 56]);
+function integer(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+}
+function playerNumber(value: unknown): number | undefined {
+  if (typeof value === "string" && /^(0|[1-9]\d{0,15})$/.test(value))
+    value = Number(value);
+  return integer(value) ? value : undefined;
+}
+function record(value: unknown): Record<string, unknown> | undefined {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+function listedPlayers(value: unknown) {
+  const list = record(value);
+  if (!list || Object.keys(list).some((key) => key !== "PlayersItem"))
+    return false;
+  const items = Array.isArray(list.PlayersItem)
+    ? list.PlayersItem
+    : [list.PlayersItem];
+  if (!items.length || items.length > 64) return false;
+  const ids = items.map(playerNumber);
+  return (
+    ids.every((id) => id !== undefined) && new Set(ids).size === items.length
+  );
+}
+
+// A fully recognized Confused effect cannot rewrite anyone else's skills.
+// Its holder is still invalidated: an effect end alone does not prove restored
+// eligibility or recover an earlier seed. Other effect shapes remain barriers.
+export function scopedTraitEffectPlayer(e: ReplayEvent): string | undefined {
+  const p = e.payload;
+  if (
+    e.attributionConflict ||
+    !["EventAddPlayerEffect", "EventEndPlayerEffect"].includes(e.sourceTag) ||
+    !p ||
+    !Object.keys(p).every((key) => key === "PlayerId" || key === "Effect") ||
+    playerNumber(p.PlayerId) === undefined ||
+    !recordedMentalEffect(p.Effect)
+  )
+    return;
+  return String(p.PlayerId);
+}
 export function preservesTraitContinuity(e: ReplayEvent) {
   if (e.attributionConflict) return false;
   if (e.sourceTag === "PlayerStep")
@@ -94,8 +141,32 @@ export function preservesTraitContinuity(e: ReplayEvent) {
     );
   if (e.sourceTag === "ResultSkillUsage")
     return (
-      passiveUses.has(Number(e.payload?.Skill)) &&
-      [0, 1].includes(Number(e.payload?.Used))
+      !!e.payload &&
+      (passiveUses.has(e.payload.Skill as number) ||
+        intrinsicOnlyUses.has(e.payload.Skill as number)) &&
+      integer(e.payload.PlayerId) &&
+      [0, 1].includes(e.payload.Used as number) &&
+      Object.keys(e.payload).every((key) =>
+        ["PlayerId", "Skill", "Used"].includes(key)
+      )
+    );
+  if (e.sourceTag === "ResultGainSpp")
+    return (
+      !!e.payload &&
+      integer(e.payload.PlayerId) &&
+      integer(e.payload.SppGained) &&
+      Object.keys(e.payload).every(
+        (key) => key === "PlayerId" || key === "SppGained"
+      )
+    );
+  if (e.sourceTag === "EventFaceUpStunnedPlayers")
+    return (
+      !!e.payload &&
+      e.payload.PitchRolls === "" &&
+      listedPlayers(e.payload.Players) &&
+      Object.keys(e.payload).every(
+        (key) => key === "PitchRolls" || key === "Players"
+      )
     );
   return nonMutating.has(e.sourceTag);
 }
