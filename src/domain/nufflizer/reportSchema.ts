@@ -27,6 +27,7 @@ import { summarizeRollFamilies } from "./rollCoverage";
 import { summarizeDamageSteps } from "./damageSteps";
 import { validReportedArmorModifierUse } from "./armorModifierBudget";
 import { validReportedRecoveryControl,validReportedRegenerationAftermath } from "./regenerationAftermath";
+import { validReportedRegenerationReturn,validReportedRecoveryReturnActivation } from "./regenerationReturn";
 import { summarizeContextEvidence } from "./contextCoverage";
 import { observedBounceDirection } from "./ballConsequences";
 import { summarizeMovementFall } from "./movementConsequences";
@@ -136,6 +137,13 @@ const playerTraits = z.strictObject({
 });
 const currentTraitEvidence = z.strictObject({playerId:text,teamId:text,rosterIndex:z.number().int().min(0).max(1),observedCheckpointAfter:count,currentCheckpointAfter:count,prayersCheckpointAfter:count,onPitch:z.boolean(),tackleZone:z.boolean().nullable(),statusCode:z.number().int().nonnegative().nullable(),traits:playerTraits});
 const injuryTable = z.strictObject({rules:z.literal("bb2020"),policy:z.literal("fixed_unmodified_injury"),stunty:z.boolean(),thickSkull:z.boolean(),traitEvidence:currentTraitEvidence,counts:z.array(z.number().int().min(0).max(36)).length(4),probabilities:z.array(probability).length(4)});
+const recoveryReturnSnapshot=z.strictObject({checkpointAfter:count,replayStep:z.number().int().positive(),childIndex:count,rosterIndex:z.union([z.literal(0),z.literal(1)]),phase:z.union([z.literal(3),z.literal(5)]),cell:pitchCell,
+  statusCode:z.number().int().nullable(),situationCode:z.number().int().nullable(),canAct:z.boolean().nullable(),tackleZone:z.boolean().nullable(),activeGamerId:z.union([z.literal(0),z.literal(1)]).nullable(),periodCode:count.nullable(),teamTurn:count.nullable()});
+const recoveryReturnStop=z.discriminatedUnion("reason",[
+  z.strictObject({reason:z.literal("invalid_source"),sourceIndex:z.null()}),
+  z.strictObject({reason:z.enum(["identity_transition","roster_conflict","unknown_position","unsupported_setup","new_damage","unsupported_activation"]),sourceIndex:count})
+]);
+const recoveryReturnActivation=z.strictObject({sourceId:text,stepSourceIndex:count,actionCode:z.union([z.literal(1),z.literal(2)]),before:recoveryReturnSnapshot});
 const pushMove=z.strictObject({playerId:text,teamId:text,from:pitchCell,to:bounceCell,destination:z.enum(["pitch","crowd"])});
 const pushBranch=z.strictObject({moves:z.array(pushMove).min(1).max(64),follow:z.boolean(),positions:z.array(z.strictObject({playerId:text,teamId:text,cell:pitchCell.nullable()})).min(1).max(65)});
 const pushModel=z.discriminatedUnion("status",[
@@ -260,6 +268,12 @@ export const LuckEventMetadataSchema = z.strictObject({
   ]).optional(),
   regenerationAftermath:z.strictObject({beforeCheckpointAfter:count,checkpointAfter:count,replayStep:z.number().int().positive(),childIndex:count,rosterIndex:z.union([z.literal(0),z.literal(1)]),
     controlSourceIds:z.array(text).min(1).max(5),observation:z.strictObject({cell:z.strictObject({x:z.literal(-1),y:z.literal(-1)}),situationCode:z.union([z.literal(1),z.literal(4)]),statusCode:z.number().int().nullable(),canAct:z.boolean().nullable(),tackleZone:z.boolean().nullable()})}).optional(),
+  regenerationReturn:z.discriminatedUnion("status",[
+    z.strictObject({status:z.literal("not_observed")}),
+    z.strictObject({status:z.literal("unverified"),stop:recoveryReturnStop}),
+    z.strictObject({status:z.literal("observed"),setup:recoveryReturnSnapshot,playing:recoveryReturnSnapshot.optional(),activation:recoveryReturnActivation.optional(),stop:recoveryReturnStop.optional()})
+  ]).optional(),
+  recoveryReturnActivation:z.strictObject({regenerationSourceId:text,stepSourceIndex:count,actionCode:z.union([z.literal(1),z.literal(2)]),before:recoveryReturnSnapshot}).optional(),
   activationLoss: z.strictObject({
     rollSourceId: text, rollSourceIndex: count, declarationSourceId: text, skillSourceId: text,
     followingActivationSourceId: text, followingSourceIndex: count, followingPlayerId: text,
@@ -2319,6 +2333,7 @@ export const LuckReportSchema = z
       else require(fixed===undefined,"Only a supported scored numeric check carries a fixed-modifier receipt.");
       const injuryObservation=event.metadata.injuryObservation;
       require(validReportedRecoveryControl(event)&&validReportedRegenerationAftermath(event,sources,report.coverage.sourceRecordCount),"Regeneration aftermath requires its first same-frame owned off-pitch observation and the exact supported ordered control bridge, separately from dice and availability.");
+      require(validReportedRegenerationReturn(event,sources,report.coverage.sourceRecordCount)&&validReportedRecoveryReturnActivation(event,sources,report.coverage.sourceRecordCount),"A recovered-player return requires ordered same-instance setup/play observations and its own supported declaration; gaps and missing observations cannot establish useful availability or add luck.");
       require(validReportedArmorModifierUse(event,sources),"A recorded Mighty Blow armor use requires its separate holder, adjacent affected subject and exact committed +1 armor evidence without odds or a score.");
       if(injuryObservation)require(event.type === "injury" && (event.metadata.injuryScoring ? event.scoringStatus === "scored" : event.scoringStatus === "excluded") && event.metadata.isRollCandidate === true &&
         event.probabilitySuccess === null && event.actualSuccess === null && (event.metadata.injuryScoring || (event.delta === 0 && event.weightedDelta === 0)) &&

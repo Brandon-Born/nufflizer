@@ -188,7 +188,8 @@ const oldProjection = (r: LuckReport, file: string) => {
                   "blockPush",
               // New observed recovery state is not part of this earlier dice
               // cohort. Its source/roster/flags have independent golden joins.
-              "regenerationAftermath"
+              "regenerationAftermath",
+              "regenerationReturn"
             ].includes(key)
         )
       )

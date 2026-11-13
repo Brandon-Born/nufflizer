@@ -30,6 +30,7 @@ import {
   PARTIAL_CONTEXT_SCOPE,
   explainInjuryObservation,
   explainRegenerationAftermath,
+  explainRegenerationReturn,
   explainDiceCensus,
   explainObservedDice,
   explainDriveEffectExpiry,
@@ -868,6 +869,11 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                             {moment.metadata.regenerationAftermath ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainRegenerationAftermath(moment)}
+                              </p>
+                            ) : null}
+                            {moment.metadata.regenerationReturn || moment.metadata.recoveryReturnActivation ? (
+                              <p className="mt-1 text-xs text-amber-100/80">
+                                {explainRegenerationReturn(moment)}
                               </p>
                             ) : null}
                             {moment.contextualImpact ? (

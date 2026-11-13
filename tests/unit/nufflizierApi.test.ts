@@ -468,6 +468,7 @@ describe("POST /api/nufflizier/analyze", () => {
     const report=LuckReportSchema.parse(body),e=report.events.find(e=>e.metadata.sourceId==="source-3098")!;
     const recovery=report.events.find(e=>e.metadata.sourceId==="source-1746")!;
     expect(recovery.weightedDelta).toBe(-0.75);expect(recovery.metadata.regenerationAftermath).toMatchObject({checkpointAfter:1747,controlSourceIds:["source-1747"],observation:{cell:{x:-1,y:-1},situationCode:4,statusCode:4,canAct:null}});
+    expect(recovery.metadata.regenerationReturn).toBeUndefined(); // Failed recovery is not a successful return trace.
     expect(report.events.find(e=>e.metadata.sourceId==="source-1747")?.metadata.recoveryControl).toEqual({kind:"standby",phase:5,gamerId:null});
     expect(e.metadata.preRoll?.ordinaryMoveAvailability?.unknownPlayerIds).toEqual(["41","42","44"]);
     expect(e.metadata.preRoll?.endedActivationSourceIds).toEqual(["source-3065","source-3090"]);

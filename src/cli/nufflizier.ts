@@ -27,6 +27,7 @@ import {
   explainBlockSkillModel,
   explainInjuryObservation,
   explainRegenerationAftermath,
+  explainRegenerationReturn,
   formatActualOutcome,
   formatContextComponentSum,
   PARTIAL_CONTEXT_SCOPE,
@@ -157,6 +158,8 @@ function formatTeamSummary(
       .map((e) => `Source ${e.metadata.sourceId}: ${explainOwnership(e)}`),
     ...report.events.filter(event=>event.metadata.regenerationAftermath).slice(0,20)
       .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainRegenerationAftermath(event)}`),
+    ...report.events.filter(event=>event.metadata.regenerationReturn).slice(0,20)
+      .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainRegenerationReturn(event)}`),
     ...report.events
       .filter((event) => event.metadata.injuryTable)
       .slice(0, 20)
@@ -277,6 +280,7 @@ function formatTeamSummary(
         formatPreRollPosition(moment.metadata.preRoll),
         explainInjuryObservation(moment),
         explainRegenerationAftermath(moment),
+        explainRegenerationReturn(moment),
         explainBlockPush(moment),
         explainOwnership(moment),
         explainPreRollEvidence(moment.metadata.preRoll),

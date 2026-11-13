@@ -598,6 +598,8 @@ describe("source-qualified completed ordinary Block availability", () => {
     expect(text.stdout).toContain("Mighty Blow's +1 was already spent");
     expect(r.events.find(e=>e.metadata.sourceId==="source-444")!.metadata.regenerationAftermath).toMatchObject({checkpointAfter:445,observation:{situationCode:1,statusCode:null,canAct:null}});
     expect(r.events.find(e=>e.metadata.sourceId==="source-1012")!.metadata.regenerationAftermath).toMatchObject({checkpointAfter:1013,observation:{situationCode:4,statusCode:4,canAct:null}});
+    expect(r.events.find(e=>e.metadata.sourceId==="source-444")!.metadata.regenerationReturn).toMatchObject({status:"observed",setup:{checkpointAfter:774,phase:3},playing:{checkpointAfter:906,phase:5},activation:{sourceId:"source-1256",actionCode:1,before:{checkpointAfter:1253}}});
+    expect(text.stdout).toContain("later observed back on the pitch");expect(text.stdout).toContain("A Move declaration is recorded at source-1256");
     expect(text.stdout).toContain("After Regeneration succeeded");expect(text.stdout).toContain("in reserves");expect(text.stdout).toContain("in the injured box");
     expect(text.stdout).toContain(explainActivationLoss(end)!);
     expect(r.verdict.luckierTeam).toBe("unknown");
