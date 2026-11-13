@@ -108,7 +108,7 @@ describe("bounded pre-roll context (NUF-016–019)", () => {
     );
     expect(perturbed.events.filter((e) => e.contextualImpact)).toHaveLength(1);
     expect(perturbed.teams[0].impactScore).toBe(base.teams[0].impactScore);
-    expect(perturbed.events[0]!.metadata.preRoll?.teamTurn).toBe(1);
+    expect(perturbed.events.find(e => e.contextualImpact)!.metadata.preRoll?.teamTurn).toBe(1);
   });
   it("has zero mean across all six faces under a fixed policy and rejects tampered totals", () => {
     const r = analyzeNufflizerInput(contextReplayXml());

@@ -19,6 +19,7 @@ import {
   explainMovementOutcome,
   explainPickupBallChain,
   explainRerollCounter,
+  explainRerollResource,
   explainActivationLoss,
   explainProGate,
   explainLonerGate,
@@ -82,6 +83,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<LuckReport | null>(null);
+  const [resourceOnly, setResourceOnly] = useState(false);
   const sourcesById = useMemo(
     () =>
       new Map(
@@ -95,6 +97,10 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
   );
   const diceById = useMemo(
     () => new Map((report?.diceRecords ?? []).map((r) => [r.id, r])),
+    [report]
+  );
+  const rerollDecisions = useMemo(
+    () => new Map((report?.rerollResources.decisions ?? []).map(d => [d.decisionEventId,d])),
     [report]
   );
   const eventsById = useMemo(
@@ -114,6 +120,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
 
     return report.events
       .filter((event) => {
+        if(resourceOnly && !event.metadata.recordedRerollChoice)return false;
         if (
           query &&
           ![event.playerId, event.metadata.initialRosterName].some((value) =>
@@ -174,10 +181,12 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
     playerQuery,
     periodFilter,
     teamTurnFilter,
-    activationFilter
+    activationFilter,
+    resourceOnly
   ]);
 
   function resetFilters() {
+    setResourceOnly(false);
     setTagFilter("all");
     setTypeFilter("all");
     setTeamFilter("all");
@@ -391,6 +400,11 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
             </p>
             <p className="mt-2 text-xs">
               {explainContextCoverage(report.coverage.contextEvidence)}
+            </p>
+            <p className="mt-2 text-xs">
+              Team reroll record: {report.rerollResources.decisionCount} choices ({report.rerollResources.recordedUsedCount} used, {report.rerollResources.recordedNotUsedCount} not used, {report.rerollResources.unknownUsageCount} unknown); {report.rerollResources.linkedCount} linked, {report.rerollResources.unresolvedCount} unresolved.
+              {" "}{report.rerollResources.byTeam.map(t => `${report.teams.find(team => team.teamId === t.teamId)?.teamName ?? t.teamId}: ${t.used} used, ${t.notUsed} not used`).join("; ")}.
+              {" "}These are linked recorded choices, separate from luck scores and general eligibility.
             </p>
             {report.recruitments.length > 0 && (
               <p className="mt-2 text-xs">
@@ -668,6 +682,13 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                     setPage(0);
                   }}
                 />
+                <button type="button" onClick={() => {
+                  resetFilters();
+                  setScoringFilter("excluded");
+                  setResourceOnly(true);
+                }} aria-pressed={resourceOnly}>
+                  View team reroll choices ({report.rerollResources.decisionCount})
+                </button>
                 <button type="button" onClick={resetFilters}>
                   Reset filters
                 </button>
@@ -935,6 +956,9 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                                   eventsById
                                 )}
                               </p>
+                            ) : null}
+                            {explainRerollResource(moment, rerollDecisions, sourcesById) ? (
+                              <p>{explainRerollResource(moment, rerollDecisions, sourcesById)}</p>
                             ) : null}
                             {explainRerollCounter(moment, sourcesById) ? (
                               <p className="mt-1 text-xs text-amber-100/80">

@@ -2,6 +2,21 @@ import type { ContextComponentSummary } from "./contextComponents";
 import { recordedInjuryName } from "./injuryObservation";
 import type { LuckEventType, LuckReport } from "./types";
 import { LuckEventTypeSchema } from "./reportSchema";
+import type { RerollResources } from "./rerollResources";
+
+export function explainRerollResource(
+  event: LuckReport["events"][number],
+  decisions: ReadonlyMap<string,RerollResources["decisions"][number]>,
+  sources: ReadonlyMap<string,LuckReport["events"][number]>
+): string | null {
+  const d=decisions.get(event.id),raw=event.metadata.recordedRerollChoice;
+  if(!d || !raw)return null;
+  const offer=sources.get(d.questionSourceId ?? "")?.metadata.recordedRerollOffer;
+  const use=raw.used===null?"The replay does not establish whether a team reroll was used.":raw.used?"The replay records use of one team reroll.":"A team reroll was not used on this choice.";
+  const flags=offer?` The recorded offer shows team reroll ${offer.teamAvailable===null?"availability unknown":offer.teamAvailable?"available":"unavailable"}${offer.proAvailable===null?"":`, Pro ${offer.proAvailable?"available":"unavailable"}`}.`:"";
+  const target=offer?.rollType===15?" This offer targets the Pro test itself; it does not establish another retry of the original action die.":"";
+  return `${use}${flags}${target} ${d.status==="linked"?`The choice is linked once to its offer for team ${d.teamId}.`:"Its offer/owner continuation is unresolved, so it stays outside linked team totals."} Source ${d.decisionSourceId ?? "unknown (unindexed record)"}${d.questionSourceId?`; offer ${d.questionSourceId}`:""}. This decision adds no random outcome or luck score. Recorded availability does not establish general eligibility, remaining resources or tactical cost.`;
+}
 
 export function explainNumericRetryAccess(event:LuckReport["events"][number]):string|null {
   const signed=(n:number)=>`${n>=0?"+":""}${n.toFixed(3)}`;
@@ -43,7 +58,7 @@ export function explainRerollCounter(
   const counter=event.metadata.teamRerollCounter ?? sources.get(event.metadata.rerollDecisionId ?? offer?.decisionSourceId ?? "")?.metadata.teamRerollCounter;
   if(!counter) return null;
   const before=counter.before,after=counter.after;
-  const choice=counter.spent ? "The recorded decision used one team reroll." : "The recorded decision declined the reroll; no team reroll was spent on this decision.";
+  const choice=counter.spent ? "The recorded decision used one team reroll." : "The recorded decision did not use a team reroll; no team reroll was spent on this decision.";
   const follow=after
     ? ` The next same-turn checkpoint records ${after.count}. The counter change from ${before.count} to ${after.count} ${counter.reconciliation === "matched" ? "matches this decision" : "does not match this single decision; resource consumption remains unreconciled"}.`
     : " The next same-turn counter is unknown. A missing counter is not treated as zero, and a later turn cannot fill it.";

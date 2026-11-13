@@ -1,4 +1,5 @@
 import { validReportedFailedNumericRetry } from "./failedNumericRetry";
+import { RerollResourcesSchema, RecordedRerollChoiceSchema, RecordedRerollOfferSchema, validReportedRerollResources } from "./rerollResources";
 import { validReportedNumericRetryAccess, validReportedNumericGatedReplacement, retryAccessDelta } from "./numericRetryAccess";
 import { validReportedCatchRerollResume } from "./catchRerollResume";
 import { validReportedNumericQuestionOriginal,validReportedNumericQuestionCopy } from "./numericQuestionOriginal";
@@ -260,6 +261,8 @@ export const LuckEventMetadataSchema = z.strictObject({
     beforeCheckpointAfter:count,afterCheckpointAfter:count,afterReplayStep:z.number().int().positive(),afterChildIndex:z.number().int().nonnegative(),
     afterPitchLocation:z.enum(["on_pitch","off_pitch","unknown"]),afterRecordedCanAct:z.boolean().nullable(),afterRecordedTackleZone:z.boolean().nullable()}).optional(),
   teamRerollDecision: z.strictObject({ gamerId: z.union([z.literal(0),z.literal(1)]), used: z.boolean() }).optional(),
+  recordedRerollChoice: RecordedRerollChoiceSchema.optional(),
+  recordedRerollOffer: RecordedRerollOfferSchema.optional(),
   mentalTraitResolution: z.strictObject({ providerSkillId: z.union([z.literal(31), z.literal(51)]), effectEndSourceId: text, skillSourceId: text }).optional(),
   mentalEffectEnd: z.strictObject({ providerSkillId: z.union([z.literal(31),z.literal(51)]), declarationSourceId: text, playerId: text }).optional(),
   activationEnd: activationEnd.optional(),
@@ -708,6 +711,7 @@ export const LuckReportSchema = z
     match: z.strictObject({ id: text, homeTeam: text, awayTeam: text }),
     verdict: LuckVerdictSchema,
     diceRecords: z.array(diceRecord).max(REPLAY_LIMITS.events),
+    rerollResources: RerollResourcesSchema,
     coverage: z.strictObject({
       modelVersion: z.literal("dice-evidence-2"),
       diceRecords: z.strictObject({
@@ -806,6 +810,7 @@ export const LuckReportSchema = z
     require(counterQuestions.size === report.events.filter((e) => e.metadata.teamRerollCounter).length,"Each counter offer can fund at most one recorded decision.");
     const teamIds = new Set(report.teams.map((team) => team.teamId));
     require(teamIds.size === 2, "Report requires two distinct teams.");
+    require(validReportedRerollResources(report.rerollResources,report.events,report.teams.map(t=>t.teamId)), "Recorded reroll resources must count each matching source choice once and preserve unresolved choices.");
     require(new Set(report.recruitments.map(r => r.sourceId)).size === report.recruitments.length,
       "Each recorded purchase must appear once.");
     require(report.events.filter(event => event.metadata.mercenary?.operation === "purchase" &&

@@ -211,7 +211,11 @@ const oldProjection = (r: LuckReport, file: string) => {
               // cohort. Its source/roster/flags have independent golden joins.
               "regenerationAftermath",
               "regenerationReturn",
-              "rerollDraws"
+              "rerollDraws",
+              // New source-only resource facts are independently joined to
+              // XML. They add no value to this frozen historical dice cohort.
+              "recordedRerollOffer",
+              "recordedRerollChoice"
             ].includes(key)
         )
       )

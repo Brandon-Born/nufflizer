@@ -98,6 +98,19 @@ export function findRerollCounterEvidence(replay: ReplayModel) {
   const checkpoints = replay.boardCheckpoints ?? [];
   const knownTeamIds = replay.teams.map((t) => t.id);
   const events = replay.turns.flatMap((t) => t.events);
+  // A shared snapshot can include more than one decision (for example a Pro
+  // choice followed by a team retry of that gate). It cannot independently
+  // corroborate the decrement for either choice. Include malformed/unsupported
+  // later choices as barriers too; never select only the understood spends.
+  const nextChoices = new Map<ReplayEvent, ReplayEvent>();
+  let nextChoice: ReplayEvent | undefined;
+  for (let i = events.length - 1; i >= 0; i--) {
+    const e = events[i]!;
+    if (e.sourceTag === "ResultTeamRerollUsage") {
+      if (nextChoice) nextChoices.set(e, nextChoice);
+      nextChoice = e;
+    }
+  }
   let cursor = 0,
     last: ReplayBoardCheckpoint | undefined;
   let step: ReplayEvent | undefined;
@@ -216,6 +229,9 @@ export function findRerollCounterEvidence(replay: ReplayModel) {
     // skip an unknown observation or borrow a later turn's reset counter.
     const next = checkpoints[cursor];
     let after = observation(next, event, q.gamer, knownTeamIds);
+    const intervening = nextChoices.get(event);
+    if (intervening && (intervening.sourceIndex === undefined || intervening.sourceIndex <= (next?.afterSourceIndex ?? Infinity)))
+      after = undefined;
     if (
       after &&
       (q.before.periodCode === null ||
@@ -273,7 +289,7 @@ export function attachRerollCounterEvidence(
     decision.metadata.teamRerollCounter = evidence;
     decision.label = proof.spent
       ? "Recorded team reroll used"
-      : "Recorded team reroll declined";
+      : canUseTeamReroll ? "Recorded team reroll declined" : "Recorded team reroll not used";
     decision.statusReason =
       "observed: team reroll decision and checkpoint counters; no additional random outcome or tactical value";
   }

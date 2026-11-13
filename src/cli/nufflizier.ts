@@ -20,6 +20,7 @@ import {
   explainMovementOutcome,
   explainPickupBallChain,
   explainRerollCounter,
+  explainRerollResource,
   explainActivationLoss,
   explainProGate,
   explainLonerGate,
@@ -167,6 +168,8 @@ function formatTeamSummary(
       .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainRegenerationReturn(event)}`),
     ...report.events.filter(event=>event.metadata.catchRerollResume).slice(0,20)
       .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainCatchRerollResume(event)}`),
+    `Recorded team-reroll decisions: ${report.rerollResources.decisionCount} (${report.rerollResources.recordedUsedCount} used, ${report.rerollResources.recordedNotUsedCount} not used, ${report.rerollResources.unknownUsageCount} unknown); ${report.rerollResources.linkedCount} linked; ${report.rerollResources.unresolvedCount} unresolved. Linked team totals: ${report.rerollResources.byTeam.map(t=>`${t.teamId}: ${t.used} used, ${t.notUsed} not used`).join("; ")}.`,
+    ...report.rerollResources.decisions.map(d=>explainRerollResource(eventsById.get(d.decisionEventId)!,new Map([[d.decisionEventId,d]]),sourcesById)!),
     ...report.events.filter(event=>event.metadata.failedNumericRetry).slice(0,20)
       .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainFailedNumericRetry(event)}`),
     ...report.events.filter(event=>event.metadata.numericRetryAccess||event.metadata.numericGatedReplacement).slice(0,20)

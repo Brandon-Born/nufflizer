@@ -2,6 +2,10 @@ import type { ReplayEvent, ReplayModel } from "@/domain/replay/types";
 import { verifyLonerTest } from "@/domain/replay/loner";
 import { addDiceLink, type DiceLinks } from "./diceEvidence";
 type Obj = Record<string, unknown>;
+function orderedResourceSources(events: readonly ReplayEvent[]) {
+  return events.every((e,i)=>!!e.id && Number.isSafeInteger(e.sourceIndex) && e.sourceIndex!>=0 &&
+    (i===0 || events[i-1]!.sourceIndex!<e.sourceIndex!));
+}
 const obj = (v: unknown): Obj | undefined =>
   v !== null && typeof v === "object" && !Array.isArray(v)
     ? (v as Obj)
@@ -487,6 +491,7 @@ export function findTeamDiceIdentities(replay: ReplayModel) {
     }
     if (
       !final.id ||
+      !orderedResourceSources([q,choice,...(gateSkill && gate ? [gateSkill,gate] : []),final]) ||
       !final.payload ||
       !same(final) ||
       final.sourceTag !== "ResultRoll" ||

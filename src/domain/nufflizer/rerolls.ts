@@ -92,6 +92,8 @@ export function linkLonerGates(
       !owner ||
       !choice?.id ||
       !skill?.id ||
+      !roll.id ||
+      !orderedSources(choice, skill, roll) ||
       choice.sourceTag !== "ResultTeamRerollUsage" ||
       choice.payload?.Used !== 1 ||
       (gamerId !== 0 && gamerId !== 1) ||
@@ -221,6 +223,9 @@ export function linkProGates(
       counts.get(roll.actionId) !== 1 ||
       !owner ||
       !skill?.id ||
+      !roll.id ||
+      !Number.isSafeInteger(skill.sourceIndex) || skill.sourceIndex! < 0 ||
+      !Number.isSafeInteger(roll.sourceIndex) || skill.sourceIndex! >= roll.sourceIndex! ||
       skill.sourceTag !== "ResultSkillUsage" ||
       skill.payload?.Skill !== 50 ||
       skill.payload.Used !== 1 ||

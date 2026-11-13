@@ -1,3 +1,4 @@
+import { findRerollResources, recordedRerollChoice, recordedRerollOffer } from "./rerollResources";
 import { findFailedNumericRetries } from "./failedNumericRetry";
 import {findNumericRetryAccess,scoreNumericRetryAccess} from "./numericRetryAccess";
 import { findCatchRerollResumes } from "./catchRerollResume";
@@ -877,6 +878,8 @@ function buildNormalizedEvent(
       },
       metadata: {
         sourceTag: event.sourceTag,
+        recordedRerollChoice: recordedRerollChoice(event),
+        recordedRerollOffer: recordedRerollOffer(event),
         mercenary:
           replayVersion === "1-4-0-0" ? mercenaryIdentity(event) : undefined,
         sourceId: event.id,
@@ -981,6 +984,8 @@ function buildNormalizedEvent(
       },
       metadata: {
         sourceTag: event.sourceTag,
+        recordedRerollChoice: recordedRerollChoice(event),
+        recordedRerollOffer: recordedRerollOffer(event),
         sourceId: event.id,
         sourceIndex: event.sourceIndex,
         isRollCandidate,
@@ -1109,6 +1114,8 @@ function buildNormalizedEvent(
           ? "two_attempt"
           : "single_attempt",
       sourceTag: event.sourceTag,
+        recordedRerollChoice: recordedRerollChoice(event),
+        recordedRerollOffer: recordedRerollOffer(event),
       sourceId: event.id,
       actionId: event.actionId,
       sequenceId: event.sequenceId,
@@ -1779,6 +1786,8 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
           "ResultPushBack",
           "ResultPlayerRemoval",
           "ResultNoRollSuccess",
+          "QuestionTeamRerollUsage",
+          "ResultTeamRerollUsage",
           "EventBuyMercenary",
           "EventRemoveMercenary"
         ].includes(event.sourceTag)
@@ -2566,7 +2575,14 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     )
   } satisfies LuckReport["coverage"];
   const recruitments = observeRecruitmentPurchases(replay);
-  const idSeed = `${replay.matchId}:${JSON.stringify({ events, recruitments })}`;
+  const rerollResources = findRerollResources(replay, ownership, catchResumes, [homeAggregate.teamId, awayAggregate.teamId], normalizedByRaw);
+  for(const event of events){
+    const choice=event.metadata.recordedRerollChoice;
+    if(choice && event.label==="Unknown excluded from score")event.label=choice.used===null
+      ? "Recorded team reroll choice (usage unknown)"
+      : choice.used ? "Recorded team reroll use" : "Recorded team reroll not used";
+  }
+  const idSeed = `${replay.matchId}:${JSON.stringify({ events, recruitments, rerollResources })}`;
 
   return {
     schemaVersion: REPORT_SCHEMA_VERSION,
@@ -2587,6 +2603,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     },
     verdict,
     diceRecords,
+    rerollResources,
     coverage,
     damageSteps,
     contextComponents: summarizeContextComponents(events, [

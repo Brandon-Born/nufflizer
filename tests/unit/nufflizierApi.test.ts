@@ -14,6 +14,9 @@ describe("POST /api/nufflizier/analyze", () => {
     const response=await POST(new Request("http://localhost/api/nufflizier/analyze",{method:"POST",body:data}));
     const payload=await response.json();expect(response.status,JSON.stringify(payload).slice(0,200)).toBe(200);
     const report=LuckReportSchema.parse(payload),e=report.events.find(e=>e.metadata.retainedCatchReaction)!;
+    expect(report.rerollResources).toMatchObject({decisionCount:21,linkedCount:20,unresolvedCount:1});
+    expect(report.rerollResources.decisions.find(d=>d.decisionSourceId==="source-5407")).toMatchObject({status:"unresolved",questionSourceId:"source-5404",teamId:null});
+    expect(report.events.find(e=>e.metadata.sourceId==="source-5407")?.label).toBe("Recorded team reroll use");
     expect(e.metadata.sourceId).toBe("source-548");expect(e.metadata.retainedCatchReaction).toMatchObject({beforeCheckpointAfter:538,waitingCheckpointAfter:545});
     expect(e.catchPossessionBounds).toMatchObject({policy:"kept_catch_failure_envelope",lower:-2/3,upper:0});
     expect(e.probabilitySuccess).toBe(1/3);expect(e.weightedDelta).toBeCloseTo(-11/30,12);
@@ -148,6 +151,10 @@ describe("POST /api/nufflizier/analyze", () => {
           e.metadata.teamRerollMovement
       )!;
     const original=report.events.find(e=>e.metadata.sourceId==="source-4546")!;
+    expect(report.rerollResources).toMatchObject({decisionCount:15,linkedCount:15,unresolvedCount:0});
+    expect(report.rerollResources.decisions.find(d=>d.decisionSourceId==="source-4548")).toMatchObject({status:"linked",questionSourceId:"source-4546",teamId:"1"});
+    expect(report.events.find(e=>e.metadata.sourceId==="source-4548")?.metadata.recordedRerollChoice).toEqual({gamerId:1,used:false,validFields:true});
+    expect(report.events.find(e=>e.metadata.sourceId==="source-4548")?.label).toBe("Recorded team reroll not used");
     expect(original.metadata.numericOriginal).toEqual({gamerId:1,canUseTeamReroll:false,canUseProReroll:true});
     expect(original.scoringStatus).toBe("scored");expect(original.probabilitySuccess).toBeCloseTo(2/3,12);
     expect(original.delta).toBeCloseTo(-2/3,12);expect(original.weightedDelta).toBeCloseTo(-11/15,12);
