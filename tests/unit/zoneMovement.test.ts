@@ -192,7 +192,7 @@ describe("fixed recorded zones and reached-square pickup consequences", () => {
     const r = LuckReportSchema.parse(analyzeReplayLuck(s.replay)),
       pickup = r.events.find((e) => e.metadata.sourceId === id)!;
     expect(pickup.probabilitySuccess).toBeCloseTo(8 / 9, 12);
-    expect(pickup.delta).toBeCloseTo(1 / 9, 12);
+    expect(pickup.delta).toBeCloseTo(-1 / 3, 12);
     expect(pickup.possessionBounds).toBeUndefined();
     expect(pickup.contextualImpact).toBeUndefined();
     expect(explainMovementOutcome(pickup.metadata)).toContain(

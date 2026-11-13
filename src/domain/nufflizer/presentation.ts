@@ -3,6 +3,12 @@ import { recordedInjuryName } from "./injuryObservation";
 import type { LuckEventType, LuckReport } from "./types";
 import { LuckEventTypeSchema } from "./reportSchema";
 
+export function explainNumericRerollScore(event:LuckReport["events"][number]):string|null {
+  const r=event.metadata.rerollDraws;if(!r)return null;
+  const signed=(n:number)=>`${n>0?"+":""}${n.toFixed(3)}`;
+  return `Dice luck counts both actual rolls once. At ${(r.baseSuccessChance*100).toFixed(1)}% success per roll, the failed first die (${r.initialSourceId}) contributes ${signed(r.initialDelta)} and the replacement contributes ${signed(r.replacementDelta)}: ${signed(event.delta)} before the category weight. Expected ${((event.probabilitySuccess??0)*100).toFixed(1)}% describes a fixed policy of rerolling a first failure; the already-chosen replacement alone has ${(r.baseSuccessChance*100).toFixed(1)}% chance. A rescued action still includes the first failed die. Resource cost and later consequences are separate.`;
+}
+
 export function explainRerollCounter(
   event: LuckReport["events"][number],
   sources: ReadonlyMap<string,LuckReport["events"][number]> = new Map()

@@ -101,7 +101,7 @@ describe("actual movement after a direct committed team-rerolled Rush", () => {
       const r = LuckReportSchema.parse(analyzeReplayLuck(s.replay)),
         e = r.events.find((e) => e.metadata.sourceId === s.final.id)!;
       expect(e.probabilitySuccess).toBeCloseTo(8 / 9, 12);
-      expect(e.delta).toBeCloseTo(1 / 9, 12);
+      expect(e.delta).toBeCloseTo(-1 / 3, 12);
       expect(explainMovementOutcome(e.metadata)).toContain(
         `${after} movement points remained`
       );
@@ -175,7 +175,7 @@ describe("actual movement after a direct committed team-rerolled Rush", () => {
         carriesBall: held
       });
       expect(e.probabilitySuccess).toBeCloseTo(35 / 36, 12);
-      expect(e.delta).toBeCloseTo(1 / 36, 12);
+      expect(e.delta).toBeCloseTo(-2 / 3, 12);
       expect(e.metadata.preRoll?.actorCell).toEqual({ x, y });
       for (const tag of [
         "ResultDoMove",
@@ -328,7 +328,7 @@ describe("actual movement after a direct committed team-rerolled Rush", () => {
           12
         );
         expect(e.delta).toBeCloseTo(
-          Number(c.result.Outcome![0]) - e.probabilitySuccess!,
+          Number(c.result.Outcome![0]) - (didUse ? 2 * p : p),
           12
         );
         expect(Number(c.result.NewRoll![0])).toBe(didUse ? 1 : 0);
@@ -543,6 +543,8 @@ describe("actual movement after a direct committed team-rerolled Rush", () => {
       expect(run.stdout).toContain("successful team-rerolled Rush");
       expect(run.stdout).toContain("explicitly held ball followed");
       expect(run.stdout).toContain("actual movement adds no luck score");
+      expect(run.stdout).toContain("Dice luck counts both actual rolls once");
+      expect(run.stdout).toContain("A rescued action still includes the first failed die");
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

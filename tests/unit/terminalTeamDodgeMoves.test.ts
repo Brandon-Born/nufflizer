@@ -46,7 +46,7 @@ describe("conditional teammate-move cost of a committed team Dodge", () => {
       });
       expect(e.contextualBounds?.activeContinuation).toBeUndefined();
       expect(e.probabilitySuccess).toBeCloseTo(8 / 9, 12);
-      expect(e.delta).toBeCloseTo(-8 / 9, 12);
+      expect(e.delta).toBeCloseTo(-4 / 3, 12);
       expect(e.metadata.movementFall).toBeDefined();
       expect(
         r.teams.every((t) => t.impactCount === 0 && t.impactScore === 0)

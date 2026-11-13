@@ -25,6 +25,7 @@ export type RerollLink = {
     skillId: 44 | 1008;
   };
   proGate?: { passed: boolean; successChance: number; skillSourceId: string };
+  teamDecisionGamerId?: 0 | 1;
 };
 function singleD6(roll: Record<string, unknown>): number | undefined {
   const dice = roll.Dice as
@@ -281,12 +282,14 @@ function sameRoll(
 export function linkTeamRerolls(
   events: ReplayEvent[],
   checkpointEpochs?: ReadonlyMap<number, number>,
-  owners?:OwnershipLookup
+  owners?:OwnershipLookup,
+  replayVersion?: string
 ): Map<number, RerollLink> {
   const links = new Map<number, RerollLink>();
   const roleOwner=(event:ReplayEvent)=>{
-    if(!owners || !event.playerId)return;
-    const known=ownerAt(owners,event.playerId,event);if(known)return known;
+    if(!owners || !event.playerId || event.attributionConflict)return;
+    const known=ownerAt(owners,event.playerId,event);
+    if(known)return (!event.actorTeamId || event.actorTeamId===known) && (!event.teamId || event.teamId===known) ? known : undefined;
     // The simple numeric contract also admits an explicit source TeamId.
     // It cannot override an overlap, current conflict or pending replacement.
     if("resolve" in owners) {
@@ -296,12 +299,17 @@ export function linkTeamRerolls(
         (!event.teamId || event.teamId===event.actorTeamId))return event.actorTeamId;
     }
   };
-  const initialRollsInStep = new Set<string>();
+  const initialRollsInStep = new Map<string, { index: number; unique: boolean }>();
+  const emittedFamiliesInStep = new Set<string>();
+  const completedTeamChecks = new Map<string, number>();
+  let lastInitialIndex: number | undefined;
   let pending:
     | {
         question: ReplayEvent;
         choice?: ReplayEvent;
         originalAlreadyReported: boolean;
+        emittedOriginalIndex?: number;
+        conflictingOriginal: boolean;
       }
     | undefined;
   function sameAction(a: ReplayEvent, b: ReplayEvent): boolean {
@@ -352,21 +360,35 @@ export function linkTeamRerolls(
       die?.Value
     ]);
   }
+  const familyKey=(event:ReplayEvent,family:unknown)=>JSON.stringify([
+    event.actionId,event.playerId,event.stepType,event.targetId,family
+  ]);
   for (const [index, event] of events.entries()) {
+    const family=event.rollType ?? ((event.sourceTag==="QuestionTeamRerollUsage")
+      ? (event.payload?.RollInfos as {RollType?:number}|undefined)?.RollType : undefined);
+    const completed=event.actionId && family!==undefined ? completedTeamChecks.get(familyKey(event,family)) : undefined;
+    if(completed!==undefined && index>completed){
+      if(event.sourceTag==="QuestionTeamRerollUsage") {pending=undefined;continue;}
+      if(event.sourceTag==="ResultRoll" && event.payload?.NewRoll===1){
+        links.set(index,{twoAttemptPolicy:false,rerollUsed:false,exclusionReason:"another fresh emission after this check's supported replacement needs its own policy"});
+        pending=undefined;continue;
+      }
+    }
     if (event.sourceTag === "QuestionTeamRerollUsage") {
       const original = event.payload?.RollInfos as
         Record<string, unknown> | undefined;
+      const emitted = original && event.actionId !== undefined
+        ? initialRollsInStep.get(originalKey(event, original.RollType, original)) : undefined;
       pending = {
         question: event,
-        originalAlreadyReported: Boolean(
-          original &&
-          event.actionId !== undefined &&
-          initialRollsInStep.has(
-            originalKey(event, original.RollType, original)
-          )
-        )
+        originalAlreadyReported: !!emitted,
+        conflictingOriginal: !!original && !emitted && emittedFamiliesInStep.has(familyKey(event,original.RollType)),
+        emittedOriginalIndex: replayVersion === "1-4-0-0" && emitted?.unique &&
+          lastInitialIndex === emitted.index ? emitted.index : undefined
       };
       initialRollsInStep.clear();
+      emittedFamiliesInStep.clear();
+      lastInitialIndex = undefined;
       continue;
     }
     if (
@@ -381,16 +403,21 @@ export function linkTeamRerolls(
         event.sourceTag === "PlayerStep" ||
         event.sourceTag === "ResultUseAction"
       )
-        initialRollsInStep.clear();
+      { initialRollsInStep.clear(); emittedFamiliesInStep.clear(); }
+      if(event.sourceTag === "ResultRoll" && event.actionId !== undefined)
+        emittedFamiliesInStep.add(familyKey(event,event.rollType));
       if (
         event.sourceTag === "ResultRoll" &&
         event.actionId !== undefined &&
         event.payload?.Status === 1 &&
         event.payload?.NewRoll === 1
       )
-        initialRollsInStep.add(
-          originalKey(event, event.rollType, event.payload)
-        );
+      {
+        const key = originalKey(event, event.rollType, event.payload);
+        initialRollsInStep.set(key, { index, unique: !initialRollsInStep.has(key) });
+        lastInitialIndex = index;
+      } else if (!(event.sourceTag === "Carrier" && event.checkpointCarrier))
+        lastInitialIndex = undefined;
       continue;
     }
     // Only a matching continuation step can intervene in this simple policy.
@@ -435,12 +462,44 @@ export function linkTeamRerolls(
       const owned=!owners || !!(owner && question.playerId && choice.playerId &&
         roleOwner(question)===owner && roleOwner(choice)===owner &&
         (question.payload?.GamerId===0 || question.payload?.GamerId===1) && String(question.payload.GamerId)===owner);
+      const emittedIndex = pending.emittedOriginalIndex;
+      const emitted = emittedIndex === undefined ? undefined : events[emittedIndex];
+      const replacementFace = singleD6(event.payload);
+      const matchedEmitted = !!emitted?.id && !!event.id && !!question.id && !!choice.id &&
+        Number.isSafeInteger(emitted.sourceIndex) && emitted.sourceIndex! > 0 &&
+        emitted.sourceIndex! < (question.sourceIndex ?? -1) &&
+        question.sourceIndex! < (choice.sourceIndex ?? -1) && choice.sourceIndex! < (event.sourceIndex ?? -1) &&
+        emitted.locator?.replayStep !== undefined && emitted.locator.childIndex !== undefined &&
+        emitted.locator.stepIndex !== undefined && emitted.locator.messageIndex !== undefined &&
+        emitted.locator.replayStep === question.locator?.replayStep &&
+        emitted.locator.childIndex === question.locator?.childIndex &&
+        emitted.locator.stepIndex === question.locator?.stepIndex &&
+        emitted.locator.messageIndex < (question.locator?.messageIndex ?? -1) &&
+        sameAction(emitted, question) && emitted.actionId === question.actionId &&
+        emitted.sourceTag === "ResultRoll" && emitted.rollType === event.rollType &&
+        [1,2,4,7].includes(event.rollType ?? -1) && !!emitted.payload &&
+        emitted.payload.Outcome === 0 && isFailedSingleD6(emitted.payload) &&
+        !numericCheckExclusion(replayVersion, emitted, false) &&
+        (!checkpointEpochs || checkpointEpochs.get(emitted.sourceIndex ?? -1) ===
+          checkpointEpochs.get(question.sourceIndex ?? -1)) &&
+        (!owners || roleOwner(emitted) === owner);
+      const validFreshReplacement = !numericCheckExclusion(replayVersion,event,true) && replacementFace !== undefined &&
+        event.payload.Outcome === Number(replacementFace >= Number(event.payload.Difficulty));
+      const matchedReplacement = matchedEmitted && validFreshReplacement;
+      const numericFamily=[1,2,4,7].includes(event.rollType??-1);
+      const numericPolicyExclusion=numericFamily
+        ? numericCheckExclusion(replayVersion,{...question,sourceTag:"ResultRoll",rollType:event.rollType,payload:roll},false) ?? numericCheckExclusion(replayVersion,event,true)
+        : undefined;
       const fullTeam =
+        !!question.id && !!choice.id && !!event.id &&
+        (question.payload?.GamerId === 0 || question.payload?.GamerId === 1) &&
         owned &&
         validOriginal &&
         question.payload?.CanUseTeamReroll === 1 &&
         choice.payload?.Used === 1 &&
-        !pending.originalAlreadyReported &&
+        !pending.conflictingOriginal &&
+        (!numericFamily || (!numericPolicyExclusion && validFreshReplacement)) &&
+        (!pending.originalAlreadyReported || matchedReplacement) &&
         event.payload?.Status === 2 &&
         event.payload?.NewRoll === 1;
       const kept =
@@ -452,20 +511,35 @@ export function linkTeamRerolls(
         event.payload.Outcome === 0 &&
         isFailedSingleD6(event.payload) &&
         sameDie(roll, event.payload);
-      const retainedOriginal = kept && !pending.originalAlreadyReported;
+      const retainedOriginal = kept && !pending.originalAlreadyReported && !pending.conflictingOriginal;
+      if(fullTeam && validFreshReplacement && [1,2,4,7].includes(event.rollType??-1) && event.actionId)
+        completedTeamChecks.set(familyKey(event,event.rollType),index);
+      if (fullTeam && matchedEmitted && emittedIndex !== undefined) {
+        links.set(emittedIndex, {
+          twoAttemptPolicy: false, rerollUsed: false, mergedIntoId: event.id,
+          exclusionReason: "original failed die retained in the committed team-rerolled check; not a separate score"
+        });
+      }
       links.set(index, {
-        retainedOriginal,
+        retainedOriginal: retainedOriginal || (kept && matchedEmitted),
         exclusionReason:
-          !owned ? "reroll participants require matching roster owners and a verified team slot at the original offer, decision and result" : choice.payload?.Used === 0 && !retainedOriginal
+          !owned ? "reroll participants require matching roster owners and a verified team slot at the original offer, decision and result" : pending.conflictingOriginal
+            ? "offered original contradicts an emitted die in this check; no compound or duplicate score is inferred"
+            : choice.payload?.Used === 0 && !retainedOriginal
             ? kept
               ? "retained original already reported; repeated summary is not another attempt"
               : "declined reroll summary does not match valid original dice"
-            : undefined,
+            : choice.payload?.Used === 1 && !fullTeam
+              ? numericPolicyExclusion ?? "committed reroll lacks a matching source-qualified original and fresh replacement"
+              : undefined,
         twoAttemptPolicy: fullTeam,
         rerollUsed: choice.payload?.Used === 1,
         questionId: question.id,
         decisionId: choice.id,
         originalDice: roll?.Dice,
+        originalId: (fullTeam || kept) && matchedEmitted ? emitted!.id : undefined,
+        mergedIntoId: kept && matchedEmitted ? emitted!.id : undefined,
+        teamDecisionGamerId: fullTeam ? question.payload!.GamerId as 0 | 1 : undefined,
         resource: fullTeam ? "team" : undefined,
         teamRerollsSpent: fullTeam ? 1 : retainedOriginal ? 0 : undefined,
         policy: fullTeam
@@ -482,7 +556,7 @@ export function linkTeamRerolls(
     const priorLink = links.get(index - 1);
     const anchor =
       priorLink?.mergedIntoId ??
-      (priorLink?.retainedOriginal ? previous?.id : undefined);
+      (priorLink?.retainedOriginal || priorLink?.twoAttemptPolicy ? previous?.id : undefined);
     if (
       !anchor ||
       links.has(index) ||
@@ -527,31 +601,36 @@ export function linkObservedSkillRerolls(
   events: ReplayEvent[],
   replayVersion: string | undefined,
   playerToTeam: OwnershipLookup,
-  links: Map<number, RerollLink>,
-  terminalDodgeSourceId?: string
+  links: Map<number, RerollLink>
 ): void {
   if (replayVersion !== "1-4-0-0") return;
-  const records = new Map<string, number>();
-  const key = (event: ReplayEvent, rollType: number) =>
-    event.actionId + ":" + rollType;
-  for (const event of events) {
-    if (!event.actionId) continue;
-    const family =
-      event.sourceTag === "ResultRoll"
-        ? event.rollType
-        : event.sourceTag === "QuestionTeamRerollUsage" ||
-            event.sourceTag === "QuestionSkillUsage"
-          ? (event.payload?.RollInfos as { RollType?: unknown } | undefined)
-              ?.RollType
-          : undefined;
-    if (typeof family !== "number" || !SKILL_CHECKS.has(family)) continue;
-    const group = key(event, family);
-    records.set(group, (records.get(group) ?? 0) + 1);
-  }
-
+  const key = (event: ReplayEvent, rollType: number) => event.actionId + ":" + rollType;
+  const seenInitials = new Set<string>();
+  const claimed = new Map<string, {index:number;event:ReplayEvent}>();
   for (const [index, original] of events.entries()) {
-    const family = original.rollType;
+    const family = original.rollType ?? ((original.sourceTag === "QuestionTeamRerollUsage" || original.sourceTag === "QuestionSkillUsage")
+      ? (original.payload?.RollInfos as {RollType?:number}|undefined)?.RollType : undefined);
     const rule = family === undefined ? undefined : SKILL_CHECKS.get(family);
+    if(rule && original.actionId && family !== undefined){
+      const group=key(original,family), prior=claimed.get(group);
+      if(prior){
+        if(original.sourceTag === "ResultRoll" && index > prior.index && !links.has(index)){
+          const previous=events[index-1],anchor=links.get(index-1)?.mergedIntoId ?? previous?.id;
+          if(original.payload?.Status===1 && original.payload.NewRoll===0 && anchor===prior.event.id &&
+            original.playerId===prior.event.playerId && original.targetId===prior.event.targetId && original.actorTeamId===prior.event.actorTeamId &&
+            original.payload.Outcome===prior.event.payload?.Outcome && sameRoll(original.payload,prior.event.payload!) && singleD6(original.payload)===singleD6(prior.event.payload!))
+            links.set(index,{twoAttemptPolicy:false,rerollUsed:false,mergedIntoId:prior.event.id,exclusionReason:"replacement already reported; repeated summary is not another draw"});
+          else if(original.payload?.NewRoll===1)
+            links.set(index,{twoAttemptPolicy:false,rerollUsed:false,exclusionReason:"another fresh emission after this check's supported replacement needs its own policy"});
+        }
+        continue;
+      }
+      if(original.sourceTag!=="ResultRoll") {seenInitials.add(group);continue;}
+      if(original.payload?.Status===1 && original.payload.NewRoll===1){
+        if(seenInitials.has(group))continue;
+        seenInitials.add(group);
+      }
+    }
     if (
       !rule ||
       family === undefined ||
@@ -563,8 +642,7 @@ export function linkObservedSkillRerolls(
       original.stepType !== rule.stepType ||
       original.stepActorId !== original.playerId ||
       original.targetId !== "-1" ||
-      original.stepTargetId !== original.targetId ||
-      records.get(key(original, family)) !== 2
+      original.stepTargetId !== original.targetId
     )
       continue;
     const skill = events[index + 1];
@@ -620,28 +698,9 @@ export function linkObservedSkillRerolls(
       replacement.Outcome !== Number(face >= Number(replacement.Difficulty))
     )
       continue;
-    if (
-      replacement.Outcome === 0 &&
-      !(family === 2 && final.id === terminalDodgeSourceId)
-    ) {
-      // A failed replacement alone does not establish that there was no
-      // further choice. A Dodge must reach the verified fall and turnover.
-      // UI-002 links the other supported failed check to its Pickup bounce.
-      const bounce = events[index + 3];
-      const direction = events[index + 4];
-      if (
-        family !== 4 ||
-        bounce?.sourceTag !== "BallStep" ||
-        bounce.stepType !== 3 ||
-        !bounce.actionId ||
-        bounce.sequenceId !== original.sequenceId ||
-        bounce.actionId === original.actionId ||
-        direction?.sourceTag !== "ResultRoll" ||
-        direction.rollType !== 25 ||
-        direction.actionId !== bounce.actionId
-      )
-        continue;
-    }
+    // The fresh replacement is an observed draw at this prefix. A later
+    // bounce/fall or unknown reaction cannot select which numeric failures
+    // count. Full aftermath/activation policies keep their own guards.
     links.set(index, {
       twoAttemptPolicy: false,
       rerollUsed: false,
@@ -649,6 +708,7 @@ export function linkObservedSkillRerolls(
       exclusionReason:
         "first die retained as evidence for the skill-rerolled check"
     });
+    claimed.set(key(original,family),{index:index+2,event:final});
     links.set(index + 2, {
       twoAttemptPolicy: true,
       rerollUsed: true,

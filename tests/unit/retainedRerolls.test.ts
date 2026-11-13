@@ -254,7 +254,7 @@ describe("NUF-012 retained original numeric checks", () => {
     expect(final(events).statusReason).toMatch(/already reported/);
   });
 
-  it("does not add combined reroll odds to an independently scored initial attempt", () => {
+  it("keeps an emitted original separate when its source identity is missing", () => {
     const events = chain();
     events[1]!.payload!.Used = 1;
     events[2]!.payload = {

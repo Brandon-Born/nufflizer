@@ -10,10 +10,12 @@ type Row = {
 };
 export function lonerDriveXml(
   id: string,
-  evidencePath = "tests/fixtures/evidence/bb3-loner-drive.json"
+  evidencePath = "tests/fixtures/evidence/bb3-loner-drive.json",
+  transform?: (records: Row[]) => void
 ) {
   const evidence = JSON.parse(readFileSync(evidencePath, "utf8"));
   const sample = evidence.cases.find((c: { id: string }) => c.id === id);
+  transform?.(sample.records as Row[]);
   const first = sample.records.find((r: Row) => r.projection?.BoardState)
     .projection.BoardState;
   const teams = first.ListTeams[0].TeamState as {

@@ -199,7 +199,7 @@ describe("valid pickup failure successors and conditional possession bounds", ()
         success = id.endsWith("success");
       expect(e.actualSuccess).toBe(success);
       expect(e.probabilitySuccess).toBeCloseTo(8 / 9, 12);
-      expect(e.delta).toBeCloseTo(Number(success) - 8 / 9, 12);
+      expect(e.delta).toBeCloseTo(Number(success) - 4 / 3, 12);
       expect(e.possessionBounds!.successChance).toBeCloseTo(2 / 3, 12);
       expect(p).toMatchObject({
         activeTeamId: null,

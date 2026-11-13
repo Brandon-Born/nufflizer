@@ -215,6 +215,7 @@ describe("NUF-007/012/013/014/015/019 evidence regressions", () => {
         rollEvent({ playerId: "37" }),
         rollEvent({
           ...base,
+          id: "offered-original",
           sourceTag: "QuestionTeamRerollUsage",
           payload: {
             GamerId: 0,
@@ -231,11 +232,13 @@ describe("NUF-007/012/013/014/015/019 evidence regressions", () => {
         }),
         rollEvent({
           ...base,
+          id: "recorded-choice",
           sourceTag: "ResultTeamRerollUsage",
           payload: { GamerId: 0, Used: used }
         }),
         rollEvent({
           ...base,
+          id: "terminal-roll",
           payload: {
             ...rollEvent().payload,
             Status: used ? 2 : 1,
@@ -243,7 +246,7 @@ describe("NUF-007/012/013/014/015/019 evidence regressions", () => {
           }
         })
       ];
-      const links = linkTeamRerolls(events);
+      const links = linkTeamRerolls(events,undefined,undefined,"1-4-0-0");
       expect(links.has(0)).toBe(false);
       expect(links.get(3)?.twoAttemptPolicy).toBe(Boolean(used));
       const report = analyzeReplayLuck(model(events));

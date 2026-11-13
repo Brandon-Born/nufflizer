@@ -1,7 +1,7 @@
 import type { LuckEventType } from "@/domain/nufflizer/types";
 
-export const DICE_MODEL_VERSION = "dice-only-25";
-export const REPORT_SCHEMA_VERSION = "2.52";
+export const DICE_MODEL_VERSION = "dice-only-26";
+export const REPORT_SCHEMA_VERSION = "2.53";
 
 export const LUCK_CATEGORY_WEIGHTS: Record<LuckEventType, number> = {
   unknown: 0,

@@ -1,5 +1,6 @@
 import { summarizeDamageSteps } from "@/domain/nufflizer/damageSteps";
 import { summarizeBlockConsequence } from "@/domain/nufflizer/blockConsequences";
+import { summarizeMovementFall } from "@/domain/nufflizer/movementConsequences";
 import { beforeAll, describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
 import { readFileSync, mkdtempSync, rmSync } from "node:fs";
@@ -115,11 +116,31 @@ const oldProjection = (r: LuckReport, file: string) => {
   // original pool deviation. Reconstruct only the earlier subtotal membership
   // for this frozen historical hash; independent source/rational tests assert
   // all eight current stage values and their current action/team sums separately.
-  const priorDamage = summarizeDamageSteps(r.events.map(e=>e.metadata.injuryScoring ? {...e,scoringStatus:"excluded" as const,delta:0,weightedDelta:0} : e));
+  // This frozen hash records the former composite-odds benchmark. Preserve
+  // that historical receipt without treating its biased reroll values as a
+  // correctness oracle. Independent full-pipeline zero-mean enumeration and
+  // 110 XML-prefix arithmetic joins require the current actual-draw scores.
+  const legacyEvents=r.events.map(e=>{
+    const copy=structuredClone(e);
+    if(e.metadata.rerollDraws){
+      copy.delta=Number(e.actualSuccess)-e.probabilitySuccess!;
+      copy.weightedDelta=copy.delta*e.explainability.weight;
+      copy.explainability.formulaSummary=`weighted delta = (${e.actualSuccess?1:0} - ${e.probabilitySuccess!.toFixed(3)}) x ${e.explainability.weight.toFixed(2)} = ${copy.weightedDelta.toFixed(3)}`;
+      copy.tags=[];if(e.actualSuccess && e.probabilitySuccess!<=0.3)copy.tags.push("blessed");if(!e.actualSuccess && e.probabilitySuccess!>=0.7)copy.tags.push("shaftaroonie");
+    }
+    return copy;
+  });
+  const priorDamage = summarizeDamageSteps(legacyEvents.map(e=>e.metadata.injuryScoring ? {...e,scoringStatus:"excluded" as const,delta:0,weightedDelta:0} : e));
+  const legacyById=new Map(legacyEvents.map(e=>[e.id,e])),legacyBySource=new Map(legacyEvents.map(e=>[e.metadata.sourceId,e]));
+  for(const e of legacyEvents){
+    const fall=e.metadata.movementFall,chain=e.metadata.pickupBallChain;
+    if(fall){const damage=priorDamage.find(d=>d.actionId===fall.damageActionId);if(damage)Object.assign(fall,summarizeMovementFall(e,damage,legacyById,legacyBySource.get(fall.combinedRushSourceId)));}
+    if(chain){chain.diceByTeam={[e.teamId]:e.weightedDelta};for(const id of chain.catchEventIds){const caught=legacyById.get(id)!;chain.diceByTeam[caught.teamId]=(chain.diceByTeam[caught.teamId]??0)+caught.weightedDelta;}}
+  }
   const ids = new Set(cohort.sourceIds),
     oldTraits = new Set(priorTraits.files.find(c=>c.file===file)!.sourceIds),
     contexts = new Map(priorContext.files.find(f=>f.file===file)!.rows.map(r=>[r.sourceId,r.preRoll])),
-    events = r.events.filter((e) => ids.has(e.metadata.sourceId!)).map(e=>{
+    events = legacyEvents.filter((e) => ids.has(e.metadata.sourceId!)).map(e=>{
       const copy=structuredClone(e);
       if(copy.metadata.blockResolution) Object.assign(copy.metadata.blockResolution,summarizeBlockConsequence(copy,priorDamage.filter(step=>copy.metadata.blockResolution!.damageActionIds.includes(step.actionId))));
       // Only the versioned pre-roll context fields changed by committed-Block
@@ -189,7 +210,8 @@ const oldProjection = (r: LuckReport, file: string) => {
               // New observed recovery state is not part of this earlier dice
               // cohort. Its source/roster/flags have independent golden joins.
               "regenerationAftermath",
-              "regenerationReturn"
+              "regenerationReturn",
+              "rerollDraws"
             ].includes(key)
         )
       )

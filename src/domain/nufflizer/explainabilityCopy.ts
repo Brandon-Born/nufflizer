@@ -5,8 +5,8 @@ export const VERDICT_SUMMARIES = {
 } as const;
 
 export const HOW_TO_READ_LINES = [
-  "Expected is the chance under the stated numeric dice contract, where supported. Categorical injuries show their outcome distribution instead of a binary success chance.",
-  "For binary checks, weighted delta is (actual result - expected chance) x provisional category weight. A qualified initial injury uses (chance of a more severe tier - chance of a less severe tier) x injury weight. Team dice totals add these contributions. Context units are a separate estimate for checks with enough pre-roll evidence; neither unit is a win probability.",
+  "Expected is the chance under the stated numeric dice contract. For a linked reroll it assumes rerolling a first failure. Categorical injuries show their outcome distribution instead of a binary success chance.",
+  "A single binary roll contributes actual result minus its chance. A linked reroll adds that calculation for each actual draw, including the failed first die once, before applying the provisional category weight. A qualified initial injury compares more-severe and less-severe tiers. Team dice totals add these contributions; context units require separate pre-roll evidence. Neither unit is a win probability.",
   "Excluded records have unknown odds where the contract is unverified. Unknown does not mean an even match.",
   "Replay segments follow source order. A half or team turn is shown only when the pre-roll state verifies it."
 ] as const;

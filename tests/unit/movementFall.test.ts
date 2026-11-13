@@ -55,7 +55,7 @@ describe("observed movement fall, damage and turnover (NUF-018)", () => {
     });
     expect(terminal!.probabilitySuccess).toBeCloseTo(8 / 9, 12);
     expect(terminal!.metadata.movementFall!.diceContribution).toBeCloseTo(
-      (-1.1 * 8) / 9 - 21 / 36,
+      (-1.1 * 4) / 3 - 21 / 36,
       12
     );
     expect(LuckReportSchema.safeParse(report).success).toBe(true);
@@ -132,7 +132,7 @@ describe("observed movement fall, damage and turnover (NUF-018)", () => {
       spent: 1,
       armorHeld: true,
       unscoredDamageRolls: 0,
-      subtotal: (-1.1 * 3) / 4 + 15 / 36
+      subtotal: -1.1 * (1 / 2 + 1 / 2) + 15 / 36
     }
   ])(
     "counts one resolved Dodge with $spent team rerolls spent ($demo)",

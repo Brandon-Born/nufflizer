@@ -28,6 +28,7 @@ import { summarizeDamageSteps } from "./damageSteps";
 import { validReportedArmorModifierUse } from "./armorModifierBudget";
 import { validReportedRecoveryControl,validReportedRegenerationAftermath } from "./regenerationAftermath";
 import { validReportedRegenerationReturn,validReportedRecoveryReturnActivation } from "./regenerationReturn";
+import { validReportedNumericRerollScore } from "./numericRerollScore";
 import { summarizeContextEvidence } from "./contextCoverage";
 import { observedBounceDirection } from "./ballConsequences";
 import { summarizeMovementFall } from "./movementConsequences";
@@ -308,6 +309,7 @@ export const LuckEventMetadataSchema = z.strictObject({
   embeddedDamageOriginalId: text.optional(),
   originalDice: z.unknown().optional(),
   rerollOriginalId: text.optional(),
+  rerollDraws: z.strictObject({initialSourceId:text,initialFace:z.number().int().min(1).max(6),baseSuccessChance:probability,initialDelta:finite,replacementDelta:finite}).optional(),
   rerollQuestionId: text.optional(),
   rerollDecisionId: text.optional(),
   rerollResource: z.enum(["team", "skill"]).optional(),
@@ -955,6 +957,11 @@ export const LuckReportSchema = z
         .filter((r) => r.path.length === 1 && r.path[0] === "Dice")
         .map((r) => [r.parentSourceId, r])
     );
+    const initialRerollDiceBySource = new Map([
+      ...rootDiceBySource,
+      ...report.diceRecords.filter(r=>r.path.length===2 && r.path[0]==="RollInfos" && r.path[1]==="Dice")
+        .map(r=>[r.parentSourceId,r] as const)
+    ]);
     require(report.coverage.diceParentCount ===
       report.coverage.sourceRecordCount +
         new Set(
@@ -1383,6 +1390,10 @@ export const LuckReportSchema = z
     const pushModels=report.events.flatMap(e=>e.metadata.blockPush?.status==="modeled"?[{e,m:e.metadata.blockPush}]:[]);
     const pushQuestions=new Set(pushModels.flatMap(x=>x.m.questionSourceIds)),pushResults=new Set(pushModels.flatMap(x=>x.m.resultSourceIds)),pushFinals=new Set(pushModels.map(x=>x.e.metadata.block!.finalSourceId));
     require(pushFinals.size===pushModels.length && pushQuestions.size===pushModels.reduce((n,x)=>n+x.m.questionSourceIds.length,0) && pushResults.size===pushModels.reduce((n,x)=>n+x.m.resultSourceIds.length,0),"A push decision or displacement must belong to exactly one terminal block.");
+    const numericTeamRerolls=report.events.filter(e=>e.metadata.rerollDraws && e.metadata.rerollResource==="team");
+    const numericTeamOffers=new Map(numericTeamRerolls.map(e=>[e.metadata.rerollQuestionId,e]));
+    require(numericTeamOffers.size===numericTeamRerolls.length && new Set(numericTeamRerolls.map(e=>e.metadata.rerollDecisionId)).size===numericTeamRerolls.length,
+      "A numeric team-reroll offer and decision must belong to one check.");
     const identityMutations = indexIdentityMutations(report.events);
     for (const event of report.events) {
       if(event.metadata.blockPush)require(validReportedBlockPush(event,sources,teamIds),"Push alternatives must reconcile ordinary geometry, complete current policies, the ordered source menus/selected displacement and follow-up, without assigning chance to coach choices.");
@@ -1390,6 +1401,8 @@ export const LuckReportSchema = z
       if(event.metadata.pushResult)require(pushResults.has(event.metadata.sourceId??"") && event.metadata.sourceTag==="ResultPushBack" && event.scoringStatus==="excluded" && !event.metadata.isRollCandidate,"A push displacement must link to its one modeled block.");
       if(event.metadata.pushAppliedFollow!==undefined)require(pushFinals.has(event.metadata.sourceId??"") && event.metadata.sourceTag==="ResultBlockOutcome","Recorded follow-up must belong to the modeled applied block.");
       const policy = event.metadata.probabilityPolicy;
+      require(validReportedNumericRerollScore(event,sources,initialRerollDiceBySource,rootDiceBySource),
+        "Numeric reroll luck must count its two source-qualified actual draws exactly once, separately from the whole-check policy chance.");
       require(validReportedOwnership(event,report,sources,identityMutations),
         "Scored outcomes need source-qualified actor/subject ownership and opposing block roles; a time-local conflict or pending identity cannot contribute favorable luck.");
       const base = event.explainability.baseOdds;
@@ -1802,8 +1815,8 @@ export const LuckReportSchema = z
         require(((event.metadata.sourceTag === "QuestionTeamRerollUsage" && event.scoringStatus === "excluded" && event.metadata.isRollCandidate === false) ||
           (event.metadata.sourceTag === "QuestionBlockDice" && event.scoringStatus === "scored" && event.metadata.isRollCandidate === true && event.metadata.rollType === 3 &&
             event.metadata.block?.pool.attackerChooses === true && event.metadata.block.attackerId === event.playerId && event.metadata.block.chooserTeamId === event.teamId && event.metadata.block.chooserGamerId === event.metadata.rerollOffer.gamerId)) &&
-          sources.get(event.metadata.rerollOffer.decisionSourceId)?.metadata.teamRerollCounter?.questionSourceId === event.metadata.sourceId &&
-          counterQuestions.has(event.metadata.sourceId ?? ""),
+          ((sources.get(event.metadata.rerollOffer.decisionSourceId)?.metadata.teamRerollCounter?.questionSourceId === event.metadata.sourceId && counterQuestions.has(event.metadata.sourceId ?? "")) ||
+            (event.metadata.sourceTag==="QuestionTeamRerollUsage" && numericTeamOffers.get(event.metadata.sourceId)?.metadata.rerollDecisionId===event.metadata.rerollOffer.decisionSourceId)),
           "A counter offer must reference one observed decision, preserving an existing attacker-selected pool or excluded non-random offer.");
       const pickupEnd = event.metadata.pickupTurnEnd;
       if(pickupEnd) {
@@ -2281,7 +2294,7 @@ export const LuckReportSchema = z
           (event.type === "dodge" ||
             event.type ===
               "ball_handling"), "Context requires a scored roll and verified pre-roll ownership.");
-        const expectedDeviation=impact.policy === "dodge_skill_reroll" ? Number(event.actualSuccess)-(7-(event.metadata.difficulty ?? 0))/6 : event.delta;
+        const expectedDeviation=event.metadata.rerollDraws?.replacementDelta ?? event.delta;
         require(near(impact.deviation,expectedDeviation), "Context deviation must use its stated whole-check or conditional terminal-die scope.");
         const expected=estimateNumericImpact(context,event.metadata.rollType,impact.policy,expectedDeviation);
         require(!!expected && near(impact.components.availableMoves,expected.components.availableMoves) && near(impact.components.possession,expected.components.possession) && near(impact.components.markedBounce,expected.components.markedBounce) && impact.components.activeContinuation === expected.components.activeContinuation, "Point context requires complete supported successor components.");
@@ -2761,7 +2774,7 @@ export const LuckReportSchema = z
         if (event.probabilitySuccess !== null && event.actualSuccess !== null)
           require(near(
             event.delta,
-            Number(event.actualSuccess) - event.probabilitySuccess
+            event.metadata.rerollDraws ? event.metadata.rerollDraws.initialDelta + event.metadata.rerollDraws.replacementDelta : Number(event.actualSuccess) - event.probabilitySuccess
           ), "Dice deviation must agree with chance and result.");
         require(near(
           event.weightedDelta,

@@ -64,7 +64,7 @@ function source() {
 }
 describe("conditional teammate moves at a committed ordinary Rush replacement", () => {
   it.each(raw.cases)(
-    "admits source-backed $id without pricing earlier dice, active continuation or the ball",
+    "admits source-backed $id with terminal context separate from earlier dice, active continuation and the ball",
     (c) => {
       const r = report(c.id),
         e = terminal(r),
@@ -97,7 +97,7 @@ describe("conditional teammate moves at a committed ordinary Rush replacement", 
       expect(b.upper).toBeCloseTo(possible.length / 6, 12);
       expect(b.activeContinuation).toBeUndefined();
       expect(e.probabilitySuccess).toBeCloseTo(35 / 36, 12);
-      expect(e.delta).toBeCloseTo(1 / 36, 12);
+      expect(e.delta).toBeCloseTo(-2 / 3, 12);
       expect(e.contextualImpact).toBeUndefined();
       expect(e.possessionBounds).toBeUndefined();
       expect(e.metadata.teamRerollMovement).toMatchObject({

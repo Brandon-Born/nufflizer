@@ -209,7 +209,9 @@ describe("source-qualified time-local player ownership", () => {
         ];
         expect(weight).toBeDefined();
         expect(e.weightedDelta).toBeCloseTo(
-          (Number(math.actualSuccess) - probability) * weight,
+          (math.policy === "two_attempt"
+            ? Number(math.actualSuccess) - 2 * (7 - Number((c.roll.Difficulty as string[])[0])) / 6
+            : Number(math.actualSuccess) - probability) * weight,
           12
         );
         if (e.metadata.block) {
@@ -241,9 +243,8 @@ describe("source-qualified time-local player ownership", () => {
               const row=categoricalWitnesses.math.find(t=>t.stunty===table.stunty&&t.thickSkull===table.thickSkull)!.rows.find(t=>t.total===e.metadata.dice!.reduce((a,b)=>a+b,0))!;
               const [a,b="1"]=row.weighted.split("/");return sum+Number(a)/Number(b);
             }
-            const math = rawCases.get(
-              key(e.metadata.locator, e.metadata.sourceTag!)
-            )!.reference!;
+            const raw = rawCases.get(key(e.metadata.locator, e.metadata.sourceTag!))!;
+            const math = raw.reference!;
             const weight =
               e.type === "block"
                 ? 0.75
@@ -254,8 +255,9 @@ describe("source-qualified time-local player ownership", () => {
                     : 1;
             return (
               sum +
-              (Number(math.actualSuccess) - math.numerator / math.denominator) *
-                weight
+              (math.policy === "two_attempt"
+                ? Number(math.actualSuccess) - 2 * (7 - Number((raw.roll.Difficulty as string[])[0])) / 6
+                : Number(math.actualSuccess) - math.numerator / math.denominator) * weight
             );
           }, 0);
         expect(team.luckScore).toBeCloseTo(oldSum + added, 10);

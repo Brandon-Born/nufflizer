@@ -167,7 +167,7 @@ describe("valid Dodge successor geometry and bounded ordinary-move context", () 
         event = r.events.find((e) => e.contextualBounds)!;
       expect(event.actualSuccess).toBe(success);
       expect(event.probabilitySuccess).toBeCloseTo(8 / 9, 12);
-      expect(event.delta).toBeCloseTo(Number(success) - 8 / 9, 12);
+      expect(event.delta).toBeCloseTo(Number(success) - 4 / 3, 12);
       expect(event.contextualBounds).toMatchObject({
         minimumMoves: 0,
         maximumMoves: maximum,
@@ -194,7 +194,7 @@ describe("valid Dodge successor geometry and bounded ordinary-move context", () 
       expect(r.verdict.luckierTeam).toBe("unknown");
     }
   );
-  it("a complete-state synthetic continuation uses terminal-die deviation, not the combined two-attempt score", () => {
+  it("a complete-state continuation separates terminal context from both actual dice innovations", () => {
     const replay = parseReplayXml(xml("terminal_dodge_failure"));
     const original = analyzeReplayLuck(replay).events.find(
       (e) => e.contextualBounds
@@ -245,7 +245,7 @@ describe("valid Dodge successor geometry and bounded ordinary-move context", () 
       deviation: -2 / 3
     });
     expect(event.contextualImpact!.contribution).toBeCloseTo(-16 / 3, 12);
-    expect(event.delta).toBeCloseTo(-8 / 9, 12);
+    expect(event.delta).toBeCloseTo(-4 / 3, 12);
     const context = event.metadata.preRoll;
     const values = [1, 2, 3, 4, 5, 6].map(
       (face) =>

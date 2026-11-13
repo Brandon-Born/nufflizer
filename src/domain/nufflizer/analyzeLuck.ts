@@ -29,6 +29,7 @@ import { attachCategoricalInjuries } from "./categoricalInjury";
 import { findMightyBlowArmorUses } from "./armorModifierBudget";
 import { findRegenerationAftermath } from "./regenerationAftermath";
 import { findRegenerationReturns } from "./regenerationReturn";
+import { numericRerollScore, formatNumericRerollFormula } from "./numericRerollScore";
 import { attachInjuryTables } from "./injuryTable";
 import { attachBlockPush } from "./blockPush";
 import { attachBlockCrowd } from "./blockCrowd";
@@ -906,6 +907,7 @@ function buildNormalizedEvent(
   }
 
   let probability;
+  let rerollDraws: ReturnType<typeof numericRerollScore>;
   try {
     const scopedOdds =
       armorScored?.probability ??
@@ -935,6 +937,16 @@ function buildNormalizedEvent(
             dieTypes,
             twoAttemptPolicy
           });
+
+  if (twoAttemptPolicy) {
+    const initial=extractDice({Dice:rerollLink?.originalDice});
+    rerollDraws=initial.dice.length===1 && initial.dieTypes[0]===0
+      ? numericRerollScore(rerollLink?.originalId ?? rerollLink?.questionId ?? "",initial.dice[0]!,difficulty!,resolvedActual.actualSuccess!)
+      : undefined;
+    // Linkers admit only a source-qualified failed first draw and one fresh
+    // replacement. Missing evidence must not revert to the biased benchmark.
+    if(!rerollDraws) throw new Error("A numeric reroll needs its observed initial draw and source");
+  }
   } catch (error) {
     return {
       id:
@@ -972,7 +984,8 @@ function buildNormalizedEvent(
   }
   const probabilitySuccess = probability.probabilitySuccess;
   const actualSuccess = resolvedActual.actualSuccess;
-  const delta = (actualSuccess ? 1 : 0) - probabilitySuccess;
+  const delta = rerollDraws ? rerollDraws.initialDelta + rerollDraws.replacementDelta
+    : (actualSuccess ? 1 : 0) - probabilitySuccess;
   const weight = LUCK_CATEGORY_WEIGHTS[eventType];
   const weightedDelta = delta * weight;
   const contextPolicy = rerollLink?.retainedOriginal
@@ -985,10 +998,7 @@ function buildNormalizedEvent(
           ? "sure_hands_reroll"
           : undefined;
   const contextDeviation =
-    contextPolicy === "dodge_skill_reroll" ||
-    contextPolicy === "sure_hands_reroll"
-      ? Number(actualSuccess) - probability.baseOdds
-      : delta;
+    rerollDraws ? rerollDraws.replacementDelta : delta;
   const contextualImpact =
     preRoll?.activeTeamId === teamId
       ? estimateNumericImpact(
@@ -1024,6 +1034,10 @@ function buildNormalizedEvent(
   if (!actualSuccess && probabilitySuccess >= 0.7) {
     tags.push("shaftaroonie");
   }
+  if (rerollDraws && actualSuccess && rerollDraws.baseSuccessChance >= 0.7 && delta < 0)
+    tags.push("shaftaroonie");
+  if (rerollDraws && actualSuccess && rerollDraws.baseSuccessChance <= 0.3 && delta > 0 && !tags.includes("blessed"))
+    tags.push("blessed");
 
   return {
     id: `${replayTurn.turnNumber}-${eventIndex}-${event.sourceTag}`,
@@ -1061,7 +1075,9 @@ function buildNormalizedEvent(
       baseOdds: probability.baseOdds,
       rerollAdjustedOdds: probability.rerollAdjustedOdds,
       weight,
-      formulaSummary: buildFormulaSummary(
+      formulaSummary: rerollDraws
+        ? formatNumericRerollFormula(rerollDraws,actualSuccess,weight)
+        : buildFormulaSummary(
         actualSuccess,
         probabilitySuccess,
         weight,
@@ -1108,6 +1124,7 @@ function buildNormalizedEvent(
       modifiers,
       modifiersSum: modifiers.reduce((sum, value) => sum + value, 0),
       ...rerollMetadata,
+      rerollDraws,
       fixedNumericModifiers: fixedNumericModifierEvidence(event),
       skillsUsed,
       normalizationFlags,
@@ -1484,14 +1501,14 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     const rerollLinks = linkTeamRerolls(
       replayTurn.events,
       eventEpochs,
-      ownership
+      ownership,
+      replay.replayVersion
     );
     linkObservedSkillRerolls(
       replayTurn.events,
       replay.replayVersion,
       ownership,
-      rerollLinks,
-      fall?.skillOriginalId ? fall.rollSourceId : undefined
+      rerollLinks
     );
     for (const link of rerollLinks.values())
       if (
@@ -1560,7 +1577,6 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
         raw.sourceTag !== "ResultRoll" ||
         raw.rollType === 71 ||
         raw.rollType === 15 ||
-        link.mergedIntoId ||
         !link.questionId
       )
         continue;
@@ -1573,7 +1589,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
           ["Dice"],
           "summary"
         );
-      else
+      else if (!link.mergedIntoId)
         addDiceLink(
           diceLinks,
           link.questionId,
@@ -1682,10 +1698,23 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     for (const [index, link] of rerollLinks)
       if (
         link.retainedOriginal &&
-        [4, 7].includes(replayTurn.events[index]?.rollType ?? -1)
+        ([4, 7].includes(replayTurn.events[index]?.rollType ?? -1) || !!link.originalId)
       ) {
         if (link.questionId) activationEvidenceSources.add(link.questionId);
         if (link.decisionId) activationEvidenceSources.add(link.decisionId);
+      }
+    const numericTeamChoices = new Map<string, 0 | 1>();
+    const numericTeamOffers = new Map<string, {gamerId:0|1;canUseTeamReroll:boolean;decisionSourceId:string}>();
+    for (const [index,link] of rerollLinks)
+      if (replay.replayVersion === "1-4-0-0" && link.twoAttemptPolicy && [1,2,4,7].includes(replayTurn.events[index]?.rollType ?? -1)) {
+        if (link.questionId) activationEvidenceSources.add(link.questionId);
+        if (link.decisionId) {
+          activationEvidenceSources.add(link.decisionId);
+          if(link.teamDecisionGamerId !== undefined) {
+            numericTeamChoices.set(link.decisionId, link.teamDecisionGamerId);
+            if(link.questionId)numericTeamOffers.set(link.questionId,{gamerId:link.teamDecisionGamerId,canUseTeamReroll:true,decisionSourceId:link.decisionId});
+          }
+        }
       }
     for (const [eventIndex, event] of replayTurn.events.entries()) {
       if (
@@ -1729,6 +1758,20 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       );
       if (!normalized) {
         continue;
+      }
+      const numericOffer = numericTeamOffers.get(event.id ?? "");
+      if(numericOffer){
+        normalized.metadata.rerollOffer=numericOffer;
+        normalized.label="Recorded team reroll offer";
+        normalized.statusReason="Recorded original die and team reroll offer; the draw is counted once with its replacement.";
+      }
+      const numericChoice = numericTeamChoices.get(event.id ?? "");
+      if (numericChoice !== undefined){
+        normalized.metadata.teamRerollDecision = {
+          gamerId: numericChoice, used: true
+        };
+        normalized.label="Recorded team reroll used";
+        normalized.statusReason="Recorded use of one team reroll; the decision is not another random outcome.";
       }
       const armorUse = armorModifierUses.get(event.id ?? "");
       const recoveryControl = recoveryState.controls.get(event.id ?? "");
@@ -1897,14 +1940,13 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   }
   for (const event of events)
     if (
-      (event.metadata.rerollSkill === "Dodge" ||
-        event.metadata.rerollSkill === "Sure Hands") &&
+      event.metadata.rerollResource === "skill" && event.metadata.rerollSkill &&
       event.metadata.rerollDecisionId
     ) {
       const skill = ballSources.get(event.metadata.rerollDecisionId);
       if (skill)
         skill.metadata.skillUsage = {
-          skillId: event.metadata.rerollSkill === "Dodge" ? 7 : 61,
+          skillId: event.metadata.rerollSkill === "Dodge" ? 7 : event.metadata.rerollSkill === "Sure Hands" ? 61 : 6,
           used: true
         };
     }

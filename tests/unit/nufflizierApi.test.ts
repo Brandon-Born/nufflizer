@@ -102,6 +102,10 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(rushes.map(e=>e.metadata.sourceId)).toEqual(["source-702","source-1091"]);
     expect(rushes.map(e=>e.contextualBounds!.maximumMoves)).toEqual([5,6]);
     expect(rushes.every(e=>e.contextualBounds!.successChance===5/6 && e.probabilitySuccess===35/36 && e.contextualImpact===undefined)).toBe(true);
+    const rescued=report.events.find(e=>e.metadata.sourceId==="source-702")!;
+    expect(rescued.metadata.rerollDraws).toMatchObject({initialSourceId:"source-698",initialFace:1,baseSuccessChance:5/6,initialDelta:-5/6});
+    expect(rescued.metadata.rerollDraws!.replacementDelta).toBeCloseTo(1/6,12);
+    expect(rescued.actualSuccess).toBe(true);expect(rescued.delta).toBeCloseTo(-2/3,12);expect(rescued.weightedDelta).toBeCloseTo(-2/3,12);
     const components=report.contextComponents.find(t=>t.teamId==="1")!;
     expect(components.componentCount).toBe(4);expect(components.byCategory.map(c=>c.type)).toEqual(["dodge","movement_risk"]);
     expect(components.bounds!.lower).toBeCloseTo(-77/6,12);expect(components.bounds!.upper).toBeCloseTo(11/6,12);
@@ -116,6 +120,14 @@ describe("POST /api/nufflizier/analyze", () => {
       3 / 20,
       12
     );
+    // These combined Rushes succeeded on their first die. Their existing
+    // single-attempt contributions and fall subtotals must not shift.
+    for (const fall of falls) {
+      const rush = report.events.find(e => e.metadata.sourceId === fall.metadata.movementFall!.combinedRushSourceId)!;
+      expect(rush.actualSuccess).toBe(true);
+      expect(rush.metadata.rerollDraws).toBeUndefined();
+      expect(rush.delta).toBeCloseTo(1 / 6, 12);
+    }
     expect(
       falls.every(
         (e) => e.actualSuccess === false && e.contextualImpact === undefined
