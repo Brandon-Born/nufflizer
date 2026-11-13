@@ -103,8 +103,8 @@ for (const c of [
     const saved = JSON.parse(
       readFileSync((await (await download).path())!, "utf8")
     );
-    expect(saved.schemaVersion).toBe("2.56");
-    expect(saved.modelVersion).toBe("dice-only-29");
+    expect(saved.schemaVersion).toBe("2.57");
+    expect(saved.modelVersion).toBe("dice-only-30");
     const kept = saved.events.find(
       (e: { metadata: { sourceId: string } }) => e.metadata.sourceId === c.kept
     );

@@ -32,6 +32,7 @@ import {
   explainNumericOriginal,
   explainCatchRerollResume,
   explainFailedNumericRetry,
+  explainNumericRetryAccess,
   formatActualOutcome,
   formatContextComponentSum,
   PARTIAL_CONTEXT_SCOPE,
@@ -168,6 +169,8 @@ function formatTeamSummary(
       .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainCatchRerollResume(event)}`),
     ...report.events.filter(event=>event.metadata.failedNumericRetry).slice(0,20)
       .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainFailedNumericRetry(event)}`),
+    ...report.events.filter(event=>event.metadata.numericRetryAccess||event.metadata.numericGatedReplacement).slice(0,20)
+      .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainNumericRetryAccess(event)}`),
     ...report.events.filter(event=>event.metadata.numericOriginal).slice(0,20)
       .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainNumericOriginal(event)}`),
     ...report.events.filter(event=>event.metadata.rerollDraws).slice(0,20)
@@ -229,7 +232,7 @@ function formatTeamSummary(
     ...report.events
       .filter((event) => event.metadata.lonerGate)
       .slice(0, 20)
-      .map((event) => explainLonerGate(event.metadata.lonerGate)!),
+      .map((event) => explainLonerGate(event.metadata.lonerGate,!!event.metadata.numericRetryAccess)!),
     ...report.events
       .filter((event) => event.metadata.driveEffectExpiry)
       .slice(0, 20)
@@ -297,6 +300,7 @@ function formatTeamSummary(
         explainNumericOriginal(moment),
         explainCatchRerollResume(moment),
         explainFailedNumericRetry(moment),
+        explainNumericRetryAccess(moment),
         explainBlockPush(moment),
         explainOwnership(moment),
         explainPreRollEvidence(moment.metadata.preRoll),

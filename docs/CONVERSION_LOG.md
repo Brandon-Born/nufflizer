@@ -1107,3 +1107,12 @@ Independent stdlib extraction binds both raw prefixes and all12 public hashes wi
 ## 2026-11-13 - Unused versus declined Pro team resource
 
 The qualified Pro prefix explicitly records no team-reroll option and Used0. Shared identity copy now says “Recorded team reroll not used,” avoiding an unsupported claim that an available team option was declined. Loner and unrelated identity copy are unchanged. Schema2.56/dice29/context41, all JSON/source/dice/contributions and original issue statuses remain unchanged. Focused semantic/CLI checks and the full45-flow production browser rerun pass; the implementation record retains exact parent CI and final-head verification handoff.
+
+
+## 2026-11-13 - Prefix-qualified numeric retry access
+
+Migration scope: primary domain/shared report/UI/API/CLI, schema2.57/dice-only-30/context41. Original NUF-012/014/021/022/027 advance; every original packet/status remains,14 done/15 incomplete.
+
+A supported Move-step Dodge original, explicit choice/skill and fresh Loner/Pro gate now define a gate contribution before any later result. The gate retains its raw71/15 identity and own pass chance. Its `p*(G-g)` contribution is the derived change in a fixed one-die rescue opportunity, not a new tuning weight or resource price. A qualified fresh replacement contributes separately at single-die odds, while the original keeps its native source/score and the gate remains sole spend owner. Missing/unsupported later outcomes cannot erase earlier known dice. Kept summaries retain zero contribution and separate hypothetical whole-check policy odds.
+
+The unchanged independent two-prefix/12SHA fixture, all-face source cuts,9,720 complete application trees, coherent source/report adversaries, actual CLI and extended existing ten-admission HTTP tests qualify this bounded model. New desktop/mobile flows inspect the scored gates, separate chances, Why and JSON export. Shared copy explains the conditional fixed model and formats actual die/percentage facts plainly. Full mixed/post-roll/eligibility/resource/state/context/calibration/hosting work remains open. See [numeric retry-access evidence](NUMERIC_RETRY_ACCESS_EVIDENCE.md) and the matching execution entry for final gates and exact-parent conservation. No provider/account/Stripe/billing/deployment/production/legacy action occurred.

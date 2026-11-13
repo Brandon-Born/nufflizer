@@ -1,5 +1,7 @@
 # Failed numeric retry policies
 
+Historical schema2.56 checkpoint. [Schema2.57 retry access](NUMERIC_RETRY_ACCESS_EVIDENCE.md) adds separately qualified gate scoring while retaining these raw witnesses, resource ownership and kept-policy facts.
+
 Scope: NUF-012/014/021/022/027, schema2.56/dice-only-29/context41. This component does not close an original issue. The ledger remains14 done/14 in_progress/1 open.
 
 ## Independent evidence

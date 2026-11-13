@@ -35,6 +35,7 @@ import {
   explainNumericOriginal,
   explainCatchRerollResume,
   explainFailedNumericRetry,
+  explainNumericRetryAccess,
   explainDiceCensus,
   explainObservedDice,
   explainDriveEffectExpiry,
@@ -880,6 +881,9 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                                 {explainRegenerationReturn(moment)}
                               </p>
                             ) : null}
+                            {moment.metadata.numericRetryAccess || moment.metadata.numericGatedReplacement ? (
+                              <p className="mt-1 text-xs text-amber-100/80">{explainNumericRetryAccess(moment)}</p>
+                            ) : null}
                             {moment.metadata.failedNumericRetry ? (
                               <p className="mt-1 text-xs text-amber-100/80">
                                 {explainFailedNumericRetry(moment)}
@@ -971,7 +975,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                             ) : null}
                             {moment.metadata.lonerGate ? (
                               <p className="mt-1 text-xs text-amber-100/80">
-                                {explainLonerGate(moment.metadata.lonerGate)}
+                                {explainLonerGate(moment.metadata.lonerGate,!!moment.metadata.numericRetryAccess)}
                               </p>
                             ) : null}
                             {moment.metadata.proGate ? (

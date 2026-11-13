@@ -95,3 +95,8 @@ Independent11-candidate/107-step raw prefixes and four exact rational tier refer
 ## Schema2.50 committed Mighty Blow armor scope
 
 The original41 contracts/eight frozen policies and the separate categorical injury model remain. A new stage receipt observes exact used13/+1 `NetGameplayModifierType27=Skill` armor evidence without odds. Only a separate applied ordinary Block, current complete holder/subject policy and exact prior spend can certify no remaining modifier for its following initial injury. This does not promote generic modified armor, every use13, MightyBlow2, an empty actual modifier list, treatment or final state. Ten independent raw patterns yield one current-table injury admission and nine visible negative cases. Source roles, namespace, effect/value, freshness, source order and per-damage resource scope have independent adversarial tests; mapping acceptance remains closed while original broader damage/resource/state/context requirements remain open. See ARMOR_MODIFIER_BUDGET_EVIDENCE.md.
+
+
+## Numeric gate scoring extension (2026-11-13)
+
+Schema2.57/dice30 adds a separate prefix-qualified fixed-rescue model for a narrow numeric Dodge Loner71/Pro15 gate, retaining actual raw identities and primary gate chance. This does not change the frozen identity inventory or generalize block, accuracy, damage or mixed gate policies. Source/rule/math/ownership and complete-report evidence are in [numeric retry access](NUMERIC_RETRY_ACCESS_EVIDENCE.md). Broader original012/014/state/context/calibration acceptance remains open.

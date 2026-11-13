@@ -313,7 +313,7 @@ export function validReportedFailedNumericRetry(
       m.locator?.replayStep ||
     [choice, skill, gate, e].some(
       (x, i) =>
-        x!.scoringStatus !== "excluded" ||
+        x!.scoringStatus !== (i===2&&g?.numericRetryAccess?"scored":"excluded") ||
         x!.metadata.sourceIndex !== choice!.metadata.sourceIndex! + i ||
         x!.metadata.actionId !== m.actionId ||
         x!.metadata.sequenceId !== m.sequenceId ||
@@ -329,7 +329,7 @@ export function validReportedFailedNumericRetry(
     skill!.metadata.sourceTag !== "ResultSkillUsage" ||
     skill!.metadata.isRollCandidate !== false ||
     !skill!.metadata.skillUsage?.used ||
-    gate!.scoringStatus !== "excluded" ||
+    gate!.scoringStatus !== (g?.numericRetryAccess?"scored":"excluded") ||
     g?.sourceTag !== "ResultRoll" ||
     g.isRollCandidate !== true ||
     g.outcomeCode !== 0 ||
@@ -339,7 +339,7 @@ export function validReportedFailedNumericRetry(
     d.rollType !== g.rollType ||
     d.parentEventId !== gate!.id ||
     d.eventId !== gate!.id ||
-    d.disposition !== "unscored_roll" ||
+    d.disposition !== (g?.numericRetryAccess?"covered_roll":"unscored_roll") ||
     d.status !== 1 ||
     d.newRoll !== 1 ||
     d.dice.length !== 1 ||

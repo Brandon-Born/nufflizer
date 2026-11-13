@@ -156,6 +156,12 @@ describe("POST /api/nufflizier/analyze", () => {
     const kept=report.events.find(e=>e.metadata.sourceId==="source-4551")!;
     expect(kept.metadata.failedNumericRetry).toMatchObject({kind:"pro",originalSourceId:"source-4546",choiceSourceId:"source-4548",skillSourceId:"source-4549",gateSourceId:"source-4550"});
     expect(kept.metadata.failedNumericRetry!.fixedPolicySuccessChance).toBeCloseTo(22/27,12);
+    const access=report.events.find(e=>e.metadata.sourceId==="source-4550")!;
+    expect(access.scoringStatus).toBe("scored");expect(access.type).toBe("dodge");expect(access.metadata.rollType).toBe(15);
+    expect(access.metadata.probabilityPolicy).toBe("gated_retry_access");expect(access.probabilitySuccess).toBeCloseTo(2/3,12);
+    expect(access.delta).toBeCloseTo(-4/9,12);expect(access.weightedDelta).toBeCloseTo(-22/45,12);
+    expect(report.diceRecords.find(d=>d.parentSourceId==="source-4550"&&d.path.join(".")==="Dice")?.disposition).toBe("covered_roll");
+
     expect(kept.metadata.teamRerollsSpent).toBeUndefined();expect(report.events.find(e=>e.metadata.sourceId===kept.metadata.failedNumericRetry!.gateSourceId)!.metadata.teamRerollsSpent).toBe(0);expect(kept.scoringStatus).toBe("excluded");expect(kept.probabilitySuccess).toBeNull();expect(kept.weightedDelta).toBe(0);
     expect(report.diceRecords.find(d=>d.parentSourceId==="source-4546" && d.path.join(".")==="RollInfos.Dice")?.disposition).toBe("covered_roll");
     const crowd=report.events.find(e=>e.metadata.blockCrowd?.subjectId === "38")!,proof=crowd.metadata.blockCrowd!;

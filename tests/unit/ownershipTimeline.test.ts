@@ -21,6 +21,23 @@ type Locator = {
   stepIndex?: number;
   messageIndex?: number;
 };
+const numericGateWitness=JSON.parse(readFileSync("tests/fixtures/evidence/bb3-numeric-gates.json","utf8")) as {files:{file:string;sha256:string;cases:{prefix:{tag:string;locator:Locator;payload?:unknown}[]}[]}[]};
+function rawAccessMath(file:string,e:LuckEvent) {
+  const f=numericGateWitness.files.find(x=>x.file===file)!;
+  const c=f.cases.find(c=>c.prefix.some(x=>x.tag==="ResultRoll"&&key(x.locator,x.tag)===key(e.metadata.locator,e.metadata.sourceTag)));
+  expect(c,`gate ${e.metadata.sourceId} needs an independent raw prefix`).toBeDefined();
+  const gate=c!.prefix.find(x=>key(x.locator,x.tag)===key(e.metadata.locator,e.metadata.sourceTag))!;
+  const q=c!.prefix.find(x=>x.tag==="QuestionTeamRerollUsage")!,skill=c!.prefix.find(x=>x.tag==="ResultSkillUsage")!;
+  const o=(x:unknown)=>x as Record<string,unknown[]>;
+  const n=(x:unknown,k:string)=>Number(o(x)[k]![0]);
+  const initial=o(q.payload).RollInfos![0],die=o(o(gate.payload).Dice![0]).Die![0];
+  expect(e.playerId).toBe(String(n(skill.payload,"PlayerId")));expect(e.teamId).toBe(String(n(q.payload,"GamerId")));
+  expect(n(skill.payload,"Used")).toBe(1);expect(n(gate.payload,"Status")).toBe(1);expect(n(gate.payload,"NewRoll")).toBe(1);
+  expect(e.metadata.rollType).toBe(n(gate.payload,"RollType"));
+  const base=(7-n(initial,"Difficulty"))/6,g=(7-n(gate.payload,"Difficulty"))/6,success=n(die,"Value")>=n(gate.payload,"Difficulty");
+  expect(n(gate.payload,"Outcome")).toBe(Number(success));
+  return {sha256:f.sha256,probability:g,success,delta:base*(Number(success)-g)};
+}
 type RawCase = {
   locator: Locator;
   sourceTag: string;
@@ -197,6 +214,13 @@ describe("source-qualified time-local player ownership", () => {
           expect(e.probabilitySuccess).toBeCloseTo(math.probability,12);expect(e.delta).toBeCloseTo(math.delta,12);expect(e.weightedDelta).toBeCloseTo(math.delta*1.1,12);
           continue;
         }
+        if(e.metadata.numericRetryAccess) {
+          const math=rawAccessMath(f.sourceFile,e);expect(math.sha256).toBe(f.sha256);
+          expect(p.role).toBe("actor");expect(e.type).toBe("dodge");expect(e.metadata.probabilityPolicy).toBe("gated_retry_access");
+          expect(e.actualSuccess).toBe(math.success);expect(e.probabilitySuccess).toBeCloseTo(math.probability,12);
+          expect(e.delta).toBeCloseTo(math.delta,12);expect(e.weightedDelta).toBeCloseTo(math.delta*1.1,12);
+          continue;
+        }
         if(e.metadata.numericOriginal){
           const f2=questionWitness.files.find(x=>x.file===f.sourceFile)!;
           const c=f2.cases.find(x=>key(x.locator,"QuestionTeamRerollUsage")===key(e.metadata.locator,e.metadata.sourceTag));
@@ -280,6 +304,7 @@ describe("source-qualified time-local player ownership", () => {
               const [a,b="1"]=row.weighted.split("/");return sum+Number(a)/Number(b);
             }
             if(e.metadata.catchRerollResume)return sum+resumedCatchMath(f.sourceFile,e).delta*1.1;
+            if(e.metadata.numericRetryAccess)return sum+rawAccessMath(f.sourceFile,e).delta*1.1;
             if(e.metadata.numericOriginal){
               const raw=questionWitness.files.find(x=>x.file===f.sourceFile)!.cases.find(x=>key(x.locator,"QuestionTeamRerollUsage")===key(e.metadata.locator,e.metadata.sourceTag))!;
               return sum-(7-Number(raw.initialRoll.Difficulty[0]))/6*1.1;

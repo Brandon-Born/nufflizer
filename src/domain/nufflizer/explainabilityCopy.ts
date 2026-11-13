@@ -7,6 +7,7 @@ export const VERDICT_SUMMARIES = {
 export const HOW_TO_READ_LINES = [
   "Expected is the chance under the stated numeric dice contract. For a linked reroll it assumes rerolling a first failure. Categorical injuries show their outcome distribution instead of a binary success chance.",
   "A single binary roll contributes actual result minus its chance. A linked reroll adds that calculation for each actual draw, including the failed first die once, before applying the provisional category weight. A qualified initial injury compares more-severe and less-severe tiers. Team dice totals add these contributions; context units require separate pre-roll evidence. Neither unit is a win probability.",
+  "A qualified Loner or Pro gate shows its own pass chance. Its contribution is the unexpected change in access to one Dodge rescue: single-Dodge chance times (gate result minus gate chance). The original die and any fresh replacement keep separate contributions; a kept summary adds no draw.",
   "Excluded records have unknown odds where the contract is unverified. Unknown does not mean an even match.",
   "Replay segments follow source order. A half or team turn is shown only when the pre-roll state verifies it."
 ] as const;

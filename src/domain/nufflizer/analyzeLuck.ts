@@ -1,4 +1,5 @@
 import { findFailedNumericRetries } from "./failedNumericRetry";
+import {findNumericRetryAccess,scoreNumericRetryAccess} from "./numericRetryAccess";
 import { findCatchRerollResumes } from "./catchRerollResume";
 import { findNumericQuestionOriginals, findNumericQuestionCopies, type NumericQuestionOriginal } from "./numericQuestionOriginal";
 import {
@@ -404,7 +405,8 @@ function buildNormalizedEvent(
   embeddedInjury: EmbeddedInjuryRecord | undefined,
   koRecoveryChecks: ReadonlyMap<string, number>,
   armorCountInStep: number | undefined,
-  questionOriginal?: NumericQuestionOriginal
+  questionOriginal?: NumericQuestionOriginal,
+  verifiedGatedReplacement=false
 ): LuckEvent | null {
   const payload =
     questionOriginal?.roll ??
@@ -774,7 +776,7 @@ function buildNormalizedEvent(
     numericCheckExclusion(
       replayVersion,
       { ...numericEvent, rollType },
-      twoAttemptPolicy,
+      twoAttemptPolicy || verifiedGatedReplacement,
       rerollLink?.retainedOriginal
     );
   const resolvedActual = armorScored
@@ -1262,6 +1264,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     findTeamDiceIdentities(replay).map((p) => [p.question.id, p])
   );
   const failedNumericRetries = findFailedNumericRetries(replay,[...teamDiceIdentityByQuestion.values()],originalByRaw,ownership);
+  const numericRetryAccess=findNumericRetryAccess(replay,originalByRaw,ownership);
   const newTeamDiceIdentities: TeamDiceIdentity[] = [];
   linkBlockDiceCopies(replay, diceLinks);
   linkApothecaryDiceCopies(replay, diceLinks);
@@ -1288,6 +1291,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     activationEvidenceSources.add(p.choice.id!);
     activationEvidenceSources.add(p.gateSkill!.id!);
   }
+  for(const p of numericRetryAccess)for(const e of [p.question,p.choice,p.skill,p.gate])activationEvidenceSources.add(e.id!);
   for (const source of armorModifierUses.keys()) activationEvidenceSources.add(source);
   for (const source of recoveryState.controls.keys()) activationEvidenceSources.add(source);
   for (const source of recoveryReturns.activations.keys()) activationEvidenceSources.add(source);
@@ -1902,6 +1906,27 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     }
   }
 
+  // Promote stages only after native first ownership is established. A
+  // replacement stage owns its own die; it must not take the original score.
+  const rawLocations=new Map(replay.turns.flatMap(t=>t.events.map((e,i)=>[e,{turn:t,index:i}] as const)));
+  for(const proof of numericRetryAccess) {
+    const gate=normalizedByRaw.get(proof.gate),first=normalizedByRaw.get(proof.question),choice=normalizedByRaw.get(proof.choice),skill=normalizedByRaw.get(proof.skill);
+    if(!gate||!first||!choice||!skill)continue;
+    scoreNumericRetryAccess(proof,gate,first,ownership);
+    if(!gate.metadata.numericRetryAccess)continue;
+    choice.metadata.teamRerollDecision={gamerId:proof.original.receipt.gamerId,used:proof.receipt.kind==="loner"};
+    skill.metadata.skillUsage={skillId:Number(proof.skill.payload!.Skill),used:true};
+    if(proof.receipt.kind==="pro"){skill.label="Recorded Pro use";skill.statusReason="Recorded use of Pro before its separate gate; no team reroll was spent on this choice.";}
+    const raw=proof.replacement,where=raw?rawLocations.get(raw):undefined,row=raw?normalizedByRaw.get(raw):undefined;
+    if(raw&&where&&row&&row.scoringStatus==="excluded") {
+      const scored=buildNormalizedEvent(replay.replayVersion,where.turn,raw,where.index,teamNameById,ownership,undefined,noContext,undefined,undefined,undefined,undefined,new Map(),undefined,undefined,true);
+      if(scored?.scoringStatus==="scored") {
+        scored.metadata.numericGatedReplacement={gateSourceId:proof.gate.id!};scored.metadata.initialRosterName=row.metadata.initialRosterName;
+        scored.label=`Replacement ${scored.label}`;scored.statusReason="scored: one fresh Dodge replacement after its separately scored gate; the first die and resource spend are not repeated";
+        Object.assign(row,scored);
+      }
+    }
+  }
   const ballSources = new Map(
     events.flatMap((e) =>
       e.metadata.sourceId ? [[e.metadata.sourceId, e] as const] : []
@@ -2347,7 +2372,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     const kept=normalizedByRaw.get(p.final), first=normalizedByRaw.get(p.question),
       choice=normalizedByRaw.get(p.choice), skill=normalizedByRaw.get(p.gateSkill!), gate=normalizedByRaw.get(p.gate!);
     if(!kept?.metadata.teamDiceIdentity || !first?.metadata.numericOriginal || !choice || !skill || !gate ||
-      first.scoringStatus!=="scored" || kept.scoringStatus!=="excluded" || gate.scoringStatus!=="excluded")continue;
+      first.scoringStatus!=="scored" || kept.scoringStatus!=="excluded" || (gate.scoringStatus!=="excluded"&&!gate.metadata.numericRetryAccess))continue;
     skill.metadata.skillUsage={skillId:Number(p.gateSkill!.payload!.Skill),used:true};
     if(receipt.kind==="pro") {
       skill.label="Recorded Pro use";

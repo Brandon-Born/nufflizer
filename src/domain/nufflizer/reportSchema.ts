@@ -1,4 +1,5 @@
 import { validReportedFailedNumericRetry } from "./failedNumericRetry";
+import { validReportedNumericRetryAccess, validReportedNumericGatedReplacement, retryAccessDelta } from "./numericRetryAccess";
 import { validReportedCatchRerollResume } from "./catchRerollResume";
 import { validReportedNumericQuestionOriginal,validReportedNumericQuestionCopy } from "./numericQuestionOriginal";
 import { isFixedNumericModifier } from "./numericCheckContract";
@@ -332,6 +333,9 @@ export const LuckEventMetadataSchema = z.strictObject({
   failedNumericRetry: z.strictObject({kind:z.enum(["loner","pro"]), originalSourceId:text, choiceSourceId:text,
     skillSourceId:text, gateSourceId:text, baseSuccessChance:probability, gateSuccessChance:probability,
     fixedPolicySuccessChance:probability}).optional(),
+  numericRetryAccess: z.strictObject({kind:z.enum(["loner","pro"]),originalSourceId:text,choiceSourceId:text,skillSourceId:text,
+    baseSuccessChance:probability,gateSuccessChance:probability,fixedPolicySuccessChance:probability}).optional(),
+  numericGatedReplacement:z.strictObject({gateSourceId:text}).optional(),
   rerollOriginalId: text.optional(),
   rerollDraws: z.strictObject({initialSourceId:text,initialFace:z.number().int().min(1).max(6),baseSuccessChance:probability,initialDelta:finite,replacementDelta:finite}).optional(),
   rerollQuestionId: text.optional(),
@@ -570,7 +574,7 @@ export const LuckEventMetadataSchema = z.strictObject({
   fixedNumericModifiers:z.array(z.strictObject({playerId:z.number().int().min(-1),modifierType:count,skillId:z.number().int().min(-1),effectId:z.literal(-1),value:finite})).max(64).optional(),
   modifiers: numbers.optional(),
   modifiersSum: finite.optional(),
-  probabilityPolicy: z.enum(["single_attempt", "two_attempt", "block_pool", "categorical_injury"]).optional(),
+  probabilityPolicy: z.enum(["single_attempt", "two_attempt", "block_pool", "categorical_injury", "gated_retry_access"]).optional(),
   rerollUsed: z.boolean().optional(),
   skillsUsed: numbers.optional(),
   normalizationFlags: z.array(text).max(REPLAY_LIMITS.events).optional(),
@@ -1424,12 +1428,19 @@ export const LuckReportSchema = z
     const pushQuestions=new Set(pushModels.flatMap(x=>x.m.questionSourceIds)),pushResults=new Set(pushModels.flatMap(x=>x.m.resultSourceIds)),pushFinals=new Set(pushModels.map(x=>x.e.metadata.block!.finalSourceId));
     require(pushFinals.size===pushModels.length && pushQuestions.size===pushModels.reduce((n,x)=>n+x.m.questionSourceIds.length,0) && pushResults.size===pushModels.reduce((n,x)=>n+x.m.resultSourceIds.length,0),"A push decision or displacement must belong to exactly one terminal block.");
     const numericRerolls=report.events.filter(e=>e.metadata.rerollDraws);
+    const ordinaryNumericDecisions=new Set(numericRerolls.map(e=>e.metadata.rerollDecisionId));
     const failedRetries=report.events.filter(e=>e.metadata.failedNumericRetry);
+    const accessGates=report.events.filter(e=>e.metadata.numericRetryAccess);
+    const proAccessChoices=new Set(accessGates.filter(e=>e.metadata.numericRetryAccess!.kind==="pro").map(e=>e.metadata.numericRetryAccess!.choiceSourceId));
+    for(const key of ["originalSourceId","choiceSourceId","skillSourceId"] as const)
+      require(new Set(accessGates.map(e=>e.metadata.numericRetryAccess![key])).size===accessGates.length,"A numeric access gate must uniquely own its original, choice and skill.");
+    const gatedReplacements=report.events.filter(e=>e.metadata.numericGatedReplacement);
+    require(new Set(gatedReplacements.map(e=>e.metadata.numericGatedReplacement!.gateSourceId)).size===gatedReplacements.length,"A numeric gate grants at most one fresh single-die replacement.");
+    require(accessGates.every(e=>!ordinaryNumericDecisions.has(e.metadata.numericRetryAccess!.choiceSourceId)&&!ordinaryNumericDecisions.has(e.metadata.numericRetryAccess!.skillSourceId)),"A numeric gate cannot reuse an ordinary reroll decision.");
     for(const key of ["originalSourceId","choiceSourceId","skillSourceId","gateSourceId"] as const)
       require(new Set(failedRetries.map(e=>e.metadata.failedNumericRetry![key])).size===failedRetries.length,
         "A failed numeric retry requires exclusive original, choice, skill and gate sources.");
-    require(failedRetries.every(e=>!numericRerolls.some(n=>n.metadata.rerollDecisionId===e.metadata.failedNumericRetry!.choiceSourceId ||
-      n.metadata.rerollDecisionId===e.metadata.failedNumericRetry!.skillSourceId)),"A failed gated policy cannot reuse a scored retry decision.");
+    require(failedRetries.every(e=>!ordinaryNumericDecisions.has(e.metadata.failedNumericRetry!.choiceSourceId)&&!ordinaryNumericDecisions.has(e.metadata.failedNumericRetry!.skillSourceId)),"A failed gated policy cannot reuse a scored retry decision.");
     require(new Set(numericRerolls.map(e=>e.metadata.rerollDecisionId)).size===numericRerolls.length,
       "A numeric reroll decision must belong to exactly one check.");
     const numericTeamRerolls=numericRerolls.filter(e=>e.metadata.rerollResource==="team");
@@ -1443,6 +1454,8 @@ export const LuckReportSchema = z
       if(event.metadata.pushResult)require(pushResults.has(event.metadata.sourceId??"") && event.metadata.sourceTag==="ResultPushBack" && event.scoringStatus==="excluded" && !event.metadata.isRollCandidate,"A push displacement must link to its one modeled block.");
       if(event.metadata.pushAppliedFollow!==undefined)require(pushFinals.has(event.metadata.sourceId??"") && event.metadata.sourceTag==="ResultBlockOutcome","Recorded follow-up must belong to the modeled applied block.");
       const policy = event.metadata.probabilityPolicy;
+      require(validReportedNumericRetryAccess(event,sources,rootDiceBySource),"Numeric retry access must be a uniquely owned raw gate with prefix-qualified first/choice/skill evidence and its derived rescue-chance innovation.");
+      require(validReportedNumericGatedReplacement(event,sources,rootDiceBySource),"A gated replacement must be one independently scored fresh die immediately after its passed access gate, without recounting the original or spending another resource.");
       require(validReportedFailedNumericRetry(event,sources,rootDiceBySource),
         "A failed numeric retry must retain its exclusive ordered first/choice/skill/gate/kept evidence, exact conditional arithmetic and resource spend, without an applied policy score.");
       require(validReportedNumericQuestionCopy(event,sources,initialRerollDiceBySource),
@@ -1501,8 +1514,7 @@ export const LuckReportSchema = z
           event.actualSuccess === pro.passed &&
           teamRerollsSpent === 0 &&
           rerollResource === "skill" &&
-          event.scoringStatus ===
-            "excluded", "Pro evidence requires a verified 3+ gate and its skill resource.");
+          event.scoringStatus === (event.metadata.numericRetryAccess ? "scored" : "excluded"), "Pro evidence requires a verified 3+ gate and its skill resource.");
       }
       const gate = event.metadata.lonerGate;
       if (gate) {
@@ -1537,8 +1549,7 @@ export const LuckReportSchema = z
           outcomeCode === Number(gate.passed) &&
           Boolean(rerollDecisionId) &&
           teamRerollsSpent === 1 &&
-          event.scoringStatus ===
-            "excluded", "A reported Loner gate requires one verified die and a team reroll spend.");
+          event.scoringStatus === (event.metadata.numericRetryAccess ? "scored" : "excluded"), "A reported Loner gate requires one verified die and a team reroll spend.");
       }
       require(event.teamId === "unresolved" ||
         teamIds.has(
@@ -1859,7 +1870,7 @@ export const LuckReportSchema = z
       }
       if(event.metadata.teamRerollDecision)
         require(event.metadata.sourceTag === "ResultTeamRerollUsage" && event.scoringStatus === "excluded" && event.metadata.isRollCandidate === false &&
-          (event.metadata.teamRerollDecision.used || counter?.spent === 0),
+          (event.metadata.teamRerollDecision.used || counter?.spent === 0 || proAccessChoices.has(event.metadata.sourceId??"")),
           "A recorded team-reroll choice must be non-random decision evidence; a decline needs its counter receipt.");
       if(event.metadata.rerollOffer)
         require(((event.metadata.sourceTag === "QuestionTeamRerollUsage" && event.scoringStatus === "excluded" && event.metadata.isRollCandidate === false) ||
@@ -2826,7 +2837,7 @@ export const LuckReportSchema = z
         if (event.probabilitySuccess !== null && event.actualSuccess !== null)
           require(near(
             event.delta,
-            event.metadata.rerollDraws ? event.metadata.rerollDraws.initialDelta + event.metadata.rerollDraws.replacementDelta : Number(event.actualSuccess) - event.probabilitySuccess
+            event.metadata.numericRetryAccess ? retryAccessDelta(event.metadata.numericRetryAccess.baseSuccessChance,event.probabilitySuccess,event.actualSuccess) : event.metadata.rerollDraws ? event.metadata.rerollDraws.initialDelta + event.metadata.rerollDraws.replacementDelta : Number(event.actualSuccess) - event.probabilitySuccess
           ), "Dice deviation must agree with chance and result.");
         require(near(
           event.weightedDelta,

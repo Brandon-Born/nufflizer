@@ -214,7 +214,9 @@ describe("failed gated numeric retry policies", () => {
       ).toBeCloseTo(c.chance, 12);
       expect(row(c.first).scoringStatus).toBe("scored");
       expect(row(c.first).delta).toBeCloseTo(-2 / 3, 12);
-      expect(row(c.gate).scoringStatus).toBe("excluded");
+      expect(row(c.gate).scoringStatus).toBe("scored");
+      expect(row(c.gate).delta).toBeCloseTo(-(2/3)*c.gateChance,12);
+      expect(row(c.gate).metadata.numericRetryAccess!.originalSourceId).toBe(`source-${c.first}`);
       expect(row(c.gate).metadata.teamRerollsSpent).toBe(c.spent);
       expect(row(c.kept).metadata.teamRerollsSpent).toBeUndefined();
       expect(row(c.kept).metadata.rerollResource).toBeUndefined();

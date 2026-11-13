@@ -3,11 +3,19 @@ import { recordedInjuryName } from "./injuryObservation";
 import type { LuckEventType, LuckReport } from "./types";
 import { LuckEventTypeSchema } from "./reportSchema";
 
+export function explainNumericRetryAccess(event:LuckReport["events"][number]):string|null {
+  const signed=(n:number)=>`${n>=0?"+":""}${n.toFixed(3)}`;
+  const r=event.metadata.numericRetryAccess;
+  if(r)return `${r.kind==="loner"?"Loner":"Pro"} ${event.actualSuccess?"granted":"did not grant"} access to one Dodge retry. The gate's own chance is ${(100*r.gateSuccessChance).toFixed(1)}%; if the retried Dodge keeps the same fixed conditions, its one-die chance is ${(100*r.baseSuccessChance).toFixed(1)}%. Under that fixed model, the gate changes the chance of rescuing the failed Dodge by ${signed(event.delta)} before the category weight: single-Dodge chance times (gate result minus gate chance). The original die (${r.originalSourceId}) keeps its separate contribution. Any verified fresh replacement contributes separately; a kept summary adds no draw. ${r.kind==="loner"?"One team reroll was spent, even if this gate failed.":"Pro was used; no team reroll was spent."} Coach choice, general eligibility and tactical resource cost add no dice score. The ${(100*r.fixedPolicySuccessChance).toFixed(1)}% whole-check chance describes only a fixed policy of taking this one gated retry after a first failure.`;
+  const replacement=event.metadata.numericGatedReplacement;
+  return replacement?`This is one fresh Dodge die after passed gate ${replacement.gateSourceId}. Its single-die chance is ${((event.probabilitySuccess??0)*100).toFixed(1)}% and its contribution is ${signed(event.delta)} before the category weight. The original and gate keep their own contributions. This replacement does not spend another resource or recount the original.`:null;
+}
+
 export function explainFailedNumericRetry(event: LuckReport["events"][number]): string | null {
   const r=event.metadata.failedNumericRetry;
   if(!r)return null;
   const name=r.kind==="loner"?"Loner":"Pro";
-  return `${name} failed, so the recorded original Dodge was kept. No fresh Dodge die was rolled. ${r.kind==="loner"?"One team reroll was spent despite the failed gate.":"Pro was used; no team reroll was spent."} For a fixed policy of taking this one gated retry after a first failure, the whole-check success chance would be ${(100*r.fixedPolicySuccessChance).toFixed(1)}%: first success, or first failure followed by a passing gate and successful retry. The single Dodge chance is ${(100*r.baseSuccessChance).toFixed(1)}%; the gate chance is ${(100*r.gateSuccessChance).toFixed(1)}%. These conditional policy odds add no score. The first die (${r.originalSourceId}) keeps its existing contribution; gate ${r.gateSourceId} remains unscored and this kept summary adds no draw. General eligibility, other retry policies and tactical resource cost remain unquantified.`;
+  return `${name} failed, so the recorded original Dodge was kept. No fresh Dodge die was rolled. ${r.kind==="loner"?"One team reroll was spent despite the failed gate.":"Pro was used; no team reroll was spent."} For a fixed policy of taking this one gated retry after a first failure, the whole-check success chance would be ${(100*r.fixedPolicySuccessChance).toFixed(1)}%: first success, or first failure followed by a passing gate and successful retry. The single Dodge chance is ${(100*r.baseSuccessChance).toFixed(1)}%; the gate chance is ${(100*r.gateSuccessChance).toFixed(1)}%. These conditional policy odds add no score. The first die (${r.originalSourceId}) keeps its existing contribution; gate ${r.gateSourceId} has its own evidence and scoring status, and this kept summary adds no draw or score. General eligibility, other retry policies and tactical resource cost remain unquantified.`;
 }
 
 export function explainCatchRerollResume(event: LuckReport["events"][number]): string | null {
@@ -537,10 +545,10 @@ export function explainDriveEffectExpiry(
 }
 
 export function explainLonerGate(
-  gate: LuckReport["events"][number]["metadata"]["lonerGate"]
+  gate: LuckReport["events"][number]["metadata"]["lonerGate"], scoredAccess=false
 ): string | null {
   return gate
-    ? `Loner ${gate.threshold}+ ${gate.passed ? "passed" : "failed"}. One team reroll was spent. ${gate.passed ? "Replacement dice need their own recorded evidence." : "The original result was kept; the gate granted no replacement dice."} The gate itself is unscored.`
+    ? `Loner ${gate.threshold}+ ${gate.passed ? "passed" : "failed"}. One team reroll was spent. ${gate.passed ? "Replacement dice need their own recorded evidence." : "The original result was kept; the gate granted no replacement dice."} ${scoredAccess?"Its source-qualified retry-access contribution is explained with the original Dodge.":"The gate itself is unscored."}`
     : null;
 }
 
