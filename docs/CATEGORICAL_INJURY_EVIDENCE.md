@@ -1,6 +1,6 @@
 # Categorical initial injury luck
 
-Current schema2.49 / dice-only-24 / mobility-possession-38. Initial policy introduced in2.48; the prefix correction is documented below. Owning work: NUF-011/014/018/019/021/022/027. Parent: `88092fde673b6e5240433c2f0845280b3bb9f2bc`. This extends actual dice analysis; it does not complete the remaining damage, state, counterfactual or calibration requirements.
+Current schema2.50 / dice-only-25 / mobility-possession-38. Initial policy introduced in2.48; the2.49 prefix correction is documented below and the2.50 committed armor-spend extension is in ARMOR_MODIFIER_BUDGET_EVIDENCE.md. The original seven-admission scope below is retained as history. Owning work: NUF-011/014/018/019/021/022/027. Parent: `88092fde673b6e5240433c2f0845280b3bb9f2bc`. This extends actual dice analysis; it does not complete the remaining damage, state, counterfactual or calibration requirements.
 
 Previously every initial injury table remained unscored even when the source established its unmodified policy. This change scores a qualified categorical injury without pretending that Stunned, KO and Casualty are binary success/failure outcomes. Both `probabilitySuccess` and `actualSuccess` remain null. The UI shows “Categorical” and the recorded injury; the shared explanation supplies the full four-outcome distribution and calculation.
 
@@ -49,7 +49,7 @@ Seven existing source rows gain actual categorical contributions:
 | demo5 /402 |0 /KO, ordinary |−5/8 |
 | demo8 /249 |0 /Stunned, Stunty self-fall |+7/8 |
 
-Demo1/source219 remains a conditional table with no score: its blocker's current list includes Mighty Blow13. An empty actual modifier list does not establish an unconditional pre-roll policy. Demo10/source113 lacks the qualified applied-block/damage cause and also remains unscored. Two other original candidate trait lists remain outside the table contract. Other unsupported injuries remain visible in coverage.
+Demo1/source219 remains a conditional table with no score: its blocker's current list includes Mighty Blow13. An empty actual modifier list does not establish an unconditional pre-roll policy. Demo10/source113 was also unscored in2.48/2.49; schema2.50 now admits it only under the separately verified armor-spend budget in [modifier evidence](ARMOR_MODIFIER_BUDGET_EVIDENCE.md). Two other original candidate trait lists remain outside the table contract. Other unsupported injuries remain visible in coverage.
 
 The existing7 injury rows and their raw dice identities are retained, not duplicated. Seven covered-roll statuses replace unscored statuses; denominators and source/event counts do not change. Initial injury, armor, casualty-selection and recovery remain distinct random stages. Damage/action summaries reference their existing contributions once and add no separate score. All2,223 parent scored deviations/odds remain unchanged; linked block/damage subtotals, category/team totals, coverage and ranked moments change only by the seven new contributions. All27 context ranges, zero source-backed context points and abstaining whole-match verdicts remain.
 
@@ -73,3 +73,8 @@ Schema2.49/dice-only-24 requires each Block injury cause to name `appliedOutcome
 Negative cases retain rejection for interrupted earlier injury policy, wrong damage source/subject/applied flag/sequence/step and forged public applied-outcome/header references. Both an unknown later reaction and a foreign-holder unknown skill preserve the earlier injury while withholding full aftermath. Existing independent raw-corpus injury joins and exact rational references remain unchanged. No Mighty Blow budget, modified injury probability, treatment/final availability or contextual value is added by this correction. Original acceptance remains13 closed/15 incomplete.
 
 Final evidence: the12 source reports deep-match595bf1e after only six new applied-outcome/header receipts and schema/dice versions/identity/time are reconciled. All2,230 prior scores and all coverage/context/verdict fields remain identical; max2,458,525 bytes.2,276 unit/API cases, Redis/build/lint/types and37 browser flows pass. The existing demo10 JSON-export browser flow checks source128→pool122→applied125→damage126. See the execution ledger for the initial stale-version browser failure and the complete corrected rerun.
+
+
+## Schema2.50 committed armor-use extension
+
+The initial unmodified injury policy can also be established by a prior source-qualified MightyBlow1 spend on this same damage action's armor. Only demo10/source113 gains the additional−5/8 contribution; the earlier seven and every other2,230 parent scored value/odds remain. Ten distinct holder/subject use observations add no score or random outcome. The armor itself stays unscored, with null binary odds/result, and only its later conditional injury receives the unchanged ordinal model. Full stage-budget, raw source, negative-policy and shared-surface evidence is in [ARMOR_MODIFIER_BUDGET_EVIDENCE.md](ARMOR_MODIFIER_BUDGET_EVIDENCE.md). Totals now include2,231 supported outcomes; context38 and whole-match abstention remain.

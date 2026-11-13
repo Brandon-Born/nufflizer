@@ -25,6 +25,7 @@ import { DICE_MODEL_VERSION, LUCK_CATEGORY_WEIGHTS, REPORT_SCHEMA_VERSION } from
 import { REPLAY_LIMITS } from "@/domain/replay/limits";
 import { summarizeRollFamilies } from "./rollCoverage";
 import { summarizeDamageSteps } from "./damageSteps";
+import { validReportedArmorModifierUse } from "./armorModifierBudget";
 import { summarizeContextEvidence } from "./contextCoverage";
 import { observedBounceDirection } from "./ballConsequences";
 import { summarizeMovementFall } from "./movementConsequences";
@@ -205,7 +206,8 @@ export const LuckEventMetadataSchema = z.strictObject({
   injuryScoring: z.strictObject({
     policy: z.literal("injury_table_order"), armorSourceId: text,
     cause: z.discriminatedUnion("kind", [
-      z.strictObject({kind:z.literal("block"),poolSourceId:text,appliedOutcomeSourceId:text,damageStepSourceIndex:count,attackerTraitEvidence:currentTraitEvidence.optional()}),
+      z.strictObject({kind:z.literal("block"),poolSourceId:text,appliedOutcomeSourceId:text,damageStepSourceIndex:count,attackerTraitEvidence:currentTraitEvidence.optional(),
+        armorModifierBudget:z.strictObject({useSourceId:text,available:z.literal(1),spent:z.literal(1),remaining:z.literal(0)}).optional()}),
       z.strictObject({kind:z.literal("self_fall"),rollSourceId:text,moveOutcomeSourceIndex:count,movementStepSourceIndex:count})
     ]),
     lessSevereChance:probability, sameSeverityChance:probability, moreSevereChance:probability
@@ -247,6 +249,7 @@ export const LuckEventMetadataSchema = z.strictObject({
     .optional(),
 
   skillUsage: z.strictObject({ skillId: z.number().int().nonnegative(), used: z.boolean() }).optional(),
+  armorModifierUse:z.strictObject({skillId:z.literal(13),armorSourceId:text,damageStepSourceIndex:count,subjectId:text,subjectTeamId:text}).optional(),
   activationLoss: z.strictObject({
     rollSourceId: text, rollSourceIndex: count, declarationSourceId: text, skillSourceId: text,
     followingActivationSourceId: text, followingSourceIndex: count, followingPlayerId: text,
@@ -2305,6 +2308,7 @@ export const LuckReportSchema = z
         "Scored numeric checks require exact supported fixed pre-roll modifier receipts; post-roll, unknown or duplicate modifiers cannot certify these odds.");
       else require(fixed===undefined,"Only a supported scored numeric check carries a fixed-modifier receipt.");
       const injuryObservation=event.metadata.injuryObservation;
+      require(validReportedArmorModifierUse(event,sources),"A recorded Mighty Blow armor use requires its separate holder, adjacent affected subject and exact committed +1 armor evidence without odds or a score.");
       if(injuryObservation)require(event.type === "injury" && (event.metadata.injuryScoring ? event.scoringStatus === "scored" : event.scoringStatus === "excluded") && event.metadata.isRollCandidate === true &&
         event.probabilitySuccess === null && event.actualSuccess === null && (event.metadata.injuryScoring || (event.delta === 0 && event.weightedDelta === 0)) &&
         !event.contextualImpact && !event.contextualBounds && !event.possessionBounds && !event.catchPossessionBounds &&

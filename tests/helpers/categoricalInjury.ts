@@ -12,6 +12,7 @@ export function categoricalInjuryXml(
     fall?: boolean;
     interruption?: string;
     aftermath?: string;
+    armorMightyBlow?: boolean;
     state?: number;
   } = {}
 ) {
@@ -51,7 +52,12 @@ export function categoricalInjuryXml(
   const damage = step(
     `<DamageStep><Applied>1</Applied><Source>${source}</Source><PlayerId>42</PlayerId><TargetId>42</TargetId><StepType>2</StepType><IsEvaluation>0</IsEvaluation><Skill>0</Skill><State>${o.state ?? (code === 4 ? 3 : 2)}</State><CellFrom>${c(x, 5)}</CellFrom><CellTo>${c(x, 5)}</CellTo></DamageStep>`,
     [
-      "<ResultRoll><Status>1</Status><Requirement>8</Requirement><Difficulty>8</Difficulty><Modifiers/><Dice><Die><DieType>0</DieType><Value>6</Value></Die><Die><DieType>0</DieType><Value>6</Value></Die></Dice><RollType>10</RollType><Outcome>1</Outcome><NewRoll>1</NewRoll></ResultRoll>",
+      ...(o.armorMightyBlow
+        ? [
+            `<ResultSkillUsage><PlayerId>${attacker}</PlayerId><Skill>13</Skill><Used>1</Used></ResultSkillUsage>`
+          ]
+        : []),
+      `<ResultRoll><Status>1</Status><Requirement>8</Requirement><Difficulty>${o.armorMightyBlow ? 7 : 8}</Difficulty><Modifiers>${o.armorMightyBlow ? `<Modifier><PlayerId>${attacker}</PlayerId><Skill>13</Skill><Effect>-1</Effect><Value>1</Value><ModifierType>27</ModifierType></Modifier>` : ""}</Modifiers><Dice><Die><DieType>0</DieType><Value>${o.armorMightyBlow ? 3 : 6}</Value></Die><Die><DieType>0</DieType><Value>${o.armorMightyBlow ? 4 : 6}</Value></Die></Dice><RollType>10</RollType><Outcome>1</Outcome><NewRoll>1</NewRoll></ResultRoll>`,
       ...(o.interruption ? [o.interruption] : []),
       `<ResultInjuryRoll><Status>1</Status><Modifiers/><Dice>${dice.map((d) => `<Die><DieType>0</DieType><Value>${d}</Value></Die>`).join("")}</Dice><Source>${source}</Source><RollType>11</RollType><Outcome>${code}</Outcome></ResultInjuryRoll>`,
       ...(o.aftermath ? [o.aftermath] : [])

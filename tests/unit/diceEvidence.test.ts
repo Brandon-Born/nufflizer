@@ -114,7 +114,7 @@ const oldProjection = (r: LuckReport, file: string) => {
   // New categorical injury stages change a linked block's subtotal, never its
   // original pool deviation. Reconstruct only the earlier subtotal membership
   // for this frozen historical hash; independent source/rational tests assert
-  // all seven new stage values and their current action/team sums separately.
+  // all eight current stage values and their current action/team sums separately.
   const priorDamage = summarizeDamageSteps(r.events.map(e=>e.metadata.injuryScoring ? {...e,scoringStatus:"excluded" as const,delta:0,weightedDelta:0} : e));
   const ids = new Set(cohort.sourceIds),
     oldTraits = new Set(priorTraits.files.find(c=>c.file===file)!.sourceIds),

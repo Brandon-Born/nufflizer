@@ -242,8 +242,8 @@ describe("source-qualified categorical injury scoring", () => {
   it.each([
     [
       "demo10.bbr",
-      ["source-128", "source-162", "source-439", "source-556"],
-      [0.625, -0.625, -1.25, 0.875]
+      ["source-113", "source-128", "source-162", "source-439", "source-556"],
+      [-0.625, 0.625, -0.625, -1.25, 0.875]
     ],
     ["demo5.bbr", ["source-110", "source-402"], [-0.625, -0.625]],
     ["demo8.bbr", ["source-249"], [0.875]]
@@ -351,7 +351,9 @@ describe("independent categorical injury evidence", () => {
         expect(n(damage.payload, "Source")).toBe(
           e.metadata.injuryObservation!.sourceCode
         );
-        const [armor, injury] = damage.messages;
+        const cause = e.metadata.injuryScoring!.cause;
+        const committed = cause.kind === "block" && !!cause.armorModifierBudget;
+        const [armor, injury] = damage.messages.slice(committed ? 1 : 0);
         expect(armor!.tag).toBe("ResultRoll");
         expect(injury!.tag).toBe("ResultInjuryRoll");
         expect(n(armor!.payload, "RollType")).toBe(10);
@@ -372,7 +374,6 @@ describe("independent categorical injury evidence", () => {
             )!;
         expect(e.delta).toBe(rational(ref.delta));
         expect(e.weightedDelta).toBe(rational(ref.weighted));
-        const cause = e.metadata.injuryScoring!.cause;
         if (cause.kind === "block") {
           const pool = r.events.find(
             (p) => p.metadata.sourceId === cause.poolSourceId
@@ -438,7 +439,7 @@ describe("independent categorical injury evidence", () => {
             expect([
               ...(seed.data!.innateSkills ?? []),
               ...(seed.data!.acquiredSkills ?? [])
-            ]).not.toContain(13);
+            ].includes(13)).toBe(committed);
           }
         } else {
           const prefix = witness.prefixes.at(-2)!;

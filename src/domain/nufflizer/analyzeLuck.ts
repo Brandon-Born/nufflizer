@@ -26,6 +26,7 @@ import {
 import { summarizeContextComponents } from "./contextComponents";
 import { attachInjuryObservations } from "./injuryObservation";
 import { attachCategoricalInjuries } from "./categoricalInjury";
+import { findMightyBlowArmorUses } from "./armorModifierBudget";
 import { attachInjuryTables } from "./injuryTable";
 import { attachBlockPush } from "./blockPush";
 import { attachBlockCrowd } from "./blockCrowd";
@@ -1219,6 +1220,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   const normalizedByRaw = new Map<ReplayEvent, LuckEvent>();
   const diceLinks: DiceLinks = new Map();
   const observedRerollDice = findObservedRerollDice(replay);
+  const armorModifierUses = findMightyBlowArmorUses(replay, ownership);
   const teamDiceIdentityByQuestion = new Map(
     findTeamDiceIdentities(replay).map((p) => [p.question.id, p])
   );
@@ -1244,6 +1246,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     ])
   );
   const rerollCounters = findRerollCounterEvidence(inputReplay);
+  for (const source of armorModifierUses.keys()) activationEvidenceSources.add(source);
   for (const [source, proof] of rerollCounters) {
     activationEvidenceSources.add(source);
     activationEvidenceSources.add(proof.questionSourceId);
@@ -1720,6 +1723,13 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       );
       if (!normalized) {
         continue;
+      }
+      const armorUse = armorModifierUses.get(event.id ?? "");
+      if (armorUse) {
+        normalized.metadata.armorModifierUse = armorUse;
+        normalized.metadata.skillUsage = {skillId:13,used:true};
+        normalized.label = "Recorded Mighty Blow on armor";
+        normalized.statusReason = "Recorded +1 armor use; eligibility and the later injury policy require separate evidence. No luck score is added.";
       }
       if(event.sourceTag==="QuestionPushBack" && !normalized.metadata.isRollCandidate){
         normalized.label="Recorded push destination choice";

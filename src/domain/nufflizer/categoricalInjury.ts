@@ -8,6 +8,7 @@ import type { LuckEvent } from "./types";
 import type { ObservedBlockConsequence } from "./blockConsequences";
 import { knockedDownSubjects } from "./blockConsequences";
 import { LUCK_CATEGORY_WEIGHTS } from "./constants";
+import { validReportedArmorModifierUse } from "./armorModifierBudget";
 
 // Ordinal dice deviation, not a price for losing the player. Badly Hurt and a
 // pending Casualty roll share one injury tier; no league damage is valued.
@@ -48,12 +49,16 @@ export function injuryOrderDeviation(
   };
 }
 // Only known intrinsic skills which cannot modify injury on an ordinary Block.
-// Mighty Blow is absent. Pro explicitly cannot reroll Armour/Injury/Casualty
+// Mighty Blow needs a separate same-damage armor-spend receipt. Pro cannot
+// reroll Armour/Injury/Casualty
 // (BB2020 p77); special and unknown skills remain outside this contract.
 const ordinaryBlockDamageSkills = new Set([
   6, 7, 10, 15, 19, 26, 27, 30, 38, 44, 50, 57, 59, 61, 63, 68, 75, 81, 83, 1008
 ]);
-export function hasFixedBlockInjuryPolicy(proof: CurrentTraitEvidence) {
+export function hasFixedBlockInjuryPolicy(
+  proof: CurrentTraitEvidence,
+  armorSpent = false
+) {
   const t = proof.traits;
   return (
     t.dataPlayerId !== null &&
@@ -64,9 +69,12 @@ export function hasFixedBlockInjuryPolicy(proof: CurrentTraitEvidence) {
     [t.innateSkills, t.acquiredSkills].every(
       (a) => new Set(a).size === a.length
     ) &&
-    [...t.innateSkills, ...t.acquiredSkills].every((s) =>
-      ordinaryBlockDamageSkills.has(s)
-    )
+    [...t.innateSkills, ...t.acquiredSkills].every(
+      (s) => ordinaryBlockDamageSkills.has(s) || (armorSpent && s === 13)
+    ) &&
+    (!armorSpent ||
+      [...t.innateSkills, ...t.acquiredSkills].filter((s) => s === 13)
+        .length === 1)
   );
 }
 function cell(p: unknown) {
@@ -211,9 +219,11 @@ export function attachCategoricalInjuries(
   const holders = findParticipantTraitEvidence(replay, modifierHolders, owners);
   for (const turn of replay.turns)
     for (let i = 0; i < turn.events.length; i++) {
-      const damage = turn.events[i]!,
-        rawArmor = turn.events[i + 1],
-        rawInjury = turn.events[i + 2];
+      const damage = turn.events[i]!;
+      const use = sources.get(turn.events[i + 1]?.id ?? "");
+      const armorUse = use?.metadata.armorModifierUse;
+      const rawArmor = turn.events[i + (armorUse ? 2 : 1)],
+        rawInjury = turn.events[i + (armorUse ? 3 : 2)];
       const injury = rawInjury?.id ? sources.get(rawInjury.id) : undefined;
       const armor = rawArmor?.id ? sources.get(rawArmor.id) : undefined;
       const table = injury?.metadata.injuryTable,
@@ -231,18 +241,23 @@ export function attachCategoricalInjuries(
         observation.recordKind !== "direct" ||
         observation.damageStepSourceIndex !== damage.sourceIndex ||
         injury.metadata.actionId !== damage.actionId ||
-        armor.scoringStatus !== "scored" ||
+        (!armorUse && armor.scoringStatus !== "scored") ||
         armor.type !== "armor_break" ||
-        armor.actualSuccess !== false ||
+        (!armorUse && armor.actualSuccess !== false) ||
         armor.playerId !== injury.playerId ||
         armor.teamId !== injury.teamId ||
         armor.metadata.actionId !== damage.actionId ||
         armor.metadata.sequenceId !== injury.metadata.sequenceId ||
-        rawArmor?.payload?.Modifiers !== "" ||
-        armor.metadata.modifiersSum !== 0 ||
-        armor.metadata.modifiers?.length !== 0 ||
+        (!armorUse &&
+          (rawArmor?.payload?.Modifiers !== "" ||
+            armor.metadata.modifiersSum !== 0 ||
+            armor.metadata.modifiers?.length !== 0)) ||
+        (armorUse &&
+          (!validReportedArmorModifierUse(use!, sources) ||
+            armorUse.armorSourceId !== rawArmor?.id ||
+            armorUse.damageStepSourceIndex !== damage.sourceIndex)) ||
         rawInjury?.sourceIndex !== rawArmor.sourceIndex! + 1 ||
-        rawArmor.sourceIndex !== damage.sourceIndex! + 1
+        rawArmor.sourceIndex !== damage.sourceIndex! + (armorUse ? 2 : 1)
       )
         continue;
       let cause:
@@ -264,12 +279,17 @@ export function attachCategoricalInjuries(
           continue;
         const proof = holders.get(rawInjury.id!);
         if (
-          injury.playerId !== block.attackerId &&
-          (!proof ||
-            !hasFixedBlockInjuryPolicy(proof) ||
-            proof.playerId !== block.attackerId ||
-            proof.teamId !== pool!.teamId ||
-            proof.currentCheckpointAfter >= damage.sourceIndex!)
+          (armorUse &&
+            (injury.playerId !== block.defenderId ||
+              use!.playerId !== block.attackerId ||
+              use!.teamId !== pool!.teamId)) ||
+          (injury.playerId !== block.attackerId &&
+            (!proof ||
+              !proof.onPitch ||
+              !hasFixedBlockInjuryPolicy(proof, !!armorUse) ||
+              proof.playerId !== block.attackerId ||
+              proof.teamId !== pool!.teamId ||
+              proof.currentCheckpointAfter >= damage.sourceIndex!))
         )
           continue;
         cause = {
@@ -277,9 +297,20 @@ export function attachCategoricalInjuries(
           poolSourceId: candidates[0]!.poolSourceId,
           appliedOutcomeSourceId: candidates[0]!.finalSourceId,
           damageStepSourceIndex: damage.sourceIndex!,
+          ...(armorUse
+            ? {
+                armorModifierBudget: {
+                  useSourceId: use!.metadata.sourceId!,
+                  available: 1 as const,
+                  spent: 1 as const,
+                  remaining: 0 as const
+                }
+              }
+            : {}),
           ...(proof ? { attackerTraitEvidence: proof } : {})
         };
-      } else if (!candidates) cause = selfFallCause(turn.events, i, sources);
+      } else if (!candidates && !armorUse)
+        cause = selfFallCause(turn.events, i, sources);
       if (!cause) continue;
       const rank = injuryOrderDeviation(table.counts, observation.outcome);
       const subject = injury.playerId
@@ -332,6 +363,9 @@ export function validReportedCategoricalInjury(
       ? injuryOrderDeviation(table.counts, observation.outcome)
       : undefined;
   const armor = sources.get(score.armorSourceId);
+  const budget =
+    score.cause.kind === "block" ? score.cause.armorModifierBudget : undefined;
+  const use = budget ? sources.get(budget.useSourceId) : undefined;
   const near = (a: number, b: number) => Math.abs(a - b) < 1e-12;
   if (
     !table ||
@@ -353,18 +387,27 @@ export function validReportedCategoricalInjury(
     !near(score.sameSeverityChance, rank.sameSeverityChance) ||
     observation.recordKind !== "direct" ||
     event.metadata.sourceTag !== "ResultInjuryRoll" ||
-    armor?.scoringStatus !== "scored" ||
+    !armor ||
     armor.type !== "armor_break" ||
-    armor.actualSuccess !== false ||
     armor.teamId !== event.teamId ||
     armor.playerId !== event.playerId ||
     armor.metadata.actionId !== event.metadata.actionId ||
     armor.metadata.sequenceId !== event.metadata.sequenceId ||
-    armor.metadata.modifiersSum !== 0 ||
-    armor.metadata.modifiers?.length !== 0 ||
+    (!budget &&
+      (armor.scoringStatus !== "scored" ||
+        armor.actualSuccess !== false ||
+        armor.metadata.modifiersSum !== 0 ||
+        armor.metadata.modifiers?.length !== 0 ||
+        armor.metadata.damage?.sourceCode !== observation.sourceCode)) ||
+    (budget &&
+      (!use ||
+        !validReportedArmorModifierUse(use, sources) ||
+        use.metadata.armorModifierUse?.armorSourceId !== score.armorSourceId ||
+        use.metadata.armorModifierUse.damageStepSourceIndex !==
+          observation.damageStepSourceIndex)) ||
     (armor.metadata.sourceIndex ?? -2) + 1 !== event.metadata.sourceIndex ||
-    observation.damageStepSourceIndex + 1 !== armor.metadata.sourceIndex ||
-    armor.metadata.damage?.sourceCode !== observation.sourceCode ||
+    observation.damageStepSourceIndex + (budget ? 2 : 1) !==
+      armor.metadata.sourceIndex ||
     event.contextualImpact ||
     event.contextualBounds ||
     event.possessionBounds ||
@@ -425,6 +468,13 @@ export function validReportedCategoricalInjury(
     ).includes(event.playerId!)
   )
     return false;
+  if (
+    budget &&
+    (event.playerId !== block.defenderId ||
+      use!.playerId !== block.attackerId ||
+      use!.teamId !== pool!.teamId)
+  )
+    return false;
   if (event.playerId === block.attackerId)
     return (
       cause.attackerTraitEvidence === undefined && pool!.teamId === event.teamId
@@ -432,7 +482,7 @@ export function validReportedCategoricalInjury(
   const proof = cause.attackerTraitEvidence;
   return (
     !!proof &&
-    hasFixedBlockInjuryPolicy(proof) &&
+    hasFixedBlockInjuryPolicy(proof, !!budget) &&
     proof.onPitch &&
     proof.playerId === block.attackerId &&
     proof.teamId === pool!.teamId &&

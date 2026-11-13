@@ -153,7 +153,7 @@ describe("conditional injury tables before treatment and recovery", () => {
           )!.counts
         );
         expect(explainInjuryTable(e)).toContain("before treatment or recovery");
-        const qualified = new Set(["demo10.bbr:26", "demo10.bbr:32", "demo10.bbr:76", "demo10.bbr:90", "demo5.bbr:29", "demo5.bbr:70", "demo8.bbr:45"]);
+        const qualified = new Set(["demo10.bbr:23", "demo10.bbr:26", "demo10.bbr:32", "demo10.bbr:76", "demo10.bbr:90", "demo5.bbr:29", "demo5.bbr:70", "demo8.bbr:45"]);
         expect(Boolean(e.metadata.injuryScoring)).toBe(qualified.has(`${c.sourceFile}:${c.locator.replayStep}`));
         if(e.metadata.injuryScoring) {
           expect(explainInjuryTable(e)).toContain("categorical dice contribution");

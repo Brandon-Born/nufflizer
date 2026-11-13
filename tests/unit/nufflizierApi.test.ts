@@ -208,6 +208,8 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(injuryTableEvent.probabilitySuccess).toBeNull();
     expect(injuryTableEvent.actualSuccess).toBeNull();
     expect(injuryTableEvent.weightedDelta).toBe(-0.625);
+    expect(report.events.find(e=>e.metadata.sourceId==="source-1755")).toMatchObject({playerId:"38",teamId:"1",scoringStatus:"excluded",weightedDelta:0,metadata:{armorModifierUse:{subjectId:"2",subjectTeamId:"0",armorSourceId:"source-1756"},skillUsage:{skillId:13,used:true}}});
+    expect(report.events.find(e=>e.metadata.sourceId==="source-1757")).toMatchObject({scoringStatus:"excluded",probabilitySuccess:null,weightedDelta:0});
     expect(injuryTableEvent.metadata.injuryScoring).toMatchObject({policy:"injury_table_order",armorSourceId:"source-109",cause:{kind:"block",poolSourceId:"source-98"},lessSevereChance:21/36,sameSeverityChance:9/36,moreSevereChance:6/36});
     expect(report.events.filter(e=>e.metadata.blockBallRelease)).toHaveLength(3);
     const release=report.events.find(e=>e.metadata.sourceId==="source-1324")!.metadata.blockBallRelease!;

@@ -1,0 +1,35 @@
+# Mighty Blow committed to armor before initial injury
+
+Schema2.50 / dice-only-25 / mobility-possession-38. Parent `c2e25cfda3363867390fb6063075bb3e2b1a779e`. Scope NUF-011/012/014/018/021/022/027. The original issue criteria remain open; this is one supported stage policy, not completion of damage, resources, state or contextual luck.
+
+## Rule, independent source and arithmetic
+
+[GR-005](GAME_SKILL_REFERENCE.md) records the in-game Mighty Blow(+1) tooltip. BB2020 printed80/PDF81 (SHA256 `8598ecc9283f7e5f49a5566392ae5cbbec55c0a5f994b1eba4dec0414e2982e3`) permits the bonus on either armor or injury when this player's Block knocks an opponent down, including a decision after the test. It excludes Stab/Chainsaw. The primary page was inspected directly. Installed `NetGameplayModifierType27=Skill` is a separate namespace from skill13/MightyBlow1;1009/MightyBlow2 is not admitted by this contract.
+
+`extract-mighty-blow-armor-evidence.py` imports only the independent stdlib inventory decoder. The committed raw artifact preserves all ten observed same-step source1 damage→used13→+1 armor prefixes, complete numeric damage/message fields, outer locators and unchanged file hashes. Selection is raw observation, not an admission oracle. Its independent 36-face ordinary injury reference is21 Stunned/9 KO/6 Casualty; ordinal weighted contributions are+5/8,−5/8,−5/4, with exact zero table-weighted mean. Existing separate four-table rational references cover all144 faces including Stunty/Thick Skull. Direct code3 remains unsupported.
+
+Only demo10/source113 has all current policy evidence. Pool99 is blocker1/team0 against subject39/team1; applied outcome108 precedes damage110. Skill111 names holder1, while armor112 and injury113 name victim39. The use has `Skill13,Used1`; the armor has the single exact modifier `PlayerId1,Skill13,Effect−1,Value1,ModifierType27`, Requirement10/Difficulty9 and fresh dice[5,4], Outcome1. The initial injury has explicit empty modifiers and[6,3], KO. Complete current subject/holder traits and the unique applied Block qualify the chain.
+
+The +1 has already been committed to armor before the initial injury draw: available1, spent1, remaining0 for this damage. The subsequent injury uses its unmodified ordinary conditional table, giving subject-oriented−5/8. This says nothing about a later different Block, and the post-roll chosen armor bonus supplies no unconditional armor probability.
+
+The other nine patterns (demo11/1591, demo2/968, demo5/1757, demo7/1691/3270, demo9/384/2611/3889/4222) lack the qualified current injury table and remain visible/unscored. Demo1/source219 has no recorded armor spend; empty actual modifiers alone do not settle its adaptive policy.
+
+## Domain and public contract
+
+`findMightyBlowArmorUses` requires the exact supported ordinary damage header, first used13 message and single exact +1 armor vector; fresh two-D6 armor/outcome/target arithmetic; ordered same-action/sequence/outer-locator fields; distinct confirmed opposing holder/subject roles and no attribution conflict. It emits an observation, not eligibility or odds. Ten source skill messages become non-random unscored report rows with `armorModifierUse` and `skillUsage`; generic scored-ownership receipts are unchanged.
+
+The initial injury scorer separately requires the unique applied Block damage prefix, opposing knocked-down subject, current complete on-pitch holder/subject traits, exactly one MightyBlow1 and only the existing harmless intrinsic skills, and exact adjacent first armor/initial-injury ordering. Combined MightyBlow2, unknown skills/effects, duplicate skill copies, off-pitch holders, wrong holder/subject/namespace/value/freshness/action/source order and intervening reactions cannot supply the policy. A later unknown treatment does not erase the earlier admitted initial injury, or certify a full aftermath/continuation.
+
+The strict Block injury cause optionally contains `armorModifierBudget={useSourceId,available:1,spent:1,remaining:0}`. Its referenced control must be the same damage's first used13, name the Block attacker, precede the injury's own modified armor and match subject/teams/source indices. The exported armor remains excluded with null binary odds/result and zero contribution; observed Outcome1 is retained as raw metadata. The initial injury keeps null binary fields and the existing categorical formula. Shared UI/CLI copy explains the spend, zero remaining modifier, unpriced armor choice and per-damage scope.
+
+The damage summary contains the existing armor/injury rows once, one scored and one unscored. The full Block damage-action linker still withholds its complete aftermath link across this foreign-holder message; the qualified prefix receipt is sufficient only for the earlier initial injury. No fake full continuation, ball release, activation end, treatment/final availability, contextual point or league damage value is added.
+
+## Verification
+
+Source joins cover all ten raw candidates and every numeric damage/message field, separate owner roles, unchanged hashes and exact locators. Decimal lexical forms such as100.0 versus100 are normalized only for that numeric comparison; empty/non-numeric XML leaf fields stay outside the numeric artifact. Rational equality uses a12-decimal floating tolerance only for non-binary-exact fractions. Positive KO−5/8 remains exact.
+
+Tests cover144 face/table cases, States1/2/3 without outcome-selected policy, actual positive and nine unknown-trait cases, malformed commitment fields, wrong public budget/cause/source/modifier/role/trait references, later versus intervening unknown reactions, separate armor/injury sums, two independent same-holder damage transactions and no inheritance into an uncommitted later injury. The existing demo10 CLI JSON/text and existing demo5 real HTTP admission exercise the public contract; the HTTP gate stays exactly ten requests. Browser acceptance uploads actual demo10, filters victim39's scored injury113, inspects armor112 as unscored, distinguishes holder1's use111, exports JSON and resets at1280×800 and390×844. Browser plugin not available; repository Playwright is used.
+
+Final gate and complete parent-report reconciliation results are recorded in the execution ledger before publication.13 issues remain closed/15 incomplete; current-schema hosted acceptance and every original broader criterion remain open.
+
+Final verification:2,320 unique unit/API cases have local passing evidence (complete mandatory gates plus two additional final regressions in the44-case budget suite), real Redis/lint/types/production build, all38 browser flows and a targeted final-copy rebuild/rerun. Final screenshots at both viewports were inspected. The12 final reports deep-match c2e25cf after only the ten observations/one injury and all individually asserted derived counts/sums/secondary dice-gap/moment changes are reconciled. All2,230 old score deviations/odds,27 ranges/zero public context points and whole-match abstention status remain. Max JSON2,458,525 bytes. Exact logs and the complete regression projection are recorded in IMPLEMENTATION_LOG.md.
