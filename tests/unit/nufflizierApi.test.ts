@@ -1,4 +1,5 @@
 import { appendIntrinsicContinuityProbe } from "../helpers/intrinsicContinuityUpload";
+import {appendExecutionProbe} from "../helpers/executionSources";
 // pnpm test runs this real-worker acceptance file after the parallel corpus
 // suite, preserving the production4s deadline without unrelated CPU contention.
 import { LuckReportSchema } from "@/domain/nufflizer/reportSchema";
@@ -42,15 +43,18 @@ describe("POST /api/nufflizier/analyze", () => {
     try {
       const data = new FormData();
       const hidden=Array.from({length:100},(_,i)=>`<Unknown${i}><Dice><Die><DieType>0</DieType><Value>3</Value></Die></Dice></Unknown${i}>`).join("");
-      const xml=appendIntrinsicContinuityProbe(appendStaffInjuryTransaction(scoringRushXml().replace("</Replay>",`<ReplayStep>${sequence([rollXml(7,6,2)])}<BoardState>${hidden}</BoardState></ReplayStep></Replay>`)));
+      const xml=appendExecutionProbe(appendIntrinsicContinuityProbe(appendStaffInjuryTransaction(scoringRushXml().replace("</Replay>",`<ReplayStep>${sequence([rollXml(7,6,2)])}<BoardState>${hidden}</BoardState></ReplayStep></Replay>`))),142);
       data.set("replay",new File([xml],"private-input.xml"));
       const response = await POST(new Request("http://localhost/api/nufflizier/analyze", {
         method: "POST", body: data
       }));
       expect(response.status).toBe(200);
       const report = LuckReportSchema.parse(await response.json());
-      expect(report.coverage.rollCandidates).toMatchObject({scoredCount:6,excludedCount:101,scoredRate:6/107});
-      expect(report.coverage.diceRecords).toMatchObject({eventRecordCount:8,snapshotRecordCount:100,unresolvedCount:100});
+      expect(report.coverage.rollCandidates).toMatchObject({scoredCount:6,excludedCount:102,scoredRate:6/108});
+      expect(report.coverage.diceRecords).toMatchObject({eventRecordCount:9,snapshotRecordCount:100,unresolvedCount:100});
+      const unapplied=report.events.find(e=>e.playerId==="142"&&e.type==="armor_break")!;
+      expect(unapplied).toMatchObject({scoringStatus:"excluded",actualSuccess:null,probabilitySuccess:null,weightedDelta:0,metadata:{isRollCandidate:true,dice:[3,5]}});
+      expect(unapplied.statusReason).toContain("not applied");
       const continued=report.events.find(e=>e.playerId==="142"&&e.metadata.blockScoring)!;
       expect(continued).toMatchObject({teamId:"0",scoringStatus:"scored",probabilitySuccess:null,actualSuccess:null,weightedDelta:5/8});
       expect(continued.metadata.block!.skillModel!.expectedValue).toBeCloseTo(1/6,12);

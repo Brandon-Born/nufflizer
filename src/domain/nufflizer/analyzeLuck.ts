@@ -38,6 +38,7 @@ import { attachInjuryObservations } from "./injuryObservation";
 import { findStaffInjuryOriginals } from "./staffInjuryOriginal";
 import { findTreatmentEvidence } from "./treatmentAftermath";
 import {canonicalizeThrowTeamMateParticipants} from "@/domain/replay/throwTeamMateParticipants";
+import {qualifyExecutionSources} from "@/domain/replay/executionSources";
 import { attachCasualtyObservations } from "./casualtyObservation";
 import { attachCasualtyTables } from "./casualtyTable";
 import { attachCategoricalInjuries } from "./categoricalInjury";
@@ -742,6 +743,7 @@ function buildNormalizedEvent(
         ? `${recoveryName} on ${recoveryTarget}+${koRecovery?.target === 3 ? " with Kegs" : ""}`
         : targetLabel(requirement, difficulty);
   const contractExclusion =
+    event.executionExclusion ??
     (!chooserMatches
       ? "block chooser slot conflicts with the participant roster"
       : undefined) ??
@@ -1267,7 +1269,7 @@ function buildHowScoredSummary(
 }
 
 export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
-  inputReplay=canonicalizeThrowTeamMateParticipants(inputReplay);
+  inputReplay=canonicalizeThrowTeamMateParticipants(qualifyExecutionSources(inputReplay));
   const ownership = createOwnershipTimeline(inputReplay);
   const replay = applyCurrentOwnership(inputReplay, ownership);
   // Inventory and bound all observed fields before probability admission.

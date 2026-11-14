@@ -193,6 +193,7 @@ export function linkBlockPools(
       }
     | undefined;
   for (const [index, event] of events.entries()) {
+    if(event.executionExclusion){chain=undefined;continue;}
     // A BoardState carrier observation sits between split block sequences.
     // The action messages, not this repeated snapshot field, decide linkage.
     if (event.sourceTag === "Carrier") {

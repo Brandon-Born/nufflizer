@@ -246,6 +246,7 @@ export function findNumericQuestionOriginals(
     { question: ReplayEvent; roll: Record<string, unknown> }
   >();
   for (const [index, e] of events.entries()) {
+    if(e.executionExclusion){pending.clear();if(e.actionId)blockedActions.add(e.actionId);continue;}
     if (e.sourceTag === "EventEndTurn" || e.sourceTag === "EventNewGamePhase")
       pending.clear();
     const q = e.sourceTag === "QuestionTeamRerollUsage",

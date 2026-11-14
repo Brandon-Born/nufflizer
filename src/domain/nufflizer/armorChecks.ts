@@ -46,6 +46,7 @@ export function verifyArmorCheck(
   countInStep: number | undefined
 ): ArmorContract | undefined {
   if (event.sourceTag !== "ResultRoll" || event.rollType !== 10) return;
+  if(event.executionExclusion)return {kind:"excluded",reason:event.executionExclusion};
   const p = event.payload;
   const subject = event.stepActorId;
   if (

@@ -174,6 +174,9 @@ export function linkApothecary(
     | undefined;
 
   for (const [index, event] of events.entries()) {
+    // Retain raw originals/copy identities, but never carry a treatment
+    // commitment across a step explicitly excluded from execution.
+    if (event.executionExclusion) pending = undefined;
     const { sourceTag: tag, payload } = event;
     if (
       event.checkpointCarrier ||
@@ -242,6 +245,7 @@ export function linkApothecary(
       pending = undefined;
       const source = event.damageSource;
       if (
+        event.executionExclusion ||
         !roll ||
         !subject ||
         !owned ||

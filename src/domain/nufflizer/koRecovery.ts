@@ -1,4 +1,5 @@
 import type { ReplayEvent, ReplayTurn } from "@/domain/replay/types";
+import { knownKoTraitTransition } from "@/domain/replay/koTraitContinuity";
 
 function recoveryKey(event: ReplayEvent) {
   return JSON.stringify([event.locator?.replayStep, event.playerId]);
@@ -53,6 +54,7 @@ export function verifyKoRecovery(
   const p = event.payload;
   if (
     version !== "1-4-0-0" ||
+    !knownKoTraitTransition(event) ||
     event.sourceTag !== "EventRoll" ||
     event.rollType !== 13 ||
     event.actionId ||

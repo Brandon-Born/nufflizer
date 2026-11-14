@@ -74,6 +74,7 @@ export function linkLonerGates(
       counts.set(event.actionId, (counts.get(event.actionId) ?? 0) + 1);
   }
   for (const [index, roll] of events.entries()) {
+    if(roll.executionExclusion)continue;
     if (
       roll.sourceTag !== "ResultRoll" ||
       roll.rollType !== 71 ||
@@ -150,6 +151,7 @@ export function linkProGates(
     )
       counts.set(event.actionId, (counts.get(event.actionId) ?? 0) + 1);
   for (const [index, roll] of events.entries()) {
+    if(roll.executionExclusion)continue;
     let link = links.get(index);
     // UI-087 uses an AccuracyStep continuation, outside the ordinary
     // numeric reroll path. Match that kept Pro gate's complete local shape.
@@ -381,6 +383,7 @@ export function linkTeamRerolls(
     event.actionId,event.playerId,event.stepType,event.targetId,family
   ]);
   for (const [index, event] of events.entries()) {
+    if(event.executionExclusion){pending=undefined;continue;}
     const family=event.rollType ?? ((event.sourceTag==="QuestionTeamRerollUsage")
       ? (event.payload?.RollInfos as {RollType?:number}|undefined)?.RollType : undefined);
     const completed=event.actionId && family!==undefined ? completedTeamChecks.get(familyKey(event,family)) : undefined;
@@ -640,6 +643,7 @@ export function linkObservedSkillRerolls(
   const seenInitials = new Set<string>();
   const claimed = new Map<string, {index:number;event:ReplayEvent}>();
   for (const [index, original] of events.entries()) {
+    if(original.executionExclusion)continue;
     const family = original.rollType ?? ((original.sourceTag === "QuestionTeamRerollUsage" || original.sourceTag === "QuestionSkillUsage")
       ? (original.payload?.RollInfos as {RollType?:number}|undefined)?.RollType : undefined);
     const rule = family === undefined ? undefined : SKILL_CHECKS.get(family);
@@ -702,6 +706,7 @@ export function linkObservedSkillRerolls(
     if (
       [original, skill, final].some(
         (event) =>
+          !!event.executionExclusion ||
           event.actionId !== original.actionId ||
           event.stepTag !== "PlayerStep" ||
           event.stepType !== original.stepType ||

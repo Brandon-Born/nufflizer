@@ -70,6 +70,7 @@ export function numericCheckExclusion(
   verifiedReplacement: boolean,
   retainedOriginal = false
 ): string | undefined {
+  if(event.executionExclusion)return event.executionExclusion;
   if (
     event.sourceTag !== "ResultRoll" ||
     ![1, 2, 4, 7].includes(event.rollType ?? -1)

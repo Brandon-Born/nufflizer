@@ -38,6 +38,7 @@ export function linkRegeneration(
     occurrences.set(event.actionId, (occurrences.get(event.actionId) ?? 0) + 1);
   }
   for (const [index, event] of events.entries()) {
+    if(event.executionExclusion)continue;
     const subject = event.stepActorId;
     const roll = event.payload;
     if (

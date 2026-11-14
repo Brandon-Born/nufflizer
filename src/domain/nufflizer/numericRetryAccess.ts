@@ -381,6 +381,7 @@ export function scoreNumericRetryAccess(
 ) {
   const owner = owners.resolve(proof.gate.playerId!, proof.gate);
   if (
+    proof.gate.executionExclusion ||
     owner.status !== "confirmed" ||
     first.scoringStatus !== "scored" ||
     !first.metadata.numericOriginal ||

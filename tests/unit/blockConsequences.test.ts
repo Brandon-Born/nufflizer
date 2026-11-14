@@ -232,7 +232,17 @@ describe("observed skill-resolved blocks and subject damage", () => {
         r.events.find((e) => e.metadata.blockResolution)?.metadata
           .blockResolution
       ).toMatchObject({ outcome: "defender_down", damageActionIds: [] });
-      expect(r.damageSteps).toHaveLength(1);
+      if (change === "evaluation") {
+        // An evaluated armor draw previously anchored this scored summary.
+        // Keep its source observation, without asserting executed damage.
+        expect(r.damageSteps).toHaveLength(0);
+        expect(r.events.find((e) => e.type === "armor_break")).toMatchObject({
+          scoringStatus: "excluded",
+          probabilitySuccess: null,
+          actualSuccess: null,
+          weightedDelta: 0
+        });
+      } else expect(r.damageSteps).toHaveLength(1);
     }
   );
   it("source-held-out public Tackle chains retain their own roles and resolution", () => {

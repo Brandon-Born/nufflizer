@@ -1,0 +1,670 @@
+{
+  "profiles": [
+    {
+      "heldCount": 21,
+      "holdChance": "7/12",
+      "policy": "never_use",
+      "rows": [
+        {
+          "delta": "5/12",
+          "dice": [
+            1,
+            1
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "5/12",
+          "dice": [
+            1,
+            2
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "5/12",
+          "dice": [
+            1,
+            3
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "5/12",
+          "dice": [
+            1,
+            4
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "5/12",
+          "dice": [
+            1,
+            5
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "5/12",
+          "dice": [
+            1,
+            6
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "5/12",
+          "dice": [
+            2,
+            1
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "5/12",
+          "dice": [
+            2,
+            2
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "5/12",
+          "dice": [
+            2,
+            3
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "5/12",
+          "dice": [
+            2,
+            4
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "5/12",
+          "dice": [
+            2,
+            5
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "-7/12",
+          "dice": [
+            2,
+            6
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "5/12",
+          "dice": [
+            3,
+            1
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "5/12",
+          "dice": [
+            3,
+            2
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "5/12",
+          "dice": [
+            3,
+            3
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "5/12",
+          "dice": [
+            3,
+            4
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "-7/12",
+          "dice": [
+            3,
+            5
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "-7/12",
+          "dice": [
+            3,
+            6
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "5/12",
+          "dice": [
+            4,
+            1
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "5/12",
+          "dice": [
+            4,
+            2
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "5/12",
+          "dice": [
+            4,
+            3
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "-7/12",
+          "dice": [
+            4,
+            4
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "-7/12",
+          "dice": [
+            4,
+            5
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "-7/12",
+          "dice": [
+            4,
+            6
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "5/12",
+          "dice": [
+            5,
+            1
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "5/12",
+          "dice": [
+            5,
+            2
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "-7/12",
+          "dice": [
+            5,
+            3
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "-7/12",
+          "dice": [
+            5,
+            4
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "-7/12",
+          "dice": [
+            5,
+            5
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "-7/12",
+          "dice": [
+            5,
+            6
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "5/12",
+          "dice": [
+            6,
+            1
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "-7/12",
+          "dice": [
+            6,
+            2
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "-7/12",
+          "dice": [
+            6,
+            3
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "-7/12",
+          "dice": [
+            6,
+            4
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "-7/12",
+          "dice": [
+            6,
+            5
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "-7/12",
+          "dice": [
+            6,
+            6
+          ],
+          "held": false,
+          "use": false
+        }
+      ],
+      "totalFaces": 36
+    },
+    {
+      "heldCount": 15,
+      "holdChance": "5/12",
+      "policy": "use_on_seven",
+      "rows": [
+        {
+          "delta": "7/12",
+          "dice": [
+            1,
+            1
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "7/12",
+          "dice": [
+            1,
+            2
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "7/12",
+          "dice": [
+            1,
+            3
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "7/12",
+          "dice": [
+            1,
+            4
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "7/12",
+          "dice": [
+            1,
+            5
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "-5/12",
+          "dice": [
+            1,
+            6
+          ],
+          "held": false,
+          "use": true
+        },
+        {
+          "delta": "7/12",
+          "dice": [
+            2,
+            1
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "7/12",
+          "dice": [
+            2,
+            2
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "7/12",
+          "dice": [
+            2,
+            3
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "7/12",
+          "dice": [
+            2,
+            4
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "-5/12",
+          "dice": [
+            2,
+            5
+          ],
+          "held": false,
+          "use": true
+        },
+        {
+          "delta": "-5/12",
+          "dice": [
+            2,
+            6
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "7/12",
+          "dice": [
+            3,
+            1
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "7/12",
+          "dice": [
+            3,
+            2
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "7/12",
+          "dice": [
+            3,
+            3
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "-5/12",
+          "dice": [
+            3,
+            4
+          ],
+          "held": false,
+          "use": true
+        },
+        {
+          "delta": "-5/12",
+          "dice": [
+            3,
+            5
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "-5/12",
+          "dice": [
+            3,
+            6
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "7/12",
+          "dice": [
+            4,
+            1
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "7/12",
+          "dice": [
+            4,
+            2
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "-5/12",
+          "dice": [
+            4,
+            3
+          ],
+          "held": false,
+          "use": true
+        },
+        {
+          "delta": "-5/12",
+          "dice": [
+            4,
+            4
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "-5/12",
+          "dice": [
+            4,
+            5
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "-5/12",
+          "dice": [
+            4,
+            6
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "7/12",
+          "dice": [
+            5,
+            1
+          ],
+          "held": true,
+          "use": false
+        },
+        {
+          "delta": "-5/12",
+          "dice": [
+            5,
+            2
+          ],
+          "held": false,
+          "use": true
+        },
+        {
+          "delta": "-5/12",
+          "dice": [
+            5,
+            3
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "-5/12",
+          "dice": [
+            5,
+            4
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "-5/12",
+          "dice": [
+            5,
+            5
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "-5/12",
+          "dice": [
+            5,
+            6
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "-5/12",
+          "dice": [
+            6,
+            1
+          ],
+          "held": false,
+          "use": true
+        },
+        {
+          "delta": "-5/12",
+          "dice": [
+            6,
+            2
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "-5/12",
+          "dice": [
+            6,
+            3
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "-5/12",
+          "dice": [
+            6,
+            4
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "-5/12",
+          "dice": [
+            6,
+            5
+          ],
+          "held": false,
+          "use": false
+        },
+        {
+          "delta": "-5/12",
+          "dice": [
+            6,
+            6
+          ],
+          "held": false,
+          "use": false
+        }
+      ],
+      "totalFaces": 36
+    }
+  ],
+  "ruleEvidence": "docs/ARMOR_MODIFIER_BUDGET_EVIDENCE.md; GR-005, BB2020 printed80/PDF81; post-roll armor/injury choice, skill13.",
+  "scope": "Controlled ordinary AV8 with opposing Mighty Blow1, fixed never-use or use-only-on-seven decision policy. No contextual or calibrated match value."
+}

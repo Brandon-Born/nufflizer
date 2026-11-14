@@ -33,6 +33,7 @@ export type ReplayEvent = {
   carrierObject?: "ball" | "bomb";
   checkpointCarrier?: boolean;
   unclassifiedDice?: boolean;
+  executionExclusion?: string;
   locator?: {
     replayStep?: number;
     childIndex?: number;
