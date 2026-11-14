@@ -15,6 +15,9 @@ describe("POST /api/nufflizier/analyze", () => {
     const response=await POST(new Request("http://localhost/api/nufflizier/analyze",{method:"POST",body:data}));
     const payload=await response.json();expect(response.status,JSON.stringify(payload).slice(0,200)).toBe(200);
     const report=LuckReportSchema.parse(payload),e=report.events.find(e=>e.metadata.retainedCatchReaction)!;
+    const measuredZero=report.events.find(e=>e.metadata.sourceId==="source-272")!;
+    expect(measuredZero).toMatchObject({scoringStatus:"scored",delta:0,weightedDelta:0,probabilitySuccess:null,actualSuccess:null});
+    expect(measuredZero.metadata.block!.skillModel!.nonKnockdownSkills).toEqual({policy:"outside_current_pool_knockdowns",attacker:[102],defender:[]});
     expect(report.rerollResources).toMatchObject({decisionCount:21,linkedCount:20,unresolvedCount:1});
     expect(report.rerollResources.flow.clockWindows.find(w=>w.recordedUsedCount===2&&w.before?.count===4&&w.after?.count===2)).toMatchObject({netDecrease:2,status:"observed_agreement"});
     expect(report.rerollResources.decisions.find(d=>d.decisionSourceId==="source-5407")).toMatchObject({status:"unresolved",questionSourceId:"source-5404",teamId:null});
@@ -234,9 +237,10 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(report.events.find(e=>e.metadata.sourceId==="source-3270")!.metadata.activationEnd).toMatchObject({kind:"ordinary_block_completed",actorId:"41",followingPlayerId:"45",teamTurn:13,periodCode:1,blockSourceId:"source-3265"});
     expect(report.events.find(e=>e.metadata.sourceId==="source-3272")!.metadata.preRoll!.ordinaryMoveAvailability!.unknownPlayerIds).not.toContain("41");
     const skillPools=report.events.filter(e=>e.metadata.block?.skillModel);
-    expect(skillPools.map(e=>e.metadata.sourceId)).toEqual(["source-98","source-132","source-367","source-386","source-409"]);
-    expect(report.schemaVersion).toBe("2.62");
-    expect(report.modelVersion).toBe("dice-only-31");
+    expect(skillPools.filter(e=>!e.metadata.block!.skillModel!.nonKnockdownSkills).map(e=>e.metadata.sourceId)).toEqual(["source-98","source-132","source-367","source-386","source-409"]);
+    expect(skillPools.filter(e=>e.metadata.block!.skillModel!.nonKnockdownSkills).map(e=>e.metadata.sourceId)).toEqual(["source-116","source-338","source-438","source-579","source-634","source-638"]);
+    expect(report.schemaVersion).toBe("2.63");
+    expect(report.modelVersion).toBe("dice-only-32");
     const positive=report.events.find(e=>e.metadata.sourceId==="source-98")!;
     const negative=report.events.find(e=>e.metadata.sourceId==="source-132")!;
     expect(positive.metadata.blockScoring).toMatchObject({policy:"fixed_pool_knockdown_balance",observedValue:1,expectedValue:19/36});
@@ -264,8 +268,12 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(release).toMatchObject({holderId:"40",holderTeamId:"1",beforeCheckpointAfter:1336,from:{x:13,y:2},to:{x:14,y:2},bounceSourceId:"source-1346",after:{checkpointAfter:1347,carrierId:null,isHeld:null}});
     expect(report.events.find(e=>e.metadata.sourceId===release.bounceSourceId)).toMatchObject({scoringStatus:"excluded",probabilitySuccess:null,weightedDelta:0,metadata:{ballTravel:{from:{x:13,y:2},to:{x:14,y:2}}}});
     for(const pool of skillPools) {
-      expect(pool.metadata.block!.skillModel!.expectedValue).toBeCloseTo(["source-98","source-132"].includes(pool.metadata.sourceId!)?19/36:1/6,12);
-      expect(pool.metadata.block!.skillModel!.positiveChance).toBeCloseTo(["source-98","source-132"].includes(pool.metadata.sourceId!)?5/9:1/3,12);
+      // Preserve the earlier five literal table expectations. The six new
+      // tables have independent full-source rational joins in the source gate.
+      if(!pool.metadata.block!.skillModel!.nonKnockdownSkills){
+        expect(pool.metadata.block!.skillModel!.expectedValue).toBeCloseTo(["source-98","source-132"].includes(pool.metadata.sourceId!)?19/36:1/6,12);
+        expect(pool.metadata.block!.skillModel!.positiveChance).toBeCloseTo(["source-98","source-132"].includes(pool.metadata.sourceId!)?5/9:1/3,12);
+      }
       expect(pool.metadata.block!.traitEvidence!.attacker.observedCheckpointAfter).toBe(0);
       expect(pool.metadata.preRoll?.actorTraits).toBeUndefined();
     }
@@ -413,6 +421,9 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(response.status, JSON.stringify(payload).slice(0, 200)).toBe(200);
     const report = LuckReportSchema.parse(payload),
       ranges = report.events.filter((e) => e.possessionBounds);
+    const classifiedBlock=report.events.find(e=>e.metadata.sourceId==="source-188")!;
+    expect(classifiedBlock.weightedDelta).toBeCloseTo(-13/24,12);
+    expect(classifiedBlock.metadata.block!.skillModel!.nonKnockdownSkills).toEqual({policy:"outside_current_pool_knockdowns",attacker:[],defender:[52,59]});
     expect(report.rerollResources.decisions.find(d=>d.decisionSourceId==="source-971")).toMatchObject({status:"linked", teamId:"1", decisionWait:{controller:null,activeGamerSourceId:"source-967",pauseSourceId:"source-968",timerSourceId:"source-969",resumedStepSourceId:"source-970"}});
     expect(ranges.map((e) => e.metadata.locator?.replayStep)).toEqual([
       99, 306

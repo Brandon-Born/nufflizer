@@ -71,6 +71,25 @@ describe("all-question independent block source inventory", () => {
       expect(q.header).toMatchObject({ skill: 0, evaluation: 0 });
       expect(q.current).toMatchObject({ phase: 5, effectsEmpty: true });
       expect(q.reference?.scope).toBe("last_complete_lists_hypothesis");
+      const classified = (s: { innate: number[]; acquired: number[] }) =>
+        [
+          ...new Set(
+            [...s.innate, ...s.acquired].filter((id) =>
+              [47, 52, 59, 86, 100, 101, 102].includes(id)
+            )
+          )
+        ].sort((a, b) => a - b);
+      const attacker = classified(q.actor!.seed!.data),
+        defender = classified(q.defender!.seed!.data);
+      expect(b.skillModel!.nonKnockdownSkills).toEqual(
+        attacker.length || defender.length
+          ? {
+              policy: "outside_current_pool_knockdowns",
+              attacker,
+              defender
+            }
+          : undefined
+      );
       const checkpoints = report.rerollResources.flow.clockSnapshots;
       const checkpointIndex = (locator: {
         kind: string;
@@ -140,7 +159,7 @@ describe("all-question independent block source inventory", () => {
   it("retains every question before support and every qualified pool", () => {
     expect(raw.files.reduce((n, f) => n + f.questions.length, 0)).toBe(848);
     expect(pools).toBe(833);
-    expect(scored).toBe(15);
+    expect(scored).toBe(57);
   });
   it("regenerates the independent stdlib inventory without application imports", () => {
     const p = spawnSync(

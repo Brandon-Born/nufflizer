@@ -129,6 +129,10 @@ const oldProjection = (r: LuckReport, file: string) => {
     // Current skill-conditioned values have separate exact prefix/oracle tests.
     if(copy.metadata.block) {
       const b=copy.metadata.block,p=b.distribution[3]!+b.distribution[4]!,success=b.rankedSymbol>=3;
+      // This frozen receipt predates the documented non-knockdown skill
+      // classification. Its new conditional tables have separate raw-prefix
+      // and exact-arithmetic acceptance; preserve the earlier absent model.
+      if(b.skillModel?.nonKnockdownSkills)delete b.skillModel;
       copy.probabilitySuccess=p;copy.actualSuccess=success;
       copy.delta=Number(success)-p;copy.weightedDelta=copy.delta*copy.explainability.weight;
       copy.scoringStatus="scored";

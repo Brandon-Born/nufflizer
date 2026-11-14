@@ -1,5 +1,9 @@
 import type { BlockPool } from "./blockPools";
 import type { BlockTraitEvidence } from "@/domain/replay/traitContinuity";
+import {
+  isBlockNonKnockdownSkill,
+  blockNonKnockdownSkillReceipt
+} from "./blockNonKnockdownSkills";
 // Supported intrinsic skills for this single-pool knockdown component only.
 // Strength/armor/recovery/ball skills below do not change a selected block
 // symbol's immediate knockdown resolution. Unknown skills are not guessed.
@@ -54,7 +58,9 @@ export function enumerateSkillBlock(
         t.playerTypeId === null ||
         t.innateSkills === null ||
         t.acquiredSkills === null ||
-        [...t.innateSkills, ...t.acquiredSkills].some((s) => !supported.has(s))
+        [...t.innateSkills, ...t.acquiredSkills].some(
+          (s) => !supported.has(s) && !isBlockNonKnockdownSkill(s)
+        )
     )
   )
     return;
@@ -81,6 +87,7 @@ export function enumerateSkillBlock(
   const outcomes: number[] = [0, 1, 2, 3, 4].map((f) =>
     faceOutcome(f, attacker, defender, wrestle)
   );
+  const nonKnockdownSkills = blockNonKnockdownSkillReceipt(attacker, defender);
   // Both coaches optimize this explicit, narrow knockdown-balance component.
   // Equal values use the lower outcome code for deterministic enumeration;
   // that tie rule does not assert tactical preference or actual die selection.
@@ -115,6 +122,7 @@ export function enumerateSkillBlock(
     poolOutcome = select(pool.faces);
   return {
     policy: "single_pool_knockdown_balance" as const,
+    ...(nonKnockdownSkills ? { nonKnockdownSkills } : {}),
     wrestlePolicy: wrestle,
     traitEvidence: evidence,
     faceOutcomes: outcomes,

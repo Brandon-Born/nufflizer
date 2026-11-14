@@ -1,6 +1,7 @@
 import { LUCK_CATEGORY_WEIGHTS } from "./constants";
 import type { LuckEvent } from "./types";
 import { enumerateSkillBlock } from "./blockSkillModel";
+import { explainBlockNonKnockdownSkills } from "./blockNonKnockdownSkills";
 import { explainBlockEvidence } from "./blockPools";
 
 // Score only the fresh draw(s), conditional on already retained dice and the
@@ -47,7 +48,7 @@ export function applyCategoricalBlockScore(event: LuckEvent) {
     "Defender knockdowns minus attacker knockdowns offered by the pool";
   event.explainability.formulaSummary =
     "weighted delta = (offered knockdown balance - fair conditional mean) × block weight";
-  event.explainability.inputsSummary = `${explainBlockEvidence(block)} Offered balance ${model.poolValue}; expected balance ${model.expectedValue.toFixed(6)}. Only ${block.pool.rolledIndexes.length} newly rolled dice are enumerated; retained dice stay fixed. Current recorded traits and tackle-zone observations qualify this conditional model. Both coaches optimize knockdown balance; this does not assert their actual choice, legal full-turn eligibility, ball/armor consequences, resource value or tactical impact.`;
+  event.explainability.inputsSummary = `${explainBlockEvidence(block)} Offered balance ${model.poolValue}; expected balance ${model.expectedValue.toFixed(6)}. Only ${block.pool.rolledIndexes.length} newly rolled dice are enumerated; retained dice stay fixed. Current recorded traits and tackle-zone observations qualify this conditional model. Both coaches optimize knockdown balance; this does not assert their actual choice, legal full-turn eligibility, ball/armor consequences, resource value or tactical impact.${explainBlockNonKnockdownSkills(model.nonKnockdownSkills)}`;
 }
 
 export function validReportedCategoricalBlock(event: LuckEvent): boolean {
@@ -84,6 +85,8 @@ export function validReportedCategoricalBlock(event: LuckEvent): boolean {
     Math.abs(a - b) <= 1e-10 * Math.max(1, Math.abs(a), Math.abs(b));
   return (
     !!expected &&
+    JSON.stringify(b.skillModel?.nonKnockdownSkills) ===
+      JSON.stringify(expected.nonKnockdownSkills) &&
     b.skillModel?.wrestlePolicy === "improve_knockdown_balance" &&
     s.poolSourceId === event.metadata.sourceId &&
     event.metadata.sourceTag === "QuestionBlockDice" &&

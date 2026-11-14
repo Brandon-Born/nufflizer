@@ -14,6 +14,17 @@ import { LuckReportSchema } from "@/domain/nufflizer/reportSchema";
 import type { LuckEvent, LuckReport } from "@/domain/nufflizer/types";
 import { ownershipReplayXml } from "../helpers/ownershipReplay";
 import { contextReplayXml } from "../helpers/contextReplay";
+import blockWitness from "../fixtures/evidence/bb3-block-scoring.json";
+
+function rawBlockWeighted(file:string,e:LuckEvent){
+  const f=blockWitness.files.find(f=>f.file===file)!;
+  const q=f.questions.find(q=>JSON.stringify(q.locator)===JSON.stringify(e.metadata.locator))!;
+  expect(q,`categorical block ${e.metadata.sourceId} needs its independent raw question`).toBeDefined();
+  expect(String(q.header.actor)).toBe(e.playerId);
+  expect(String(q.header.target)).toBe(e.metadata.block!.defenderId);
+  expect(q.reference?.scope).toBe("last_complete_lists_hypothesis");
+  const [n,d="1"]=q.reference!.weighted.split("/");return Number(n)/Number(d);
+}
 
 type Locator = {
   replayStep?: number | null;
@@ -198,6 +209,15 @@ describe("source-qualified time-local player ownership", () => {
           ).toBe(true);
           expect(members[0][3] === null || members[0][3] === team).toBe(true);
         }
+        if(e.metadata.blockScoring){
+          expect(blockWitness.files.find(x=>x.file===f.sourceFile)!.sha256).toBe(f.sha256);
+          expect(p.role).toBe("actor");expect(p.playerId).toBe(e.metadata.block!.attackerId);
+          expect(e.metadata.probabilityPolicy).toBe("categorical_block");
+          expect(e.actualSuccess).toBeNull();expect(e.probabilitySuccess).toBeNull();
+          expect(e.weightedDelta).toBeCloseTo(rawBlockWeighted(f.sourceFile,e),12);
+          expect(e.metadata.block!.chooserTeamId).toBe(e.metadata.block!.pool.attackerChooses?p.teamId:p.defender!.teamId);
+          continue;
+        }
         if(e.metadata.injuryScoring) {
           const c=categoricalWitnesses.cases.find(c=>c.file===f.sourceFile && JSON.stringify(c.locator)===JSON.stringify(e.metadata.locator));
           expect(c, `categorical outcome ${e.metadata.sourceId} needs its independent raw damage prefix`).toBeDefined();
@@ -298,6 +318,7 @@ describe("source-qualified time-local player ownership", () => {
         const added = scored
           .filter((e) => !oldIds.has(e.metadata.sourceId!))
           .reduce((sum, e) => {
+            if(e.metadata.blockScoring)return sum+rawBlockWeighted(f.sourceFile,e);
             if(e.metadata.injuryScoring){
               const table=e.metadata.injuryTable!;
               const row=categoricalWitnesses.math.find(t=>t.stunty===table.stunty&&t.thickSkull===table.thickSkull)!.rows.find(t=>t.total===e.metadata.dice!.reduce((a,b)=>a+b,0))!;

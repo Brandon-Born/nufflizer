@@ -45,7 +45,10 @@ def reference(question, actor, defender):
     d = set(defender["seed"]["data"]["innate"] + defender["seed"]["data"]["acquired"])
     # Block/Dodge/Tackle/Wrestle affect this immediate component. Mighty Blow
     # and Regeneration concern later damage/recovery, outside this utility.
-    if not (a | d) <= {7,13,19,30,57,68}:
+    # Additional documented skills concern other actions, pre-pool gates,
+    # fixed pool size or later damage. This reference is still a conditional
+    # arithmetic hypothesis, not an applicability/continuity certificate.
+    if not (a | d) <= {6,7,10,13,15,19,26,27,30,38,44,47,50,52,57,59,61,63,68,75,81,86,100,101,102,1008}:
         return None
     faces, indexes = question["faces"], question["freshIndexes"]
     if not 1 <= len(faces) <= 3 or question["dieTypes"] != [2]*len(faces) or any(f not in range(5) for f in faces) or not indexes or any(i is None or i not in range(len(faces)) for i in indexes) or len(set(indexes)) != len(indexes) or question["attackerChoice"] not in [0,1]:

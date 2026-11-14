@@ -2,7 +2,7 @@
 
 Updated 2026-11-13. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.62`, dice model `dice-only-31` and context model `mobility-possession-42`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.63`, dice model `dice-only-32` and context model `mobility-possession-42`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -739,3 +739,9 @@ The new `ordinary_no_retry_scoring_rush` policy retains a complete current pre-r
 Its single partial context contribution is `(actual - 5/6) * (4 + scorePressure)`. Score pressure is eight times the success/failure difference in the sign of the current lead, divided by one plus both teams' remaining scheduled regulation turns. These explicit weights are provisional heuristic units, not calibrated win probability or final-result certainty. All faces use the same pre-roll admission. Pending availability/possession and other tactical components remain unquantified.
 
 Team `impactByType` adds `movement_risk`, reconciled with event/action/category/team components. The actual later touchdown adds no second score. The schema validates branch arithmetic, source/physical checkpoint/clock/roster/draw linkage, policy and aggregates; API/CLI/UI share the same typed successor and explanation. Dice model31 and the existing public dice scores remain unchanged. See [full scope and independent references](SCORING_RUSH_CONTEXT_EVIDENCE.md).
+
+## Schema2.63 / dice-only-32: documented skill-effect scope
+
+A current complete intrinsic block profile may contain Pass47, RightStuff52, Stunty59 or Animosity86/100/101/102 without changing the existing immediate knockdown table under the stated policy. Each such model has a validated `nonKnockdownSkills` receipt with policy `outside_current_pool_knockdowns` and sorted unique attacker/defender IDs. All existing state/effect/identity/source guards remain; another unsupported skill or missing evidence still withholds the table. The schema checks the receipt against the current lists, and shared UI/CLI text names the affected roles and excluded other effects. Stunty's later injury/Dodge behavior is not treated as inert.
+
+The fixed-pool metric and weight are unchanged. Forty-two original-source pool contributions (39 initial/three team replacements) are added, while all1,418 prior scored objects and every other report field are conserved after independently checked derived sums/coverage/ranking/version changes. All833 raw pools remain, with57 qualified and776 unknown tables. No categorical binary probability or actual coach-choice/tactical value is invented. See [primary rules, independent arithmetic and source conservation](BLOCK_SKILL_EFFECT_SCOPE.md).

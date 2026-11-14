@@ -117,7 +117,7 @@ describe("fixed-policy single-pool skill distributions", () => {
       faceOutcome(1, new Set([68]), new Set(), "improve_knockdown_balance")
     ).toBe(1);
   });
-  it.each([999, 17, 52, 100])(
+  it.each([999, 17, 96, 69])(
     "withholds unaccepted skill %s instead of treating it as no skill",
     (skill) => {
       expect(

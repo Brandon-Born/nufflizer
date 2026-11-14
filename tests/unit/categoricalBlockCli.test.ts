@@ -32,9 +32,9 @@ it("[cli-worker] shares original-source categorical scores, unknown pools and pa
     // Run the direct corpus only after the real deadline worker has exited.
     const direct = analyzeNufflizerInput(bytes.toString());
     expect(report.events).toEqual(direct.events);
-    expect(report.schemaVersion).toBe("2.62");
+    expect(report.schemaVersion).toBe("2.63");
     expect(report.events.filter((e) => e.metadata.blockScoring)).toHaveLength(
-      5
+      11
     );
     expect(
       report.events.find((e) => e.metadata.sourceId === "source-98")!
@@ -51,7 +51,7 @@ it("[cli-worker] shares original-source categorical scores, unknown pools and pa
     const text = run("text");
     expect(text.status, text.stderr).toBe(0);
     expect(text.stdout).toContain(
-      "82 observed; 5 have qualified categorical luck; 77 have no qualified luck value"
+      "82 observed; 11 have qualified categorical luck; 71 have no qualified luck value"
     );
     expect(text.stdout).toContain(
       "source source-98: Offered balance +1; fair conditional mean 0.527778; dice contribution 0.354167"

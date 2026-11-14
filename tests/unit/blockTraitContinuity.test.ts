@@ -152,12 +152,23 @@ describe("continued intrinsic traits before an offered block pool", () => {
       traits: { playerTypeId: 9, innateSkills: [30] }
     });
   });
-  it("qualifies complete current owned identities without initial ownership keys or readable names",()=>{
-    const r=replay();r.playerOwnershipKeys=[];
-    const proof=findBlockTraitEvidence(r).get("pool")!;
-    expect(proof.attacker).toMatchObject({playerId:"42",teamId:"0",observedCheckpointAfter:0,currentCheckpointAfter:3,
-      traits:{dataPlayerId:42,playerTypeId:8,innateSkills:[],acquiredSkills:[]}});
-    expect(proof.defender).toMatchObject({playerId:"7",teamId:"1"});
+  it("qualifies complete current owned identities without initial ownership keys or readable names", () => {
+    const r = replay();
+    r.playerOwnershipKeys = [];
+    const proof = findBlockTraitEvidence(r).get("pool")!;
+    expect(proof.attacker).toMatchObject({
+      playerId: "42",
+      teamId: "0",
+      observedCheckpointAfter: 0,
+      currentCheckpointAfter: 3,
+      traits: {
+        dataPlayerId: 42,
+        playerTypeId: 8,
+        innateSkills: [],
+        acquiredSkills: []
+      }
+    });
+    expect(proof.defender).toMatchObject({ playerId: "7", teamId: "1" });
   });
   it.each([
     "team-effects",
@@ -244,19 +255,31 @@ describe("continued intrinsic traits before an offered block pool", () => {
     if (kind === "unordered-checkpoints") r.boardCheckpoints!.reverse();
     expect(findBlockTraitEvidence(r).size).toBe(0);
   });
-  it("accepts physically ordered board refreshes before the same next event",()=>{
-    const r=replay();r.boardCheckpoints![1]!.afterSourceIndex=0;
-    const p=findBlockTraitEvidence(r).get("pool")!;
+  it("accepts physically ordered board refreshes before the same next event", () => {
+    const r = replay();
+    r.boardCheckpoints![1]!.afterSourceIndex = 0;
+    const p = findBlockTraitEvidence(r).get("pool")!;
     expect(p.attacker.currentCheckpointAfter).toBe(0);
     expect(p.attacker.observedCheckpointAfter).toBe(0);
   });
-  it.each(["duplicate","backward","missing","invalid_initial"])("rejects ambiguous equal-index checkpoint order: %s",kind=>{
-    const r=replay(),cp=r.boardCheckpoints![1]!;cp.afterSourceIndex=0;
-    if(kind==="missing")cp.childIndex=null;
-    else if(kind==="invalid_initial")r.boardCheckpoints![0]!.replayStep=1;
-    else {const next=structuredClone(cp);cp.childIndex=2;next.childIndex=kind==="duplicate"?2:1;r.boardCheckpoints!.push(next);}
-    expect(findBlockTraitEvidence(r).size).toBe(0);
-  });
+  it.each(["duplicate", "backward", "missing", "invalid_initial"])(
+    "rejects ambiguous equal-index checkpoint order: %s",
+    (kind) => {
+      const r = replay(),
+        cp = r.boardCheckpoints![1]!;
+      cp.afterSourceIndex = 0;
+      if (kind === "missing") cp.childIndex = null;
+      else if (kind === "invalid_initial")
+        r.boardCheckpoints![0]!.replayStep = 1;
+      else {
+        const next = structuredClone(cp);
+        cp.childIndex = 2;
+        next.childIndex = kind === "duplicate" ? 2 : 1;
+        r.boardCheckpoints!.push(next);
+      }
+      expect(findBlockTraitEvidence(r).size).toBe(0);
+    }
+  );
   it("keeps an established prefix when a later checkpoint has contradictory order", () => {
     const r = replay();
     const before = findBlockTraitEvidence(r).get("pool");
@@ -327,24 +350,31 @@ describe("continued intrinsic traits before an offered block pool", () => {
       expect(b.traitEvidence!.defender.traits).toEqual(
         f.seeds[f.defenderId]!.traits
       );
-      expect(Boolean(b.skillModel)).toBe(f.modelSupported);
+      // The fixture's modelSupported flag records its original policy. The
+      // new primary-rule classification changes these two current cases;
+      // source facts and the original annotation are not rewritten.
+      const classified = ["demo6_10_45", "demo8_2_47"].includes(f.id);
+      expect(Boolean(b.skillModel)).toBe(f.modelSupported || classified);
       expect(e.metadata.preRoll?.actorTraits).toBeUndefined();
       expect(e.metadata.preRoll?.targetTraits).toBeUndefined();
       expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
       expect(r.verdict.luckierTeam).toBe("unknown");
       expect(LuckReportSchema.safeParse(r).success).toBe(true);
       if (b.skillModel) {
-        expect(b.skillModel.expectedValue).toBeCloseTo(19 / 36, 12);
-        expect(b.skillModel.positiveChance).toBeCloseTo(5 / 9, 12);
-        expect(b.skillModel.outcomeDistribution).toEqual([
-          1 / 36,
-          7 / 36,
-          0,
-          0,
-          8 / 36,
-          0,
-          20 / 36
-        ]);
+        const tackleBlock = f.id === "demo6_10_45";
+        expect(b.skillModel.expectedValue).toBeCloseTo(
+          tackleBlock ? 13 / 18 : 19 / 36,
+          12
+        );
+        expect(b.skillModel.positiveChance).toBeCloseTo(
+          tackleBlock ? 3 / 4 : 5 / 9,
+          12
+        );
+        expect(b.skillModel.outcomeDistribution).toEqual(
+          tackleBlock
+            ? [1 / 36, 0, 0, 0, 8 / 36, 11 / 36, 16 / 36]
+            : [1 / 36, 7 / 36, 0, 0, 8 / 36, 0, 20 / 36]
+        );
         expect(explainBlockSkillModel(e)).toContain(
           "included once in dice totals"
         );

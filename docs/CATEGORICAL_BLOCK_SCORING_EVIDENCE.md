@@ -1,6 +1,6 @@
 # Categorical block scoring evidence
 
-Current scope: schema2.61, dice-only-31, mobility-possession-41. This advances
+Base evidence: schema2.61, dice-only-31, mobility-possession-41. Current schema2.63/dice32 extends the qualified skill scope; see [the current classification evidence](BLOCK_SKILL_EFFECT_SCOPE.md). This advances
 NUF-010/012/014/018/019/021/022/027; it does not close their broader acceptance.
 All fifteen original incomplete issues remain incomplete.
 

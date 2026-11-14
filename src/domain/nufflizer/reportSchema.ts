@@ -162,7 +162,8 @@ const pushModel=z.discriminatedUnion("status",[
     destinations:z.array(bounceCell).min(1).max(3),branches:z.array(pushBranch).min(2).max(256),selectedBranch:z.number().int().min(0).max(255),resultSourceIds:z.array(text).min(1).max(64)})
 ]);
 const blockTraitEvidence = z.strictObject({attacker:currentTraitEvidence,defender:currentTraitEvidence});
-const blockSkillModel = z.strictObject({policy:z.literal("single_pool_knockdown_balance"),wrestlePolicy:z.enum(["decline","improve_knockdown_balance"]),traitEvidence:blockTraitEvidence,faceOutcomes:z.array(z.number().int().min(0).max(6)).length(5),outcomeDistribution:z.array(probability).length(7),expectedValue:finite.min(-1).max(1),poolOutcome:z.number().int().min(0).max(6),poolValue:z.union([z.literal(-1),z.literal(0),z.literal(1)]),positiveChance:probability});
+const blockNonKnockdownSkill = z.union([z.literal(47),z.literal(52),z.literal(59),z.literal(86),z.literal(100),z.literal(101),z.literal(102)]);
+const blockSkillModel = z.strictObject({policy:z.literal("single_pool_knockdown_balance"),wrestlePolicy:z.enum(["decline","improve_knockdown_balance"]),traitEvidence:blockTraitEvidence,nonKnockdownSkills:z.strictObject({policy:z.literal("outside_current_pool_knockdowns"),attacker:z.array(blockNonKnockdownSkill).max(7),defender:z.array(blockNonKnockdownSkill).max(7)}).optional(),faceOutcomes:z.array(z.number().int().min(0).max(6)).length(5),outcomeDistribution:z.array(probability).length(7),expectedValue:finite.min(-1).max(1),poolOutcome:z.number().int().min(0).max(6),poolValue:z.union([z.literal(-1),z.literal(0),z.literal(1)]),positiveChance:probability});
 const activationEnd = z.strictObject({
   kind: z.enum(["ordinary_move_completed", "ordinary_block_completed", "bone_head", "really_stupid"]),
   sourceId: text,
