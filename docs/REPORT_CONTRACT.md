@@ -2,7 +2,7 @@
 
 Updated 2026-11-14. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.71`, dice model `dice-only-35` and context model `mobility-possession-42`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.72`, dice model `dice-only-36` and context model `mobility-possession-42`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -803,3 +803,10 @@ A qualified treatment/recovery return can reach the first typed ResultUseAction 
 Both cause-specific markers require reciprocal origin/code/budget/before receipts, last-board source binding and actor ownership, with null chance/outcome, zero weight/deviation, no new roll and no context value. Recovery snapshot validation now uses the same retained clock/roster source checks as treatment. These are structural joins, not complete legal eligibility or raw-byte authentication. Shared Why/Actual text names the declared budget and explains its parameters.
 
 Demo1 treatment5188 now reaches Pass5397 before the separate Throw Team-mate sequence. Complete twelve-report acceptance preserves all1,480 scored objects/18,441 physical records/resources/five recovery traces/27 ranges/zero public points/verdicts, allowing one new non-random row, two recovery actor proofs and independently recomputed derived metadata. No dice/context model or runtime cap changes. [Source, reproduction and validation evidence](RETURN_BUDGET_EVIDENCE.md).
+
+
+## Schema2.72 / dice-only-36: intrinsic continuity through known notifications
+
+The trait reducer accepts strict own-header inner ResultAddPlayerEffect/ResultEndPlayerEffect variants for the existing Confused44/Skill4/BoneHead31 or ReallyStupid51/durations[6,1] contract. They invalidate the exact holder while preserving unrelated learned lists/prior empty-prayer evidence. Unknown shapes/providers/roles/source positions remain barriers; neither an effect end nor an omitted later list restores the holder. The known direct EventRoll13 base/Kegs recovery shape preserves existing learned lists separately from the unchanged recovery-ownership/probability policy. Incidental root sequence grouping is not an action. Version, full seed/current identity/type/effects and physical observations retain their guards.
+
+Fifty new categorical block/nine injury contributions use the already independently verified fair tables. New trait/table and post-die push receipts add no pre-roll or tactical value. All previous scored odds/deviations, physical dice identities, resources, pre-roll state,27 ranges/zero public context points and abstention remain. Exactly59 physical dispositions become covered and derived totals/coverage reflect them; two failed-movement subtotals include their newly supported injury. Known Badly Hurt remains distinct from unknown treatment or final availability. Complete raw-source/arithmetic/conservation/transport evidence: [INTRINSIC_NOTIFICATION_EVIDENCE.md](INTRINSIC_NOTIFICATION_EVIDENCE.md).

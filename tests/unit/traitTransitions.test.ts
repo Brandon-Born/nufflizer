@@ -538,12 +538,12 @@ describe("intrinsic traits across source-qualified non-transforming transitions"
         expect(m.positiveChance).toBeCloseTo(fraction(ref!.positiveChance), 12);
       }
       const expected: Record<string, number> = {
-        "demo1.bbr": 11,
-        "demo10.bbr": 17,
+        "demo1.bbr": 14,
+        "demo10.bbr": 36,
         "demo5.bbr": 14,
         "demo6.bbr": 4,
         "demo8.bbr": 29,
-        "demo9.bbr": 13
+        "demo9.bbr": 54
       };
       expect(count).toBe(expected[f.file] ?? 0);
       expect(report.teams.every((t) => t.impactCount === 0)).toBe(true);

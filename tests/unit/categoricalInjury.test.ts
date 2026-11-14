@@ -1,3 +1,4 @@
+import { assertIntrinsicInjury } from "../helpers/intrinsicInjuryFacts";
 import { assertTransactionInjury } from "../helpers/injuryTransactionFacts";
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
@@ -245,8 +246,8 @@ describe("source-qualified categorical injury scoring", () => {
   it.each([
     [
       "demo10.bbr",
-      ["source-113", "source-128", "source-162", "source-439", "source-556"],
-      [-0.625, 0.625, -0.625, -1.25, 0.875]
+      ["source-113", "source-128", "source-162", "source-439", "source-556", "source-1007", "source-1121", "source-1200"],
+      [-0.625, 0.625, -0.625, -1.25, 0.875, -5/4, -13/12, -5/24]
     ],
     ["demo5.bbr", ["source-110", "source-402", "source-454", "source-595"], [-0.625, -0.625, 0.625, 0.625]],
     ["demo8.bbr", ["source-249", "source-427", "source-686", "source-1361", "source-1431", "source-1585", "source-1610"], [0.875, 0.625, 0.625, 0.625, 0.625, 0.625, 0.625]]
@@ -342,7 +343,7 @@ describe("independent categorical injury evidence", () => {
             c.file === file &&
             JSON.stringify(c.locator) === JSON.stringify(e.metadata.locator)
         )!;
-        if(!witness){expect(assertTransactionInjury(file,e,r)).toBe(true);continue;}
+        if(!witness){expect((assertTransactionInjury(file,e,r)||assertIntrinsicInjury(file,e,r))).toBe(true);continue;}
         expect(witness).toBeDefined();
         expect(witness.sha256).toBe(
           createHash("sha256").update(input).digest("hex")

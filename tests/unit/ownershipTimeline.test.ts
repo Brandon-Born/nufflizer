@@ -1,3 +1,4 @@
+import { assertIntrinsicInjury } from "../helpers/intrinsicInjuryFacts";
 import casualtyWitness from "../fixtures/evidence/bb3-casualty-observations.json";
 import { assertTransactionInjury } from "../helpers/injuryTransactionFacts";
 import { createHash } from "node:crypto";
@@ -230,7 +231,7 @@ describe("source-qualified time-local player ownership", () => {
         if(e.metadata.injuryScoring) {
           const c=categoricalWitnesses.cases.find(c=>c.file===f.sourceFile && JSON.stringify(c.locator)===JSON.stringify(e.metadata.locator));
           if(c)expect(c.sha256).toBe(f.sha256);
-          else expect(assertTransactionInjury(f.sourceFile,e,r), `categorical outcome ${e.metadata.sourceId} needs its independent raw damage prefix`).toBe(true);
+          else expect((assertTransactionInjury(f.sourceFile,e,r)||assertIntrinsicInjury(f.sourceFile,e,r)), `categorical outcome ${e.metadata.sourceId} needs its independent raw damage prefix`).toBe(true);
           expect(p.role).toBe("subject");
           // Exact source, opponent modifier seed and rational tier odds are
           // independently checked by categoricalInjury.test.ts.

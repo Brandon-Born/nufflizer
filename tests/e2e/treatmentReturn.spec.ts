@@ -194,7 +194,7 @@ for (const partial of [false, true])
       readFileSync((await (await pending).path())!, "utf8")
     );
     expect(saved).toEqual(report);
-    expect(saved.schemaVersion).toBe("2.71");
+    expect(saved.schemaVersion).toBe("2.72");
     expect(saved.verdict.luckierTeam).toBe("unknown");
     expect(
       saved.teams.every((t: { impactCount: number }) => t.impactCount === 0)
@@ -285,7 +285,7 @@ test("recovered player's Pass budget retains its recovery cause and zero value",
     readFileSync((await (await pending).path())!, "utf8")
   );
   expect(saved).toEqual(report);
-  expect(saved.schemaVersion).toBe("2.71");
+  expect(saved.schemaVersion).toBe("2.72");
   expect(saved.verdict.luckierTeam).toBe("unknown");
   expect(
     saved.teams.every((t: { impactCount: number }) => t.impactCount === 0)

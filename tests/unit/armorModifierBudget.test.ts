@@ -1,3 +1,4 @@
+import { assertIntrinsicInjury } from "../helpers/intrinsicInjuryFacts";
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { parseReplayXml } from "@/domain/replay/parseXml";
@@ -126,19 +127,47 @@ describe("Mighty Blow committed to armor before initial injury", () => {
     ).toBe(2);
   });
   it("does not carry an earlier spent budget into an uncommitted later injury", () => {
-    const first=categoricalInjuryXml({attackerSkills:[13],armorMightyBlow:true});
-    const next=categoricalInjuryXml({attackerSkills:[13]}).match(/<ReplayStep>[\s\S]*<\/ReplayStep>/)![0];
-    const r=LuckReportSchema.parse(analyzeReplayLuck(parseReplayXml(first.replace("</Replay>",next+"</Replay>"))));
-    const injuries=r.events.filter(e=>e.metadata.injuryObservation);
-    expect(injuries).toHaveLength(2);expect(scored(r)).toHaveLength(1);
-    expect(injuries[1]!.metadata.injuryTable).toBeDefined();expect(injuries[1]!.scoringStatus).toBe("excluded");
+    const first = categoricalInjuryXml({
+      attackerSkills: [13],
+      armorMightyBlow: true
+    });
+    const next = categoricalInjuryXml({ attackerSkills: [13] }).match(
+      /<ReplayStep>[\s\S]*<\/ReplayStep>/
+    )![0];
+    const r = LuckReportSchema.parse(
+      analyzeReplayLuck(
+        parseReplayXml(first.replace("</Replay>", next + "</Replay>"))
+      )
+    );
+    const injuries = r.events.filter((e) => e.metadata.injuryObservation);
+    expect(injuries).toHaveLength(2);
+    expect(scored(r)).toHaveLength(1);
+    expect(injuries[1]!.metadata.injuryTable).toBeDefined();
+    expect(injuries[1]!.scoringStatus).toBe("excluded");
   });
   it("withholds an off-pitch modifier holder and duplicate acquired Mighty Blow", () => {
-    const xml=categoricalInjuryXml({attackerSkills:[13],armorMightyBlow:true});
-    const offPitch=xml.replace("<Id>7</Id><Cell><X>6</X><Y>5</Y></Cell>","<Id>7</Id><Cell><X>-1</X><Y>-1</Y></Cell>");
-    expect(scored(LuckReportSchema.parse(analyzeReplayLuck(parseReplayXml(offPitch))))).toHaveLength(0);
-    const duplicated=xml.replace("<InnateSkillsItem>13</InnateSkillsItem></InnateSkills><AcquiredSkills/>","<InnateSkillsItem>13</InnateSkillsItem></InnateSkills><AcquiredSkills><AcquiredSkillsItem>13</AcquiredSkillsItem></AcquiredSkills>");
-    expect(scored(LuckReportSchema.parse(analyzeReplayLuck(parseReplayXml(duplicated))))).toHaveLength(0);
+    const xml = categoricalInjuryXml({
+      attackerSkills: [13],
+      armorMightyBlow: true
+    });
+    const offPitch = xml.replace(
+      "<Id>7</Id><Cell><X>6</X><Y>5</Y></Cell>",
+      "<Id>7</Id><Cell><X>-1</X><Y>-1</Y></Cell>"
+    );
+    expect(
+      scored(
+        LuckReportSchema.parse(analyzeReplayLuck(parseReplayXml(offPitch)))
+      )
+    ).toHaveLength(0);
+    const duplicated = xml.replace(
+      "<InnateSkillsItem>13</InnateSkillsItem></InnateSkills><AcquiredSkills/>",
+      "<InnateSkillsItem>13</InnateSkillsItem></InnateSkills><AcquiredSkills><AcquiredSkillsItem>13</AcquiredSkillsItem></AcquiredSkills>"
+    );
+    expect(
+      scored(
+        LuckReportSchema.parse(analyzeReplayLuck(parseReplayXml(duplicated)))
+      )
+    ).toHaveLength(0);
   });
   it.each([
     "used",
@@ -338,7 +367,13 @@ describe("independent Mighty Blow armor source evidence", () => {
           )!;
           expect(injury.weightedDelta).toBe(rational(ref.weighted));
         } else {
-          expect(injury.metadata.injuryTable).toBeUndefined();
+          if (
+            file === "demo9.bbr" &&
+            injury.metadata.sourceId === "source-4222"
+          )
+            expect(assertIntrinsicInjury(file, injury, r)).toBe(true);
+          else expect(injury.metadata.injuryTable).toBeUndefined();
+          expect(injury.metadata.injuryScoring).toBeUndefined();
           expect(injury.weightedDelta).toBe(0);
           expect(injury.probabilitySuccess).toBeNull();
         }
@@ -384,8 +419,7 @@ describe("independent Mighty Blow armor source evidence", () => {
             rational(
               references.math
                 .find(
-                  (m) =>
-                    m.stunty === t.stunty && m.thickSkull === t.thickSkull
+                  (m) => m.stunty === t.stunty && m.thickSkull === t.thickSkull
                 )!
                 .rows.find((m) => m.total === a + b)!.weighted
             ),

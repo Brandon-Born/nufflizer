@@ -1,3 +1,4 @@
+import { appendIntrinsicContinuityProbe } from "../helpers/intrinsicContinuityUpload";
 // pnpm test runs this real-worker acceptance file after the parallel corpus
 // suite, preserving the production4s deadline without unrelated CPU contention.
 import { LuckReportSchema } from "@/domain/nufflizer/reportSchema";
@@ -41,15 +42,20 @@ describe("POST /api/nufflizier/analyze", () => {
     try {
       const data = new FormData();
       const hidden=Array.from({length:100},(_,i)=>`<Unknown${i}><Dice><Die><DieType>0</DieType><Value>3</Value></Die></Dice></Unknown${i}>`).join("");
-      const xml=appendStaffInjuryTransaction(scoringRushXml().replace("</Replay>",`<ReplayStep>${sequence([rollXml(7,6,2)])}<BoardState>${hidden}</BoardState></ReplayStep></Replay>`));
+      const xml=appendIntrinsicContinuityProbe(appendStaffInjuryTransaction(scoringRushXml().replace("</Replay>",`<ReplayStep>${sequence([rollXml(7,6,2)])}<BoardState>${hidden}</BoardState></ReplayStep></Replay>`)));
       data.set("replay",new File([xml],"private-input.xml"));
       const response = await POST(new Request("http://localhost/api/nufflizier/analyze", {
         method: "POST", body: data
       }));
       expect(response.status).toBe(200);
       const report = LuckReportSchema.parse(await response.json());
-      expect(report.coverage.rollCandidates).toMatchObject({scoredCount:5,excludedCount:100,scoredRate:5/105});
-      expect(report.coverage.diceRecords).toMatchObject({eventRecordCount:6,snapshotRecordCount:100,unresolvedCount:100});
+      expect(report.coverage.rollCandidates).toMatchObject({scoredCount:6,excludedCount:101,scoredRate:6/107});
+      expect(report.coverage.diceRecords).toMatchObject({eventRecordCount:8,snapshotRecordCount:100,unresolvedCount:100});
+      const continued=report.events.find(e=>e.playerId==="142"&&e.metadata.blockScoring)!;
+      expect(continued).toMatchObject({teamId:"0",scoringStatus:"scored",probabilitySuccess:null,actualSuccess:null,weightedDelta:5/8});
+      expect(continued.metadata.block!.skillModel!.expectedValue).toBeCloseTo(1/6,12);
+      expect(continued.contextualImpact).toBeUndefined();
+      expect(report.events.find(e=>e.metadata.sourceTag==="EventRoll"&&e.playerId==="199")!.scoringStatus).toBe("excluded");
       const initial=report.events.find(e=>e.metadata.initialInjuryOriginal)!;
       expect(initial).toMatchObject({playerId:"88",teamId:"0",scoringStatus:"scored",probabilitySuccess:null,actualSuccess:null,weightedDelta:-13/12});
       expect(initial.metadata.injuryObservation).toMatchObject({recordKind:"apothecary_original",outcome:"badly_hurt"});
@@ -250,8 +256,8 @@ describe("POST /api/nufflizier/analyze", () => {
     const skillPools=report.events.filter(e=>e.metadata.block?.skillModel);
     expect(skillPools.filter(e=>!e.metadata.block!.skillModel!.nonKnockdownSkills).map(e=>e.metadata.sourceId)).toEqual(["source-98","source-132","source-367","source-386","source-409"]);
     expect(skillPools.filter(e=>e.metadata.block!.skillModel!.nonKnockdownSkills).map(e=>e.metadata.sourceId)).toEqual(["source-116","source-338","source-438","source-579","source-634","source-638"]);
-    expect(report.schemaVersion).toBe("2.71");
-    expect(report.modelVersion).toBe("dice-only-35");
+    expect(report.schemaVersion).toBe("2.72");
+    expect(report.modelVersion).toBe("dice-only-36");
     const positive=report.events.find(e=>e.metadata.sourceId==="source-98")!;
     const negative=report.events.find(e=>e.metadata.sourceId==="source-132")!;
     expect(positive.metadata.blockScoring).toMatchObject({policy:"fixed_pool_knockdown_balance",observedValue:1,expectedValue:19/36});

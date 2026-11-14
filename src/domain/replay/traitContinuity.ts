@@ -76,6 +76,7 @@ function visitCurrentTraits(
     current: ReplayBoardCheckpoint | undefined,
     previousCheckpoint: ReplayBoardCheckpoint | undefined,
     previousIndex = -1;
+  let header:ReplayEvent|undefined;
   function observe(cp: ReplayBoardCheckpoint) {
     const board = cp.board,
       teams = board && rosterTeamIds(board, known);
@@ -197,6 +198,7 @@ function visitCurrentTraits(
         continue;
       }
       previousIndex = index;
+      if(event.sourceTag==="PlayerStep")header=event;
       while (
         cursor < checkpoints.length &&
         checkpoints[cursor]!.afterSourceIndex < index
@@ -218,7 +220,7 @@ function visitCurrentTraits(
         observe(current);
       }
       visit(event, current, ledger);
-      const affectedByEffect = scopedTraitEffectPlayer(event);
+      const affectedByEffect = scopedTraitEffectPlayer(event,header);
       if (
         [
           "EventBuyMercenary",

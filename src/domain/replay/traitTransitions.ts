@@ -1,6 +1,8 @@
 import type { ReplayEvent } from "./types";
 import { recordedMentalEffect } from "./mentalEffects";
 import { isInertReplayControl } from "./inertControls";
+import { scopedMentalNotificationHolder } from "./mentalNotification";
+import { knownKoTraitTransition } from "./koTraitContinuity";
 
 // These transitions do not rewrite intrinsic player skill lists. Effects,
 // transformations, purchases/removals and unknown messages have separate
@@ -119,7 +121,8 @@ function listedPlayers(value: unknown) {
 // A fully recognized Confused effect cannot rewrite anyone else's skills.
 // Its holder is still invalidated: an effect end alone does not prove restored
 // eligibility or recover an earlier seed. Other effect shapes remain barriers.
-export function scopedTraitEffectPlayer(e: ReplayEvent): string | undefined {
+export function scopedTraitEffectPlayer(e: ReplayEvent, header?:ReplayEvent): string | undefined {
+  if(e.sourceTag==="ResultAddPlayerEffect"||e.sourceTag==="ResultEndPlayerEffect")return scopedMentalNotificationHolder(e,header);
   const p = e.payload;
   if (
     e.attributionConflict ||
@@ -134,6 +137,7 @@ export function scopedTraitEffectPlayer(e: ReplayEvent): string | undefined {
 }
 export function preservesTraitContinuity(e: ReplayEvent) {
   if (e.attributionConflict) return false;
+  if(e.sourceTag==="EventRoll")return knownKoTraitTransition(e);
   if(["Clock","EventPauseActiveTimer","EventActiveTimerChanged","EventGamersAreReady","EventStartActiveTimer"].includes(e.sourceTag))return isInertReplayControl(e);
   if (e.sourceTag === "PlayerStep")
     return (

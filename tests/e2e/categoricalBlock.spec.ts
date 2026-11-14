@@ -90,7 +90,7 @@ test("categorical block positives, negatives and unknown pools share timeline/ex
   await page.getByRole("button", { name: "Download JSON" }).click();
   const file = await pending,
     saved = JSON.parse(readFileSync((await file.path())!, "utf8"));
-  expect(saved.schemaVersion).toBe("2.71");
+  expect(saved.schemaVersion).toBe("2.72");
   expect(
     saved.events.find(
       (e: { metadata: { sourceId: string } }) =>

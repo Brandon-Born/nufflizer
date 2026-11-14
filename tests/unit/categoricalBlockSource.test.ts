@@ -159,7 +159,7 @@ describe("all-question independent block source inventory", () => {
   it("retains every question before support and every qualified pool", () => {
     expect(raw.files.reduce((n, f) => n + f.questions.length, 0)).toBe(848);
     expect(pools).toBe(833);
-    expect(scored).toBe(67);
+    expect(scored).toBe(117);
   });
   it("regenerates the independent stdlib inventory without application imports", () => {
     const p = spawnSync(

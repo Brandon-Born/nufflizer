@@ -1,3 +1,4 @@
+import { assertIntrinsicInjury } from "../helpers/intrinsicInjuryFacts";
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
@@ -93,7 +94,9 @@ describe("direct Badly Hurt keeps its injury namespace and initial severity", ()
       expect(
         raw.roll.Dice[0].Die.map((d: { Value: string[] }) => Number(d.Value[0]))
       ).toEqual(dice);
-      const qualified = file === "demo6.bbr" && id === "source-248";
+      const qualified =
+        (file === "demo6.bbr" && id === "source-248") ||
+        (file === "demo10.bbr" && id === "source-1121");
       expect(e).toMatchObject({
         playerId: player,
         teamId: team,
@@ -110,9 +113,13 @@ describe("direct Badly Hurt keeps its injury namespace and initial severity", ()
         subjectTeamId: team
       });
       expect(formatActualOutcome(e)).toBe("Badly Hurt (recorded)");
-      if (qualified)
+      if (id === "source-248")
         expect(e.metadata.injuryScoring?.sppSourceId).toBe("source-247");
-      else expect(e.metadata.injuryScoring).toBeUndefined();
+      else if (qualified) {
+        expect(assertIntrinsicInjury(file, e, report)).toBe(true);
+        expect(e.metadata.injuryScoring!.cause.kind).toBe("self_fall");
+        expect(e.metadata.injuryScoring!.sppSourceId).toBeUndefined();
+      } else expect(e.metadata.injuryScoring).toBeUndefined();
       expect(e.contextualImpact).toBeUndefined();
       expect(LuckReportSchema.safeParse(report).success).toBe(true);
     }
