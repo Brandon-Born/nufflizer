@@ -100,7 +100,7 @@ for (const c of [
     );
     const exported = saved.events.find((v: { id: string }) => v.id === e.id);
     expect(exported).toEqual(e);
-    expect(saved.schemaVersion).toBe("2.65");
+    expect(saved.schemaVersion).toBe("2.66");
     expect(saved.modelVersion).toBe("dice-only-34");
     expect(saved.verdict.luckierTeam).toBe("unknown");
     await page

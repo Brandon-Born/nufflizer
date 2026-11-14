@@ -1,4 +1,5 @@
 import { explainInjuryOtherActions } from "./injurySkillScope";
+import { CASUALTY_NAMES, casualtyOutcome } from "./casualtyObservation";
 import { explainBlockNonKnockdownSkills } from "./blockNonKnockdownSkills";
 import type { ContextComponentSummary } from "./contextComponents";
 import { recordedInjuryName } from "./injuryObservation";
@@ -96,6 +97,7 @@ export function formatContextComponentSum(
 
 export function formatExpectedOutcome(event: LuckReport["events"][number]): string {
   if(event.metadata.recordedSpp)return "No new roll";
+  if(event.metadata.apothecary)return "No new roll";
   return (event.metadata.injuryScoring || event.metadata.blockScoring) ? "Categorical" : event.probabilitySuccess === null
     ? "Unknown" : `${(event.probabilitySuccess * 100).toFixed(1)}%`;
 }
@@ -104,11 +106,33 @@ export function formatActualOutcome(
   event: LuckReport["events"][number]
 ): string {
   if(event.metadata.recordedSpp)return "Recorded +2 SPP";
+  if(event.metadata.casualtyObservation)return `${CASUALTY_NAMES[event.metadata.casualtyObservation.outcome]} (recorded)`;
+  if(event.metadata.apothecary){
+    const a=event.metadata.apothecary;
+    if(a.applied==="injury_treatment")return "Injury treated (recorded)";
+    const outcome=casualtyOutcome(a.appliedCasualty,true);
+    if(outcome)return `${CASUALTY_NAMES[outcome]} (applied)`;
+  }
   if(event.metadata.blockScoring)return `Offered balance ${event.metadata.blockScoring.observedValue>0?"+":""}${event.metadata.blockScoring.observedValue}`;
   if(event.metadata.block)return "Observed symbols";
   if(event.metadata.injuryObservation) return `${recordedInjuryName(event.metadata.injuryObservation.outcome)} (recorded)`;
   if (event.actualSuccess === null) return "Unknown";
   return event.actualSuccess ? "Success" : "Fail";
+}
+
+export function explainCasualtyObservation(event: LuckReport["events"][number]): string | null {
+  const o=event.metadata.casualtyObservation;
+  if(!o)return null;
+  const role=o.recordKind==="direct" ? "This is a directly recorded casualty roll." : o.recordKind==="apothecary_original" ? "These are the original casualty dice in an Apothecary usage question; they are not a second roll or the applied treatment decision." : "These are the replacement dice in an Apothecary choice. Repeated original dice are a copied summary and add no random draw; their copied outcome cannot rename the original result. This replacement does not by itself establish which result was applied.";
+  return `The recorded casualty result for player ${o.subjectId} is ${CASUALTY_NAMES[o.outcome]}. ${role} This is a categorical observation, not binary success or failure. The full modifier and treatment policy and its odds are unverified, so no luck contribution is assigned. The initial injury roll remains a separate stage. Long-term league damage is not priced as current-match impact. Final removal, recovery and useful availability require separate evidence.`;
+}
+
+export function explainApothecaryDecision(event: LuckReport["events"][number]): string | null {
+  const a=event.metadata.apothecary;
+  if(!a)return null;
+  const outcome=casualtyOutcome(a.appliedCasualty,true);
+  const applied=a.applied==="injury_treatment" ? "treated the initial injury without replacement casualty dice" : `applied the ${a.applied} casualty${outcome ? `: ${CASUALTY_NAMES[outcome]}` : ""}`;
+  return `Recorded Apothecary decision: ${a.resourceSpent ? "one resource used" : "declined"}; ${applied}. Original source ${a.originalSourceId}${a.replacementSourceId ? `; replacement source ${a.replacementSourceId}` : ""}. The coach's decision adds no random draw or luck contribution. This source receipt does not establish the full resource rules, choices for other possible rolls or final useful availability.`;
 }
 
 export function explainDiceCensus(

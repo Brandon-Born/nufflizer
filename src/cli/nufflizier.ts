@@ -28,6 +28,8 @@ import {
   explainBlockResolution,
   explainBlockSkillModel,
   explainInjuryObservation,
+  explainCasualtyObservation,
+  explainApothecaryDecision,
   explainRegenerationAftermath,
   explainRegenerationReturn,
   explainNumericRerollScore,
@@ -138,6 +140,11 @@ function formatTeamSummary(
         : [])
     ]),
     `Push decisions: ${report.events.filter(e=>e.metadata.sourceTag==="QuestionPushBack").length} source menus; ${report.events.filter(e=>e.metadata.blockPush?.status==="modeled").length} modeled ordinary position alternatives. These are coach decisions with no added luck score.`,
+    ...(report.events.some(e=>e.metadata.casualtyObservation) ? [
+      `Recorded casualty results: ${report.events.filter(e=>e.metadata.casualtyObservation).length}. Original and replacement dice remain separate; all have unverified odds and no current-match luck score.`,
+      ...report.events.filter(e=>e.metadata.casualtyObservation).map(e=>`Player ${e.playerId}; source ${e.metadata.sourceId}: ${formatActualOutcome(e)}; Not scored. ${explainCasualtyObservation(e)}`)
+    ]:[]),
+    ...report.events.filter(e=>e.metadata.apothecary).map(e=>`Player ${e.playerId}; source ${e.metadata.sourceId}: ${explainApothecaryDecision(e)}`),
     ...report.events.filter(e=>e.metadata.blockPush?.status==="modeled").slice(0,20).map(e=>`Source ${e.metadata.sourceId}: ${explainBlockPush(e)}`),
     ...(report.events.some(e=>e.metadata.recordedSpp)?[
       `Recorded SPP notifications: ${report.events.filter(e=>e.metadata.recordedSpp).length}. Source annotations add no random draw, skill advancement or injury value.`,

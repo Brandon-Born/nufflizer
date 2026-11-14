@@ -8,6 +8,8 @@ Direct injury checkpoint (2026-11-14): schema2.64/dice33 labels eight direct Bad
 
 Initial injury transaction checkpoint (2026-11-14): schema2.65/dice34 advances bounded learned-list continuity, other-action skill scope and one observational SPP bridge with exact block-peer roles. Independent864 fair faces cover both injured roles; all prior1,460 scored values remain, with twenty new scores and independently checked derived summaries. No original work/acceptance packet or ledger status changes. NUF-010/011/012/014/018/019/021/022/027 retain their broader criteria. See [evidence](INJURY_TRANSACTION_EVIDENCE.md).
 
+Recorded casualty checkpoint (2026-11-14): schema2.66 adds59 owned direct/original/replacement labels and plain-language applied treatment receipts, preserving copied summaries and null odds/no contribution. Independent source/enum/primary rule/playback evidence and current roster checks preserve all1,480 scored objects and18,441 physical records; local3,288 cases/Redis/build and66 browser flows pass. NUF-011/014/018/020/021/022/027 advance without changing any original packet, ledger row or broader acceptance criterion. See [evidence](CASUALTY_OBSERVATION_EVIDENCE.md).
+
 ## Product outcome
 
 A user uploads a BB3 `.xml` or `.bbr` replay and receives a defensible account of dice luck and its match consequences. A failed 2+ dodge with one applicable full reroll has a 1/36 failure probability. Its impact depends on what the failure costs: useful activations, possession, scoring opportunities, player availability, and remaining time. A final optional block can matter little; a final action deciding the match can matter enormously.
@@ -430,7 +432,7 @@ Schema2.61/dice31 replaces raw-symbol points with qualified current intrinsic-tr
 
 ## Current acceptance audit
 
-Updated2026-11-14 for schema2.65/dice-only-34/context mobility-possession-42. The new injury transaction checkpoint above supplements the earlier scoped evidence in the table below. Every original issue, dependency and acceptance criterion above is retained. Seventeen issues are closed and fifteen original issues remain incomplete; NUF-030–032 have independent source/order/counter/report and complete local-gate closure evidence. NUF-029 has completed exact-code verification after its decision-reuse/source-order follow-up; the original28 issues and acceptance criteria remain intact. An open broad issue is not a reason to stop its independently actionable engineering. This table separates implementation work from precise absent evidence and final acceptance; it does not replace the ledger.
+Updated2026-11-14 for schema2.66/dice-only-34/context mobility-possession-42. The new injury transaction and casualty checkpoints above supplement the earlier scoped evidence in the table below. Every original issue, dependency and acceptance criterion above is retained. Seventeen issues are closed and fifteen original issues remain incomplete; NUF-030–032 have independent source/order/counter/report and complete local-gate closure evidence. NUF-029 has completed exact-code verification after its decision-reuse/source-order follow-up; the original28 issues and acceptance criteria remain intact. An open broad issue is not a reason to stop its independently actionable engineering. This table separates implementation work from precise absent evidence and final acceptance; it does not replace the ledger.
 
 | ID | Existing acceptance evidence | Remaining input or acceptance gap | Next actionable work |
 | --- | --- | --- | --- |

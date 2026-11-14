@@ -15,6 +15,7 @@ import {
   type ContextComponentSummary
 } from "./contextComponents";
 import { directInjuryOutcome } from "./injuryObservation";
+import { validReportedCasualtyObservation } from "./casualtyObservation";
 import { validReportedDamageSpp } from "./damageSpp";
 import { validReportedCategoricalInjury } from "./categoricalInjury";
 import { injuryTableForTraits } from "./injuryTable";
@@ -247,6 +248,7 @@ export const LuckEventMetadataSchema = z.strictObject({
   recordedSpp:z.strictObject({points:z.literal(2),damage:z.strictObject({armorSourceId:text,injurySourceId:text,damageStepSourceIndex:count}).optional()}).optional(),
   injuryTable:injuryTable.optional(),
   injuryObservation:z.strictObject({outcome:z.enum(["stunned","ko","badly_hurt","casualty"]),recordKind:z.enum(["direct","embedded_ko"]),subjectId:text,subjectTeamId:text,sourceCode:z.number().int().min(0).max(64),damageStepSourceIndex:count}).optional(),
+  casualtyObservation:z.strictObject({outcome:z.enum(["no_injury","badly_hurt","seriously_hurt","serious_injury","lasting_injury","smashed_knee","head_injury","broken_arm","neck_injury","dislocated_shoulder","dead"]),recordKind:z.enum(["direct","apothecary_original","apothecary_replacement"]),subjectId:text,subjectTeamId:text,sourceCode:z.number().int().min(0).max(64),damageStepSourceIndex:count}).optional(),
   crowdPush:z.strictObject({playerId:text,from:pitchCell,to:z.strictObject({x:z.number().int().min(-1).max(26),y:z.number().int().min(-1).max(15)}),resolution:z.literal(3)}).optional(),
   crowdRemoval:z.strictObject({reason:z.union([z.literal(0),z.literal(1)]),situation:z.union([z.literal(1),z.literal(2)]),status:z.union([z.literal(0),z.literal(3)])}).optional(),
   blockCrowd:z.strictObject({pushSourceId:text,initialRemovalSourceId:text,finalRemovalSourceId:text,injurySourceId:text,subjectId:text,subjectTeamId:text,
@@ -999,6 +1001,10 @@ export const LuckReportSchema = z
         );
       }), "Roll-family coverage must match the reported candidate evidence.");
     const rawDiceById = new Map(report.diceRecords.map((r) => [r.id, r]));
+    const casualtyDiceBySource = new Map(report.diceRecords.filter(r =>
+      (r.path.length === 1 && r.path[0] === "Dice") ||
+      (r.path.length === 2 && ["RollInfos","NewRoll"].includes(String(r.path[0])) && r.path[1] === "Dice")
+    ).map(r => [r.parentSourceId,r]));
     const parentKeys= new Set(
       report.events.map(
         (e) => {
@@ -2467,6 +2473,7 @@ export const LuckReportSchema = z
       else require(fixed===undefined,"Only a supported scored numeric check carries a fixed-modifier receipt.");
       if(event.metadata.recordedSpp)require(validReportedDamageSpp(event,sources),"Recorded SPP is a non-random owned notification; any damage link needs its adjacent armor/injury source records and separate subject.");
       const injuryObservation=event.metadata.injuryObservation;
+      if(event.metadata.casualtyObservation)require(teamIds.has(event.teamId) && validReportedCasualtyObservation(event,casualtyDiceBySource.get(event.metadata.sourceId)),"A recorded casualty needs its uniquely owned DamageStep, exact direct/original/replacement dice path and separate outcome namespace; copied summaries, probabilities and match-impact claims cannot certify it.");
       require(validReportedRecoveryControl(event)&&validReportedRegenerationAftermath(event,sources,report.coverage.sourceRecordCount),"Regeneration aftermath requires its first same-frame owned off-pitch observation and the exact supported ordered control bridge, separately from dice and availability.");
       require(validReportedRegenerationReturn(event,sources,report.coverage.sourceRecordCount)&&validReportedRecoveryReturnActivation(event,sources,report.coverage.sourceRecordCount),"A recovered-player return requires ordered same-instance setup/play observations and its own supported declaration; gaps and missing observations cannot establish useful availability or add luck.");
       require(validReportedArmorModifierUse(event,sources),"A recorded Mighty Blow armor use requires its separate holder, adjacent affected subject and exact committed +1 armor evidence without odds or a score.");

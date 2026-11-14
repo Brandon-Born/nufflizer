@@ -239,7 +239,7 @@ describe("POST /api/nufflizier/analyze", () => {
     const skillPools=report.events.filter(e=>e.metadata.block?.skillModel);
     expect(skillPools.filter(e=>!e.metadata.block!.skillModel!.nonKnockdownSkills).map(e=>e.metadata.sourceId)).toEqual(["source-98","source-132","source-367","source-386","source-409"]);
     expect(skillPools.filter(e=>e.metadata.block!.skillModel!.nonKnockdownSkills).map(e=>e.metadata.sourceId)).toEqual(["source-116","source-338","source-438","source-579","source-634","source-638"]);
-    expect(report.schemaVersion).toBe("2.65");
+    expect(report.schemaVersion).toBe("2.66");
     expect(report.modelVersion).toBe("dice-only-34");
     const positive=report.events.find(e=>e.metadata.sourceId==="source-98")!;
     const negative=report.events.find(e=>e.metadata.sourceId==="source-132")!;
@@ -473,6 +473,13 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(response.status, JSON.stringify(payload).slice(0, 200)).toBe(200);
     const r = LuckReportSchema.parse(payload),
       caught = r.events.find((e) => e.catchPossessionBounds)!;
+    const casualtyOriginal=r.events.find(e=>e.metadata.sourceId==="source-2033")!,casualtyReplacement=r.events.find(e=>e.metadata.sourceId==="source-2039")!;
+    expect(casualtyOriginal.metadata.casualtyObservation).toMatchObject({outcome:"serious_injury",recordKind:"apothecary_original",subjectId:"45",subjectTeamId:"1"});
+    expect(casualtyOriginal.metadata.ownership).toMatchObject({role:"subject",playerId:"45",teamId:"1"});
+    expect(casualtyReplacement.metadata.casualtyObservation).toMatchObject({outcome:"no_injury",recordKind:"apothecary_replacement",subjectId:"45",subjectTeamId:"1"});
+    expect(r.events.find(e=>e.metadata.sourceId==="source-2043")?.metadata.apothecary).toMatchObject({originalSourceId:"source-2033",replacementSourceId:"source-2039",resourceSpent:1,appliedCasualty:0,applied:"replacement"});
+    for(const e of [casualtyOriginal,casualtyReplacement])expect(e).toMatchObject({scoringStatus:"excluded",actualSuccess:null,probabilitySuccess:null,delta:0,weightedDelta:0});
+    expect(r.diceRecords.find(d=>d.parentSourceId==="source-2039"&&d.path.join()==="OriginalRoll,Dice")).toMatchObject({disposition:"summary",aliasOf:expect.any(String)});
     expect(r.rerollResources.flow.intervals.find(i=>i.pools[1].before?.count===1&&i.pools[1].after?.count===3)?.pools[1]).toMatchObject({netDecrease:-2,status:"not_comparable",reason:"clock_boundary"});
     expect(caught.metadata.locator?.replayStep).toBe(531);
     expect(caught.playerId).toBe("45");

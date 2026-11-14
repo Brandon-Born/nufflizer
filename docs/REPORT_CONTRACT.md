@@ -2,7 +2,7 @@
 
 Updated 2026-11-14. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.65`, dice model `dice-only-34` and context model `mobility-possession-42`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.66`, dice model `dice-only-34` and context model `mobility-possession-42`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -758,3 +758,10 @@ Strict known skill-use messages preserve learned-list continuity separately from
 `recordedSpp` is an owned actor annotation, always excluded/non-random with points2, null binary odds/results and zero contribution. Its optional damage link requires adjacent same-action armor/injury sources and a distinct opposing subject. `injuryScoring.sppSourceId` admits exactly that one bridge only when its recipient is the opposing participant in the same qualified block, for either injured role. Own-fall or unrelated-recipient bridges remain unsupported. No award legality, advancement, removal, availability or tactical value follows. The export schema checks role/source/order links and recomputes the skill receipt.
 
 The fair injury metric and category weights are unchanged. Twenty public scores are added; all1,460 earlier values persist, with independently checked derived sums. Source6/248 now qualifies, superseding the previous schema2.64 checkpoint's eight-public-records-unscored statement; the other seven direct Badly Hurt witnesses remain unscored. Full scope, primary references, independent864 fair-face and twelve-report conservation evidence are in [INJURY_TRANSACTION_EVIDENCE.md](INJURY_TRANSACTION_EVIDENCE.md).
+
+
+## Schema2.66: recorded casualty and treatment roles
+
+`casualtyObservation` records a strict direct D16 result, embedded original or NewRoll replacement with its affected player/team, numeric source and prior DamageStep index. The three namespaces/physical paths remain distinct; code0 No injury is accepted only for an explicit replacement. Copied OriginalRoll fields cannot supply an observed name or new draw. Each observation requires a confirmed current subject ownership receipt, exact physical dice/path/source/status evidence and the existing identity barriers. Exports reject contradictory role/name/owner/source/dice fields, invented binary odds, contributions or context components.
+
+All59 public observations remain excluded/null binary odds/zero contribution. Initial injury, treatment selection and recovery remain separate stages. Shared UI/CLI text names the later applied Apothecary decision from its existing validated source receipt without adding another roll. All1,480 scored objects,18,441 physical records/aliases/dispositions, team/category totals, resources,27 ranges/zero public points, rankings and abstentions remain unchanged. Full source, primary rule, modifier-presence, copy-namespace and product evidence: [CASUALTY_OBSERVATION_EVIDENCE.md](CASUALTY_OBSERVATION_EVIDENCE.md).

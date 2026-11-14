@@ -1,3 +1,4 @@
+import casualtyWitness from "../fixtures/evidence/bb3-casualty-observations.json";
 import { assertTransactionInjury } from "../helpers/injuryTransactionFacts";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -170,7 +171,7 @@ describe("source-qualified time-local player ownership", () => {
       // Check each public proof against its actual raw snapshot, including
       // initial players renewed after an unknown transition. No future snapshot
       // or most-recent omission substitutes for that positive observation.
-      for (const e of r.events.filter((e) => e.scoringStatus === "scored")) {
+      for (const e of r.events.filter((e) => e.scoringStatus === "scored" || e.metadata.casualtyObservation)) {
         const p = e.metadata.ownership!;
         for (const proof of [p, ...(p.defender ? [p.defender] : [])]) {
           if (proof.basis === "explicit_team") continue;
@@ -209,6 +210,13 @@ describe("source-qualified time-local player ownership", () => {
             members[0][2] === null || members[0][2] === Number(proof.playerId)
           ).toBe(true);
           expect(members[0][3] === null || members[0][3] === team).toBe(true);
+        }
+        if(e.metadata.casualtyObservation) {
+          const c=casualtyWitness.rawEmissions.find(c=>c.sourceFile===f.sourceFile && c.recordKind!=="copied_original" && key(c.locator,c.tag)===key(e.metadata.locator,e.metadata.sourceTag));
+          expect(c,`casualty ${e.metadata.sourceId} needs its independent raw source`).toBeDefined();
+          expect(c!.sha256).toBe(f.sha256);expect(p.role).toBe("subject");expect(p.playerId).toBe(String(c!.subjectId));
+          expect(e.scoringStatus).toBe("excluded");expect(e.probabilitySuccess).toBeNull();expect(e.actualSuccess).toBeNull();expect(e.weightedDelta).toBe(0);
+          continue;
         }
         if(e.metadata.blockScoring){
           expect(blockWitness.files.find(x=>x.file===f.sourceFile)!.sha256).toBe(f.sha256);

@@ -34,6 +34,7 @@ import {
 import { summarizeContextComponents } from "./contextComponents";
 import { findDamageSppNotices, attachDamageSppLinks } from "./damageSpp";
 import { attachInjuryObservations } from "./injuryObservation";
+import { attachCasualtyObservations } from "./casualtyObservation";
 import { attachCategoricalInjuries } from "./categoricalInjury";
 import { findMightyBlowArmorUses } from "./armorModifierBudget";
 import { findRegenerationAftermath } from "./regenerationAftermath";
@@ -1993,6 +1994,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     )
   );
   attachInjuryObservations(replay, ballSources);
+  attachCasualtyObservations(replay, ballSources, ownership);
   attachDamageSppLinks(ballSources);
   attachInjuryTables(replay, ballSources, ownership);
   attachCategoricalInjuries(replay, ballSources, blockConsequences, ownership);
