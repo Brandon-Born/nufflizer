@@ -39,7 +39,9 @@ describe("source-qualified categorical injury scoring", () => {
       counts: number[];
       totalOutcomes: number[];
     }) => {
-      let sum = 0;
+      let sum = 0,
+        actualSum = 0,
+        scoredFaces = 0;
       for (let a = 1; a <= 6; a++)
         for (let b = 1; b <= 6; b++) {
           const outcome = t.totalOutcomes[a + b - 2]!,
@@ -62,18 +64,18 @@ describe("source-qualified categorical injury scoring", () => {
             dice: [a, b],
             outcome: [0, 2, 3, 4][outcome]
           });
-          if (outcome === 2)
-            expect(injuries(r)).toHaveLength(0); // Unverified direct code3 stays unknown.
-          else {
-            const e = injuries(r)[0]!;
-            expect(e).toBeDefined();
-            expect(e.delta).toBe(reference);
-            expect(e.weightedDelta).toBe(reference * 1.5);
-            expect(e.actualSuccess).toBeNull();
-            expect(e.probabilitySuccess).toBeNull();
-          }
+          const e = injuries(r)[0]!;
+          expect(e).toBeDefined();
+          scoredFaces++;
+          actualSum += e.delta;
+          expect(e.delta).toBe(reference);
+          expect(e.weightedDelta).toBe(reference * 1.5);
+          expect(e.actualSuccess).toBeNull();
+          expect(e.probabilitySuccess).toBeNull();
         }
       expect(sum).toBeCloseTo(0, 12);
+      expect(actualSum).toBeCloseTo(0, 12);
+      expect(scoredFaces).toBe(36);
     }
   );
   it("reduces to ordinary binary dice deviation when only two tiers have mass", () => {

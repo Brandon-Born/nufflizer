@@ -4,6 +4,8 @@ Created: 2026-11-09. Reviewed baseline: `b06d50e9fa2b42b821f4f8b30ef3894c10f588c
 
 This is the authoritative implementation backlog for the November 2026 review and the requested context-sensitive luck analyzer. Read [AGENTS.md](../AGENTS.md), [PROJECT_PLAN.md](PROJECT_PLAN.md), and the two execution logs first. The February roll-family promotion order is superseded. **Seventeen issues have closure evidence, including new NUF-030–032 source-window/report fixes; fifteen original issues remain incomplete. The full analyzer is not complete. See the ledger and current implementation record.**
 
+Direct injury checkpoint (2026-11-14): schema2.64/dice33 labels eight direct Badly Hurt records from independently joined executable enum/raw/rule evidence, keeping the pending treatment code1 separate. The omitted Badly Hurt branch had left each qualified synthetic Stunty profile with positive fair-draw mean13/108; all144 full-pipeline faces now retain zero-mean actual scores; the eight public records remain unscored under unchanged policy guards. Every previous scored object and physical die, all original work/acceptance packets and ledger states remain. This advances NUF-011/014/018/021/022/027 without closing their broader criteria. See [evidence](DIRECT_BADLY_HURT_EVIDENCE.md).
+
 ## Product outcome
 
 A user uploads a BB3 `.xml` or `.bbr` replay and receives a defensible account of dice luck and its match consequences. A failed 2+ dodge with one applicable full reroll has a 1/36 failure probability. Its impact depends on what the failure costs: useful activations, possession, scoring opportunities, player availability, and remaining time. A final optional block can matter little; a final action deciding the match can matter enormously.

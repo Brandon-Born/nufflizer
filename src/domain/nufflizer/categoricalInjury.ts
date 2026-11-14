@@ -5,6 +5,7 @@ import {
   type CurrentTraitEvidence
 } from "@/domain/replay/traitContinuity";
 import type { LuckEvent } from "./types";
+import { recordedInjuryName } from "./injuryObservation";
 import type { ObservedBlockConsequence } from "./blockConsequences";
 import { knockedDownSubjects } from "./blockConsequences";
 import { LUCK_CATEGORY_WEIGHTS } from "./constants";
@@ -337,7 +338,7 @@ export function attachCategoricalInjuries(
       injury.delta = rank.delta;
       injury.explainability.weight = LUCK_CATEGORY_WEIGHTS.injury;
       injury.weightedDelta = rank.delta * LUCK_CATEGORY_WEIGHTS.injury;
-      injury.label = `Injury: ${observation.outcome === "stunned" ? "Stunned" : observation.outcome === "ko" ? "KO" : "Casualty"}`;
+      injury.label = `Injury: ${recordedInjuryName(observation.outcome)}`;
       injury.statusReason =
         "verified unmodified categorical injury under a source-qualified damage policy";
       injury.explainability.target =

@@ -1,19 +1,31 @@
 import type { ReplayEvent, ReplayModel } from "@/domain/replay/types";
 import type { LuckEvent } from "./types";
 
-export function recordedInjuryName(outcome: "stunned" | "ko" | "casualty") {
-  return { stunned: "Stunned", ko: "KO", casualty: "Casualty" }[outcome];
+export function recordedInjuryName(
+  outcome: "stunned" | "ko" | "badly_hurt" | "casualty"
+) {
+  return {
+    stunned: "Stunned",
+    ko: "KO",
+    badly_hurt: "Badly Hurt",
+    casualty: "Casualty"
+  }[outcome];
 }
 export function directInjuryOutcome(
   code: unknown
-): "stunned" | "ko" | "casualty" | undefined {
+): "stunned" | "ko" | "badly_hurt" | "casualty" | undefined {
+  // Direct gameplay injury namespace: frozen enum + eight raw code3 witnesses.
+  // Treatment questions have separate codes (UI-009 uses1 for Badly Hurt).
+  // Callers still qualify replay version, source/header and subject evidence.
   return code === 0
     ? "stunned"
     : code === 2
       ? "ko"
-      : code === 4
-        ? "casualty"
-        : undefined;
+      : code === 3
+        ? "badly_hurt"
+        : code === 4
+          ? "casualty"
+          : undefined;
 }
 const fields = (p: Record<string, unknown> | undefined, keys: string[]) =>
   !!p &&

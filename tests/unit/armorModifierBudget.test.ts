@@ -379,19 +379,18 @@ describe("independent Mighty Blow armor source evidence", () => {
               dice: [a, b],
               outcome: [0, 2, 3, 4][result]
             });
-          if (result === 2) expect(scored(r)).toHaveLength(0);
-          else
-            expect(scored(r)[0]!.weightedDelta).toBeCloseTo(
-              rational(
-                references.math
-                  .find(
-                    (m) =>
-                      m.stunty === t.stunty && m.thickSkull === t.thickSkull
-                  )!
-                  .rows.find((m) => m.total === a + b)!.weighted
-              ),
-              12
-            );
+          expect(scored(r)).toHaveLength(1);
+          expect(scored(r)[0]!.weightedDelta).toBeCloseTo(
+            rational(
+              references.math
+                .find(
+                  (m) =>
+                    m.stunty === t.stunty && m.thickSkull === t.thickSkull
+                )!
+                .rows.find((m) => m.total === a + b)!.weighted
+            ),
+            12
+          );
         }
   });
 });

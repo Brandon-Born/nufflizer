@@ -243,7 +243,7 @@ export const LuckEventMetadataSchema = z.strictObject({
     lessSevereChance:probability, sameSeverityChance:probability, moreSevereChance:probability
   }).optional(),
   injuryTable:injuryTable.optional(),
-  injuryObservation:z.strictObject({outcome:z.enum(["stunned","ko","casualty"]),recordKind:z.enum(["direct","embedded_ko"]),subjectId:text,subjectTeamId:text,sourceCode:z.number().int().min(0).max(64),damageStepSourceIndex:count}).optional(),
+  injuryObservation:z.strictObject({outcome:z.enum(["stunned","ko","badly_hurt","casualty"]),recordKind:z.enum(["direct","embedded_ko"]),subjectId:text,subjectTeamId:text,sourceCode:z.number().int().min(0).max(64),damageStepSourceIndex:count}).optional(),
   crowdPush:z.strictObject({playerId:text,from:pitchCell,to:z.strictObject({x:z.number().int().min(-1).max(26),y:z.number().int().min(-1).max(15)}),resolution:z.literal(3)}).optional(),
   crowdRemoval:z.strictObject({reason:z.union([z.literal(0),z.literal(1)]),situation:z.union([z.literal(1),z.literal(2)]),status:z.union([z.literal(0),z.literal(3)])}).optional(),
   blockCrowd:z.strictObject({pushSourceId:text,initialRemovalSourceId:text,finalRemovalSourceId:text,injurySourceId:text,subjectId:text,subjectTeamId:text,

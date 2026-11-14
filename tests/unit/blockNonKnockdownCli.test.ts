@@ -34,6 +34,11 @@ it("[cli-worker] exports the original Stunty/Right Stuff source and explains its
       attacker: [],
       defender: [52, 59]
     });
+    expect(r.events.find(e => e.metadata.sourceId === "source-248")).toMatchObject({
+      playerId: "47", teamId: "1", scoringStatus: "excluded",
+      probabilitySuccess: null, actualSuccess: null, weightedDelta: 0,
+      metadata: {injuryObservation: {outcome: "badly_hurt", recordKind: "direct"}}
+    });
     expect(r.verdict.luckierTeam).toBe("unknown");
     expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
     const text = run("text");
@@ -48,6 +53,7 @@ it("[cli-worker] exports the original Stunty/Right Stuff source and explains its
     expect(text.stdout).toContain(
       "Those other effects are outside this component"
     );
+    expect(text.stdout).toContain("Player 47; source source-248: Badly Hurt (recorded); Not scored.");
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

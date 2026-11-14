@@ -116,7 +116,7 @@ describe("observed injury result is distinct from odds and final availability", 
     "version",
     "turn-inferred",
     "outcome1",
-    "outcome3",
+    "unknown-outcome5",
     "status",
     "die",
     "modifier",
@@ -132,7 +132,7 @@ describe("observed injury result is distinct from odds and final availability", 
     if (kind === "version") x.r.replayVersion = "2-0-0-0";
     if (kind === "turn-inferred") x.roll.actorTeamSource = "turn_inferred";
     if (kind === "outcome1") x.roll.payload!.Outcome = 1;
-    if (kind === "outcome3") x.roll.payload!.Outcome = 3;
+    if (kind === "unknown-outcome5") x.roll.payload!.Outcome = 5;
     if (kind === "status") x.roll.payload!.Status = 2;
     if (kind === "die")
       (x.roll.payload!.Dice as { Die: { DieType: number }[] }).Die[0]!.DieType =
@@ -238,7 +238,7 @@ describe("observed injury result is distinct from odds and final availability", 
       "Later mitigation and state observations remain separate"
     );
   });
-  it("reconciles full-demo observations against independently decoded source locators and preserves all unverified code3 records", () => {
+  it("reconciles full-demo observations against independently decoded source locators and labels the eight independently enumerated direct Badly Hurt records", () => {
     const files = [
       ...new Set(
         evidence.rawEmissions.map((x: { sourceFile: string }) => x.sourceFile)
@@ -278,14 +278,14 @@ describe("observed injury result is distinct from odds and final availability", 
           e.metadata.outcomeCode === 3
         ) {
           unknown3++;
-          expect(o).toBeUndefined();
+          expect(o?.outcome).toBe("badly_hurt");
         }
       }
       expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
       expect(r.verdict.luckierTeam).toBe("unknown");
     }
     expect(unknown3).toBe(8);
-    expect(counts).toEqual({ stunned: 119, ko: 64, casualty: 55 });
+    expect(counts).toEqual({ stunned: 119, ko: 64, casualty: 55, badly_hurt: 8 });
   }, 60000);
   it("[cli-worker] reproduces source facts independently and prints known outcomes with Not scored in the CLI", () => {
     const dir = mkdtempSync(join(tmpdir(), "nuff-injury-")),

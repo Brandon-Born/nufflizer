@@ -239,8 +239,8 @@ describe("POST /api/nufflizier/analyze", () => {
     const skillPools=report.events.filter(e=>e.metadata.block?.skillModel);
     expect(skillPools.filter(e=>!e.metadata.block!.skillModel!.nonKnockdownSkills).map(e=>e.metadata.sourceId)).toEqual(["source-98","source-132","source-367","source-386","source-409"]);
     expect(skillPools.filter(e=>e.metadata.block!.skillModel!.nonKnockdownSkills).map(e=>e.metadata.sourceId)).toEqual(["source-116","source-338","source-438","source-579","source-634","source-638"]);
-    expect(report.schemaVersion).toBe("2.63");
-    expect(report.modelVersion).toBe("dice-only-32");
+    expect(report.schemaVersion).toBe("2.64");
+    expect(report.modelVersion).toBe("dice-only-33");
     const positive=report.events.find(e=>e.metadata.sourceId==="source-98")!;
     const negative=report.events.find(e=>e.metadata.sourceId==="source-132")!;
     expect(positive.metadata.blockScoring).toMatchObject({policy:"fixed_pool_knockdown_balance",observedValue:1,expectedValue:19/36});
@@ -421,6 +421,7 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(response.status, JSON.stringify(payload).slice(0, 200)).toBe(200);
     const report = LuckReportSchema.parse(payload),
       ranges = report.events.filter((e) => e.possessionBounds);
+    expect(report.events.find(e=>e.metadata.sourceId==="source-248")).toMatchObject({playerId:"47",teamId:"1",scoringStatus:"excluded",probabilitySuccess:null,actualSuccess:null,weightedDelta:0,metadata:{injuryObservation:{outcome:"badly_hurt",recordKind:"direct"}}});
     const classifiedBlock=report.events.find(e=>e.metadata.sourceId==="source-188")!;
     expect(classifiedBlock.weightedDelta).toBeCloseTo(-13/24,12);
     expect(classifiedBlock.metadata.block!.skillModel!.nonKnockdownSkills).toEqual({policy:"outside_current_pool_knockdowns",attacker:[],defender:[52,59]});

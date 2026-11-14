@@ -91,15 +91,10 @@ describe("conditional injury tables before treatment and recovery", () => {
               outcome: [0, 2, 3, 4][outcome]
             })
           );
-          if (outcome === 2) {
-            // Direct code3 remains unverified: a rule table does not resolve its
-            // serialization namespace or the pending-apothecary counterexample.
-            expect(modeled(r)).toBeUndefined();
-          } else {
-            expect(modeled(r).metadata.injuryTable!.counts).toEqual(t.counts);
-            expect(modeled(r).scoringStatus).toBe("excluded");
-            expect(modeled(r).probabilitySuccess).toBeNull();
-          }
+          expect(modeled(r).metadata.injuryTable!.counts).toEqual(t.counts);
+          expect(modeled(r).scoringStatus).toBe("excluded");
+          expect(modeled(r).probabilitySuccess).toBeNull();
+          expect(modeled(r).actualSuccess).toBeNull();
           expect(r.teams.every((team) => team.impactCount === 0)).toBe(true);
           expect(r.verdict.luckierTeam).toBe("unknown");
         }

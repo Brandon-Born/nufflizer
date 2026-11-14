@@ -1,0 +1,996 @@
+{
+  "scope": "Direct ResultInjuryRoll/11 code3 observation only. Initial Stunty seeds and total9 corroborate the enum; they do not establish current traits, scoring eligibility, treatment or availability.",
+  "replayVersion": "1-4-0-0",
+  "enumSource": {
+    "file": "tests/fixtures/evidence/bb3-installed-enums.json",
+    "sha256": "d30a5261b36f206b9eefa0b905ad6d8a5d1022f5a3554eb64f709c31e1636066",
+    "executableSha256": "590787b522ad4404b2e8a7570993375114a794fa4288d88a8595ab9dfbd7d6ae",
+    "namespace": {
+      "name": "EBB3NetGameplayInjuryOutcome",
+      "entries": [
+        {
+          "member": "Stunned",
+          "value": 0,
+          "nameOffset": 82327664,
+          "entryOffset": 82327584
+        },
+        {
+          "member": "Reserve",
+          "value": 1,
+          "nameOffset": 82327704,
+          "entryOffset": 82327600
+        },
+        {
+          "member": "Ko",
+          "value": 2,
+          "nameOffset": 82327744,
+          "entryOffset": 82327616
+        },
+        {
+          "member": "BadlyHurt",
+          "value": 3,
+          "nameOffset": 82327784,
+          "entryOffset": 82327632
+        },
+        {
+          "member": "Casualty",
+          "value": 4,
+          "nameOffset": 82327824,
+          "entryOffset": 82327648
+        }
+      ]
+    }
+  },
+  "treatmentCounterexample": {
+    "file": "tests/fixtures/evidence/bb3-ui-playback-001.json",
+    "sha256": "9e8d99c0a1befd965ef8c5eee4e6c078ce8799b0bfc6695b6b5a0716559ab992",
+    "case": "UI-009",
+    "tag": "QuestionApothecaryCasualtyUsage",
+    "roll": {
+      "Status": [
+        "1"
+      ],
+      "Dice": [
+        {
+          "Die": [
+            {
+              "DieType": [
+                "0"
+              ],
+              "Value": [
+                "5"
+              ]
+            },
+            {
+              "DieType": [
+                "0"
+              ],
+              "Value": [
+                "4"
+              ]
+            }
+          ]
+        }
+      ],
+      "Source": [
+        "9"
+      ],
+      "RollType": [
+        "11"
+      ],
+      "Outcome": [
+        "1"
+      ]
+    },
+    "label": "Badly Hurt",
+    "directMappingAllowed": false
+  },
+  "rows": [
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "sha256": "ea2ab9aa3a5b5ef91bf1fa09d1cf41199fd49d00530e5271174e47ba9c9da8f9",
+      "locator": {
+        "replayStep": 130,
+        "childIndex": 1,
+        "stepIndex": 6,
+        "messageIndex": 2
+      },
+      "subjectId": "10",
+      "initialSeed": {
+        "innateSkills": [
+          59,
+          7
+        ],
+        "acquiredSkills": [
+          6
+        ]
+      },
+      "dice": [
+        3,
+        5
+      ],
+      "modifiersPresent": true,
+      "modifierValues": [
+        1
+      ],
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "7"
+        ],
+        "PlayerId": [
+          "10"
+        ],
+        "TargetId": [
+          "10"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "4"
+            ],
+            "X": [
+              "9"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "4"
+            ],
+            "X": [
+              "9"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "roll": {
+        "Status": [
+          "1"
+        ],
+        "Modifiers": [
+          {
+            "Modifier": [
+              {
+                "PlayerId": [
+                  "41"
+                ],
+                "Skill": [
+                  "27"
+                ],
+                "Effect": [
+                  "-1"
+                ],
+                "Value": [
+                  "1"
+                ],
+                "ModifierType": [
+                  "27"
+                ]
+              }
+            ]
+          }
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "3"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "5"
+                ]
+              }
+            ]
+          }
+        ],
+        "Source": [
+          "7"
+        ],
+        "RollType": [
+          "11"
+        ],
+        "Outcome": [
+          "3"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "sha256": "ea2ab9aa3a5b5ef91bf1fa09d1cf41199fd49d00530e5271174e47ba9c9da8f9",
+      "locator": {
+        "replayStep": 345,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 2
+      },
+      "subjectId": "48",
+      "initialSeed": {
+        "innateSkills": [
+          59,
+          52,
+          7
+        ],
+        "acquiredSkills": []
+      },
+      "dice": [
+        3,
+        6
+      ],
+      "modifiersPresent": true,
+      "modifierValues": [],
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "48"
+        ],
+        "TargetId": [
+          "48"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "6"
+            ],
+            "X": [
+              "14"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "6"
+            ],
+            "X": [
+              "14"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "roll": {
+        "Status": [
+          "1"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "3"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "6"
+                ]
+              }
+            ]
+          }
+        ],
+        "Source": [
+          "1"
+        ],
+        "RollType": [
+          "11"
+        ],
+        "Outcome": [
+          "3"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "sha256": "ea2ab9aa3a5b5ef91bf1fa09d1cf41199fd49d00530e5271174e47ba9c9da8f9",
+      "locator": {
+        "replayStep": 379,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 2
+      },
+      "subjectId": "46",
+      "initialSeed": {
+        "innateSkills": [
+          59,
+          52,
+          7
+        ],
+        "acquiredSkills": []
+      },
+      "dice": [
+        6,
+        3
+      ],
+      "modifiersPresent": true,
+      "modifierValues": [],
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "46"
+        ],
+        "TargetId": [
+          "46"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "12"
+            ],
+            "X": [
+              "16"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "12"
+            ],
+            "X": [
+              "16"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "roll": {
+        "Status": [
+          "1"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "6"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "3"
+                ]
+              }
+            ]
+          }
+        ],
+        "Source": [
+          "1"
+        ],
+        "RollType": [
+          "11"
+        ],
+        "Outcome": [
+          "3"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo10.bbr",
+      "sha256": "7895a4dfb4e8a69686336946171fadc5e3daf7bf8ecc8b720c7b8522f7744d8f",
+      "locator": {
+        "replayStep": 163,
+        "childIndex": 1,
+        "stepIndex": 2,
+        "messageIndex": 1
+      },
+      "subjectId": "48",
+      "initialSeed": {
+        "innateSkills": [
+          59,
+          7
+        ],
+        "acquiredSkills": []
+      },
+      "dice": [
+        5,
+        4
+      ],
+      "modifiersPresent": true,
+      "modifierValues": [],
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "0"
+        ],
+        "PlayerId": [
+          "48"
+        ],
+        "TargetId": [
+          "48"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "13"
+            ],
+            "X": [
+              "12"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "13"
+            ],
+            "X": [
+              "12"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "roll": {
+        "Status": [
+          "1"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "5"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "4"
+                ]
+              }
+            ]
+          }
+        ],
+        "Source": [
+          "0"
+        ],
+        "RollType": [
+          "11"
+        ],
+        "Outcome": [
+          "3"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo4.bbr",
+      "sha256": "f30c868e4d5fcb8435270716234ba3d880df37096c5f89531f7cc8a6b1939819",
+      "locator": {
+        "replayStep": 392,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 2
+      },
+      "subjectId": "49",
+      "initialSeed": {
+        "innateSkills": [
+          56,
+          83,
+          59,
+          52,
+          7
+        ],
+        "acquiredSkills": []
+      },
+      "dice": [
+        6,
+        3
+      ],
+      "modifiersPresent": true,
+      "modifierValues": [],
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "49"
+        ],
+        "TargetId": [
+          "49"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "3"
+            ],
+            "X": [
+              "14"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "3"
+            ],
+            "X": [
+              "14"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "roll": {
+        "Status": [
+          "1"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "6"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "3"
+                ]
+              }
+            ]
+          }
+        ],
+        "Source": [
+          "1"
+        ],
+        "RollType": [
+          "11"
+        ],
+        "Outcome": [
+          "3"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo6.bbr",
+      "sha256": "e42180aa79c226ce003b5453a16c9cef30e1dd7d49039e7d50e24347434d3ff9",
+      "locator": {
+        "replayStep": 52,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 2
+      },
+      "subjectId": "47",
+      "initialSeed": {
+        "innateSkills": [
+          59,
+          52,
+          7
+        ],
+        "acquiredSkills": []
+      },
+      "dice": [
+        6,
+        3
+      ],
+      "modifiersPresent": true,
+      "modifierValues": [],
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "47"
+        ],
+        "TargetId": [
+          "47"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "12"
+            ],
+            "X": [
+              "11"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "12"
+            ],
+            "X": [
+              "11"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "roll": {
+        "Status": [
+          "1"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "6"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "3"
+                ]
+              }
+            ]
+          }
+        ],
+        "Source": [
+          "1"
+        ],
+        "RollType": [
+          "11"
+        ],
+        "Outcome": [
+          "3"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo6.bbr",
+      "sha256": "e42180aa79c226ce003b5453a16c9cef30e1dd7d49039e7d50e24347434d3ff9",
+      "locator": {
+        "replayStep": 516,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 2
+      },
+      "subjectId": "45",
+      "initialSeed": {
+        "innateSkills": [
+          59,
+          52,
+          7
+        ],
+        "acquiredSkills": []
+      },
+      "dice": [
+        5,
+        4
+      ],
+      "modifiersPresent": true,
+      "modifierValues": [],
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "45"
+        ],
+        "TargetId": [
+          "45"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "3"
+            ],
+            "X": [
+              "22"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "3"
+            ],
+            "X": [
+              "22"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "roll": {
+        "Status": [
+          "1"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "5"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "4"
+                ]
+              }
+            ]
+          }
+        ],
+        "Source": [
+          "1"
+        ],
+        "RollType": [
+          "11"
+        ],
+        "Outcome": [
+          "3"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo8.bbr",
+      "sha256": "305f4c96ba0e65c7618112f13c65ef946fa7a71ba4cf4345b4990d468495233d",
+      "locator": {
+        "replayStep": 394,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 2
+      },
+      "subjectId": "8",
+      "initialSeed": {
+        "innateSkills": [
+          59,
+          7
+        ],
+        "acquiredSkills": []
+      },
+      "dice": [
+        4,
+        5
+      ],
+      "modifiersPresent": true,
+      "modifierValues": [],
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "8"
+        ],
+        "TargetId": [
+          "8"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "4"
+            ],
+            "X": [
+              "9"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "4"
+            ],
+            "X": [
+              "9"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "roll": {
+        "Status": [
+          "1"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "4"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "5"
+                ]
+              }
+            ]
+          }
+        ],
+        "Source": [
+          "1"
+        ],
+        "RollType": [
+          "11"
+        ],
+        "Outcome": [
+          "3"
+        ]
+      }
+    }
+  ]
+}

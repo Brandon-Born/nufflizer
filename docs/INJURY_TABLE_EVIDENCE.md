@@ -1,5 +1,7 @@
 # Conditional injury tables
 
+Current direct-code update (2026-11-14): schema2.64/dice33 qualifies direct Outcome3 as Badly Hurt using the extracted gameplay enum and eight original raw witnesses, corroborated by the Stunty9 rule. The existing table/cause guards remain; all eight public observations stay unscored. All144 full-pipeline injury faces now pass, including Badly Hurt. Earlier statements below that direct code3 was unverified describe the prior scope and are superseded only by [this bounded evidence](DIRECT_BADLY_HURT_EVIDENCE.md). Treatment-question code1, modifier choice and final availability remain separate.
+
 Observed 2026-11-12. Owning IDs NUF-009/011/013/016/018/021/022. This advances the injury-distribution prerequisite; it does not close those issues.
 
 ## Rule and version evidence
