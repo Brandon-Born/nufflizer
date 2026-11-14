@@ -32,7 +32,7 @@ it("[cli-worker] shares original-source categorical scores, unknown pools and pa
     // Run the direct corpus only after the real deadline worker has exited.
     const direct = analyzeNufflizerInput(bytes.toString());
     expect(report.events).toEqual(direct.events);
-    expect(report.schemaVersion).toBe("2.64");
+    expect(report.schemaVersion).toBe("2.65");
     expect(report.events.filter((e) => e.metadata.blockScoring)).toHaveLength(
       11
     );

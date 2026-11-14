@@ -1,5 +1,5 @@
 // Installed BoardDataSkill IDs, independently paired with the 2020 rules:
-// Pass p81, Animosity p82, Right Stuff p85, Stunty p86. These are not a
+// Pass p79, Animosity p81, Right Stuff p86, Stunty p86. These are not a
 // certificate of legal activation or of any other skill/continuation policy.
 export const BLOCK_NON_KNOCKDOWN_SKILLS = {
   47: "Pass",

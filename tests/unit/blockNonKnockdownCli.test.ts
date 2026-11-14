@@ -34,13 +34,34 @@ it("[cli-worker] exports the original Stunty/Right Stuff source and explains its
       attacker: [],
       defender: [52, 59]
     });
-    expect(r.events.find(e => e.metadata.sourceId === "source-248")).toMatchObject({
-      playerId: "47", teamId: "1", scoringStatus: "excluded",
-      probabilitySuccess: null, actualSuccess: null, weightedDelta: 0,
-      metadata: {injuryObservation: {outcome: "badly_hurt", recordKind: "direct"}}
+    expect(
+      r.events.find((e) => e.metadata.sourceId === "source-248")
+    ).toMatchObject({
+      playerId: "47",
+      teamId: "1",
+      scoringStatus: "scored",
+      probabilitySuccess: null,
+      actualSuccess: null,
+      weightedDelta: -13 / 12,
+      metadata: {
+        injuryObservation: { outcome: "badly_hurt", recordKind: "direct" }
+      }
     });
     expect(r.verdict.luckierTeam).toBe("unknown");
     expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
+    expect(
+      r.events.find((e) => e.metadata.sourceId === "source-248")?.metadata
+        .injuryScoring?.sppSourceId
+    ).toBe("source-247");
+    expect(
+      r.events.find((e) => e.metadata.sourceId === "source-247")
+    ).toMatchObject({
+      playerId: "8",
+      teamId: "0",
+      scoringStatus: "excluded",
+      delta: 0,
+      metadata: { isRollCandidate: false, recordedSpp: { points: 2 } }
+    });
     const text = run("text");
     expect(text.status, text.stderr).toBe(0);
     expect(text.stdout).toContain(
@@ -53,7 +74,12 @@ it("[cli-worker] exports the original Stunty/Right Stuff source and explains its
     expect(text.stdout).toContain(
       "Those other effects are outside this component"
     );
-    expect(text.stdout).toContain("Player 47; source source-248: Badly Hurt (recorded); Not scored.");
+    expect(text.stdout).toContain(
+      "Player 47; source source-248: Badly Hurt (recorded); Categorical dice contribution -1.083333."
+    );
+    expect(text.stdout).toContain(
+      "Player 8; source source-247: Recorded +2 SPP; Not scored. Between armor source-246 and injury source-248."
+    );
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

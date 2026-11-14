@@ -4,6 +4,8 @@ Observed 2026-11-14. Schema2.64 / dice-only-33 / mobility-possession-42. Partial
 
 `ResultInjuryRoll`, RollType11, Outcome3 now retains the categorical label **Badly Hurt** for ReplayVersion1-4-0-0. This fills an omitted initial injury branch. A label establishes neither the applicable distribution nor treatment, final removal, availability or match value. The existing damage-header, subject/ownership, dice, status, field and version checks still apply. Embedded KO observations remain restricted to KO; treatment-question codes use their own namespace.
 
+Current follow-up: schema2.65 independently qualifies demo6/source248 through its current trait/causal/SPP prefix, while the other seven direct Badly Hurt records remain unscored. The statements below describe the schema2.64 checkpoint. See [injury transaction evidence](INJURY_TRANSACTION_EVIDENCE.md).
+
 ## Independent evidence
 
 - The previously frozen installed executable snapshot (SHA256 `590787b522ad4404b2e8a7570993375114a794fa4288d88a8595ab9dfbd7d6ae`) contains the contiguous `EBB3NetGameplayInjuryOutcome` entries Stunned0, Reserve1, Ko2, BadlyHurt3, Casualty4. This is extracted build evidence, not official protocol documentation or a guarantee for every build.

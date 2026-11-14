@@ -6,7 +6,7 @@ Current extension: schema2.63 / dice-only-32 / mobility-possession-42. Owning or
 
 The installed-build snapshot (`bb3-installed-enums.json`, executable SHA256590787b522ad4404b2e8a7570993375114a794fa4288d88a8595ab9dfbd7d6ae) gives these seven member/value pairs in the BoardDataSkill namespace. Names alone are not a behavioral contract.
 
-The original2020 Games Workshop rulebook supplies the behavioral boundary ([primary document, mirrored PDF](https://www.tassidelmiele.it/wp-content/uploads/2021/02/OR2020.pdf), SHA2568598ecc9283f7e5f49a5566392ae5cbbec55c0a5f994b1eba4dec0414e2982e3). Printed81/82/85/86 describe the following effects:
+The original2020 Games Workshop rulebook supplies the behavioral boundary ([primary document, mirrored PDF](https://www.tassidelmiele.it/wp-content/uploads/2021/02/OR2020.pdf), SHA2568598ecc9283f7e5f49a5566392ae5cbbec55c0a5f994b1eba4dec0414e2982e3). Printed79/81/86 describe the following effects:
 
 | ID | Installed member | Relevant effect and boundary |
 | --- | --- | --- |
@@ -47,3 +47,5 @@ All173 recorded choices,6,798 checkpoints,533 raw ends,111 numeric reroll groups
 API/CLI/UI share the typed classification and explain the affected side and skill names, unchanged immediate knockdown table, excluded other effects and fixed policy. A real measured-zero block is numeric0.000; an unsupported pool still displays Not scored. Real worker tests extend the existing ten-request API file and serial CLI gate. Browser tests use original demo6's negative Stunty/RightStuff pool and demo1's measured-zero Animosity pool, with source inspection, mobile wrapping, export parity and reset. Final execution and exact publication receipts are recorded in the matching implementation entry.
 
 Every worker/input/XML/event/report/admission limit is unchanged. Full effective/legal skill policies, complete playable state, combined counterfactual value, calibration, original integrated acceptance and current-schema hosting retain their existing open requirements.
+
+Printed-page correction (2026-11-14): rendered primary pages locate Pass at79, Animosity at81, and Right Stuff/Stunty at86 (PDF80/82/87). Earlier81/82/85 locators were inaccurate; the rule meanings and existing calculation are unchanged. See [transaction evidence](INJURY_TRANSACTION_EVIDENCE.md).

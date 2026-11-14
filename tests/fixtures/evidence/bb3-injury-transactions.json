@@ -1,0 +1,8629 @@
+{
+  "scope": "Raw source witnesses and independent fixed-table arithmetic, not gameplay/current-trait admission or final availability certificates.",
+  "replayVersion": "1-4-0-0",
+  "sourceHashes": {
+    "demo-goblins1.bbr": "ea2ab9aa3a5b5ef91bf1fa09d1cf41199fd49d00530e5271174e47ba9c9da8f9",
+    "demo1.bbr": "1e637c37bfa46907c4ee0ffa4492f54a862a0dd1b2b0c1e367ec9e2f3dc8bf18",
+    "demo10.bbr": "7895a4dfb4e8a69686336946171fadc5e3daf7bf8ecc8b720c7b8522f7744d8f",
+    "demo11.bbr": "8d50653050cf2d25608e6c06ed4fed7b4aa5ebefb1bf1f0b5524d9d63c6525f9",
+    "demo2.bbr": "70f663bdb35dcfbedfd596903c880dd45263ca4cd522091ee91cd0aa77c936e8",
+    "demo3.bbr": "51e38feb7067985f6ee7a6fb623b10607482706040c5cc74d3d646d4a8e77cef",
+    "demo4.bbr": "f30c868e4d5fcb8435270716234ba3d880df37096c5f89531f7cc8a6b1939819",
+    "demo5.bbr": "e55514b2b7c24fe5a41a8955119e194d25197ad284230b9d25faca0827a457e0",
+    "demo6.bbr": "e42180aa79c226ce003b5453a16c9cef30e1dd7d49039e7d50e24347434d3ff9",
+    "demo7.bbr": "1af12b0bb733d279cb3364b5dabb88c0c59d1d15a308d1d6fd667403cfaeda56",
+    "demo8.bbr": "305f4c96ba0e65c7618112f13c65ef946fa7a71ba4cf4345b4990d468495233d",
+    "demo9.bbr": "7bef0a74bff43ae56da5edf6abed7d8cb182da85a4da591acb78943afebcbcaf"
+  },
+  "enumSource": {
+    "file": "tests/fixtures/evidence/bb3-installed-enums.json",
+    "sha256": "d30a5261b36f206b9eefa0b905ad6d8a5d1022f5a3554eb64f709c31e1636066",
+    "executableSha256": "590787b522ad4404b2e8a7570993375114a794fa4288d88a8595ab9dfbd7d6ae"
+  },
+  "skillUses": [
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "locator": {
+        "replayStep": 40,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 0
+      },
+      "skill": 1009,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "49"
+        ],
+        "Skill": [
+          "1009"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "locator": {
+        "replayStep": 50,
+        "childIndex": 1,
+        "stepIndex": 3,
+        "messageIndex": 0
+      },
+      "skill": 25,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "40"
+        ],
+        "Skill": [
+          "25"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "locator": {
+        "replayStep": 86,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 0
+      },
+      "skill": 1009,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "49"
+        ],
+        "Skill": [
+          "1009"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "locator": {
+        "replayStep": 129,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 17,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "4"
+        ],
+        "Skill": [
+          "17"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "locator": {
+        "replayStep": 161,
+        "childIndex": 1,
+        "stepIndex": 7,
+        "messageIndex": 1
+      },
+      "skill": 25,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "40"
+        ],
+        "Skill": [
+          "25"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "locator": {
+        "replayStep": 174,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 17,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "4"
+        ],
+        "Skill": [
+          "17"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "locator": {
+        "replayStep": 198,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "skill": 1009,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "49"
+        ],
+        "Skill": [
+          "1009"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "locator": {
+        "replayStep": 199,
+        "childIndex": 1,
+        "stepIndex": 5,
+        "messageIndex": 0
+      },
+      "skill": 25,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "40"
+        ],
+        "Skill": [
+          "25"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "locator": {
+        "replayStep": 230,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 17,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "4"
+        ],
+        "Skill": [
+          "17"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "locator": {
+        "replayStep": 243,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 0
+      },
+      "skill": 1009,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "49"
+        ],
+        "Skill": [
+          "1009"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "locator": {
+        "replayStep": 262,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 17,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "4"
+        ],
+        "Skill": [
+          "17"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "locator": {
+        "replayStep": 268,
+        "childIndex": 1,
+        "stepIndex": 2,
+        "messageIndex": 0
+      },
+      "skill": 25,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "40"
+        ],
+        "Skill": [
+          "25"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "locator": {
+        "replayStep": 287,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 0
+      },
+      "skill": 95,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "37"
+        ],
+        "Skill": [
+          "95"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "locator": {
+        "replayStep": 311,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 0
+      },
+      "skill": 97,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "11"
+        ],
+        "Skill": [
+          "97"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "locator": {
+        "replayStep": 339,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 0
+      },
+      "skill": 97,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "11"
+        ],
+        "Skill": [
+          "97"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "locator": {
+        "replayStep": 363,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 0
+      },
+      "skill": 1009,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "49"
+        ],
+        "Skill": [
+          "1009"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "locator": {
+        "replayStep": 366,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 17,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "4"
+        ],
+        "Skill": [
+          "17"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "locator": {
+        "replayStep": 585,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 0
+      },
+      "skill": 95,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "38"
+        ],
+        "Skill": [
+          "95"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo1.bbr",
+      "locator": {
+        "replayStep": 124,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 0
+      },
+      "skill": 55,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "2"
+        ],
+        "Skill": [
+          "55"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo1.bbr",
+      "locator": {
+        "replayStep": 128,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 0
+      },
+      "skill": 55,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "2"
+        ],
+        "Skill": [
+          "55"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo1.bbr",
+      "locator": {
+        "replayStep": 139,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 17,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "6"
+        ],
+        "Skill": [
+          "17"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo1.bbr",
+      "locator": {
+        "replayStep": 180,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 37,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "9"
+        ],
+        "Skill": [
+          "37"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo1.bbr",
+      "locator": {
+        "replayStep": 204,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 0
+      },
+      "skill": 55,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "2"
+        ],
+        "Skill": [
+          "55"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo1.bbr",
+      "locator": {
+        "replayStep": 216,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 0
+      },
+      "skill": 55,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "2"
+        ],
+        "Skill": [
+          "55"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo1.bbr",
+      "locator": {
+        "replayStep": 228,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 37,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "9"
+        ],
+        "Skill": [
+          "37"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo1.bbr",
+      "locator": {
+        "replayStep": 264,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 0
+      },
+      "skill": 55,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "2"
+        ],
+        "Skill": [
+          "55"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo1.bbr",
+      "locator": {
+        "replayStep": 301,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 0
+      },
+      "skill": 55,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "2"
+        ],
+        "Skill": [
+          "55"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo1.bbr",
+      "locator": {
+        "replayStep": 310,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 17,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "6"
+        ],
+        "Skill": [
+          "17"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo1.bbr",
+      "locator": {
+        "replayStep": 357,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 37,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "9"
+        ],
+        "Skill": [
+          "37"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo1.bbr",
+      "locator": {
+        "replayStep": 409,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 0
+      },
+      "skill": 26,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "11"
+        ],
+        "Skill": [
+          "26"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo1.bbr",
+      "locator": {
+        "replayStep": 484,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 37,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "9"
+        ],
+        "Skill": [
+          "37"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo1.bbr",
+      "locator": {
+        "replayStep": 508,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 0
+      },
+      "skill": 55,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "2"
+        ],
+        "Skill": [
+          "55"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo1.bbr",
+      "locator": {
+        "replayStep": 676,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 0
+      },
+      "skill": 18,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "37"
+        ],
+        "Skill": [
+          "18"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo1.bbr",
+      "locator": {
+        "replayStep": 676,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 2
+      },
+      "skill": 64,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "37"
+        ],
+        "Skill": [
+          "64"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo11.bbr",
+      "locator": {
+        "replayStep": 50,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 17,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "37"
+        ],
+        "Skill": [
+          "17"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo11.bbr",
+      "locator": {
+        "replayStep": 54,
+        "childIndex": 1,
+        "stepIndex": 6,
+        "messageIndex": 1
+      },
+      "skill": 23,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "5"
+        ],
+        "Skill": [
+          "23"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo11.bbr",
+      "locator": {
+        "replayStep": 57,
+        "childIndex": 1,
+        "stepIndex": 2,
+        "messageIndex": 0
+      },
+      "skill": 25,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "4"
+        ],
+        "Skill": [
+          "25"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo11.bbr",
+      "locator": {
+        "replayStep": 389,
+        "childIndex": 1,
+        "stepIndex": 6,
+        "messageIndex": 1
+      },
+      "skill": 23,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "5"
+        ],
+        "Skill": [
+          "23"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo11.bbr",
+      "locator": {
+        "replayStep": 515,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 0
+      },
+      "skill": 95,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "1"
+        ],
+        "Skill": [
+          "95"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo2.bbr",
+      "locator": {
+        "replayStep": 20,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 0
+      },
+      "skill": 71,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "44"
+        ],
+        "Skill": [
+          "71"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo2.bbr",
+      "locator": {
+        "replayStep": 77,
+        "childIndex": 1,
+        "stepIndex": 3,
+        "messageIndex": 0
+      },
+      "skill": 25,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "4"
+        ],
+        "Skill": [
+          "25"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo2.bbr",
+      "locator": {
+        "replayStep": 109,
+        "childIndex": 1,
+        "stepIndex": 4,
+        "messageIndex": 0
+      },
+      "skill": 25,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "4"
+        ],
+        "Skill": [
+          "25"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo2.bbr",
+      "locator": {
+        "replayStep": 148,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 0
+      },
+      "skill": 25,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "4"
+        ],
+        "Skill": [
+          "25"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo2.bbr",
+      "locator": {
+        "replayStep": 178,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 0
+      },
+      "skill": 25,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "4"
+        ],
+        "Skill": [
+          "25"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo2.bbr",
+      "locator": {
+        "replayStep": 183,
+        "childIndex": 1,
+        "stepIndex": 2,
+        "messageIndex": 1
+      },
+      "skill": 23,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "5"
+        ],
+        "Skill": [
+          "23"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo2.bbr",
+      "locator": {
+        "replayStep": 211,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 0
+      },
+      "skill": 25,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "4"
+        ],
+        "Skill": [
+          "25"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo2.bbr",
+      "locator": {
+        "replayStep": 254,
+        "childIndex": 1,
+        "stepIndex": 4,
+        "messageIndex": 0
+      },
+      "skill": 25,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "4"
+        ],
+        "Skill": [
+          "25"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo2.bbr",
+      "locator": {
+        "replayStep": 262,
+        "childIndex": 1,
+        "stepIndex": 3,
+        "messageIndex": 0
+      },
+      "skill": 25,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "4"
+        ],
+        "Skill": [
+          "25"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo2.bbr",
+      "locator": {
+        "replayStep": 387,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "skill": 41,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "7"
+        ],
+        "Skill": [
+          "41"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo2.bbr",
+      "locator": {
+        "replayStep": 498,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 0
+      },
+      "skill": 95,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "2"
+        ],
+        "Skill": [
+          "95"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo3.bbr",
+      "locator": {
+        "replayStep": 353,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 0
+      },
+      "skill": 95,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "1"
+        ],
+        "Skill": [
+          "95"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo4.bbr",
+      "locator": {
+        "replayStep": 235,
+        "childIndex": 4,
+        "stepIndex": 0,
+        "messageIndex": 0
+      },
+      "skill": 47,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "46"
+        ],
+        "Skill": [
+          "47"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo5.bbr",
+      "locator": {
+        "replayStep": 99,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 84,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "37"
+        ],
+        "Skill": [
+          "84"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo5.bbr",
+      "locator": {
+        "replayStep": 142,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 84,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "37"
+        ],
+        "Skill": [
+          "84"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo5.bbr",
+      "locator": {
+        "replayStep": 162,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 84,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "37"
+        ],
+        "Skill": [
+          "84"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo5.bbr",
+      "locator": {
+        "replayStep": 208,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 84,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "37"
+        ],
+        "Skill": [
+          "84"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo5.bbr",
+      "locator": {
+        "replayStep": 252,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 2
+      },
+      "skill": 84,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "37"
+        ],
+        "Skill": [
+          "84"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo5.bbr",
+      "locator": {
+        "replayStep": 293,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 84,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "37"
+        ],
+        "Skill": [
+          "84"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo5.bbr",
+      "locator": {
+        "replayStep": 318,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 84,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "37"
+        ],
+        "Skill": [
+          "84"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo5.bbr",
+      "locator": {
+        "replayStep": 378,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 84,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "37"
+        ],
+        "Skill": [
+          "84"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo5.bbr",
+      "locator": {
+        "replayStep": 400,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 2
+      },
+      "skill": 84,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "37"
+        ],
+        "Skill": [
+          "84"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo5.bbr",
+      "locator": {
+        "replayStep": 433,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 84,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "37"
+        ],
+        "Skill": [
+          "84"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo5.bbr",
+      "locator": {
+        "replayStep": 452,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 84,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "37"
+        ],
+        "Skill": [
+          "84"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo5.bbr",
+      "locator": {
+        "replayStep": 483,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 84,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "37"
+        ],
+        "Skill": [
+          "84"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo5.bbr",
+      "locator": {
+        "replayStep": 514,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 84,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "37"
+        ],
+        "Skill": [
+          "84"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo6.bbr",
+      "locator": {
+        "replayStep": 48,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 0
+      },
+      "skill": 26,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "3"
+        ],
+        "Skill": [
+          "26"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo6.bbr",
+      "locator": {
+        "replayStep": 86,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 0
+      },
+      "skill": 26,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "3"
+        ],
+        "Skill": [
+          "26"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo6.bbr",
+      "locator": {
+        "replayStep": 222,
+        "childIndex": 1,
+        "stepIndex": 6,
+        "messageIndex": 1
+      },
+      "skill": 26,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "3"
+        ],
+        "Skill": [
+          "26"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo6.bbr",
+      "locator": {
+        "replayStep": 321,
+        "childIndex": 1,
+        "stepIndex": 2,
+        "messageIndex": 0
+      },
+      "skill": 18,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "37"
+        ],
+        "Skill": [
+          "18"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo6.bbr",
+      "locator": {
+        "replayStep": 321,
+        "childIndex": 1,
+        "stepIndex": 2,
+        "messageIndex": 2
+      },
+      "skill": 64,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "37"
+        ],
+        "Skill": [
+          "64"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo6.bbr",
+      "locator": {
+        "replayStep": 351,
+        "childIndex": 1,
+        "stepIndex": 2,
+        "messageIndex": 0
+      },
+      "skill": 25,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "40"
+        ],
+        "Skill": [
+          "25"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo7.bbr",
+      "locator": {
+        "replayStep": 173,
+        "childIndex": 1,
+        "stepIndex": 7,
+        "messageIndex": 0
+      },
+      "skill": 25,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "4"
+        ],
+        "Skill": [
+          "25"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo7.bbr",
+      "locator": {
+        "replayStep": 199,
+        "childIndex": 1,
+        "stepIndex": 5,
+        "messageIndex": 1
+      },
+      "skill": 25,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "4"
+        ],
+        "Skill": [
+          "25"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo7.bbr",
+      "locator": {
+        "replayStep": 415,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "skill": 41,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "6"
+        ],
+        "Skill": [
+          "41"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo9.bbr",
+      "locator": {
+        "replayStep": 32,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 84,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "1"
+        ],
+        "Skill": [
+          "84"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo9.bbr",
+      "locator": {
+        "replayStep": 97,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 84,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "1"
+        ],
+        "Skill": [
+          "84"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo9.bbr",
+      "locator": {
+        "replayStep": 137,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 84,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "1"
+        ],
+        "Skill": [
+          "84"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo9.bbr",
+      "locator": {
+        "replayStep": 213,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 84,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "1"
+        ],
+        "Skill": [
+          "84"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo9.bbr",
+      "locator": {
+        "replayStep": 297,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 17,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "2"
+        ],
+        "Skill": [
+          "17"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo9.bbr",
+      "locator": {
+        "replayStep": 325,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "skill": 17,
+      "fields": [
+        "PlayerId",
+        "Skill",
+        "Used"
+      ],
+      "payload": {
+        "PlayerId": [
+          "2"
+        ],
+        "Skill": [
+          "17"
+        ],
+        "Used": [
+          "1"
+        ]
+      }
+    }
+  ],
+  "damageSpp": [
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "locator": {
+        "replayStep": 345,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "48"
+        ],
+        "TargetId": [
+          "48"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "6"
+            ],
+            "X": [
+              "14"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "6"
+            ],
+            "X": [
+              "14"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "payload": {
+        "PlayerId": [
+          "5"
+        ],
+        "SppGained": [
+          "2"
+        ]
+      },
+      "armor": {
+        "Status": [
+          "1"
+        ],
+        "Requirement": [
+          "8"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "6"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "3"
+                ]
+              }
+            ]
+          }
+        ],
+        "Difficulty": [
+          "8"
+        ],
+        "RollType": [
+          "10"
+        ],
+        "Outcome": [
+          "1"
+        ],
+        "NewRoll": [
+          "1"
+        ]
+      },
+      "injury": {
+        "Status": [
+          "1"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "3"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "6"
+                ]
+              }
+            ]
+          }
+        ],
+        "Source": [
+          "1"
+        ],
+        "RollType": [
+          "11"
+        ],
+        "Outcome": [
+          "3"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo-goblins1.bbr",
+      "locator": {
+        "replayStep": 379,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "46"
+        ],
+        "TargetId": [
+          "46"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "12"
+            ],
+            "X": [
+              "16"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "12"
+            ],
+            "X": [
+              "16"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "payload": {
+        "PlayerId": [
+          "5"
+        ],
+        "SppGained": [
+          "2"
+        ]
+      },
+      "armor": {
+        "Status": [
+          "1"
+        ],
+        "Requirement": [
+          "8"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "2"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "6"
+                ]
+              }
+            ]
+          }
+        ],
+        "Difficulty": [
+          "8"
+        ],
+        "RollType": [
+          "10"
+        ],
+        "Outcome": [
+          "1"
+        ],
+        "NewRoll": [
+          "1"
+        ]
+      },
+      "injury": {
+        "Status": [
+          "1"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "6"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "3"
+                ]
+              }
+            ]
+          }
+        ],
+        "Source": [
+          "1"
+        ],
+        "RollType": [
+          "11"
+        ],
+        "Outcome": [
+          "3"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo4.bbr",
+      "locator": {
+        "replayStep": 392,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "49"
+        ],
+        "TargetId": [
+          "49"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "3"
+            ],
+            "X": [
+              "14"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "3"
+            ],
+            "X": [
+              "14"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "payload": {
+        "PlayerId": [
+          "11"
+        ],
+        "SppGained": [
+          "2"
+        ]
+      },
+      "armor": {
+        "Status": [
+          "1"
+        ],
+        "Requirement": [
+          "6"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "5"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "4"
+                ]
+              }
+            ]
+          }
+        ],
+        "Difficulty": [
+          "6"
+        ],
+        "RollType": [
+          "10"
+        ],
+        "Outcome": [
+          "1"
+        ],
+        "NewRoll": [
+          "1"
+        ]
+      },
+      "injury": {
+        "Status": [
+          "1"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "6"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "3"
+                ]
+              }
+            ]
+          }
+        ],
+        "Source": [
+          "1"
+        ],
+        "RollType": [
+          "11"
+        ],
+        "Outcome": [
+          "3"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo6.bbr",
+      "locator": {
+        "replayStep": 52,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "47"
+        ],
+        "TargetId": [
+          "47"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "12"
+            ],
+            "X": [
+              "11"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "12"
+            ],
+            "X": [
+              "11"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "payload": {
+        "PlayerId": [
+          "8"
+        ],
+        "SppGained": [
+          "2"
+        ]
+      },
+      "armor": {
+        "Status": [
+          "1"
+        ],
+        "Requirement": [
+          "8"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "6"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "2"
+                ]
+              }
+            ]
+          }
+        ],
+        "Difficulty": [
+          "8"
+        ],
+        "RollType": [
+          "10"
+        ],
+        "Outcome": [
+          "1"
+        ],
+        "NewRoll": [
+          "1"
+        ]
+      },
+      "injury": {
+        "Status": [
+          "1"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "6"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "3"
+                ]
+              }
+            ]
+          }
+        ],
+        "Source": [
+          "1"
+        ],
+        "RollType": [
+          "11"
+        ],
+        "Outcome": [
+          "3"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo6.bbr",
+      "locator": {
+        "replayStep": 516,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "45"
+        ],
+        "TargetId": [
+          "45"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "3"
+            ],
+            "X": [
+              "22"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "3"
+            ],
+            "X": [
+              "22"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "payload": {
+        "PlayerId": [
+          "1"
+        ],
+        "SppGained": [
+          "2"
+        ]
+      },
+      "armor": {
+        "Status": [
+          "1"
+        ],
+        "Requirement": [
+          "8"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "5"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "4"
+                ]
+              }
+            ]
+          }
+        ],
+        "Difficulty": [
+          "8"
+        ],
+        "RollType": [
+          "10"
+        ],
+        "Outcome": [
+          "1"
+        ],
+        "NewRoll": [
+          "1"
+        ]
+      },
+      "injury": {
+        "Status": [
+          "1"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "5"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "4"
+                ]
+              }
+            ]
+          }
+        ],
+        "Source": [
+          "1"
+        ],
+        "RollType": [
+          "11"
+        ],
+        "Outcome": [
+          "3"
+        ]
+      }
+    },
+    {
+      "sourceFile": "demo8.bbr",
+      "locator": {
+        "replayStep": 394,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "8"
+        ],
+        "TargetId": [
+          "8"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "4"
+            ],
+            "X": [
+              "9"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "4"
+            ],
+            "X": [
+              "9"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "payload": {
+        "PlayerId": [
+          "47"
+        ],
+        "SppGained": [
+          "2"
+        ]
+      },
+      "armor": {
+        "Status": [
+          "1"
+        ],
+        "Requirement": [
+          "8"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "4"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "6"
+                ]
+              }
+            ]
+          }
+        ],
+        "Difficulty": [
+          "8"
+        ],
+        "RollType": [
+          "10"
+        ],
+        "Outcome": [
+          "1"
+        ],
+        "NewRoll": [
+          "1"
+        ]
+      },
+      "injury": {
+        "Status": [
+          "1"
+        ],
+        "Dice": [
+          {
+            "Die": [
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "4"
+                ]
+              },
+              {
+                "DieType": [
+                  "0"
+                ],
+                "Value": [
+                  "5"
+                ]
+              }
+            ]
+          }
+        ],
+        "Source": [
+          "1"
+        ],
+        "RollType": [
+          "11"
+        ],
+        "Outcome": [
+          "3"
+        ]
+      }
+    }
+  ],
+  "injuries": [
+    {
+      "sourceFile": "demo5.bbr",
+      "locator": {
+        "replayStep": 77,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "subjectId": "40",
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "40"
+        ],
+        "TargetId": [
+          "40"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "12"
+            ],
+            "X": [
+              "13"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "12"
+            ],
+            "X": [
+              "13"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "messages": [
+        {
+          "tag": "ResultRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Requirement": [
+              "8"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "5"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "4"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Difficulty": [
+              "8"
+            ],
+            "RollType": [
+              "10"
+            ],
+            "Outcome": [
+              "1"
+            ],
+            "NewRoll": [
+              "1"
+            ]
+          }
+        },
+        {
+          "tag": "ResultInjuryRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "3"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "3"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Source": [
+              "1"
+            ],
+            "RollType": [
+              "11"
+            ],
+            "Outcome": [
+              "0"
+            ]
+          }
+        }
+      ],
+      "previousStep": {
+        "header": {
+          "Probability": [
+            "100.0"
+          ],
+          "PlayerId": [
+            "2"
+          ],
+          "TargetId": [
+            "40"
+          ],
+          "IsEvaluation": [
+            "0"
+          ],
+          "StepType": [
+            "6"
+          ],
+          "CellTo": [
+            {
+              "Y": [
+                "11"
+              ],
+              "X": [
+                "12"
+              ]
+            }
+          ],
+          "State": [
+            "3"
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "10"
+              ],
+              "X": [
+                "12"
+              ]
+            }
+          ],
+          "Skill": [
+            "0"
+          ]
+        },
+        "messages": [
+          {
+            "tag": "ResultFollowUp",
+            "payload": {
+              "Follow": [
+                "1"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "10"
+                  ],
+                  "X": [
+                    "12"
+                  ]
+                }
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "11"
+                  ],
+                  "X": [
+                    "12"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "tag": "ResultBlockOutcome",
+            "payload": {
+              "AttackerId": [
+                "2"
+              ],
+              "DefenderId": [
+                "40"
+              ],
+              "Outcome": [
+                "6"
+              ],
+              "Pushbacks": [
+                {
+                  "ResultPushBack": [
+                    {
+                      "CellTo": [
+                        {
+                          "Y": [
+                            "12"
+                          ],
+                          "X": [
+                            "13"
+                          ]
+                        }
+                      ],
+                      "CellFrom": [
+                        {
+                          "Y": [
+                            "11"
+                          ],
+                          "X": [
+                            "12"
+                          ]
+                        }
+                      ],
+                      "Resolution": [
+                        "3"
+                      ],
+                      "PushedPlayerId": [
+                        "40"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Follow": [
+                "1"
+              ]
+            }
+          },
+          {
+            "tag": "ResultMoveOutcome",
+            "payload": {
+              "TentacleUsed": [
+                "0"
+              ],
+              "Moved": [
+                "0"
+              ],
+              "Pushbacks": [
+                {
+                  "ResultPushBack": [
+                    {
+                      "CellTo": [
+                        {
+                          "Y": [
+                            "12"
+                          ],
+                          "X": [
+                            "13"
+                          ]
+                        }
+                      ],
+                      "CellFrom": [
+                        {
+                          "Y": [
+                            "11"
+                          ],
+                          "X": [
+                            "12"
+                          ]
+                        }
+                      ],
+                      "Resolution": [
+                        "3"
+                      ],
+                      "PushedPlayerId": [
+                        "40"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "FumbleRooskieUsed": [
+                "0"
+              ]
+            }
+          }
+        ]
+      },
+      "seeds": [
+        {
+          "playerId": "2",
+          "rosterIndex": 0,
+          "explicitTeamId": "0",
+          "prayersEmpty": true,
+          "playerType": "1031",
+          "dataPlayerId": "2",
+          "innate": [],
+          "acquired": []
+        },
+        {
+          "playerId": "40",
+          "rosterIndex": 1,
+          "explicitTeamId": "1",
+          "prayersEmpty": true,
+          "playerType": "1013",
+          "dataPlayerId": "40",
+          "innate": [
+            86
+          ],
+          "acquired": []
+        }
+      ],
+      "current": {
+        "locator": {
+          "replayStep": 76,
+          "childIndex": 2
+        },
+        "phase": "5",
+        "effectsEmpty": true,
+        "players": [
+          {
+            "playerId": "2",
+            "rosterIndex": 0,
+            "explicitTeamId": null,
+            "effectsEmpty": true,
+            "teamEffectsEmpty": true,
+            "transformationsEmpty": true,
+            "prayersEmpty": null,
+            "raw": {
+              "Gfi": [
+                "2"
+              ],
+              "Id": [
+                "2"
+              ],
+              "CanAct": [
+                "1"
+              ],
+              "Cell": [
+                {
+                  "Y": [
+                    "10"
+                  ],
+                  "X": [
+                    "12"
+                  ]
+                }
+              ],
+              "HasMoved": [
+                "1"
+              ],
+              "SequenceType": [
+                "3"
+              ],
+              "LastCell": [
+                {
+                  "Y": [
+                    "9"
+                  ],
+                  "X": [
+                    "12"
+                  ]
+                }
+              ],
+              "TackleZone": [
+                "1"
+              ],
+              "MovePoint": [
+                "4"
+              ]
+            }
+          },
+          {
+            "playerId": "40",
+            "rosterIndex": 1,
+            "explicitTeamId": "1",
+            "effectsEmpty": true,
+            "teamEffectsEmpty": true,
+            "transformationsEmpty": true,
+            "prayersEmpty": null,
+            "raw": {
+              "Gfi": [
+                "2"
+              ],
+              "Id": [
+                "40"
+              ],
+              "CanAct": [
+                "1"
+              ],
+              "Cell": [
+                {
+                  "Y": [
+                    "12"
+                  ],
+                  "X": [
+                    "13"
+                  ]
+                }
+              ],
+              "LastCell": [
+                {
+                  "Y": [
+                    "11"
+                  ],
+                  "X": [
+                    "12"
+                  ]
+                }
+              ],
+              "TackleZone": [
+                "1"
+              ],
+              "MovePoint": [
+                "7"
+              ]
+            }
+          }
+        ]
+      },
+      "reference": {
+        "scope": "conditional table from observed initial lists; admission/current continuity/cause require separate proof",
+        "stunty": false,
+        "thickSkull": false,
+        "counts": [
+          21,
+          9,
+          0,
+          6
+        ],
+        "dice": [
+          3,
+          3
+        ],
+        "outcome": "stunned",
+        "delta": "5/12",
+        "weighted": "5/8"
+      }
+    },
+    {
+      "sourceFile": "demo5.bbr",
+      "locator": {
+        "replayStep": 88,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "subjectId": "41",
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "41"
+        ],
+        "TargetId": [
+          "41"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "7"
+            ],
+            "X": [
+              "15"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "7"
+            ],
+            "X": [
+              "15"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "messages": [
+        {
+          "tag": "ResultRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Requirement": [
+              "10"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "4"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "6"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Difficulty": [
+              "10"
+            ],
+            "RollType": [
+              "10"
+            ],
+            "Outcome": [
+              "1"
+            ],
+            "NewRoll": [
+              "1"
+            ]
+          }
+        },
+        {
+          "tag": "ResultInjuryRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "1"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "2"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Source": [
+              "1"
+            ],
+            "RollType": [
+              "11"
+            ],
+            "Outcome": [
+              "0"
+            ]
+          }
+        }
+      ],
+      "previousStep": {
+        "header": {
+          "Probability": [
+            "100.0"
+          ],
+          "PlayerId": [
+            "3"
+          ],
+          "TargetId": [
+            "41"
+          ],
+          "IsEvaluation": [
+            "0"
+          ],
+          "StepType": [
+            "6"
+          ],
+          "CellTo": [
+            {
+              "Y": [
+                "7"
+              ],
+              "X": [
+                "14"
+              ]
+            }
+          ],
+          "State": [
+            "3"
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "6"
+              ],
+              "X": [
+                "13"
+              ]
+            }
+          ],
+          "Skill": [
+            "0"
+          ]
+        },
+        "messages": [
+          {
+            "tag": "ResultFollowUp",
+            "payload": {
+              "Follow": [
+                "1"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "6"
+                  ],
+                  "X": [
+                    "13"
+                  ]
+                }
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "7"
+                  ],
+                  "X": [
+                    "14"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "tag": "ResultBlockOutcome",
+            "payload": {
+              "AttackerId": [
+                "3"
+              ],
+              "DefenderId": [
+                "41"
+              ],
+              "Outcome": [
+                "6"
+              ],
+              "Pushbacks": [
+                {
+                  "ResultPushBack": [
+                    {
+                      "CellTo": [
+                        {
+                          "Y": [
+                            "7"
+                          ],
+                          "X": [
+                            "15"
+                          ]
+                        }
+                      ],
+                      "CellFrom": [
+                        {
+                          "Y": [
+                            "7"
+                          ],
+                          "X": [
+                            "14"
+                          ]
+                        }
+                      ],
+                      "Resolution": [
+                        "3"
+                      ],
+                      "PushedPlayerId": [
+                        "41"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Follow": [
+                "1"
+              ]
+            }
+          },
+          {
+            "tag": "ResultMoveOutcome",
+            "payload": {
+              "TentacleUsed": [
+                "0"
+              ],
+              "Moved": [
+                "0"
+              ],
+              "Pushbacks": [
+                {
+                  "ResultPushBack": [
+                    {
+                      "CellTo": [
+                        {
+                          "Y": [
+                            "7"
+                          ],
+                          "X": [
+                            "15"
+                          ]
+                        }
+                      ],
+                      "CellFrom": [
+                        {
+                          "Y": [
+                            "7"
+                          ],
+                          "X": [
+                            "14"
+                          ]
+                        }
+                      ],
+                      "Resolution": [
+                        "3"
+                      ],
+                      "PushedPlayerId": [
+                        "41"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "FumbleRooskieUsed": [
+                "0"
+              ]
+            }
+          }
+        ]
+      },
+      "seeds": [
+        {
+          "playerId": "3",
+          "rosterIndex": 0,
+          "explicitTeamId": "0",
+          "prayersEmpty": true,
+          "playerType": "1031",
+          "dataPlayerId": "3",
+          "innate": [],
+          "acquired": []
+        },
+        {
+          "playerId": "41",
+          "rosterIndex": 1,
+          "explicitTeamId": "1",
+          "prayersEmpty": true,
+          "playerType": "1012",
+          "dataPlayerId": "41",
+          "innate": [
+            86
+          ],
+          "acquired": []
+        }
+      ],
+      "current": {
+        "locator": {
+          "replayStep": 87,
+          "childIndex": 2
+        },
+        "phase": "5",
+        "effectsEmpty": true,
+        "players": [
+          {
+            "playerId": "3",
+            "rosterIndex": 0,
+            "explicitTeamId": null,
+            "effectsEmpty": true,
+            "teamEffectsEmpty": true,
+            "transformationsEmpty": true,
+            "prayersEmpty": null,
+            "raw": {
+              "Gfi": [
+                "2"
+              ],
+              "Id": [
+                "3"
+              ],
+              "CanAct": [
+                "1"
+              ],
+              "Cell": [
+                {
+                  "Y": [
+                    "6"
+                  ],
+                  "X": [
+                    "13"
+                  ]
+                }
+              ],
+              "SequenceType": [
+                "2"
+              ],
+              "LastCell": [
+                {
+                  "Y": [
+                    "-1"
+                  ],
+                  "X": [
+                    "-1"
+                  ]
+                }
+              ],
+              "TackleZone": [
+                "1"
+              ],
+              "MovePoint": [
+                "6"
+              ]
+            }
+          },
+          {
+            "playerId": "41",
+            "rosterIndex": 1,
+            "explicitTeamId": "1",
+            "effectsEmpty": true,
+            "teamEffectsEmpty": true,
+            "transformationsEmpty": true,
+            "prayersEmpty": null,
+            "raw": {
+              "Gfi": [
+                "2"
+              ],
+              "Id": [
+                "41"
+              ],
+              "CanAct": [
+                "1"
+              ],
+              "Cell": [
+                {
+                  "Y": [
+                    "7"
+                  ],
+                  "X": [
+                    "15"
+                  ]
+                }
+              ],
+              "LastCell": [
+                {
+                  "Y": [
+                    "7"
+                  ],
+                  "X": [
+                    "14"
+                  ]
+                }
+              ],
+              "TackleZone": [
+                "1"
+              ],
+              "MovePoint": [
+                "5"
+              ]
+            }
+          }
+        ]
+      },
+      "reference": {
+        "scope": "conditional table from observed initial lists; admission/current continuity/cause require separate proof",
+        "stunty": false,
+        "thickSkull": false,
+        "counts": [
+          21,
+          9,
+          0,
+          6
+        ],
+        "dice": [
+          1,
+          2
+        ],
+        "outcome": "stunned",
+        "delta": "5/12",
+        "weighted": "5/8"
+      }
+    },
+    {
+      "sourceFile": "demo6.bbr",
+      "locator": {
+        "replayStep": 52,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 2
+      },
+      "subjectId": "47",
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "47"
+        ],
+        "TargetId": [
+          "47"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "12"
+            ],
+            "X": [
+              "11"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "12"
+            ],
+            "X": [
+              "11"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "messages": [
+        {
+          "tag": "ResultRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Requirement": [
+              "8"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "6"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "2"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Difficulty": [
+              "8"
+            ],
+            "RollType": [
+              "10"
+            ],
+            "Outcome": [
+              "1"
+            ],
+            "NewRoll": [
+              "1"
+            ]
+          }
+        },
+        {
+          "tag": "ResultGainSpp",
+          "payload": {
+            "PlayerId": [
+              "8"
+            ],
+            "SppGained": [
+              "2"
+            ]
+          }
+        },
+        {
+          "tag": "ResultInjuryRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "6"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "3"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Source": [
+              "1"
+            ],
+            "RollType": [
+              "11"
+            ],
+            "Outcome": [
+              "3"
+            ]
+          }
+        },
+        {
+          "tag": "ResultPlayerRemoval",
+          "payload": {
+            "PlayerId": [
+              "47"
+            ],
+            "Situation": [
+              "4"
+            ],
+            "Reason": [
+              "0"
+            ],
+            "Status": [
+              "4"
+            ]
+          }
+        }
+      ],
+      "previousStep": {
+        "header": {
+          "Probability": [
+            "100.0"
+          ],
+          "PlayerId": [
+            "8"
+          ],
+          "TargetId": [
+            "47"
+          ],
+          "IsEvaluation": [
+            "0"
+          ],
+          "StepType": [
+            "6"
+          ],
+          "CellTo": [
+            {
+              "Y": [
+                "12"
+              ],
+              "X": [
+                "11"
+              ]
+            }
+          ],
+          "State": [
+            "3"
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "12"
+              ],
+              "X": [
+                "10"
+              ]
+            }
+          ],
+          "Skill": [
+            "0"
+          ]
+        },
+        "messages": [
+          {
+            "tag": "ResultSkillUsage",
+            "payload": {
+              "PlayerId": [
+                "8"
+              ],
+              "Skill": [
+                "30"
+              ],
+              "Used": [
+                "1"
+              ]
+            }
+          },
+          {
+            "tag": "ResultBlockRoll",
+            "payload": {
+              "RollStatus": [
+                "1"
+              ],
+              "StModifiers": [
+                {
+                  "Modifier": [
+                    {
+                      "PlayerId": [
+                        "4"
+                      ],
+                      "Skill": [
+                        "-1"
+                      ],
+                      "Effect": [
+                        "-1"
+                      ],
+                      "Value": [
+                        "1"
+                      ],
+                      "ModifierType": [
+                        "11"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Die": [
+                {
+                  "DieType": [
+                    "2"
+                  ],
+                  "Value": [
+                    "1"
+                  ]
+                }
+              ],
+              "Assists": [
+                {
+                  "AssistInfos": [
+                    {
+                      "Cell": [
+                        {
+                          "Y": [
+                            "11"
+                          ],
+                          "X": [
+                            "10"
+                          ]
+                        }
+                      ],
+                      "Modifier": [
+                        "1"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "RollType": [
+                "3"
+              ],
+              "Outcome": [
+                "5"
+              ],
+              "NewRoll": [
+                "1"
+              ]
+            }
+          },
+          {
+            "tag": "ResultBlockOutcome",
+            "payload": {
+              "AttackerId": [
+                "8"
+              ],
+              "DefenderId": [
+                "47"
+              ],
+              "Outcome": [
+                "5"
+              ],
+              "Follow": [
+                "0"
+              ]
+            }
+          }
+        ]
+      },
+      "seeds": [
+        {
+          "playerId": "8",
+          "rosterIndex": 0,
+          "explicitTeamId": "0",
+          "prayersEmpty": true,
+          "playerType": "6",
+          "dataPlayerId": "8",
+          "innate": [
+            57,
+            30,
+            63
+          ],
+          "acquired": []
+        },
+        {
+          "playerId": "47",
+          "rosterIndex": 1,
+          "explicitTeamId": "1",
+          "prayersEmpty": true,
+          "playerType": "30",
+          "dataPlayerId": "47",
+          "innate": [
+            59,
+            52,
+            7
+          ],
+          "acquired": []
+        }
+      ],
+      "current": {
+        "locator": {
+          "replayStep": 51,
+          "childIndex": 2
+        },
+        "phase": "5",
+        "effectsEmpty": true,
+        "players": [
+          {
+            "playerId": "8",
+            "rosterIndex": 0,
+            "explicitTeamId": null,
+            "effectsEmpty": true,
+            "teamEffectsEmpty": true,
+            "transformationsEmpty": true,
+            "prayersEmpty": null,
+            "raw": {
+              "Gfi": [
+                "2"
+              ],
+              "Id": [
+                "8"
+              ],
+              "CanAct": [
+                "1"
+              ],
+              "Cell": [
+                {
+                  "Y": [
+                    "12"
+                  ],
+                  "X": [
+                    "10"
+                  ]
+                }
+              ],
+              "SequenceType": [
+                "2"
+              ],
+              "LastCell": [
+                {
+                  "Y": [
+                    "-1"
+                  ],
+                  "X": [
+                    "-1"
+                  ]
+                }
+              ],
+              "TackleZone": [
+                "1"
+              ],
+              "MovePoint": [
+                "4"
+              ]
+            }
+          },
+          {
+            "playerId": "47",
+            "rosterIndex": 1,
+            "explicitTeamId": "1",
+            "effectsEmpty": true,
+            "teamEffectsEmpty": true,
+            "transformationsEmpty": true,
+            "prayersEmpty": null,
+            "raw": {
+              "Gfi": [
+                "2"
+              ],
+              "Id": [
+                "47"
+              ],
+              "CanAct": [
+                "1"
+              ],
+              "Cell": [
+                {
+                  "Y": [
+                    "12"
+                  ],
+                  "X": [
+                    "11"
+                  ]
+                }
+              ],
+              "LastCell": [
+                {
+                  "Y": [
+                    "-1"
+                  ],
+                  "X": [
+                    "-1"
+                  ]
+                }
+              ],
+              "TackleZone": [
+                "1"
+              ],
+              "MovePoint": [
+                "6"
+              ]
+            }
+          }
+        ]
+      },
+      "reference": {
+        "scope": "conditional table from observed initial lists; admission/current continuity/cause require separate proof",
+        "stunty": true,
+        "thickSkull": false,
+        "counts": [
+          15,
+          11,
+          4,
+          6
+        ],
+        "dice": [
+          6,
+          3
+        ],
+        "outcome": "badly_hurt",
+        "delta": "-13/18",
+        "weighted": "-13/12"
+      }
+    },
+    {
+      "sourceFile": "demo8.bbr",
+      "locator": {
+        "replayStep": 60,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "subjectId": "47",
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "47"
+        ],
+        "TargetId": [
+          "47"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "6"
+            ],
+            "X": [
+              "15"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "6"
+            ],
+            "X": [
+              "15"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "messages": [
+        {
+          "tag": "ResultRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Requirement": [
+              "10"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "6"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "4"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Difficulty": [
+              "10"
+            ],
+            "RollType": [
+              "10"
+            ],
+            "Outcome": [
+              "1"
+            ],
+            "NewRoll": [
+              "1"
+            ]
+          }
+        },
+        {
+          "tag": "ResultInjuryRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "3"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "1"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Source": [
+              "1"
+            ],
+            "RollType": [
+              "11"
+            ],
+            "Outcome": [
+              "0"
+            ]
+          }
+        }
+      ],
+      "previousStep": {
+        "header": {
+          "Probability": [
+            "100.0"
+          ],
+          "PlayerId": [
+            "3"
+          ],
+          "TargetId": [
+            "47"
+          ],
+          "IsEvaluation": [
+            "0"
+          ],
+          "StepType": [
+            "6"
+          ],
+          "CellTo": [
+            {
+              "Y": [
+                "7"
+              ],
+              "X": [
+                "14"
+              ]
+            }
+          ],
+          "State": [
+            "3"
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "7"
+              ],
+              "X": [
+                "13"
+              ]
+            }
+          ],
+          "Skill": [
+            "0"
+          ]
+        },
+        "messages": [
+          {
+            "tag": "ResultFollowUp",
+            "payload": {
+              "Follow": [
+                "1"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "7"
+                  ],
+                  "X": [
+                    "13"
+                  ]
+                }
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "7"
+                  ],
+                  "X": [
+                    "14"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "tag": "ResultBlockOutcome",
+            "payload": {
+              "AttackerId": [
+                "3"
+              ],
+              "DefenderId": [
+                "47"
+              ],
+              "Outcome": [
+                "6"
+              ],
+              "Pushbacks": [
+                {
+                  "ResultPushBack": [
+                    {
+                      "CellTo": [
+                        {
+                          "Y": [
+                            "6"
+                          ],
+                          "X": [
+                            "15"
+                          ]
+                        }
+                      ],
+                      "CellFrom": [
+                        {
+                          "Y": [
+                            "7"
+                          ],
+                          "X": [
+                            "14"
+                          ]
+                        }
+                      ],
+                      "Resolution": [
+                        "3"
+                      ],
+                      "PushedPlayerId": [
+                        "47"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Follow": [
+                "1"
+              ]
+            }
+          },
+          {
+            "tag": "ResultMoveOutcome",
+            "payload": {
+              "TentacleUsed": [
+                "0"
+              ],
+              "Moved": [
+                "0"
+              ],
+              "Pushbacks": [
+                {
+                  "ResultPushBack": [
+                    {
+                      "CellTo": [
+                        {
+                          "Y": [
+                            "6"
+                          ],
+                          "X": [
+                            "15"
+                          ]
+                        }
+                      ],
+                      "CellFrom": [
+                        {
+                          "Y": [
+                            "7"
+                          ],
+                          "X": [
+                            "14"
+                          ]
+                        }
+                      ],
+                      "Resolution": [
+                        "3"
+                      ],
+                      "PushedPlayerId": [
+                        "47"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "FumbleRooskieUsed": [
+                "0"
+              ]
+            }
+          }
+        ]
+      },
+      "seeds": [
+        {
+          "playerId": "3",
+          "rosterIndex": 0,
+          "explicitTeamId": "0",
+          "prayersEmpty": true,
+          "playerType": "1031",
+          "dataPlayerId": "3",
+          "innate": [],
+          "acquired": []
+        },
+        {
+          "playerId": "47",
+          "rosterIndex": 1,
+          "explicitTeamId": "1",
+          "prayersEmpty": true,
+          "playerType": "21",
+          "dataPlayerId": "47",
+          "innate": [
+            100
+          ],
+          "acquired": []
+        }
+      ],
+      "current": {
+        "locator": {
+          "replayStep": 59,
+          "childIndex": 2
+        },
+        "phase": "5",
+        "effectsEmpty": true,
+        "players": [
+          {
+            "playerId": "3",
+            "rosterIndex": 0,
+            "explicitTeamId": null,
+            "effectsEmpty": true,
+            "teamEffectsEmpty": true,
+            "transformationsEmpty": true,
+            "prayersEmpty": null,
+            "raw": {
+              "Gfi": [
+                "2"
+              ],
+              "Id": [
+                "3"
+              ],
+              "CanAct": [
+                "1"
+              ],
+              "Cell": [
+                {
+                  "Y": [
+                    "7"
+                  ],
+                  "X": [
+                    "13"
+                  ]
+                }
+              ],
+              "SequenceType": [
+                "2"
+              ],
+              "LastCell": [
+                {
+                  "Y": [
+                    "-1"
+                  ],
+                  "X": [
+                    "-1"
+                  ]
+                }
+              ],
+              "TackleZone": [
+                "1"
+              ],
+              "MovePoint": [
+                "6"
+              ]
+            }
+          },
+          {
+            "playerId": "47",
+            "rosterIndex": 1,
+            "explicitTeamId": "1",
+            "effectsEmpty": true,
+            "teamEffectsEmpty": true,
+            "transformationsEmpty": true,
+            "prayersEmpty": null,
+            "raw": {
+              "Gfi": [
+                "2"
+              ],
+              "Id": [
+                "47"
+              ],
+              "CanAct": [
+                "1"
+              ],
+              "Cell": [
+                {
+                  "Y": [
+                    "6"
+                  ],
+                  "X": [
+                    "15"
+                  ]
+                }
+              ],
+              "LastCell": [
+                {
+                  "Y": [
+                    "7"
+                  ],
+                  "X": [
+                    "14"
+                  ]
+                }
+              ],
+              "TackleZone": [
+                "1"
+              ],
+              "MovePoint": [
+                "5"
+              ]
+            }
+          }
+        ]
+      },
+      "reference": {
+        "scope": "conditional table from observed initial lists; admission/current continuity/cause require separate proof",
+        "stunty": false,
+        "thickSkull": false,
+        "counts": [
+          21,
+          9,
+          0,
+          6
+        ],
+        "dice": [
+          3,
+          1
+        ],
+        "outcome": "stunned",
+        "delta": "5/12",
+        "weighted": "5/8"
+      }
+    },
+    {
+      "sourceFile": "demo8.bbr",
+      "locator": {
+        "replayStep": 98,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "subjectId": "44",
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "44"
+        ],
+        "TargetId": [
+          "44"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "11"
+            ],
+            "X": [
+              "20"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "11"
+            ],
+            "X": [
+              "20"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "messages": [
+        {
+          "tag": "ResultRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Requirement": [
+              "9"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "4"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "5"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Difficulty": [
+              "9"
+            ],
+            "RollType": [
+              "10"
+            ],
+            "Outcome": [
+              "1"
+            ],
+            "NewRoll": [
+              "1"
+            ]
+          }
+        },
+        {
+          "tag": "ResultInjuryRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "4"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "1"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Source": [
+              "1"
+            ],
+            "RollType": [
+              "11"
+            ],
+            "Outcome": [
+              "0"
+            ]
+          }
+        }
+      ],
+      "previousStep": {
+        "header": {
+          "Probability": [
+            "100.0"
+          ],
+          "PlayerId": [
+            "2"
+          ],
+          "TargetId": [
+            "44"
+          ],
+          "IsEvaluation": [
+            "0"
+          ],
+          "StepType": [
+            "6"
+          ],
+          "CellTo": [
+            {
+              "Y": [
+                "12"
+              ],
+              "X": [
+                "19"
+              ]
+            }
+          ],
+          "State": [
+            "3"
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "13"
+              ],
+              "X": [
+                "18"
+              ]
+            }
+          ],
+          "Skill": [
+            "0"
+          ]
+        },
+        "messages": [
+          {
+            "tag": "ResultFollowUp",
+            "payload": {
+              "Follow": [
+                "1"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "13"
+                  ],
+                  "X": [
+                    "18"
+                  ]
+                }
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "12"
+                  ],
+                  "X": [
+                    "19"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "tag": "ResultBlockOutcome",
+            "payload": {
+              "AttackerId": [
+                "2"
+              ],
+              "DefenderId": [
+                "44"
+              ],
+              "Outcome": [
+                "6"
+              ],
+              "Pushbacks": [
+                {
+                  "ResultPushBack": [
+                    {
+                      "CellTo": [
+                        {
+                          "Y": [
+                            "11"
+                          ],
+                          "X": [
+                            "20"
+                          ]
+                        }
+                      ],
+                      "CellFrom": [
+                        {
+                          "Y": [
+                            "12"
+                          ],
+                          "X": [
+                            "19"
+                          ]
+                        }
+                      ],
+                      "Resolution": [
+                        "3"
+                      ],
+                      "PushedPlayerId": [
+                        "44"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Follow": [
+                "1"
+              ]
+            }
+          },
+          {
+            "tag": "ResultMoveOutcome",
+            "payload": {
+              "TentacleUsed": [
+                "0"
+              ],
+              "Moved": [
+                "0"
+              ],
+              "Pushbacks": [
+                {
+                  "ResultPushBack": [
+                    {
+                      "CellTo": [
+                        {
+                          "Y": [
+                            "11"
+                          ],
+                          "X": [
+                            "20"
+                          ]
+                        }
+                      ],
+                      "CellFrom": [
+                        {
+                          "Y": [
+                            "12"
+                          ],
+                          "X": [
+                            "19"
+                          ]
+                        }
+                      ],
+                      "Resolution": [
+                        "3"
+                      ],
+                      "PushedPlayerId": [
+                        "44"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "FumbleRooskieUsed": [
+                "0"
+              ]
+            }
+          }
+        ]
+      },
+      "seeds": [
+        {
+          "playerId": "2",
+          "rosterIndex": 0,
+          "explicitTeamId": "0",
+          "prayersEmpty": true,
+          "playerType": "1031",
+          "dataPlayerId": "2",
+          "innate": [],
+          "acquired": []
+        },
+        {
+          "playerId": "44",
+          "rosterIndex": 1,
+          "explicitTeamId": "1",
+          "prayersEmpty": true,
+          "playerType": "23",
+          "dataPlayerId": "44",
+          "innate": [
+            61,
+            86,
+            47
+          ],
+          "acquired": []
+        }
+      ],
+      "current": {
+        "locator": {
+          "replayStep": 97,
+          "childIndex": 2
+        },
+        "phase": "5",
+        "effectsEmpty": true,
+        "players": [
+          {
+            "playerId": "2",
+            "rosterIndex": 0,
+            "explicitTeamId": null,
+            "effectsEmpty": true,
+            "teamEffectsEmpty": true,
+            "transformationsEmpty": true,
+            "prayersEmpty": null,
+            "raw": {
+              "Gfi": [
+                "2"
+              ],
+              "Id": [
+                "2"
+              ],
+              "CanAct": [
+                "1"
+              ],
+              "Cell": [
+                {
+                  "Y": [
+                    "13"
+                  ],
+                  "X": [
+                    "18"
+                  ]
+                }
+              ],
+              "HasMoved": [
+                "1"
+              ],
+              "SequenceType": [
+                "3"
+              ],
+              "LastCell": [
+                {
+                  "Y": [
+                    "13"
+                  ],
+                  "X": [
+                    "17"
+                  ]
+                }
+              ],
+              "TackleZone": [
+                "1"
+              ],
+              "MovePoint": [
+                "2"
+              ]
+            }
+          },
+          {
+            "playerId": "44",
+            "rosterIndex": 1,
+            "explicitTeamId": "1",
+            "effectsEmpty": true,
+            "teamEffectsEmpty": true,
+            "transformationsEmpty": true,
+            "prayersEmpty": null,
+            "raw": {
+              "Gfi": [
+                "2"
+              ],
+              "Id": [
+                "44"
+              ],
+              "CanAct": [
+                "1"
+              ],
+              "Cell": [
+                {
+                  "Y": [
+                    "11"
+                  ],
+                  "X": [
+                    "20"
+                  ]
+                }
+              ],
+              "LastCell": [
+                {
+                  "Y": [
+                    "12"
+                  ],
+                  "X": [
+                    "19"
+                  ]
+                }
+              ],
+              "TackleZone": [
+                "1"
+              ],
+              "MovePoint": [
+                "5"
+              ]
+            }
+          }
+        ]
+      },
+      "reference": {
+        "scope": "conditional table from observed initial lists; admission/current continuity/cause require separate proof",
+        "stunty": false,
+        "thickSkull": false,
+        "counts": [
+          21,
+          9,
+          0,
+          6
+        ],
+        "dice": [
+          4,
+          1
+        ],
+        "outcome": "stunned",
+        "delta": "5/12",
+        "weighted": "5/8"
+      }
+    },
+    {
+      "sourceFile": "demo8.bbr",
+      "locator": {
+        "replayStep": 177,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "subjectId": "43",
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "43"
+        ],
+        "TargetId": [
+          "43"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "8"
+            ],
+            "X": [
+              "13"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "8"
+            ],
+            "X": [
+              "13"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "messages": [
+        {
+          "tag": "ResultRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Requirement": [
+              "10"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "5"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "5"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Difficulty": [
+              "10"
+            ],
+            "RollType": [
+              "10"
+            ],
+            "Outcome": [
+              "1"
+            ],
+            "NewRoll": [
+              "1"
+            ]
+          }
+        },
+        {
+          "tag": "ResultInjuryRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "4"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "3"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Source": [
+              "1"
+            ],
+            "RollType": [
+              "11"
+            ],
+            "Outcome": [
+              "0"
+            ]
+          }
+        }
+      ],
+      "previousStep": {
+        "header": {
+          "Probability": [
+            "100.0"
+          ],
+          "PlayerId": [
+            "2"
+          ],
+          "TargetId": [
+            "43"
+          ],
+          "IsEvaluation": [
+            "0"
+          ],
+          "StepType": [
+            "6"
+          ],
+          "CellTo": [
+            {
+              "Y": [
+                "8"
+              ],
+              "X": [
+                "12"
+              ]
+            }
+          ],
+          "State": [
+            "3"
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "7"
+              ],
+              "X": [
+                "11"
+              ]
+            }
+          ],
+          "Skill": [
+            "0"
+          ]
+        },
+        "messages": [
+          {
+            "tag": "ResultFollowUp",
+            "payload": {
+              "Follow": [
+                "1"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "7"
+                  ],
+                  "X": [
+                    "11"
+                  ]
+                }
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "8"
+                  ],
+                  "X": [
+                    "12"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "tag": "ResultBlockOutcome",
+            "payload": {
+              "AttackerId": [
+                "2"
+              ],
+              "DefenderId": [
+                "43"
+              ],
+              "Outcome": [
+                "6"
+              ],
+              "Pushbacks": [
+                {
+                  "ResultPushBack": [
+                    {
+                      "CellTo": [
+                        {
+                          "Y": [
+                            "8"
+                          ],
+                          "X": [
+                            "13"
+                          ]
+                        }
+                      ],
+                      "CellFrom": [
+                        {
+                          "Y": [
+                            "8"
+                          ],
+                          "X": [
+                            "12"
+                          ]
+                        }
+                      ],
+                      "Resolution": [
+                        "3"
+                      ],
+                      "PushedPlayerId": [
+                        "43"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Follow": [
+                "1"
+              ]
+            }
+          },
+          {
+            "tag": "ResultMoveOutcome",
+            "payload": {
+              "TentacleUsed": [
+                "0"
+              ],
+              "Moved": [
+                "0"
+              ],
+              "Pushbacks": [
+                {
+                  "ResultPushBack": [
+                    {
+                      "CellTo": [
+                        {
+                          "Y": [
+                            "8"
+                          ],
+                          "X": [
+                            "13"
+                          ]
+                        }
+                      ],
+                      "CellFrom": [
+                        {
+                          "Y": [
+                            "8"
+                          ],
+                          "X": [
+                            "12"
+                          ]
+                        }
+                      ],
+                      "Resolution": [
+                        "3"
+                      ],
+                      "PushedPlayerId": [
+                        "43"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "FumbleRooskieUsed": [
+                "0"
+              ]
+            }
+          }
+        ]
+      },
+      "seeds": [
+        {
+          "playerId": "2",
+          "rosterIndex": 0,
+          "explicitTeamId": "0",
+          "prayersEmpty": true,
+          "playerType": "1031",
+          "dataPlayerId": "2",
+          "innate": [],
+          "acquired": []
+        },
+        {
+          "playerId": "43",
+          "rosterIndex": 1,
+          "explicitTeamId": "1",
+          "prayersEmpty": true,
+          "playerType": "25",
+          "dataPlayerId": "43",
+          "innate": [
+            30,
+            86
+          ],
+          "acquired": []
+        }
+      ],
+      "current": {
+        "locator": {
+          "replayStep": 176,
+          "childIndex": 2
+        },
+        "phase": "5",
+        "effectsEmpty": true,
+        "players": [
+          {
+            "playerId": "2",
+            "rosterIndex": 0,
+            "explicitTeamId": null,
+            "effectsEmpty": true,
+            "teamEffectsEmpty": true,
+            "transformationsEmpty": true,
+            "prayersEmpty": null,
+            "raw": {
+              "Gfi": [
+                "2"
+              ],
+              "Id": [
+                "2"
+              ],
+              "CanAct": [
+                "1"
+              ],
+              "Cell": [
+                {
+                  "Y": [
+                    "7"
+                  ],
+                  "X": [
+                    "11"
+                  ]
+                }
+              ],
+              "SequenceType": [
+                "2"
+              ],
+              "LastCell": [
+                {
+                  "Y": [
+                    "-1"
+                  ],
+                  "X": [
+                    "-1"
+                  ]
+                }
+              ],
+              "TackleZone": [
+                "1"
+              ],
+              "MovePoint": [
+                "6"
+              ]
+            }
+          },
+          {
+            "playerId": "43",
+            "rosterIndex": 1,
+            "explicitTeamId": "1",
+            "effectsEmpty": true,
+            "teamEffectsEmpty": true,
+            "transformationsEmpty": true,
+            "prayersEmpty": null,
+            "raw": {
+              "Gfi": [
+                "2"
+              ],
+              "Id": [
+                "43"
+              ],
+              "CanAct": [
+                "1"
+              ],
+              "Cell": [
+                {
+                  "Y": [
+                    "8"
+                  ],
+                  "X": [
+                    "13"
+                  ]
+                }
+              ],
+              "LastCell": [
+                {
+                  "Y": [
+                    "8"
+                  ],
+                  "X": [
+                    "12"
+                  ]
+                }
+              ],
+              "TackleZone": [
+                "1"
+              ],
+              "MovePoint": [
+                "6"
+              ]
+            }
+          }
+        ]
+      },
+      "reference": {
+        "scope": "conditional table from observed initial lists; admission/current continuity/cause require separate proof",
+        "stunty": false,
+        "thickSkull": false,
+        "counts": [
+          21,
+          9,
+          0,
+          6
+        ],
+        "dice": [
+          4,
+          3
+        ],
+        "outcome": "stunned",
+        "delta": "5/12",
+        "weighted": "5/8"
+      }
+    },
+    {
+      "sourceFile": "demo8.bbr",
+      "locator": {
+        "replayStep": 190,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "subjectId": "37",
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "0"
+        ],
+        "PlayerId": [
+          "37"
+        ],
+        "TargetId": [
+          "37"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "6"
+            ],
+            "X": [
+              "12"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "6"
+            ],
+            "X": [
+              "12"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "messages": [
+        {
+          "tag": "ResultRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Requirement": [
+              "10"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "6"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "6"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Difficulty": [
+              "10"
+            ],
+            "RollType": [
+              "10"
+            ],
+            "Outcome": [
+              "1"
+            ],
+            "NewRoll": [
+              "1"
+            ]
+          }
+        },
+        {
+          "tag": "ResultInjuryRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "3"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "4"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Source": [
+              "0"
+            ],
+            "RollType": [
+              "11"
+            ],
+            "Outcome": [
+              "0"
+            ]
+          }
+        }
+      ],
+      "previousStep": {
+        "header": {
+          "Probability": [
+            "100.0"
+          ],
+          "PlayerId": [
+            "37"
+          ],
+          "TargetId": [
+            "-1"
+          ],
+          "IsEvaluation": [
+            "0"
+          ],
+          "StepType": [
+            "1"
+          ],
+          "CellTo": [
+            {
+              "Y": [
+                "6"
+              ],
+              "X": [
+                "11"
+              ]
+            }
+          ],
+          "State": [
+            "2"
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "6"
+              ],
+              "X": [
+                "12"
+              ]
+            }
+          ],
+          "Skill": [
+            "0"
+          ]
+        },
+        "messages": [
+          {
+            "tag": "ResultTeamRerollUsage",
+            "payload": {
+              "GamerId": [
+                "1"
+              ],
+              "Used": [
+                "0"
+              ]
+            }
+          },
+          {
+            "tag": "ResultRoll",
+            "payload": {
+              "Status": [
+                "1"
+              ],
+              "Requirement": [
+                "4"
+              ],
+              "Dice": [
+                {
+                  "Die": [
+                    {
+                      "DieType": [
+                        "0"
+                      ],
+                      "Value": [
+                        "2"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Difficulty": [
+                "4"
+              ],
+              "RollType": [
+                "2"
+              ],
+              "Outcome": [
+                "0"
+              ],
+              "NewRoll": [
+                "0"
+              ]
+            }
+          },
+          {
+            "tag": "ResultDoMove",
+            "payload": null
+          },
+          {
+            "tag": "ResultMoveOutcome",
+            "payload": {
+              "TentacleUsed": [
+                "0"
+              ],
+              "Moved": [
+                "1"
+              ],
+              "Rolls": [
+                {
+                  "RollSummary": [
+                    {
+                      "RollType": [
+                        "2"
+                      ],
+                      "Outcome": [
+                        "0"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "FumbleRooskieUsed": [
+                "0"
+              ]
+            }
+          }
+        ]
+      },
+      "seeds": [
+        {
+          "playerId": "37",
+          "rosterIndex": 1,
+          "explicitTeamId": "1",
+          "prayersEmpty": true,
+          "playerType": "24",
+          "dataPlayerId": "37",
+          "innate": [
+            101
+          ],
+          "acquired": []
+        }
+      ],
+      "current": {
+        "locator": {
+          "replayStep": 189,
+          "childIndex": 2
+        },
+        "phase": "5",
+        "effectsEmpty": true,
+        "players": [
+          {
+            "playerId": "37",
+            "rosterIndex": 1,
+            "explicitTeamId": "1",
+            "effectsEmpty": true,
+            "teamEffectsEmpty": true,
+            "transformationsEmpty": true,
+            "prayersEmpty": null,
+            "raw": {
+              "Gfi": [
+                "2"
+              ],
+              "Id": [
+                "37"
+              ],
+              "CanAct": [
+                "1"
+              ],
+              "Cell": [
+                {
+                  "Y": [
+                    "6"
+                  ],
+                  "X": [
+                    "12"
+                  ]
+                }
+              ],
+              "SequenceType": [
+                "3"
+              ],
+              "LastCell": [
+                {
+                  "Y": [
+                    "-1"
+                  ],
+                  "X": [
+                    "-1"
+                  ]
+                }
+              ],
+              "TackleZone": [
+                "1"
+              ],
+              "MovePoint": [
+                "5"
+              ]
+            }
+          }
+        ]
+      },
+      "reference": {
+        "scope": "conditional table from observed initial lists; admission/current continuity/cause require separate proof",
+        "stunty": false,
+        "thickSkull": false,
+        "counts": [
+          21,
+          9,
+          0,
+          6
+        ],
+        "dice": [
+          3,
+          4
+        ],
+        "outcome": "stunned",
+        "delta": "5/12",
+        "weighted": "5/8"
+      }
+    },
+    {
+      "sourceFile": "demo8.bbr",
+      "locator": {
+        "replayStep": 215,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "subjectId": "39",
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "0"
+        ],
+        "PlayerId": [
+          "39"
+        ],
+        "TargetId": [
+          "39"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "6"
+            ],
+            "X": [
+              "20"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "6"
+            ],
+            "X": [
+              "20"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "messages": [
+        {
+          "tag": "ResultRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Requirement": [
+              "10"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "5"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "5"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Difficulty": [
+              "10"
+            ],
+            "RollType": [
+              "10"
+            ],
+            "Outcome": [
+              "1"
+            ],
+            "NewRoll": [
+              "1"
+            ]
+          }
+        },
+        {
+          "tag": "ResultInjuryRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "1"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "5"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Source": [
+              "0"
+            ],
+            "RollType": [
+              "11"
+            ],
+            "Outcome": [
+              "0"
+            ]
+          }
+        }
+      ],
+      "previousStep": {
+        "header": {
+          "Probability": [
+            "100.0"
+          ],
+          "PlayerId": [
+            "39"
+          ],
+          "TargetId": [
+            "-1"
+          ],
+          "IsEvaluation": [
+            "0"
+          ],
+          "StepType": [
+            "1"
+          ],
+          "CellTo": [
+            {
+              "Y": [
+                "5"
+              ],
+              "X": [
+                "20"
+              ]
+            }
+          ],
+          "State": [
+            "2"
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "6"
+              ],
+              "X": [
+                "20"
+              ]
+            }
+          ],
+          "Skill": [
+            "0"
+          ]
+        },
+        "messages": [
+          {
+            "tag": "ResultTeamRerollUsage",
+            "payload": {
+              "GamerId": [
+                "1"
+              ],
+              "Used": [
+                "1"
+              ]
+            }
+          },
+          {
+            "tag": "ResultRoll",
+            "payload": {
+              "Status": [
+                "2"
+              ],
+              "Requirement": [
+                "4"
+              ],
+              "Dice": [
+                {
+                  "Die": [
+                    {
+                      "DieType": [
+                        "0"
+                      ],
+                      "Value": [
+                        "1"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Difficulty": [
+                "4"
+              ],
+              "RollType": [
+                "2"
+              ],
+              "Outcome": [
+                "0"
+              ],
+              "NewRoll": [
+                "1"
+              ]
+            }
+          },
+          {
+            "tag": "ResultDoMove",
+            "payload": null
+          },
+          {
+            "tag": "ResultMoveOutcome",
+            "payload": {
+              "TentacleUsed": [
+                "0"
+              ],
+              "Moved": [
+                "1"
+              ],
+              "Rolls": [
+                {
+                  "RollSummary": [
+                    {
+                      "RollType": [
+                        "2"
+                      ],
+                      "Outcome": [
+                        "0"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "FumbleRooskieUsed": [
+                "0"
+              ]
+            }
+          }
+        ]
+      },
+      "seeds": [
+        {
+          "playerId": "39",
+          "rosterIndex": 1,
+          "explicitTeamId": "1",
+          "prayersEmpty": true,
+          "playerType": "24",
+          "dataPlayerId": "39",
+          "innate": [
+            101
+          ],
+          "acquired": []
+        }
+      ],
+      "current": {
+        "locator": {
+          "replayStep": 214,
+          "childIndex": 2
+        },
+        "phase": "5",
+        "effectsEmpty": true,
+        "players": [
+          {
+            "playerId": "39",
+            "rosterIndex": 1,
+            "explicitTeamId": "1",
+            "effectsEmpty": true,
+            "teamEffectsEmpty": true,
+            "transformationsEmpty": true,
+            "prayersEmpty": null,
+            "raw": {
+              "Gfi": [
+                "2"
+              ],
+              "Id": [
+                "39"
+              ],
+              "CanAct": [
+                "1"
+              ],
+              "Cell": [
+                {
+                  "Y": [
+                    "6"
+                  ],
+                  "X": [
+                    "20"
+                  ]
+                }
+              ],
+              "HasMoved": [
+                "1"
+              ],
+              "SequenceType": [
+                "1"
+              ],
+              "LastCell": [
+                {
+                  "Y": [
+                    "5"
+                  ],
+                  "X": [
+                    "19"
+                  ]
+                }
+              ],
+              "TackleZone": [
+                "1"
+              ],
+              "MovePoint": [
+                "1"
+              ]
+            }
+          }
+        ]
+      },
+      "reference": {
+        "scope": "conditional table from observed initial lists; admission/current continuity/cause require separate proof",
+        "stunty": false,
+        "thickSkull": false,
+        "counts": [
+          21,
+          9,
+          0,
+          6
+        ],
+        "dice": [
+          1,
+          5
+        ],
+        "outcome": "stunned",
+        "delta": "5/12",
+        "weighted": "5/8"
+      }
+    },
+    {
+      "sourceFile": "demo8.bbr",
+      "locator": {
+        "replayStep": 220,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "subjectId": "44",
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "44"
+        ],
+        "TargetId": [
+          "44"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "6"
+            ],
+            "X": [
+              "22"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "6"
+            ],
+            "X": [
+              "22"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "messages": [
+        {
+          "tag": "ResultRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Requirement": [
+              "9"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "4"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "5"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Difficulty": [
+              "9"
+            ],
+            "RollType": [
+              "10"
+            ],
+            "Outcome": [
+              "1"
+            ],
+            "NewRoll": [
+              "1"
+            ]
+          }
+        },
+        {
+          "tag": "ResultInjuryRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "3"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "3"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Source": [
+              "1"
+            ],
+            "RollType": [
+              "11"
+            ],
+            "Outcome": [
+              "0"
+            ]
+          }
+        }
+      ],
+      "previousStep": {
+        "header": {
+          "Probability": [
+            "100.0"
+          ],
+          "PlayerId": [
+            "4"
+          ],
+          "TargetId": [
+            "44"
+          ],
+          "IsEvaluation": [
+            "0"
+          ],
+          "StepType": [
+            "6"
+          ],
+          "CellTo": [
+            {
+              "Y": [
+                "7"
+              ],
+              "X": [
+                "21"
+              ]
+            }
+          ],
+          "State": [
+            "3"
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "7"
+              ],
+              "X": [
+                "20"
+              ]
+            }
+          ],
+          "Skill": [
+            "0"
+          ]
+        },
+        "messages": [
+          {
+            "tag": "ResultFollowUp",
+            "payload": {
+              "Follow": [
+                "1"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "7"
+                  ],
+                  "X": [
+                    "20"
+                  ]
+                }
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "7"
+                  ],
+                  "X": [
+                    "21"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "tag": "ResultBlockOutcome",
+            "payload": {
+              "AttackerId": [
+                "4"
+              ],
+              "DefenderId": [
+                "44"
+              ],
+              "Outcome": [
+                "6"
+              ],
+              "Pushbacks": [
+                {
+                  "ResultPushBack": [
+                    {
+                      "CellTo": [
+                        {
+                          "Y": [
+                            "6"
+                          ],
+                          "X": [
+                            "22"
+                          ]
+                        }
+                      ],
+                      "CellFrom": [
+                        {
+                          "Y": [
+                            "7"
+                          ],
+                          "X": [
+                            "21"
+                          ]
+                        }
+                      ],
+                      "Resolution": [
+                        "3"
+                      ],
+                      "PushedPlayerId": [
+                        "44"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Follow": [
+                "1"
+              ]
+            }
+          },
+          {
+            "tag": "ResultMoveOutcome",
+            "payload": {
+              "TentacleUsed": [
+                "0"
+              ],
+              "Moved": [
+                "0"
+              ],
+              "Pushbacks": [
+                {
+                  "ResultPushBack": [
+                    {
+                      "CellTo": [
+                        {
+                          "Y": [
+                            "6"
+                          ],
+                          "X": [
+                            "22"
+                          ]
+                        }
+                      ],
+                      "CellFrom": [
+                        {
+                          "Y": [
+                            "7"
+                          ],
+                          "X": [
+                            "21"
+                          ]
+                        }
+                      ],
+                      "Resolution": [
+                        "3"
+                      ],
+                      "PushedPlayerId": [
+                        "44"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "FumbleRooskieUsed": [
+                "0"
+              ]
+            }
+          }
+        ]
+      },
+      "seeds": [
+        {
+          "playerId": "4",
+          "rosterIndex": 0,
+          "explicitTeamId": "0",
+          "prayersEmpty": true,
+          "playerType": "1031",
+          "dataPlayerId": "4",
+          "innate": [],
+          "acquired": [
+            30
+          ]
+        },
+        {
+          "playerId": "44",
+          "rosterIndex": 1,
+          "explicitTeamId": "1",
+          "prayersEmpty": true,
+          "playerType": "23",
+          "dataPlayerId": "44",
+          "innate": [
+            61,
+            86,
+            47
+          ],
+          "acquired": []
+        }
+      ],
+      "current": {
+        "locator": {
+          "replayStep": 219,
+          "childIndex": 2
+        },
+        "phase": "5",
+        "effectsEmpty": true,
+        "players": [
+          {
+            "playerId": "4",
+            "rosterIndex": 0,
+            "explicitTeamId": null,
+            "effectsEmpty": true,
+            "teamEffectsEmpty": true,
+            "transformationsEmpty": true,
+            "prayersEmpty": null,
+            "raw": {
+              "Gfi": [
+                "2"
+              ],
+              "Id": [
+                "4"
+              ],
+              "CanAct": [
+                "1"
+              ],
+              "Cell": [
+                {
+                  "Y": [
+                    "7"
+                  ],
+                  "X": [
+                    "20"
+                  ]
+                }
+              ],
+              "SequenceType": [
+                "2"
+              ],
+              "LastCell": [
+                {
+                  "Y": [
+                    "-1"
+                  ],
+                  "X": [
+                    "-1"
+                  ]
+                }
+              ],
+              "TackleZone": [
+                "1"
+              ],
+              "MovePoint": [
+                "6"
+              ]
+            }
+          },
+          {
+            "playerId": "44",
+            "rosterIndex": 1,
+            "explicitTeamId": "1",
+            "effectsEmpty": true,
+            "teamEffectsEmpty": true,
+            "transformationsEmpty": true,
+            "prayersEmpty": null,
+            "raw": {
+              "Gfi": [
+                "2"
+              ],
+              "Id": [
+                "44"
+              ],
+              "CanAct": [
+                "1"
+              ],
+              "Cell": [
+                {
+                  "Y": [
+                    "6"
+                  ],
+                  "X": [
+                    "22"
+                  ]
+                }
+              ],
+              "LastCell": [
+                {
+                  "Y": [
+                    "7"
+                  ],
+                  "X": [
+                    "21"
+                  ]
+                }
+              ],
+              "TackleZone": [
+                "1"
+              ],
+              "MovePoint": [
+                "5"
+              ]
+            }
+          }
+        ]
+      },
+      "reference": {
+        "scope": "conditional table from observed initial lists; admission/current continuity/cause require separate proof",
+        "stunty": false,
+        "thickSkull": false,
+        "counts": [
+          21,
+          9,
+          0,
+          6
+        ],
+        "dice": [
+          3,
+          3
+        ],
+        "outcome": "stunned",
+        "delta": "5/12",
+        "weighted": "5/8"
+      }
+    },
+    {
+      "sourceFile": "demo9.bbr",
+      "locator": {
+        "replayStep": 33,
+        "childIndex": 1,
+        "stepIndex": 2,
+        "messageIndex": 1
+      },
+      "subjectId": "43",
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "43"
+        ],
+        "TargetId": [
+          "43"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "6"
+            ],
+            "X": [
+              "13"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "6"
+            ],
+            "X": [
+              "13"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "messages": [
+        {
+          "tag": "ResultRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Requirement": [
+              "9"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "6"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "3"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Difficulty": [
+              "9"
+            ],
+            "RollType": [
+              "10"
+            ],
+            "Outcome": [
+              "1"
+            ],
+            "NewRoll": [
+              "1"
+            ]
+          }
+        },
+        {
+          "tag": "ResultInjuryRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "3"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "2"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Source": [
+              "1"
+            ],
+            "RollType": [
+              "11"
+            ],
+            "Outcome": [
+              "0"
+            ]
+          }
+        }
+      ],
+      "previousStep": {
+        "header": {
+          "Applied": [
+            "1"
+          ],
+          "Probability": [
+            "100.0"
+          ],
+          "Source": [
+            "1"
+          ],
+          "PlayerId": [
+            "1"
+          ],
+          "TargetId": [
+            "1"
+          ],
+          "IsEvaluation": [
+            "0"
+          ],
+          "StepType": [
+            "2"
+          ],
+          "CellTo": [
+            {
+              "Y": [
+                "6"
+              ],
+              "X": [
+                "12"
+              ]
+            }
+          ],
+          "State": [
+            "2"
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "6"
+              ],
+              "X": [
+                "12"
+              ]
+            }
+          ],
+          "Skill": [
+            "0"
+          ]
+        },
+        "messages": [
+          {
+            "tag": "ResultRoll",
+            "payload": {
+              "Status": [
+                "1"
+              ],
+              "Requirement": [
+                "9"
+              ],
+              "Dice": [
+                {
+                  "Die": [
+                    {
+                      "DieType": [
+                        "0"
+                      ],
+                      "Value": [
+                        "6"
+                      ]
+                    },
+                    {
+                      "DieType": [
+                        "0"
+                      ],
+                      "Value": [
+                        "4"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Difficulty": [
+                "9"
+              ],
+              "RollType": [
+                "10"
+              ],
+              "Outcome": [
+                "1"
+              ],
+              "NewRoll": [
+                "1"
+              ]
+            }
+          },
+          {
+            "tag": "ResultInjuryRoll",
+            "payload": {
+              "Status": [
+                "1"
+              ],
+              "Dice": [
+                {
+                  "Die": [
+                    {
+                      "DieType": [
+                        "0"
+                      ],
+                      "Value": [
+                        "3"
+                      ]
+                    },
+                    {
+                      "DieType": [
+                        "0"
+                      ],
+                      "Value": [
+                        "1"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Source": [
+                "1"
+              ],
+              "RollType": [
+                "11"
+              ],
+              "Outcome": [
+                "0"
+              ]
+            }
+          }
+        ]
+      },
+      "seeds": [
+        {
+          "playerId": "1",
+          "rosterIndex": 0,
+          "explicitTeamId": "0",
+          "prayersEmpty": true,
+          "playerType": "1106",
+          "dataPlayerId": "1",
+          "innate": [
+            36,
+            49,
+            84,
+            13,
+            44
+          ],
+          "acquired": []
+        },
+        {
+          "playerId": "43",
+          "rosterIndex": 1,
+          "explicitTeamId": "1",
+          "prayersEmpty": true,
+          "playerType": "1077",
+          "dataPlayerId": "43",
+          "innate": [
+            19
+          ],
+          "acquired": []
+        }
+      ],
+      "current": {
+        "locator": {
+          "replayStep": 32,
+          "childIndex": 2
+        },
+        "phase": "5",
+        "effectsEmpty": true,
+        "players": [
+          {
+            "playerId": "1",
+            "rosterIndex": 0,
+            "explicitTeamId": null,
+            "effectsEmpty": true,
+            "teamEffectsEmpty": true,
+            "transformationsEmpty": true,
+            "prayersEmpty": null,
+            "raw": {
+              "Gfi": [
+                "2"
+              ],
+              "Id": [
+                "1"
+              ],
+              "ListUsedSkills": [
+                {
+                  "ListUsedSkillsItem": [
+                    "84"
+                  ]
+                }
+              ],
+              "CanAct": [
+                "1"
+              ],
+              "Cell": [
+                {
+                  "Y": [
+                    "6"
+                  ],
+                  "X": [
+                    "12"
+                  ]
+                }
+              ],
+              "SequenceType": [
+                "2"
+              ],
+              "LastCell": [
+                {
+                  "Y": [
+                    "-1"
+                  ],
+                  "X": [
+                    "-1"
+                  ]
+                }
+              ],
+              "TackleZone": [
+                "1"
+              ],
+              "MovePoint": [
+                "6"
+              ]
+            }
+          },
+          {
+            "playerId": "43",
+            "rosterIndex": 1,
+            "explicitTeamId": "1",
+            "effectsEmpty": true,
+            "teamEffectsEmpty": true,
+            "transformationsEmpty": true,
+            "prayersEmpty": null,
+            "raw": {
+              "Gfi": [
+                "2"
+              ],
+              "Id": [
+                "43"
+              ],
+              "CanAct": [
+                "1"
+              ],
+              "Cell": [
+                {
+                  "Y": [
+                    "6"
+                  ],
+                  "X": [
+                    "13"
+                  ]
+                }
+              ],
+              "LastCell": [
+                {
+                  "Y": [
+                    "-1"
+                  ],
+                  "X": [
+                    "-1"
+                  ]
+                }
+              ],
+              "TackleZone": [
+                "1"
+              ],
+              "MovePoint": [
+                "4"
+              ]
+            }
+          }
+        ]
+      },
+      "reference": {
+        "scope": "conditional table from observed initial lists; admission/current continuity/cause require separate proof",
+        "stunty": false,
+        "thickSkull": false,
+        "counts": [
+          21,
+          9,
+          0,
+          6
+        ],
+        "dice": [
+          3,
+          2
+        ],
+        "outcome": "stunned",
+        "delta": "5/12",
+        "weighted": "5/8"
+      }
+    },
+    {
+      "sourceFile": "demo9.bbr",
+      "locator": {
+        "replayStep": 48,
+        "childIndex": 1,
+        "stepIndex": 1,
+        "messageIndex": 1
+      },
+      "subjectId": "8",
+      "header": {
+        "Applied": [
+          "1"
+        ],
+        "Probability": [
+          "100.0"
+        ],
+        "Source": [
+          "1"
+        ],
+        "PlayerId": [
+          "8"
+        ],
+        "TargetId": [
+          "8"
+        ],
+        "IsEvaluation": [
+          "0"
+        ],
+        "StepType": [
+          "2"
+        ],
+        "CellTo": [
+          {
+            "Y": [
+              "6"
+            ],
+            "X": [
+              "11"
+            ]
+          }
+        ],
+        "State": [
+          "2"
+        ],
+        "CellFrom": [
+          {
+            "Y": [
+              "6"
+            ],
+            "X": [
+              "11"
+            ]
+          }
+        ],
+        "Skill": [
+          "0"
+        ]
+      },
+      "messages": [
+        {
+          "tag": "ResultRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Requirement": [
+              "9"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "5"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "6"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Difficulty": [
+              "9"
+            ],
+            "RollType": [
+              "10"
+            ],
+            "Outcome": [
+              "1"
+            ],
+            "NewRoll": [
+              "1"
+            ]
+          }
+        },
+        {
+          "tag": "ResultInjuryRoll",
+          "payload": {
+            "Status": [
+              "1"
+            ],
+            "Dice": [
+              {
+                "Die": [
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "6"
+                    ]
+                  },
+                  {
+                    "DieType": [
+                      "0"
+                    ],
+                    "Value": [
+                      "1"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "Source": [
+              "1"
+            ],
+            "RollType": [
+              "11"
+            ],
+            "Outcome": [
+              "0"
+            ]
+          }
+        }
+      ],
+      "previousStep": {
+        "header": {
+          "Probability": [
+            "100.0"
+          ],
+          "PlayerId": [
+            "42"
+          ],
+          "TargetId": [
+            "8"
+          ],
+          "IsEvaluation": [
+            "0"
+          ],
+          "StepType": [
+            "6"
+          ],
+          "CellTo": [
+            {
+              "Y": [
+                "5"
+              ],
+              "X": [
+                "12"
+              ]
+            }
+          ],
+          "State": [
+            "3"
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "5"
+              ],
+              "X": [
+                "13"
+              ]
+            }
+          ],
+          "Skill": [
+            "0"
+          ]
+        },
+        "messages": [
+          {
+            "tag": "ResultFollowUp",
+            "payload": {
+              "Follow": [
+                "1"
+              ],
+              "CellFrom": [
+                {
+                  "Y": [
+                    "5"
+                  ],
+                  "X": [
+                    "13"
+                  ]
+                }
+              ],
+              "CellTo": [
+                {
+                  "Y": [
+                    "5"
+                  ],
+                  "X": [
+                    "12"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "tag": "ResultBlockOutcome",
+            "payload": {
+              "AttackerId": [
+                "42"
+              ],
+              "DefenderId": [
+                "8"
+              ],
+              "Outcome": [
+                "6"
+              ],
+              "Pushbacks": [
+                {
+                  "ResultPushBack": [
+                    {
+                      "CellTo": [
+                        {
+                          "Y": [
+                            "6"
+                          ],
+                          "X": [
+                            "11"
+                          ]
+                        }
+                      ],
+                      "CellFrom": [
+                        {
+                          "Y": [
+                            "5"
+                          ],
+                          "X": [
+                            "12"
+                          ]
+                        }
+                      ],
+                      "Resolution": [
+                        "3"
+                      ],
+                      "PushedPlayerId": [
+                        "8"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Follow": [
+                "1"
+              ]
+            }
+          },
+          {
+            "tag": "ResultMoveOutcome",
+            "payload": {
+              "TentacleUsed": [
+                "0"
+              ],
+              "Moved": [
+                "0"
+              ],
+              "Pushbacks": [
+                {
+                  "ResultPushBack": [
+                    {
+                      "CellTo": [
+                        {
+                          "Y": [
+                            "6"
+                          ],
+                          "X": [
+                            "11"
+                          ]
+                        }
+                      ],
+                      "CellFrom": [
+                        {
+                          "Y": [
+                            "5"
+                          ],
+                          "X": [
+                            "12"
+                          ]
+                        }
+                      ],
+                      "Resolution": [
+                        "3"
+                      ],
+                      "PushedPlayerId": [
+                        "8"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "FumbleRooskieUsed": [
+                "0"
+              ]
+            }
+          }
+        ]
+      },
+      "seeds": [
+        {
+          "playerId": "8",
+          "rosterIndex": 0,
+          "explicitTeamId": "0",
+          "prayersEmpty": true,
+          "playerType": "1008",
+          "dataPlayerId": "8",
+          "innate": [],
+          "acquired": []
+        },
+        {
+          "playerId": "42",
+          "rosterIndex": 1,
+          "explicitTeamId": "1",
+          "prayersEmpty": true,
+          "playerType": "1077",
+          "dataPlayerId": "42",
+          "innate": [
+            19
+          ],
+          "acquired": []
+        }
+      ],
+      "current": {
+        "locator": {
+          "replayStep": 47,
+          "childIndex": 2
+        },
+        "phase": "5",
+        "effectsEmpty": true,
+        "players": [
+          {
+            "playerId": "8",
+            "rosterIndex": 0,
+            "explicitTeamId": null,
+            "effectsEmpty": true,
+            "teamEffectsEmpty": true,
+            "transformationsEmpty": true,
+            "prayersEmpty": null,
+            "raw": {
+              "Gfi": [
+                "2"
+              ],
+              "Id": [
+                "8"
+              ],
+              "CanAct": [
+                "1"
+              ],
+              "Cell": [
+                {
+                  "Y": [
+                    "6"
+                  ],
+                  "X": [
+                    "11"
+                  ]
+                }
+              ],
+              "LastCell": [
+                {
+                  "Y": [
+                    "5"
+                  ],
+                  "X": [
+                    "12"
+                  ]
+                }
+              ],
+              "TackleZone": [
+                "1"
+              ],
+              "MovePoint": [
+                "6"
+              ]
+            }
+          },
+          {
+            "playerId": "42",
+            "rosterIndex": 1,
+            "explicitTeamId": "1",
+            "effectsEmpty": true,
+            "teamEffectsEmpty": true,
+            "transformationsEmpty": true,
+            "prayersEmpty": null,
+            "raw": {
+              "Gfi": [
+                "2"
+              ],
+              "Id": [
+                "42"
+              ],
+              "CanAct": [
+                "1"
+              ],
+              "Cell": [
+                {
+                  "Y": [
+                    "5"
+                  ],
+                  "X": [
+                    "13"
+                  ]
+                }
+              ],
+              "SequenceType": [
+                "2"
+              ],
+              "LastCell": [
+                {
+                  "Y": [
+                    "-1"
+                  ],
+                  "X": [
+                    "-1"
+                  ]
+                }
+              ],
+              "TackleZone": [
+                "1"
+              ],
+              "MovePoint": [
+                "4"
+              ]
+            }
+          }
+        ]
+      },
+      "reference": {
+        "scope": "conditional table from observed initial lists; admission/current continuity/cause require separate proof",
+        "stunty": false,
+        "thickSkull": false,
+        "counts": [
+          21,
+          9,
+          0,
+          6
+        ],
+        "dice": [
+          6,
+          1
+        ],
+        "outcome": "stunned",
+        "delta": "5/12",
+        "weighted": "5/8"
+      }
+    }
+  ],
+  "pushes": [
+    {
+      "sourceFile": "demo9.bbr",
+      "question": {
+        "tag": "QuestionPushBack",
+        "locator": {
+          "replayStep": 46,
+          "childIndex": 1,
+          "stepIndex": 0,
+          "messageIndex": 1
+        },
+        "payload": {
+          "GamerId": [
+            "1"
+          ],
+          "CellTo": [
+            {
+              "Cell": [
+                {
+                  "Y": [
+                    "5"
+                  ],
+                  "X": [
+                    "11"
+                  ]
+                },
+                {
+                  "Y": [
+                    "6"
+                  ],
+                  "X": [
+                    "11"
+                  ]
+                }
+              ]
+            }
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "5"
+              ],
+              "X": [
+                "12"
+              ]
+            }
+          ],
+          "BlockRoll": [
+            {
+              "RollStatus": [
+                "1"
+              ],
+              "StModifiers": [
+                {
+                  "Modifier": [
+                    {
+                      "PlayerId": [
+                        "45"
+                      ],
+                      "Skill": [
+                        "-1"
+                      ],
+                      "Effect": [
+                        "-1"
+                      ],
+                      "Value": [
+                        "1"
+                      ],
+                      "ModifierType": [
+                        "11"
+                      ]
+                    },
+                    {
+                      "PlayerId": [
+                        "41"
+                      ],
+                      "Skill": [
+                        "-1"
+                      ],
+                      "Effect": [
+                        "-1"
+                      ],
+                      "Value": [
+                        "1"
+                      ],
+                      "ModifierType": [
+                        "11"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Die": [
+                {
+                  "DieType": [
+                    "2"
+                  ],
+                  "Value": [
+                    "4"
+                  ]
+                }
+              ],
+              "Assists": [
+                {
+                  "AssistInfos": [
+                    {
+                      "Cell": [
+                        {
+                          "Y": [
+                            "4"
+                          ],
+                          "X": [
+                            "11"
+                          ]
+                        }
+                      ],
+                      "Modifier": [
+                        "1"
+                      ]
+                    },
+                    {
+                      "Cell": [
+                        {
+                          "Y": [
+                            "4"
+                          ],
+                          "X": [
+                            "13"
+                          ]
+                        }
+                      ],
+                      "Modifier": [
+                        "1"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "RollType": [
+                "3"
+              ],
+              "Outcome": [
+                "6"
+              ],
+              "NewRoll": [
+                "1"
+              ]
+            }
+          ]
+        }
+      },
+      "push": {
+        "tag": "ResultPushBack",
+        "locator": {
+          "replayStep": 47,
+          "childIndex": 1,
+          "stepIndex": 0,
+          "messageIndex": 0
+        },
+        "payload": {
+          "CellTo": [
+            {
+              "Y": [
+                "6"
+              ],
+              "X": [
+                "11"
+              ]
+            }
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "5"
+              ],
+              "X": [
+                "12"
+              ]
+            }
+          ],
+          "Resolution": [
+            "3"
+          ],
+          "PushedPlayerId": [
+            "8"
+          ]
+        }
+      },
+      "applied": {
+        "tag": "ResultBlockOutcome",
+        "locator": {
+          "replayStep": 48,
+          "childIndex": 1,
+          "stepIndex": 0,
+          "messageIndex": 1
+        },
+        "payload": {
+          "AttackerId": [
+            "42"
+          ],
+          "DefenderId": [
+            "8"
+          ],
+          "Outcome": [
+            "6"
+          ],
+          "Pushbacks": [
+            {
+              "ResultPushBack": [
+                {
+                  "CellTo": [
+                    {
+                      "Y": [
+                        "6"
+                      ],
+                      "X": [
+                        "11"
+                      ]
+                    }
+                  ],
+                  "CellFrom": [
+                    {
+                      "Y": [
+                        "5"
+                      ],
+                      "X": [
+                        "12"
+                      ]
+                    }
+                  ],
+                  "Resolution": [
+                    "3"
+                  ],
+                  "PushedPlayerId": [
+                    "8"
+                  ]
+                }
+              ]
+            }
+          ],
+          "Follow": [
+            "1"
+          ]
+        }
+      }
+    },
+    {
+      "sourceFile": "demo9.bbr",
+      "question": {
+        "tag": "QuestionPushBack",
+        "locator": {
+          "replayStep": 69,
+          "childIndex": 1,
+          "stepIndex": 0,
+          "messageIndex": 1
+        },
+        "payload": {
+          "GamerId": [
+            "0"
+          ],
+          "CellTo": [
+            {
+              "Cell": [
+                {
+                  "Y": [
+                    "3"
+                  ],
+                  "X": [
+                    "11"
+                  ]
+                },
+                {
+                  "Y": [
+                    "3"
+                  ],
+                  "X": [
+                    "12"
+                  ]
+                }
+              ]
+            }
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "4"
+              ],
+              "X": [
+                "11"
+              ]
+            }
+          ],
+          "BlockRoll": [
+            {
+              "RollStatus": [
+                "2"
+              ],
+              "StModifiers": [
+                {
+                  "Modifier": [
+                    {
+                      "PlayerId": [
+                        "2"
+                      ],
+                      "Skill": [
+                        "-1"
+                      ],
+                      "Effect": [
+                        "-1"
+                      ],
+                      "Value": [
+                        "1"
+                      ],
+                      "ModifierType": [
+                        "11"
+                      ]
+                    },
+                    {
+                      "PlayerId": [
+                        "42"
+                      ],
+                      "Skill": [
+                        "-1"
+                      ],
+                      "Effect": [
+                        "-1"
+                      ],
+                      "Value": [
+                        "-1"
+                      ],
+                      "ModifierType": [
+                        "12"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Die": [
+                {
+                  "DieType": [
+                    "2"
+                  ],
+                  "Value": [
+                    "2"
+                  ]
+                }
+              ],
+              "Assists": [
+                {
+                  "AssistInfos": [
+                    {
+                      "Cell": [
+                        {
+                          "Y": [
+                            "5"
+                          ],
+                          "X": [
+                            "10"
+                          ]
+                        }
+                      ],
+                      "Modifier": [
+                        "1"
+                      ]
+                    },
+                    {
+                      "Cell": [
+                        {
+                          "Y": [
+                            "5"
+                          ],
+                          "X": [
+                            "12"
+                          ]
+                        }
+                      ],
+                      "Modifier": [
+                        "-1"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "RollType": [
+                "3"
+              ],
+              "Outcome": [
+                "4"
+              ],
+              "NewRoll": [
+                "1"
+              ]
+            }
+          ]
+        }
+      },
+      "push": {
+        "tag": "ResultPushBack",
+        "locator": {
+          "replayStep": 70,
+          "childIndex": 1,
+          "stepIndex": 0,
+          "messageIndex": 0
+        },
+        "payload": {
+          "CellTo": [
+            {
+              "Y": [
+                "3"
+              ],
+              "X": [
+                "12"
+              ]
+            }
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "4"
+              ],
+              "X": [
+                "11"
+              ]
+            }
+          ],
+          "Resolution": [
+            "3"
+          ],
+          "PushedPlayerId": [
+            "45"
+          ]
+        }
+      },
+      "applied": {
+        "tag": "ResultBlockOutcome",
+        "locator": {
+          "replayStep": 71,
+          "childIndex": 1,
+          "stepIndex": 0,
+          "messageIndex": 1
+        },
+        "payload": {
+          "AttackerId": [
+            "9"
+          ],
+          "DefenderId": [
+            "45"
+          ],
+          "Outcome": [
+            "4"
+          ],
+          "Pushbacks": [
+            {
+              "ResultPushBack": [
+                {
+                  "CellTo": [
+                    {
+                      "Y": [
+                        "3"
+                      ],
+                      "X": [
+                        "12"
+                      ]
+                    }
+                  ],
+                  "CellFrom": [
+                    {
+                      "Y": [
+                        "4"
+                      ],
+                      "X": [
+                        "11"
+                      ]
+                    }
+                  ],
+                  "Resolution": [
+                    "3"
+                  ],
+                  "PushedPlayerId": [
+                    "45"
+                  ]
+                }
+              ]
+            }
+          ],
+          "Follow": [
+            "1"
+          ]
+        }
+      }
+    },
+    {
+      "sourceFile": "demo9.bbr",
+      "question": {
+        "tag": "QuestionPushBack",
+        "locator": {
+          "replayStep": 83,
+          "childIndex": 1,
+          "stepIndex": 0,
+          "messageIndex": 1
+        },
+        "payload": {
+          "GamerId": [
+            "1"
+          ],
+          "CellTo": [
+            {
+              "Cell": [
+                {
+                  "Y": [
+                    "5"
+                  ],
+                  "X": [
+                    "11"
+                  ]
+                },
+                {
+                  "Y": [
+                    "4"
+                  ],
+                  "X": [
+                    "10"
+                  ]
+                }
+              ]
+            }
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "4"
+              ],
+              "X": [
+                "11"
+              ]
+            }
+          ],
+          "BlockRoll": [
+            {
+              "RollStatus": [
+                "1"
+              ],
+              "StModifiers": [
+                {
+                  "Modifier": [
+                    {
+                      "PlayerId": [
+                        "42"
+                      ],
+                      "Skill": [
+                        "-1"
+                      ],
+                      "Effect": [
+                        "-1"
+                      ],
+                      "Value": [
+                        "1"
+                      ],
+                      "ModifierType": [
+                        "11"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Die": [
+                {
+                  "DieType": [
+                    "2"
+                  ],
+                  "Value": [
+                    "3"
+                  ]
+                }
+              ],
+              "Assists": [
+                {
+                  "AssistInfos": [
+                    {
+                      "Cell": [
+                        {
+                          "Y": [
+                            "5"
+                          ],
+                          "X": [
+                            "12"
+                          ]
+                        }
+                      ],
+                      "Modifier": [
+                        "1"
+                      ]
+                    },
+                    {
+                      "Cell": [
+                        {
+                          "Y": [
+                            "3"
+                          ],
+                          "X": [
+                            "11"
+                          ]
+                        }
+                      ],
+                      "Modifier": [
+                        "0"
+                      ]
+                    },
+                    {
+                      "Cell": [
+                        {
+                          "Y": [
+                            "3"
+                          ],
+                          "X": [
+                            "10"
+                          ]
+                        }
+                      ],
+                      "Modifier": [
+                        "0"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "RollType": [
+                "3"
+              ],
+              "Outcome": [
+                "6"
+              ],
+              "NewRoll": [
+                "1"
+              ]
+            }
+          ]
+        }
+      },
+      "push": {
+        "tag": "ResultPushBack",
+        "locator": {
+          "replayStep": 84,
+          "childIndex": 1,
+          "stepIndex": 0,
+          "messageIndex": 0
+        },
+        "payload": {
+          "CellTo": [
+            {
+              "Y": [
+                "5"
+              ],
+              "X": [
+                "11"
+              ]
+            }
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "4"
+              ],
+              "X": [
+                "11"
+              ]
+            }
+          ],
+          "Resolution": [
+            "3"
+          ],
+          "PushedPlayerId": [
+            "9"
+          ]
+        }
+      },
+      "applied": {
+        "tag": "ResultBlockOutcome",
+        "locator": {
+          "replayStep": 85,
+          "childIndex": 1,
+          "stepIndex": 0,
+          "messageIndex": 1
+        },
+        "payload": {
+          "AttackerId": [
+            "45"
+          ],
+          "DefenderId": [
+            "9"
+          ],
+          "Outcome": [
+            "6"
+          ],
+          "Pushbacks": [
+            {
+              "ResultPushBack": [
+                {
+                  "CellTo": [
+                    {
+                      "Y": [
+                        "5"
+                      ],
+                      "X": [
+                        "11"
+                      ]
+                    }
+                  ],
+                  "CellFrom": [
+                    {
+                      "Y": [
+                        "4"
+                      ],
+                      "X": [
+                        "11"
+                      ]
+                    }
+                  ],
+                  "Resolution": [
+                    "3"
+                  ],
+                  "PushedPlayerId": [
+                    "9"
+                  ]
+                }
+              ]
+            }
+          ],
+          "Follow": [
+            "1"
+          ]
+        }
+      }
+    }
+  ]
+}

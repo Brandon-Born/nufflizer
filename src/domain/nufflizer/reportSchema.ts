@@ -15,6 +15,7 @@ import {
   type ContextComponentSummary
 } from "./contextComponents";
 import { directInjuryOutcome } from "./injuryObservation";
+import { validReportedDamageSpp } from "./damageSpp";
 import { validReportedCategoricalInjury } from "./categoricalInjury";
 import { injuryTableForTraits } from "./injuryTable";
 import { validReportedBlockCrowd } from "./blockCrowd";
@@ -145,7 +146,8 @@ const playerTraits = z.strictObject({
   acquiredSkills: z.array(z.number().int().nonnegative()).max(64).nullable()
 });
 const currentTraitEvidence = z.strictObject({playerId:text,teamId:text,rosterIndex:z.number().int().min(0).max(1),observedCheckpointAfter:count,currentCheckpointAfter:count,prayersCheckpointAfter:count,onPitch:z.boolean(),tackleZone:z.boolean().nullable(),statusCode:z.number().int().nonnegative().nullable(),traits:playerTraits});
-const injuryTable = z.strictObject({rules:z.literal("bb2020"),policy:z.literal("fixed_unmodified_injury"),stunty:z.boolean(),thickSkull:z.boolean(),traitEvidence:currentTraitEvidence,counts:z.array(z.number().int().min(0).max(36)).length(4),probabilities:z.array(probability).length(4)});
+const injuryOtherActionSkills=z.strictObject({policy:z.literal("outside_initial_injury_table"),skills:z.array(z.union([z.literal(47),z.literal(52),z.literal(86),z.literal(100),z.literal(101),z.literal(102)])).min(1).max(6)});
+const injuryTable = z.strictObject({rules:z.literal("bb2020"),policy:z.literal("fixed_unmodified_injury"),stunty:z.boolean(),thickSkull:z.boolean(),traitEvidence:currentTraitEvidence,otherActionSkills:injuryOtherActionSkills.optional(),counts:z.array(z.number().int().min(0).max(36)).length(4),probabilities:z.array(probability).length(4)});
 const recoveryReturnSnapshot=z.strictObject({checkpointAfter:count,replayStep:z.number().int().positive(),childIndex:count,rosterIndex:z.union([z.literal(0),z.literal(1)]),phase:z.union([z.literal(3),z.literal(5)]),cell:pitchCell,
   statusCode:z.number().int().nullable(),situationCode:z.number().int().nullable(),canAct:z.boolean().nullable(),tackleZone:z.boolean().nullable(),activeGamerId:z.union([z.literal(0),z.literal(1)]).nullable(),periodCode:count.nullable(),teamTurn:count.nullable()});
 const recoveryReturnStop=z.discriminatedUnion("reason",[
@@ -234,14 +236,15 @@ export const LuckEventMetadataSchema = z.strictObject({
   blockSelection:z.strictObject({face:z.number().int().min(0).max(4)}).optional(),
   blockScoring:z.strictObject({policy:z.literal("fixed_pool_knockdown_balance"),poolSourceId:text,observedValue:z.union([z.literal(-1),z.literal(0),z.literal(1)]),expectedValue:finite.min(-1).max(1)}).optional(),
   injuryScoring: z.strictObject({
-    policy: z.literal("injury_table_order"), armorSourceId: text,
+    policy: z.literal("injury_table_order"), armorSourceId: text, sppSourceId:text.optional(),
     cause: z.discriminatedUnion("kind", [
-      z.strictObject({kind:z.literal("block"),poolSourceId:text,appliedOutcomeSourceId:text,damageStepSourceIndex:count,attackerTraitEvidence:currentTraitEvidence.optional(),
+      z.strictObject({kind:z.literal("block"),poolSourceId:text,appliedOutcomeSourceId:text,damageStepSourceIndex:count,attackerTraitEvidence:currentTraitEvidence.optional(),attackerOtherActionSkills:injuryOtherActionSkills.optional(),
         armorModifierBudget:z.strictObject({useSourceId:text,available:z.literal(1),spent:z.literal(1),remaining:z.literal(0)}).optional()}),
       z.strictObject({kind:z.literal("self_fall"),rollSourceId:text,moveOutcomeSourceIndex:count,movementStepSourceIndex:count})
     ]),
     lessSevereChance:probability, sameSeverityChance:probability, moreSevereChance:probability
   }).optional(),
+  recordedSpp:z.strictObject({points:z.literal(2),damage:z.strictObject({armorSourceId:text,injurySourceId:text,damageStepSourceIndex:count}).optional()}).optional(),
   injuryTable:injuryTable.optional(),
   injuryObservation:z.strictObject({outcome:z.enum(["stunned","ko","badly_hurt","casualty"]),recordKind:z.enum(["direct","embedded_ko"]),subjectId:text,subjectTeamId:text,sourceCode:z.number().int().min(0).max(64),damageStepSourceIndex:count}).optional(),
   crowdPush:z.strictObject({playerId:text,from:pitchCell,to:z.strictObject({x:z.number().int().min(-1).max(26),y:z.number().int().min(-1).max(15)}),resolution:z.literal(3)}).optional(),
@@ -2462,6 +2465,7 @@ export const LuckReportSchema = z
         JSON.stringify([...new Set(fixed.filter(m=>m.skillId>=0).map(m=>m.skillId))])===JSON.stringify(event.metadata.skillsUsed??[]),
         "Scored numeric checks require exact supported fixed pre-roll modifier receipts; post-roll, unknown or duplicate modifiers cannot certify these odds.");
       else require(fixed===undefined,"Only a supported scored numeric check carries a fixed-modifier receipt.");
+      if(event.metadata.recordedSpp)require(validReportedDamageSpp(event,sources),"Recorded SPP is a non-random owned notification; any damage link needs its adjacent armor/injury source records and separate subject.");
       const injuryObservation=event.metadata.injuryObservation;
       require(validReportedRecoveryControl(event)&&validReportedRegenerationAftermath(event,sources,report.coverage.sourceRecordCount),"Regeneration aftermath requires its first same-frame owned off-pitch observation and the exact supported ordered control bridge, separately from dice and availability.");
       require(validReportedRegenerationReturn(event,sources,report.coverage.sourceRecordCount)&&validReportedRecoveryReturnActivation(event,sources,report.coverage.sourceRecordCount),"A recovered-player return requires ordered same-instance setup/play observations and its own supported declaration; gaps and missing observations cannot establish useful availability or add luck.");
@@ -2484,6 +2488,7 @@ export const LuckReportSchema = z
           proof.playerId===event.playerId && proof.teamId===event.teamId && proof.observedCheckpointAfter<=proof.currentCheckpointAfter &&
           proof.prayersCheckpointAfter<=proof.currentCheckpointAfter && proof.currentCheckpointAfter<injuryObservation.damageStepSourceIndex &&
           !!expected && table.stunty===expected.stunty && table.thickSkull===expected.thickSkull &&
+          JSON.stringify(table.otherActionSkills)===JSON.stringify(expected.otherActionSkills) &&
           table.counts.every((n,i)=>n===expected.counts[i]) && table.probabilities.every((n,i)=>near(n,expected.probabilities[i]!)),
           "An injury table requires an owned current trait receipt before damage, no applied modifier, matching recorded outcome and exact fair 2D6 categorical probabilities; no treatment, availability or luck value is implied.");
       }

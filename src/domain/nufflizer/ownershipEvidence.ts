@@ -96,9 +96,12 @@ export function validReportedOwnership(
     if (conflict.reason === "pending_identity" && !conflict.identitySourceId)
       return false;
   }
-  if (!ownership) return event.scoringStatus !== "scored" && !event.metadata.block;
+  if (!ownership)
+    return event.scoringStatus !== "scored" && !event.metadata.block;
   if (
-    (event.scoringStatus !== "scored" && !event.metadata.block) ||
+    (event.scoringStatus !== "scored" &&
+      !event.metadata.block &&
+      !event.metadata.recordedSpp) ||
     conflict ||
     !teams.has(ownership.teamId) ||
     ownership.teamId !== event.teamId ||

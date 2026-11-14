@@ -93,14 +93,15 @@ describe("direct Badly Hurt keeps its injury namespace and initial severity", ()
       expect(
         raw.roll.Dice[0].Die.map((d: { Value: string[] }) => Number(d.Value[0]))
       ).toEqual(dice);
+      const qualified = file === "demo6.bbr" && id === "source-248";
       expect(e).toMatchObject({
         playerId: player,
         teamId: team,
         actualSuccess: null,
         probabilitySuccess: null,
-        scoringStatus: "excluded",
-        delta: 0,
-        weightedDelta: 0
+        scoringStatus: qualified ? "scored" : "excluded",
+        delta: qualified ? -13 / 18 : 0,
+        weightedDelta: qualified ? -13 / 12 : 0
       });
       expect(e.metadata.injuryObservation).toMatchObject({
         outcome: "badly_hurt",
@@ -109,7 +110,9 @@ describe("direct Badly Hurt keeps its injury namespace and initial severity", ()
         subjectTeamId: team
       });
       expect(formatActualOutcome(e)).toBe("Badly Hurt (recorded)");
-      expect(e.metadata.injuryScoring).toBeUndefined();
+      if (qualified)
+        expect(e.metadata.injuryScoring?.sppSourceId).toBe("source-247");
+      else expect(e.metadata.injuryScoring).toBeUndefined();
       expect(e.contextualImpact).toBeUndefined();
       expect(LuckReportSchema.safeParse(report).success).toBe(true);
     }

@@ -32,6 +32,7 @@ import {
   attachRetainedRushMoves
 } from "./retainedRushMoves";
 import { summarizeContextComponents } from "./contextComponents";
+import { findDamageSppNotices, attachDamageSppLinks } from "./damageSpp";
 import { attachInjuryObservations } from "./injuryObservation";
 import { attachCategoricalInjuries } from "./categoricalInjury";
 import { findMightyBlowArmorUses } from "./armorModifierBudget";
@@ -1281,6 +1282,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   const diceLinks: DiceLinks = new Map();
   const observedRerollDice = findObservedRerollDice(replay);
   const armorModifierUses = findMightyBlowArmorUses(replay, ownership);
+  const damageSppNotices = findDamageSppNotices(replay, ownership);
   const recoveryState = findRegenerationAftermath(replay, ownership);
   const recoveryReturns = findRegenerationReturns(replay, ownership, recoveryState.aftermath);
   const teamDiceIdentityByQuestion = new Map(
@@ -1321,6 +1323,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   }
   for(const p of numericRetryAccess)for(const e of [p.question,p.choice,p.skill,p.gate])activationEvidenceSources.add(e.id!);
   for (const source of armorModifierUses.keys()) activationEvidenceSources.add(source);
+  for (const source of damageSppNotices.keys()) activationEvidenceSources.add(source);
   for (const source of recoveryState.controls.keys()) activationEvidenceSources.add(source);
   for (const source of recoveryReturns.activations.keys()) activationEvidenceSources.add(source);
   for (const [source, proof] of rerollCounters) {
@@ -1864,6 +1867,17 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
         normalized.label="Recorded team reroll used";
         normalized.statusReason="Recorded use of one team reroll; the decision is not another random outcome.";
       }
+      const sppNotice=damageSppNotices.get(event.id??"");
+      if(sppNotice){
+        normalized.metadata.recordedSpp={points:2};
+        normalized.metadata.ownership={...sppNotice.ownership,role:"actor"};
+        normalized.type="unknown";normalized.metadata.isRollCandidate=false;
+        normalized.scoringStatus="excluded";normalized.probabilitySuccess=null;normalized.actualSuccess=null;normalized.delta=0;normalized.weightedDelta=0;normalized.explainability.weight=0;
+        normalized.label="Recorded SPP notification";
+        normalized.statusReason="Recorded two SPP; this annotation adds no random outcome or change to the initial injury table. Award legality, learned skills and availability require separate evidence.";
+        normalized.metadata.normalizationFlags=normalized.metadata.normalizationFlags?.filter(f=>f!=="missing_target_threshold");
+        normalized.metadata.normalizationNotes=normalized.metadata.normalizationNotes?.filter(n=>n!=="difficulty and requirement were both missing");
+      }
       const armorUse = armorModifierUses.get(event.id ?? "");
       const recoveryControl = recoveryState.controls.get(event.id ?? "");
       if(recoveryControl)normalized.metadata.recoveryControl=recoveryControl;
@@ -1979,6 +1993,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     )
   );
   attachInjuryObservations(replay, ballSources);
+  attachDamageSppLinks(ballSources);
   attachInjuryTables(replay, ballSources, ownership);
   attachCategoricalInjuries(replay, ballSources, blockConsequences, ownership);
   attachBlockCrowd(replay, ballSources, blockConsequences);

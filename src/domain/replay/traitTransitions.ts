@@ -81,7 +81,14 @@ const passiveUses = new Set([
 ]);
 // These source-specific uses affect a test, displacement or follow-up, not
 // learned skill lists. This does not grant their effective gameplay policy.
-const intrinsicOnlyUses = new Set([10, 31, 35, 36, 51, 56]);
+// BB2020 action/position/damage skills (pp75–87), individually source-linked
+// in INJURY_TRANSACTION_EVIDENCE. Their uses do not replace learned lists.
+// Physical effects, removals, prayers, transformations and unknown messages
+// still have their independent invalidation barriers.
+const intrinsicOnlyUses = new Set([
+  10, 31, 35, 36, 51, 56,
+  17, 18, 23, 25, 26, 37, 41, 47, 55, 64, 71, 84, 95, 97, 1009
+]);
 function integer(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 }

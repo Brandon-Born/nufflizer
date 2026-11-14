@@ -139,14 +139,18 @@ function formatTeamSummary(
     ]),
     `Push decisions: ${report.events.filter(e=>e.metadata.sourceTag==="QuestionPushBack").length} source menus; ${report.events.filter(e=>e.metadata.blockPush?.status==="modeled").length} modeled ordinary position alternatives. These are coach decisions with no added luck score.`,
     ...report.events.filter(e=>e.metadata.blockPush?.status==="modeled").slice(0,20).map(e=>`Source ${e.metadata.sourceId}: ${explainBlockPush(e)}`),
+    ...(report.events.some(e=>e.metadata.recordedSpp)?[
+      `Recorded SPP notifications: ${report.events.filter(e=>e.metadata.recordedSpp).length}. Source annotations add no random draw, skill advancement or injury value.`,
+      ...report.events.filter(e=>e.metadata.recordedSpp).map(e=>`Player ${e.playerId}; source ${e.metadata.sourceId}: ${formatActualOutcome(e)}; Not scored.${e.metadata.recordedSpp!.damage?` Between armor ${e.metadata.recordedSpp!.damage!.armorSourceId} and injury ${e.metadata.recordedSpp!.damage!.injurySourceId}.`:""}`)
+    ]:[]),
     ...(injuryObservations.length
       ? [
-          `Recorded injury results: ${injuryObservations.length}. These observed labels have unverified odds and are not luck scores or final player availability.`,
+          `Recorded injury results: ${injuryObservations.length}. Qualified initial injuries have separate categorical dice luck; other observations keep unverified odds. Treatment and final availability remain separate.`,
           ...injuryObservations
             .slice(0, 20)
             .map(
               (event) =>
-                `Player ${event.playerId}; source ${event.metadata.sourceId}: ${formatActualOutcome(event)}; Not scored.`
+                `Player ${event.playerId}; source ${event.metadata.sourceId}: ${formatActualOutcome(event)}; ${event.metadata.injuryScoring ? `Categorical dice contribution ${event.weightedDelta.toFixed(6)}.` : "Not scored."}`
             ),
           ...(injuryObservations.length > 20
             ? ["Further recorded injury results are retained in JSON."]

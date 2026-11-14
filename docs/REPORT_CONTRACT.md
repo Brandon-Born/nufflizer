@@ -2,7 +2,7 @@
 
 Updated 2026-11-14. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.64`, dice model `dice-only-33` and context model `mobility-possession-42`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.65`, dice model `dice-only-34` and context model `mobility-possession-42`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -749,3 +749,12 @@ The fixed-pool metric and weight are unchanged. Forty-two original-source pool c
 ## Direct Badly Hurt observation (schema2.64)
 
 `injuryObservation.outcome` also permits `badly_hurt`, joined to direct ResultInjuryRoll/11 Outcome3 under the existing source/header/subject guards. The existing current-trait table and causal policy still determine scoring independently. Embedded KO and treatment codes retain their separate contracts; code1 is not a direct injury label. Every public code3 witness remains unscored with unknown binary odds. See [source, rule, namespace and conservation evidence](DIRECT_BADLY_HURT_EVIDENCE.md).
+
+
+## Schema2.65 / dice-only-34: initial injury transaction scope
+
+Strict known skill-use messages preserve learned-list continuity separately from physical/effective-state admission. Pass47, RightStuff52 and Animosity86/100/101/102 may carry canonical `outside_initial_injury_table` receipts on the subject table or incoming blocker policy; Stunty59 still changes the table. Existing unknown-skill, state, ownership, modifier and causal guards remain.
+
+`recordedSpp` is an owned actor annotation, always excluded/non-random with points2, null binary odds/results and zero contribution. Its optional damage link requires adjacent same-action armor/injury sources and a distinct opposing subject. `injuryScoring.sppSourceId` admits exactly that one bridge only when its recipient is the opposing participant in the same qualified block, for either injured role. Own-fall or unrelated-recipient bridges remain unsupported. No award legality, advancement, removal, availability or tactical value follows. The export schema checks role/source/order links and recomputes the skill receipt.
+
+The fair injury metric and category weights are unchanged. Twenty public scores are added; all1,460 earlier values persist, with independently checked derived sums. Source6/248 now qualifies, superseding the previous schema2.64 checkpoint's eight-public-records-unscored statement; the other seven direct Badly Hurt witnesses remain unscored. Full scope, primary references, independent864 fair-face and twelve-report conservation evidence are in [INJURY_TRANSACTION_EVIDENCE.md](INJURY_TRANSACTION_EVIDENCE.md).

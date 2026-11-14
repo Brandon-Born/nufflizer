@@ -541,8 +541,9 @@ describe("intrinsic traits across source-qualified non-transforming transitions"
         "demo1.bbr": 11,
         "demo10.bbr": 17,
         "demo5.bbr": 14,
-        "demo6.bbr": 2,
-        "demo8.bbr": 29
+        "demo6.bbr": 4,
+        "demo8.bbr": 29,
+        "demo9.bbr": 13
       };
       expect(count).toBe(expected[f.file] ?? 0);
       expect(report.teams.every((t) => t.impactCount === 0)).toBe(true);

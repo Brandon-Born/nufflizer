@@ -33,12 +33,12 @@ test("direct Badly Hurt is visible with unknown odds on desktop and mobile", asy
   await expect(
     page.getByRole("heading", { name: "Nuffle Match Report" })
   ).toBeVisible();
-  await page.getByLabel("Player ID or initial roster name").fill("47");
+  await page.getByLabel("Player ID or initial roster name").fill("45");
   await page.getByLabel("Category", { exact: true }).selectOption("injury");
   await page.getByLabel("Scoring status").selectOption("excluded");
   const row = page
     .locator("tbody tr")
-    .filter({ hasText: "Source: source-248;" });
+    .filter({ hasText: "Source: source-3956;" });
   await expect(row).toHaveCount(1);
   await expect(row.locator("td").nth(3)).toHaveText("Unknown");
   await expect(row.locator("td").nth(4)).toHaveText("Badly Hurt (recorded)");
@@ -68,14 +68,14 @@ test("direct Badly Hurt is visible with unknown odds on desktop and mobile", asy
   const saved = JSON.parse(
     readFileSync((await (await pending).path())!, "utf8")
   );
-  expect(saved.schemaVersion).toBe("2.64");
-  expect(saved.modelVersion).toBe("dice-only-33");
+  expect(saved.schemaVersion).toBe("2.65");
+  expect(saved.modelVersion).toBe("dice-only-34");
   expect(
     saved.events.find(
       (e: { metadata: { sourceId: string } }) =>
-        e.metadata.sourceId === "source-248"
+        e.metadata.sourceId === "source-3956"
     )
-  ).toEqual(report.events.find((e) => e.metadata.sourceId === "source-248"));
+  ).toEqual(report.events.find((e) => e.metadata.sourceId === "source-3956"));
   expect(saved.verdict.luckierTeam).toBe("unknown");
   expect(await page.locator("nextjs-portal").count()).toBe(0);
   await page.getByRole("button", { name: "Reset filters" }).click();

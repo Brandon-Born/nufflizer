@@ -115,8 +115,11 @@ describe("conditional injury tables before treatment and recovery", () => {
         )!;
       expect(e, JSON.stringify(c.locator)).toBeDefined();
       expect(e.playerId).toBe(c.subjectId);
-      expect(Boolean(e.metadata.injuryTable)).toBe(c.modelSupported);
-      if (c.modelSupported) {
+      // Original annotation stays frozen; the new independent transaction
+      // witness qualifies this other-action Animosity profile in schema2.65.
+      const added = c.sourceFile === "demo8.bbr" && c.locator.replayStep === 60;
+      expect(Boolean(e.metadata.injuryTable)).toBe(c.modelSupported || added);
+      if (c.modelSupported || added) {
         const table = e.metadata.injuryTable!;
         expect(table.traitEvidence.traits.innateSkills).toEqual(
           c.seed.innateSkills
@@ -148,7 +151,7 @@ describe("conditional injury tables before treatment and recovery", () => {
           )!.counts
         );
         expect(explainInjuryTable(e)).toContain("before treatment or recovery");
-        const qualified = new Set(["demo10.bbr:23", "demo10.bbr:26", "demo10.bbr:32", "demo10.bbr:76", "demo10.bbr:90", "demo5.bbr:29", "demo5.bbr:70", "demo8.bbr:45"]);
+        const qualified = new Set(["demo10.bbr:23", "demo10.bbr:26", "demo10.bbr:32", "demo10.bbr:76", "demo10.bbr:90", "demo5.bbr:29", "demo5.bbr:70", "demo8.bbr:45", "demo8.bbr:60"]);
         expect(Boolean(e.metadata.injuryScoring)).toBe(qualified.has(`${c.sourceFile}:${c.locator.replayStep}`));
         if(e.metadata.injuryScoring) {
           expect(explainInjuryTable(e)).toContain("categorical dice contribution");

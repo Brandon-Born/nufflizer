@@ -5,6 +5,7 @@ import {
   type CurrentTraitEvidence
 } from "@/domain/replay/traitContinuity";
 import type { LuckEvent } from "./types";
+import { injuryOtherActionScope, isOtherActionInjurySkill } from "./injurySkillScope";
 
 export const INJURY_OUTCOMES = [
   "stunned",
@@ -68,7 +69,7 @@ export function injuryTableForTraits(
     [t.innateSkills, t.acquiredSkills].some(
       (a) => new Set(a).size !== a.length
     ) ||
-    [...t.innateSkills, ...t.acquiredSkills].some((s) => !supported.has(s)) ||
+    [...t.innateSkills, ...t.acquiredSkills].some((s) => !supported.has(s) && !isOtherActionInjurySkill(s)) ||
     dice.length !== 2 ||
     dice.some((d) => !Number.isInteger(d) || d < 1 || d > 6)
   )
@@ -87,6 +88,7 @@ export function injuryTableForTraits(
     stunty,
     thickSkull,
     traitEvidence,
+    ...(injuryOtherActionScope(traitEvidence) ? {otherActionSkills:injuryOtherActionScope(traitEvidence)} : {}),
     ...enumerateUnmodifiedInjury(stunty, thickSkull)
   };
 }

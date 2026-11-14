@@ -6,6 +6,11 @@ import {
 } from "@/domain/replay/traitContinuity";
 import type { LuckEvent } from "./types";
 import { recordedInjuryName } from "./injuryObservation";
+import {
+  injuryOtherActionScope,
+  isOtherActionInjurySkill
+} from "./injurySkillScope";
+import { validReportedDamageSpp } from "./damageSpp";
 import type { ObservedBlockConsequence } from "./blockConsequences";
 import { knockedDownSubjects } from "./blockConsequences";
 import { LUCK_CATEGORY_WEIGHTS } from "./constants";
@@ -71,7 +76,10 @@ export function hasFixedBlockInjuryPolicy(
       (a) => new Set(a).size === a.length
     ) &&
     [...t.innateSkills, ...t.acquiredSkills].every(
-      (s) => ordinaryBlockDamageSkills.has(s) || (armorSpent && s === 13)
+      (s) =>
+        ordinaryBlockDamageSkills.has(s) ||
+        isOtherActionInjurySkill(s) ||
+        (armorSpent && s === 13)
     ) &&
     (!armorSpent ||
       [...t.innateSkills, ...t.acquiredSkills].filter((s) => s === 13)
@@ -92,6 +100,22 @@ function cell(p: unknown) {
   )
     return;
   return { x: Number(c.X), y: Number(c.Y) };
+}
+// A recorded award bridges this damage transaction only for the opposing
+// participant in the same block. Either participant can be the injured player.
+function sppMatchesBlockPeer(
+  spp: LuckEvent,
+  injuredId: string | undefined,
+  block: NonNullable<LuckEvent["metadata"]["block"]>,
+  attackerTeamId: LuckEvent["teamId"]
+) {
+  if (injuredId === block.defenderId)
+    return spp.playerId === block.attackerId && spp.teamId === attackerTeamId;
+  if (injuredId === block.attackerId)
+    return (
+      spp.playerId === block.defenderId && spp.teamId === block.defenderTeamId
+    );
+  return false;
 }
 function selfFallCause(
   events: readonly ReplayEvent[],
@@ -223,8 +247,11 @@ export function attachCategoricalInjuries(
       const damage = turn.events[i]!;
       const use = sources.get(turn.events[i + 1]?.id ?? "");
       const armorUse = use?.metadata.armorModifierUse;
-      const rawArmor = turn.events[i + (armorUse ? 2 : 1)],
-        rawInjury = turn.events[i + (armorUse ? 3 : 2)];
+      const rawArmor = turn.events[i + (armorUse ? 2 : 1)];
+      const following = turn.events[i + (armorUse ? 3 : 2)];
+      const spp = following?.id ? sources.get(following.id) : undefined;
+      const sppLink = spp?.metadata.recordedSpp?.damage;
+      const rawInjury = turn.events[i + (armorUse ? 3 : 2) + (sppLink ? 1 : 0)];
       const injury = rawInjury?.id ? sources.get(rawInjury.id) : undefined;
       const armor = rawArmor?.id ? sources.get(rawArmor.id) : undefined;
       const table = injury?.metadata.injuryTable,
@@ -257,7 +284,13 @@ export function attachCategoricalInjuries(
           (!validReportedArmorModifierUse(use!, sources) ||
             armorUse.armorSourceId !== rawArmor?.id ||
             armorUse.damageStepSourceIndex !== damage.sourceIndex)) ||
-        rawInjury?.sourceIndex !== rawArmor.sourceIndex! + 1 ||
+        rawInjury?.sourceIndex !== rawArmor.sourceIndex! + (sppLink ? 2 : 1) ||
+        (sppLink &&
+          (!spp ||
+            !validReportedDamageSpp(spp, sources) ||
+            sppLink.armorSourceId !== rawArmor?.id ||
+            sppLink.injurySourceId !== rawInjury?.id ||
+            sppLink.damageStepSourceIndex !== damage.sourceIndex)) ||
         rawArmor.sourceIndex !== damage.sourceIndex! + (armorUse ? 2 : 1)
       )
         continue;
@@ -279,6 +312,11 @@ export function attachCategoricalInjuries(
         )
           continue;
         const proof = holders.get(rawInjury.id!);
+        if (
+          sppLink &&
+          !sppMatchesBlockPeer(spp!, injury.playerId, block, pool!.teamId)
+        )
+          continue;
         if (
           (armorUse &&
             (injury.playerId !== block.defenderId ||
@@ -308,11 +346,18 @@ export function attachCategoricalInjuries(
                 }
               }
             : {}),
-          ...(proof ? { attackerTraitEvidence: proof } : {})
+          ...(proof
+            ? {
+                attackerTraitEvidence: proof,
+                ...(injuryOtherActionScope(proof)
+                  ? { attackerOtherActionSkills: injuryOtherActionScope(proof) }
+                  : {})
+              }
+            : {})
         };
       } else if (!candidates && !armorUse)
         cause = selfFallCause(turn.events, i, sources);
-      if (!cause) continue;
+      if (!cause || (sppLink && cause.kind !== "block")) continue;
       const rank = injuryOrderDeviation(table.counts, observation.outcome);
       const subject = injury.playerId
         ? owners.resolve(injury.playerId, rawInjury!)
@@ -328,6 +373,7 @@ export function attachCategoricalInjuries(
       injury.metadata.injuryScoring = {
         policy: "injury_table_order",
         armorSourceId: rawArmor.id!,
+        ...(sppLink ? { sppSourceId: spp!.metadata.sourceId! } : {}),
         cause,
         lessSevereChance: rank.lessSevereChance,
         sameSeverityChance: rank.sameSeverityChance,
@@ -367,6 +413,7 @@ export function validReportedCategoricalInjury(
   const budget =
     score.cause.kind === "block" ? score.cause.armorModifierBudget : undefined;
   const use = budget ? sources.get(budget.useSourceId) : undefined;
+  const spp = score.sppSourceId ? sources.get(score.sppSourceId) : undefined;
   const near = (a: number, b: number) => Math.abs(a - b) < 1e-12;
   if (
     !table ||
@@ -406,7 +453,17 @@ export function validReportedCategoricalInjury(
         use.metadata.armorModifierUse?.armorSourceId !== score.armorSourceId ||
         use.metadata.armorModifierUse.damageStepSourceIndex !==
           observation.damageStepSourceIndex)) ||
-    (armor.metadata.sourceIndex ?? -2) + 1 !== event.metadata.sourceIndex ||
+    (armor.metadata.sourceIndex ?? -2) + (score.sppSourceId ? 2 : 1) !==
+      event.metadata.sourceIndex ||
+    (score.sppSourceId &&
+      (!spp ||
+        !validReportedDamageSpp(spp, sources) ||
+        spp.metadata.recordedSpp?.damage?.armorSourceId !==
+          score.armorSourceId ||
+        spp.metadata.recordedSpp.damage.injurySourceId !==
+          event.metadata.sourceId ||
+        spp.metadata.recordedSpp.damage.damageStepSourceIndex !==
+          observation.damageStepSourceIndex)) ||
     observation.damageStepSourceIndex + (budget ? 2 : 1) !==
       armor.metadata.sourceIndex ||
     event.contextualImpact ||
@@ -417,6 +474,7 @@ export function validReportedCategoricalInjury(
     return false;
   const cause = score.cause;
   if (cause.kind === "self_fall") {
+    if (score.sppSourceId) return false;
     const fall = sources.get(cause.rollSourceId),
       i = fall?.metadata.sourceIndex;
     return (
@@ -469,6 +527,8 @@ export function validReportedCategoricalInjury(
     ).includes(event.playerId!)
   )
     return false;
+  if (spp && !sppMatchesBlockPeer(spp, event.playerId, block, pool!.teamId))
+    return false;
   if (
     budget &&
     (event.playerId !== block.defenderId ||
@@ -478,12 +538,16 @@ export function validReportedCategoricalInjury(
     return false;
   if (event.playerId === block.attackerId)
     return (
-      cause.attackerTraitEvidence === undefined && pool!.teamId === event.teamId
+      cause.attackerTraitEvidence === undefined &&
+      cause.attackerOtherActionSkills === undefined &&
+      pool!.teamId === event.teamId
     );
   const proof = cause.attackerTraitEvidence;
   return (
     !!proof &&
     hasFixedBlockInjuryPolicy(proof, !!budget) &&
+    JSON.stringify(cause.attackerOtherActionSkills) ===
+      JSON.stringify(injuryOtherActionScope(proof)) &&
     proof.onPitch &&
     proof.playerId === block.attackerId &&
     proof.teamId === pool!.teamId &&
