@@ -35,6 +35,7 @@ import { summarizeContextComponents } from "./contextComponents";
 import { findDamageSppNotices, attachDamageSppLinks } from "./damageSpp";
 import { attachInjuryObservations } from "./injuryObservation";
 import { findStaffInjuryOriginals } from "./staffInjuryOriginal";
+import { findTreatmentEvidence } from "./treatmentAftermath";
 import { attachCasualtyObservations } from "./casualtyObservation";
 import { attachCategoricalInjuries } from "./categoricalInjury";
 import { findMightyBlowArmorUses } from "./armorModifierBudget";
@@ -755,6 +756,8 @@ function buildNormalizedEvent(
       ? apothecary.resolution
         ? apothecary.resolution.applied === "injury_treatment"
           ? "Apothecary used to treat the injury without a replacement roll"
+          : apothecary.resolution.applied === "injury_original"
+            ? "No Apothecary resource used; the original initial injury is retained without a new roll"
           : apothecary.resolution.resourceSpent === 0
             ? "Apothecary declined and the original casualty kept"
             : apothecary.resolution.applied === "original"
@@ -1291,6 +1294,8 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     staffInjuryOriginals
   );
   const recoveryState = findRegenerationAftermath(replay, ownership);
+  const treatmentEvidence = findTreatmentEvidence(replay, ownership);
+  const recordedTreatmentIds = new Set(treatmentEvidence.records.keys());
   const recoveryReturns = findRegenerationReturns(replay, ownership, recoveryState.aftermath);
   const teamDiceIdentityByQuestion = new Map(
     findTeamDiceIdentities(replay).map((p) => [p.question.id, p])
@@ -1332,6 +1337,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   for (const source of armorModifierUses.keys()) activationEvidenceSources.add(source);
   for (const source of damageSppNotices.keys()) activationEvidenceSources.add(source);
   for (const source of recoveryState.controls.keys()) activationEvidenceSources.add(source);
+  for (const source of treatmentEvidence.controls.keys()) activationEvidenceSources.add(source);
   for (const source of recoveryReturns.activations.keys()) activationEvidenceSources.add(source);
   for (const [source, proof] of rerollCounters) {
     activationEvidenceSources.add(source);
@@ -1758,7 +1764,8 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     const apothecary = linkApothecary(
       replayTurn.events,
       replay.replayVersion,
-      ownership
+      ownership,
+      {resultIds:recordedTreatmentIds,initialOriginalIds:treatmentEvidence.initialOriginalIds}
     );
     for (const [index, record] of apothecary) {
       const raw = replayTurn.events[index]!;
@@ -1891,6 +1898,46 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
         normalized.scoringStatus="excluded";normalized.probabilitySuccess=null;normalized.actualSuccess=null;normalized.delta=0;normalized.weightedDelta=0;normalized.explainability.weight=0;
         normalized.label="Recorded SPP notification";
         normalized.statusReason="Recorded two SPP; this annotation adds no random outcome or change to the initial injury table. Award legality, learned skills and availability require separate evidence.";
+        normalized.metadata.normalizationFlags=normalized.metadata.normalizationFlags?.filter(f=>f!=="missing_target_threshold");
+        normalized.metadata.normalizationNotes=normalized.metadata.normalizationNotes?.filter(n=>n!=="difficulty and requirement were both missing");
+      }
+      const treatmentSpp=apothecary.get(eventIndex)?.treatmentSpp;
+      if(treatmentSpp&&event.playerId){
+        const recipient=ownership.resolve(event.playerId,event);
+        if(recipient.status==="confirmed"){
+          normalized.metadata.treatmentSpp={points:2,...treatmentSpp};
+          normalized.metadata.ownership={...recipient.proof,role:"actor"};
+          normalized.type="unknown";normalized.metadata.isRollCandidate=false;
+          normalized.scoringStatus="excluded";normalized.probabilitySuccess=null;normalized.actualSuccess=null;normalized.delta=0;normalized.weightedDelta=0;normalized.explainability.weight=0;
+          normalized.label="Recorded SPP notification";
+          normalized.statusReason="Recorded two SPP before the injury removal and applied result. This adds no random outcome or injury value and does not establish award legality, learned skills or useful availability.";
+          normalized.metadata.normalizationFlags=normalized.metadata.normalizationFlags?.filter(f=>f!=="missing_target_threshold");
+          normalized.metadata.normalizationNotes=normalized.metadata.normalizationNotes?.filter(n=>n!=="difficulty and requirement were both missing");
+        }
+      }
+      const treatment = treatmentEvidence.records.get(event.id ?? "");
+      if (treatment) {
+        normalized.metadata.recordedTreatment = treatment.observation;
+        normalized.metadata.ownership = {...treatment.ownership,role:"subject"};
+        normalized.type="injury";normalized.metadata.isRollCandidate=false;
+        normalized.scoringStatus="excluded";normalized.probabilitySuccess=null;normalized.actualSuccess=null;normalized.delta=0;normalized.weightedDelta=0;normalized.explainability.weight=0;
+        normalized.label="Recorded Apothecary outcome";
+        normalized.statusReason="Recorded treatment notification; no new random outcome or luck contribution. Selection and useful availability require separate evidence.";
+        normalized.explainability.target="recorded treatment outcome";
+        normalized.explainability.inputsSummary="The replay records resource use and an applied treatment outcome; these observations do not establish eligibility, a counterfactual policy or match value.";
+        normalized.metadata.normalizationFlags=normalized.metadata.normalizationFlags?.filter(f=>f!=="missing_target_threshold");
+        normalized.metadata.normalizationNotes=normalized.metadata.normalizationNotes?.filter(n=>n!=="difficulty and requirement were both missing");
+        const after=treatmentEvidence.aftermath.get(event.id!);
+        if(after)normalized.metadata.treatmentAftermath=after;
+      }
+      const treatmentControl=treatmentEvidence.controls.get(event.id??"");
+      if(treatmentControl){
+        normalized.metadata.treatmentControl=treatmentControl;
+        normalized.type="unknown";normalized.metadata.isRollCandidate=false;
+        normalized.scoringStatus="excluded";normalized.probabilitySuccess=null;normalized.actualSuccess=null;normalized.delta=0;normalized.weightedDelta=0;normalized.explainability.weight=0;
+        normalized.label="Recorded treatment transition control";
+        normalized.statusReason="Non-random source control between treatment and its first linked snapshot; omitted controllers and flags remain unknown.";
+        normalized.explainability.target="recorded control";
         normalized.metadata.normalizationFlags=normalized.metadata.normalizationFlags?.filter(f=>f!=="missing_target_threshold");
         normalized.metadata.normalizationNotes=normalized.metadata.normalizationNotes?.filter(n=>n!=="difficulty and requirement were both missing");
       }

@@ -98,7 +98,8 @@ export function formatContextComponentSum(
 export function formatExpectedOutcome(
   event: LuckReport["events"][number]
 ): string {
-  if(event.metadata.recordedSpp)return "No new roll";
+  if(event.metadata.recordedSpp || event.metadata.treatmentSpp)return "No new roll";
+  if(event.metadata.recordedTreatment || event.metadata.treatmentControl)return "No new roll";
   if(event.metadata.apothecary)return "No new roll";
   return event.metadata.injuryScoring || event.metadata.blockScoring
     ? "Categorical"
@@ -109,14 +110,21 @@ export function formatExpectedOutcome(
 export function formatActualOutcome(
   event: LuckReport["events"][number]
 ): string {
-  if(event.metadata.recordedSpp)return "Recorded +2 SPP";
+  if(event.metadata.recordedSpp || event.metadata.treatmentSpp)return "Recorded +2 SPP";
   if(event.metadata.casualtyObservation)return `${CASUALTY_NAMES[event.metadata.casualtyObservation.outcome]} (recorded)`;
   if(event.metadata.apothecary){
     const a=event.metadata.apothecary;
     if(a.applied==="injury_treatment")return "Injury treated (recorded)";
+    if(a.applied==="injury_original")return "Initial injury retained (recorded)";
     const outcome=casualtyOutcome(a.appliedCasualty,true);
     if(outcome)return `${CASUALTY_NAMES[outcome]} (applied)`;
   }
+  if(event.metadata.recordedTreatment){
+    const r=event.metadata.recordedTreatment;
+    const outcome=r.stage==="casualty"?casualtyOutcome(r.appliedOutcomeCode,true):undefined;
+    return outcome?`${CASUALTY_NAMES[outcome]} (applied)`:"Initial injury result (unverified)";
+  }
+  if(event.metadata.treatmentControl)return "Recorded control";
   if(event.metadata.blockScoring)return `Offered balance ${event.metadata.blockScoring.observedValue>0?"+":""}${event.metadata.blockScoring.observedValue}`;
   if(event.metadata.block)return "Observed symbols";
   if (event.metadata.injuryObservation)
@@ -136,8 +144,20 @@ export function explainApothecaryDecision(event: LuckReport["events"][number]): 
   const a=event.metadata.apothecary;
   if(!a)return null;
   const outcome=casualtyOutcome(a.appliedCasualty,true);
-  const applied=a.applied==="injury_treatment" ? "treated the initial injury without replacement casualty dice" : `applied the ${a.applied} casualty${outcome ? `: ${CASUALTY_NAMES[outcome]}` : ""}`;
-  return `Recorded Apothecary decision: ${a.resourceSpent ? "one resource used" : "declined"}; ${applied}. Original source ${a.originalSourceId}${a.replacementSourceId ? `; replacement source ${a.replacementSourceId}` : ""}. The coach's decision adds no random draw or luck contribution. This source receipt does not establish the full resource rules, choices for other possible rolls or final useful availability.`;
+  const applied=a.applied==="injury_treatment" ? "treated the initial injury without replacement casualty dice" : a.applied==="injury_original" ? "retained the recorded initial injury without a new roll; this link does not verify the injury-table name" : `applied the ${a.applied} casualty${outcome ? `: ${CASUALTY_NAMES[outcome]}` : ""}`;
+  return `Recorded Apothecary decision: ${a.resourceSpent ? "one resource used" : a.applied==="injury_original" ? "no resource used" : "declined"}; ${applied}. Original source ${a.originalSourceId}${a.replacementSourceId ? `; replacement source ${a.replacementSourceId}` : ""}${a.initialRemovalSourceId?`; removal source ${a.initialRemovalSourceId}`:""}.${a.treatmentSppSourceId?` Recorded SPP notification ${a.treatmentSppSourceId} precedes removal in this continuation; it adds no random outcome, injury value or award-legality claim.`:""} The coach's decision adds no random draw or luck contribution. This source receipt does not establish the full resource rules, choices for other possible rolls or final useful availability.`;
+}
+
+export function explainRecordedTreatment(event:LuckReport["events"][number]):string|null {
+  const r=event.metadata.recordedTreatment;if(!r)return null;
+  const outcome=r.stage==="casualty"?casualtyOutcome(r.appliedOutcomeCode,true):undefined;
+  return `Recorded treatment notification for player ${r.subjectId}: ${r.resourceSpent?"one Apothecary resource used":"no Apothecary resource used"}. ${outcome?`The recorded applied casualty result is ${CASUALTY_NAMES[outcome]}.`:"This is an initial-injury notification; its result name is not verified by this notification alone. Initial injury and casualty result codes are separate."} ${event.metadata.apothecary?"A separate source-linked decision identifies the recorded original or replacement relationship.":"The original/replacement selection chain is unresolved here."} This adds no random draw, probability or luck contribution. Resource eligibility, alternative choices and final useful availability require separate evidence.`;
+}
+
+export function explainTreatmentAftermath(event:LuckReport["events"][number]):string|null {
+  const a=event.metadata.treatmentAftermath;if(!a)return null;
+  const o=a.observation;
+  return `The first linked replay snapshot after this treatment notification shows player ${event.playerId} off the pitch in ${o.situationCode===1?"reserves":"the injured box"} (checkpoint after source ${a.checkpointAfter}). ${o.statusCode===null?"The snapshot omits the status flag; it stays unknown. ":"The recorded status agrees with the notification. "}Recorded action flag: ${o.canAct===null?"unknown":o.canAct?"set":"unset"}; tackle-zone flag: ${o.tackleZone===null?"unknown":o.tackleZone?"set":"unset"}. Off-pitch flags do not establish a legal or useful activation, immediate return or permanent loss. ${a.observedActiveGamerId===null?"The snapshot's active controller is also unknown. ":""}The intervening controls are source observations, not proof of full turn or resource rules. No extra luck score or contextual value is added.`;
 }
 
 export function explainDiceCensus(

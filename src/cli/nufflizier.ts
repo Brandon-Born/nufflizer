@@ -30,6 +30,8 @@ import {
   explainInjuryObservation,
   explainCasualtyObservation,
   explainApothecaryDecision,
+  explainRecordedTreatment,
+  explainTreatmentAftermath,
   explainRegenerationAftermath,
   explainRegenerationReturn,
   explainNumericRerollScore,
@@ -144,7 +146,11 @@ function formatTeamSummary(
       `Recorded casualty results: ${report.events.filter(e=>e.metadata.casualtyObservation).length}. Original and replacement dice remain separate; all have unverified odds and no current-match luck score.`,
       ...report.events.filter(e=>e.metadata.casualtyObservation).map(e=>`Player ${e.playerId}; source ${e.metadata.sourceId}: ${formatActualOutcome(e)}; Not scored. ${explainCasualtyObservation(e)}`)
     ]:[]),
-    ...report.events.filter(e=>e.metadata.apothecary).map(e=>`Player ${e.playerId}; source ${e.metadata.sourceId}: ${explainApothecaryDecision(e)}`),
+    ...report.events.filter(e=>e.metadata.apothecary&&!e.metadata.recordedTreatment).map(e=>`Player ${e.playerId}; source ${e.metadata.sourceId}: ${explainApothecaryDecision(e)}`),
+    ...(report.events.some(e=>e.metadata.recordedTreatment)?[
+      `Recorded treatment notifications: ${report.events.filter(e=>e.metadata.recordedTreatment).length}. Resource observations, selected results and first observed aftermath stay separate from dice and useful availability.`,
+      ...report.events.filter(e=>e.metadata.recordedTreatment).map(e=>`Player ${e.playerId}; source ${e.metadata.sourceId}: ${[explainApothecaryDecision(e),explainRecordedTreatment(e),explainTreatmentAftermath(e)].filter(Boolean).join(" ")}`)
+    ]:[]),
     ...report.events.filter(e=>e.metadata.blockPush?.status==="modeled").slice(0,20).map(e=>`Source ${e.metadata.sourceId}: ${explainBlockPush(e)}`),
     ...(report.events.some(e=>e.metadata.recordedSpp)?[
       `Recorded SPP notifications: ${report.events.filter(e=>e.metadata.recordedSpp).length}. Source annotations add no random draw, skill advancement or injury value.`,

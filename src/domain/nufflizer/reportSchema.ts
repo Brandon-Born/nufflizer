@@ -18,6 +18,7 @@ import { directInjuryOutcome,
   isInitialInjuryObservation
 } from "./injuryObservation";
 import { validReportedStaffInjuryOriginal } from "./staffInjuryOriginal";
+import { validReportedTreatment, validReportedTreatmentControl, validReportedTreatmentSpp } from "./treatmentAftermath";
 import { validReportedCasualtyObservation } from "./casualtyObservation";
 import { validReportedDamageSpp } from "./damageSpp";
 import { validReportedCategoricalInjury } from "./categoricalInjury";
@@ -249,6 +250,16 @@ export const LuckEventMetadataSchema = z.strictObject({
     lessSevereChance:probability, sameSeverityChance:probability, moreSevereChance:probability
   }).optional(),
   recordedSpp:z.strictObject({points:z.literal(2),damage:z.strictObject({armorSourceId:text,injurySourceId:text,damageStepSourceIndex:count}).optional()}).optional(),
+  recordedTreatment:z.strictObject({stage:z.enum(["initial_injury","casualty"]),wireIsInjury:z.union([z.literal(0),z.literal(1)]),resourceSpent:z.union([z.literal(0),z.literal(1)]),appliedOutcomeCode:z.number().int().min(0).max(10),playerStatusCode:z.number().int().min(0).max(10),subjectId:text,subjectTeamId:text,sourceCode:z.number().int().min(0).max(64),damageStepSourceIndex:count}).optional(),
+  treatmentSpp:z.strictObject({points:z.literal(2),treatmentSourceId:text,originalSourceId:text}).optional(),
+  treatmentControl:z.discriminatedUnion("kind",[
+    z.strictObject({kind:z.literal("gamer"),gamerId:z.union([z.literal(0),z.literal(1)]).nullable(),recordedGamer:z.boolean()}),
+    z.strictObject({kind:z.literal("end"),reason:z.literal(2),gamerId:z.union([z.literal(0),z.literal(1)]).nullable(),recordedGamer:z.boolean()}),
+    z.strictObject({kind:z.literal("pause")}),
+    z.strictObject({kind:z.literal("timer"),duration:finite.nonnegative(),timerType:z.literal(1),value:finite.nonnegative(),team:z.union([z.literal(0),z.literal(1)]).nullable(),isPaused:z.union([z.literal(0),z.literal(1)]).nullable(),recordedFlags:z.strictObject({team:z.boolean(),isPaused:z.boolean()})}),
+    z.strictObject({kind:z.literal("standby"),phase:z.literal(5),gamerId:z.union([z.literal(0),z.literal(1)]).nullable(),recordedGamer:z.boolean()})
+  ]).optional(),
+  treatmentAftermath:z.strictObject({beforeCheckpointAfter:count,checkpointAfter:count,replayStep:z.number().int().positive(),childIndex:count,rosterIndex:z.union([z.literal(0),z.literal(1)]),controlSourceIds:z.array(text).min(4).max(5),observedActiveGamerId:z.union([z.literal(0),z.literal(1)]).nullable(),recordedFlags:z.strictObject({status:z.boolean(),canAct:z.boolean(),tackleZone:z.boolean()}),observation:z.strictObject({cell:z.strictObject({x:z.literal(-1),y:z.literal(-1)}),situationCode:z.union([z.literal(1),z.literal(4)]),statusCode:z.number().int().min(0).max(6).nullable(),canAct:z.boolean().nullable(),tackleZone:z.boolean().nullable()})}).optional(),
   injuryTable:injuryTable.optional(),
   injuryObservation:z.strictObject({outcome:z.enum(["stunned","ko","badly_hurt","casualty"]),recordKind:z.enum(["direct","embedded_ko", "apothecary_original"]),subjectId:text,subjectTeamId:text,sourceCode:z.number().int().min(0).max(64),damageStepSourceIndex:count
     })
@@ -577,7 +588,9 @@ export const LuckEventMetadataSchema = z.strictObject({
       resourceSpent: z.union([z.literal(0), z.literal(1)]),
       appliedCasualty: z.number().int().min(0).max(10),
       playerStatus: z.number().int().min(0).max(10),
-      applied: z.enum(["original", "replacement", "injury_treatment"])
+      applied: z.enum(["original", "replacement", "injury_treatment", "injury_original"]),
+      initialRemovalSourceId: text.optional(),
+      treatmentSppSourceId: text.optional()
     })
     .optional(),
   isRollCandidate: z.boolean().optional(),
@@ -1510,6 +1523,7 @@ export const LuckReportSchema = z
     require(numericTeamOffers.size===numericTeamRerolls.length && new Set(numericTeamRerolls.map(e=>e.metadata.rerollDecisionId)).size===numericTeamRerolls.length,
       "A numeric team-reroll offer and decision must belong to one check.");
     const identityMutations = indexIdentityMutations(report.events);
+    const treatmentControls = new Set(report.events.flatMap(e=>e.metadata.treatmentAftermath?.controlSourceIds??[]));
     for (const event of report.events) {
       if(event.metadata.blockPush)require(validReportedBlockPush(event,sources,teamIds),"Push alternatives must reconcile ordinary geometry, complete current policies, the ordered source menus/selected displacement and follow-up, without assigning chance to coach choices.");
       if(event.metadata.pushQuestion)require(event.metadata.sourceTag==="QuestionPushBack" && event.scoringStatus==="excluded" && !event.metadata.isRollCandidate,"An observed push menu is non-random source evidence; only a separately validated model can interpret its legal alternatives.");
@@ -1530,6 +1544,8 @@ export const LuckReportSchema = z
         "Numeric reroll luck must count its two source-qualified actual draws exactly once, separately from the whole-check policy chance.");
       require(validReportedOwnership(event,report,sources,identityMutations),
         "Scored outcomes need source-qualified actor/subject ownership and opposing block roles; a time-local conflict or pending identity cannot contribute favorable luck.");
+      require(validReportedTreatment(event,sources,report)&&validReportedTreatmentControl(event)&&validReportedTreatmentSpp(event,sources)&&(!event.metadata.treatmentControl||treatmentControls.has(event.metadata.sourceId??"")),
+        "Treatment notifications retain owned raw namespaces/resource use separately from selection. A first aftermath requires the first ordered compatible roster checkpoint and its exact non-random controls; omitted posture/controller/availability cannot be invented.");
       const base = event.explainability.baseOdds;
       require(validReportedCategoricalInjury(event,sources), "Categorical injury scoring needs a qualified unmodified damage cause, current modifier policy, exact injury-tier probabilities and zero-mean subject-perspective deviation.");
       require(validReportedCategoricalBlock(event), "Block luck requires one prefix-qualified current-trait table and the fresh-pool innovation under its stated choice policy; unverified pools retain source evidence without a point.");
@@ -2896,12 +2912,30 @@ export const LuckReportSchema = z
               "QuestionApothecaryCasualtyChoice" &&
               replacement.teamId === event.teamId &&
               replacement.playerId === event.playerId)) &&
-          (apothecary.applied === "injury_treatment"
+          (["injury_treatment","injury_original"].includes(apothecary.applied)
             ? original?.metadata.rollType === 11 &&
               !replacement &&
-              apothecary.resourceSpent === 1 &&
-              apothecary.appliedCasualty === 0
+              (apothecary.applied === "injury_treatment"
+                ? apothecary.resourceSpent === 1 && apothecary.appliedCasualty === 0 && !apothecary.initialRemovalSourceId
+                : apothecary.resourceSpent === 0 && apothecary.appliedCasualty === 1 && apothecary.playerStatus === 4 &&
+                  event.metadata.recordedTreatment?.stage === "initial_injury" && original.metadata.outcomeCode === 1 &&
+                  (event.metadata.sourceIndex??-1) === event.metadata.recordedTreatment.damageStepSourceIndex + (apothecary.treatmentSppSourceId?3:2) &&
+                  original.metadata.modifiers?.length === 0 && original.metadata.modifiersSum === 0 &&
+                  original.metadata.dice?.length === 2 && original.metadata.dice.reduce((a,b)=>a+b,0) === 9 &&
+                  original.metadata.dieTypes?.join() === "0,0" &&
+                  (()=>{const removal=apothecary.initialRemovalSourceId?sources.get(apothecary.initialRemovalSourceId):undefined;
+                    const die=initialRerollDiceBySource.get(original.metadata.sourceId);
+                    return !!removal && removal.metadata.sourceTag === "ResultPlayerRemoval" && removal.playerId===event.playerId && removal.teamId===event.teamId &&
+                      removal.metadata.actionId===event.metadata.actionId && removal.metadata.sequenceId===event.metadata.sequenceId &&
+                      removal.metadata.sourceIndex!==undefined && removal.metadata.sourceIndex < event.metadata.sourceIndex! &&
+                      removal.metadata.sourceIndex===event.metadata.sourceIndex!-1 &&
+                      original.metadata.sourceIndex!==undefined && original.metadata.sourceIndex < removal.metadata.sourceIndex &&
+                      !(identityMutations.get(event.playerId??"")??[]).some(change=>(change.metadata.sourceIndex??-1)>original.metadata.sourceIndex!&&(change.metadata.sourceIndex??Infinity)<event.metadata.sourceIndex!) &&
+                      !!die && die.path.join()==="RollInfos,Dice" && die.rollType===11 && die.status===1 && die.stepActorId===event.playerId && die.stepTargetId===event.playerId &&
+                      [1,9].includes(die.damageSource??-1) && die.damageSource===event.metadata.recordedTreatment?.sourceCode && die.quality==="complete" &&
+                      die.dice.length===2 && die.dice.every((d,i)=>d.dieType===0&&d.value===original.metadata.dice![i]);})())
             : original?.metadata.rollType === 12 &&
+              !apothecary.initialRemovalSourceId &&
               (apothecary.resourceSpent === 1) === Boolean(replacement) &&
               apothecary.appliedCasualty ===
                 (apothecary.applied === "original"

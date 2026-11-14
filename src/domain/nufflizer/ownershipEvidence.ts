@@ -102,13 +102,15 @@ export function validReportedOwnership(
     (event.scoringStatus !== "scored" &&
       !event.metadata.block &&
       !event.metadata.casualtyObservation &&
-      !event.metadata.recordedSpp) ||
+      !event.metadata.recordedSpp &&
+      !event.metadata.recordedTreatment &&
+      !event.metadata.treatmentSpp) ||
     conflict ||
     !teams.has(ownership.teamId) ||
     ownership.teamId !== event.teamId ||
     ownership.playerId !== event.playerId ||
     ownership.role !==
-      (event.metadata.damage || event.metadata.casualtyObservation ? "subject" : event.playerId ? "actor" : "team")
+      (event.metadata.damage || event.metadata.casualtyObservation || event.metadata.recordedTreatment ? "subject" : event.playerId ? "actor" : "team")
   )
     return false;
   type Proof = Omit<typeof ownership, "defender" | "role">;

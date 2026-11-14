@@ -15,7 +15,9 @@ export type ApothecaryResolution = {
   resourceSpent: 0 | 1;
   appliedCasualty: number;
   playerStatus: number;
-  applied: "original" | "replacement" | "injury_treatment";
+  applied: "original" | "replacement" | "injury_treatment" | "injury_original";
+  initialRemovalSourceId?: string;
+  treatmentSppSourceId?: string;
 };
 
 export type ApothecaryRecord = {
@@ -24,6 +26,7 @@ export type ApothecaryRecord = {
   repeatedOriginalSourceId?: string;
   copiedOriginalSourceId?: string;
   resolution?: ApothecaryResolution;
+  treatmentSpp?: {treatmentSourceId:string;originalSourceId:string};
 };
 
 function object(value: unknown): Record<string, unknown> | undefined {
@@ -92,12 +95,16 @@ function appliedOutcome(
   original: Record<string, unknown>,
   replacement: Record<string, unknown> | undefined,
   resourceSpent: 0 | 1,
-  casualty: number
+  casualty: number,
+  knownInitialDecline = false
 ): ApothecaryResolution["applied"] | undefined {
-  if (original.RollType === 11)
+  if (original.RollType === 11) {
+    if (knownInitialDecline && resourceSpent === 0 && !replacement && casualty === 1)
+      return "injury_original";
     return resourceSpent === 1 && !replacement && casualty === 0
       ? "injury_treatment"
       : undefined;
+  }
   if (resourceSpent === 0)
     return !replacement && casualty === original.Outcome
       ? "original"
@@ -139,7 +146,8 @@ function sameCell(a: unknown, b: unknown) {
 export function linkApothecary(
   events: readonly ReplayEvent[],
   version: string | undefined,
-  owners: OwnershipLookup
+  owners: OwnershipLookup,
+  treatmentEvidence?: {resultIds:ReadonlySet<string>;initialOriginalIds:ReadonlySet<string>}
 ): Map<number, ApothecaryRecord> {
   const records = new Map<number, ApothecaryRecord>();
   let step: ReplayEvent | undefined;
@@ -154,6 +162,11 @@ export function linkApothecary(
         original: Record<string, unknown>;
         originalSourceId: string;
         gamerId: number;
+        knownInitialOriginal: boolean;
+        initialContinuationActionId?: string;
+        initialContinuationValid?: boolean;
+        initialSppSourceId?: string;
+        initialSppIndex?: number;
         replacement?: Record<string, unknown>;
         replacementSourceId?: string;
         removal?: ReplayEvent;
@@ -172,6 +185,10 @@ export function linkApothecary(
     const owner = subject ? ownerAt(owners, subject, event) : undefined;
     const isStep = tag === "DamageStep";
     if (isStep) {
+      if(pending?.knownInitialOriginal){
+        pending.initialContinuationValid = pending.initialContinuationActionId===undefined && payload?.Applied===1 && payload.IsEvaluation===0 && payload.Skill===0 && payload.State===2;
+        pending.initialContinuationActionId=event.actionId;
+      }
       if (
         pending &&
         (pending.removal || pending.lastActionId !== step?.actionId)
@@ -179,6 +196,19 @@ export function linkApothecary(
         pending = undefined;
       step = event;
       direct.clear();
+    }
+    if(tag==="ResultGainSpp"&&pending?.knownInitialOriginal){
+      const recipient=payload?.PlayerId;
+      const recipientOwner=integer(recipient,0,1000000)?ownerAt(owners,String(recipient),event):undefined;
+      if(pending.source===1 && pending.initialContinuationValid && !pending.initialSppSourceId && !pending.removal &&
+        event.id && event.actionId===pending.initialContinuationActionId && event.actionId===step?.actionId &&
+        event.stepTag==="DamageStep" && event.stepType===2 && event.stepActorId===pending.subject && event.stepTargetId===pending.subject && event.damageSource===pending.source &&
+        payload && Object.keys(payload).every(k=>["PlayerId","SppGained"].includes(k)) && payload.SppGained===2 && recipientOwner && recipientOwner!==pending.owner){
+        pending.initialSppSourceId=event.id;
+        pending.initialSppIndex=index;
+        continue;
+      }
+      pending=undefined;
     }
     const sameStep = step && subject && step.actionId === event.actionId;
     const owned = owner && owner === event.actorTeamId;
@@ -231,7 +261,8 @@ export function linkApothecary(
         lastActionId: event.actionId,
         original: roll,
         originalSourceId: event.id,
-        gamerId: payload.GamerId
+        gamerId: payload.GamerId,
+        knownInitialOriginal: treatmentEvidence?.initialOriginalIds.has(event.id) ?? false
       };
       continue;
     }
@@ -290,9 +321,20 @@ export function linkApothecary(
           pending.original,
           pending.replacement,
           resourceSpent,
-          appliedCasualty
+          appliedCasualty,
+          pending.knownInitialOriginal && pending.initialContinuationValid === true && pending.initialContinuationActionId === event.actionId &&
+            !!treatmentEvidence?.resultIds.has(event.id ?? "") && playerStatus === 4
         );
-        if (applied)
+        if(pending.initialSppSourceId&&!treatmentEvidence?.resultIds.has(event.id??"")){
+          pending=undefined;continue;
+        }
+        if (applied === "injury_original" && (pending.removal.payload?.Situation!==4 || !pending.removal.payload ||
+          Object.keys(pending.removal.payload).some(k=>!["PlayerId","Situation","Reason","Status"].includes(k)) ||
+          pending.removal.sourceIndex!==event.sourceIndex!-1 ||
+          pending.initialContinuationActionId!==event.actionId)) {
+          pending=undefined;continue;
+        }
+        if (applied) {
           records.set(index, {
             resolution: {
               originalSourceId: pending.originalSourceId,
@@ -301,9 +343,13 @@ export function linkApothecary(
               resourceSpent,
               appliedCasualty,
               playerStatus,
-              applied
+              applied,
+              ...(applied === "injury_original" ? {initialRemovalSourceId: pending.removal.id} : {}),
+              ...(pending.initialSppSourceId ? {treatmentSppSourceId:pending.initialSppSourceId} : {})
             }
           });
+          if(pending.initialSppIndex!==undefined&&event.id)records.set(pending.initialSppIndex,{treatmentSpp:{treatmentSourceId:event.id,originalSourceId:pending.originalSourceId}});
+        }
       }
       pending = undefined;
       continue;

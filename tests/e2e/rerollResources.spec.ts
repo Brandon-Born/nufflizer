@@ -116,7 +116,7 @@ for (const c of [
     const saved = JSON.parse(
       readFileSync((await (await pending).path())!, "utf8")
     );
-    expect(saved.schemaVersion).toBe("2.67");
+    expect(saved.schemaVersion).toBe("2.68");
     expect(saved.rerollResources).toEqual(report.rerollResources);
     expect(saved.verdict.luckierTeam).toBe("unknown");
     await page.getByRole("button", { name: "Reset filters" }).click();
