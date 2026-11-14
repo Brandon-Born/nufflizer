@@ -358,6 +358,28 @@ describe("Throw Team-mate source and report guards", () => {
       nonrandom(r);
     }
   );
+  it.each([false, true])(
+    "withholds a current-roster resource namespace when boards are absent (explicit actor team=%s)",
+    (explicit) => {
+      const p = parse();
+      p.boardCheckpoints = [];
+      if (explicit)
+        for (const e of events(p)) {
+          e.actorTeamId = "1";
+          e.actorTeamSource = "explicit";
+        }
+      const before = structuredClone(p),
+        r = analyzeReplayLuck(p);
+      expect(p).toEqual(before);
+      expect(LuckReportSchema.safeParse(r).success).toBe(true);
+      expect(choice(r)).toMatchObject({
+        status: "unresolved",
+        teamId: null,
+        namespace: null
+      });
+      nonrandom(r);
+    }
+  );
   it("leaves an original question die physical even though the question row is a control", () => {
     const r = analyze(),
       q = r.events.find(

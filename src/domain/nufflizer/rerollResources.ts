@@ -346,7 +346,7 @@ export function findRerollResources(
     if (owner !== String(g)) return null;
     if(e.stepTag==="ThrowTeamMateStep"){
       const t=e.throwTeamMate;
-      if(!t||t.role!=="thrower"||t.throwerId!==e.playerId||t.thrownMateId!==e.targetId||ownerAt(owners,t.thrownMateId,e)!==owner)return null;
+      if(!last||!t||t.role!=="thrower"||t.throwerId!==e.playerId||t.thrownMateId!==e.targetId||ownerAt(owners,t.thrownMateId,e)!==owner)return null;
     }
 
     if (!last)
