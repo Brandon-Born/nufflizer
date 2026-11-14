@@ -15,6 +15,7 @@ describe("POST /api/nufflizier/analyze", () => {
     const payload=await response.json();expect(response.status,JSON.stringify(payload).slice(0,200)).toBe(200);
     const report=LuckReportSchema.parse(payload),e=report.events.find(e=>e.metadata.retainedCatchReaction)!;
     expect(report.rerollResources).toMatchObject({decisionCount:21,linkedCount:20,unresolvedCount:1});
+    expect(report.rerollResources.flow.clockWindows.find(w=>w.recordedUsedCount===2&&w.before?.count===4&&w.after?.count===2)).toMatchObject({netDecrease:2,status:"observed_agreement"});
     expect(report.rerollResources.decisions.find(d=>d.decisionSourceId==="source-5407")).toMatchObject({status:"unresolved",questionSourceId:"source-5404",teamId:null});
     expect(report.events.find(e=>e.metadata.sourceId==="source-5407")?.label).toBe("Recorded team reroll use");
     expect(e.metadata.sourceId).toBe("source-548");expect(e.metadata.retainedCatchReaction).toMatchObject({beforeCheckpointAfter:538,waitingCheckpointAfter:545});
@@ -152,6 +153,7 @@ describe("POST /api/nufflizier/analyze", () => {
       )!;
     const original=report.events.find(e=>e.metadata.sourceId==="source-4546")!;
     expect(report.rerollResources).toMatchObject({decisionCount:15,linkedCount:15,unresolvedCount:0});
+    expect(report.rerollResources.flow.clockWindows.find(w=>w.recordedUsedCount===2&&w.before?.count===2&&w.after?.count===null)).toMatchObject({netDecrease:null,status:"not_comparable"});
     expect(report.rerollResources.decisions.find(d=>d.decisionSourceId==="source-4548")).toMatchObject({status:"linked",questionSourceId:"source-4546",teamId:"1"});
     expect(report.events.find(e=>e.metadata.sourceId==="source-4548")?.metadata.recordedRerollChoice).toEqual({gamerId:1,used:false,validFields:true});
     expect(report.events.find(e=>e.metadata.sourceId==="source-4548")?.label).toBe("Recorded team reroll not used");
@@ -440,6 +442,7 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(response.status, JSON.stringify(payload).slice(0, 200)).toBe(200);
     const r = LuckReportSchema.parse(payload),
       caught = r.events.find((e) => e.catchPossessionBounds)!;
+    expect(r.rerollResources.flow.intervals.find(i=>i.pools[1].before?.count===1&&i.pools[1].after?.count===3)?.pools[1]).toMatchObject({netDecrease:-2,status:"not_comparable",reason:"clock_boundary"});
     expect(caught.metadata.locator?.replayStep).toBe(531);
     expect(caught.playerId).toBe("45");
     expect(caught.catchPossessionBounds!.upper).toBeCloseTo(5 / 3, 12);

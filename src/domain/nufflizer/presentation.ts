@@ -3,6 +3,21 @@ import { recordedInjuryName } from "./injuryObservation";
 import type { LuckEventType, LuckReport } from "./types";
 import { LuckEventTypeSchema } from "./reportSchema";
 import type { RerollResources } from "./rerollResources";
+import type { RerollResourceFlow } from "./rerollResourceFlow";
+
+export function explainResourceWindow(
+  window: RerollResourceFlow["clockWindows"][number],
+  teams: readonly {teamId:string;teamName:string}[]
+): string {
+  const name = teams.find(t=>t.teamId===window.teamId)?.teamName ?? "Unresolved team";
+  const value = (n: number | null | undefined) => n === null || n === undefined ? "unknown" : String(n);
+  const comparison = window.status === "observed_agreement"
+    ? "The observed decrease equals the number of recorded uses."
+    : window.status === "observed_difference"
+      ? "The observed decrease differs from the number of recorded uses."
+      : `Comparison is unverified: ${({no_decision:"no choice",unindexed_choices:"unindexed choices",unknown_gamer:"unknown responding gamer",unknown_usage:"unknown usage",unresolved_choice:"unresolved choice",owner_conflict:"pool ownership is uncertain",missing_snapshot:"missing checkpoint",missing_counter:"missing counter",clock_boundary:"clock or end-notification boundary",regular_play_unverified:"regular play is unverified",unindexed_clock_boundary:"unindexed end notification"} as const)[window.reason ?? "missing_snapshot"]}.`;
+  return `${name}: ${window.recordedUsedCount} recorded uses, ${window.recordedNotUsedCount} non-uses, ${window.unknownUsageCount} unknown; counter ${value(window.before?.count)} → ${value(window.after?.count)} (observed decrease ${value(window.netDecrease)}). ${comparison} This observed window does not certify a complete legal turn, eligibility, resets, free rerolls or tactical cost. It adds no luck points.`;
+}
 
 export function explainRerollResource(
   event: LuckReport["events"][number],
@@ -58,12 +73,13 @@ export function explainRerollCounter(
   const offer=event.metadata.rerollOffer ?? sources.get(event.metadata.block?.previousPoolSourceId ?? "")?.metadata.rerollOffer;
   const counter=event.metadata.teamRerollCounter ?? sources.get(event.metadata.rerollDecisionId ?? offer?.decisionSourceId ?? "")?.metadata.teamRerollCounter;
   if(!counter) return null;
-  const before=counter.before,after=counter.after;
+  const before=counter.decisionBefore ?? counter.before,after=counter.after;
   const choice=counter.spent ? "The recorded decision used one team reroll." : "The recorded decision did not use a team reroll; no team reroll was spent on this decision.";
   const follow=after
     ? ` The next same-turn checkpoint records ${after.count}. The counter change from ${before.count} to ${after.count} ${counter.reconciliation === "matched" ? "matches this decision" : "does not match this single decision; resource consumption remains unreconciled"}.`
     : " The next same-turn counter is unknown. A missing counter is not treated as zero, and a later turn cannot fill it.";
-  return `Last recorded team reroll counter before the offer: ${before.count} (ReplayStep ${before.replayStep}, child ${before.childIndex}). ${choice}${follow} These observations do not certify another reroll is legal. The cost of losing the reroll is not included in luck points.`;
+  const prefix=counter.decisionBefore ? "Refreshed counter after the earlier choice and before this decision" : "Last recorded team reroll counter before the offer";
+  return `${prefix}: ${before.count} (ReplayStep ${before.replayStep}, child ${before.childIndex}). ${choice}${follow} These observations do not certify another reroll is legal. The cost of losing the reroll is not included in luck points.`;
 }
 
 export const PARTIAL_CONTEXT_SCOPE =

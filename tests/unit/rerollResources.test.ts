@@ -625,6 +625,9 @@ it.each(["demo1.bbr", "demo11.bbr", "demo6.bbr", "demo7.bbr"])(
     const json = run("json");
     expect(json.status, json.stderr).toBe(0);
     const r = LuckReportSchema.parse(JSON.parse(json.stdout));
+    expect(Buffer.byteLength(json.stdout)).toBeLessThanOrEqual(4_000_001);
+    expect(json.stdout).toBe(JSON.stringify(r)+"\n");
+    expect(r.rerollResources.flow.clockSnapshots.length).toBeGreaterThan(0);
     expect(r.rerollResources.decisionCount).toBe(sample.decisions.length);
     expect(r.rerollResources.recordedUsedCount).toBe(
       sample.decisions.filter(
@@ -640,6 +643,12 @@ it.each(["demo1.bbr", "demo11.bbr", "demo6.bbr", "demo7.bbr"])(
       ).toHaveLength(1);
     const text = run("text");
     expect(text.status, text.stderr).toBe(0);
+    expect(text.stdout).toContain(`Recorded counter flow: ${r.rerollResources.flow.clockSnapshots.length} source checkpoints`);
+    for(const w of r.rerollResources.flow.clockWindows) {
+      expect(text.stdout).toContain(`Window ${w.id+1}, checkpoints ${w.startSnapshotId}`);
+      expect(text.stdout).toContain(`${w.recordedUsedCount} recorded uses`);
+    }
+    expect(text.stdout).toContain("does not certify a complete legal turn");
     expect(text.stdout).toContain(
       `Recorded team-reroll decisions: ${sample.decisions.length}`
     );

@@ -215,7 +215,7 @@ export const LuckEventMetadataSchema = z.strictObject({
     movementBefore:z.number().int().min(0).max(16).nullable(),movementAfter:z.number().int().min(0).max(16).nullable(),carriesBall:z.boolean().nullable(),
     zonePenalty:z.strictObject({baseTarget:z.number().int().min(2).max(6),markers:z.array(z.strictObject({playerId:text,cell:pitchCell})).min(1).max(8)}).optional()}).optional(),
   rerollOffer:z.strictObject({gamerId:z.union([z.literal(0),z.literal(1)]),canUseTeamReroll:z.boolean(),decisionSourceId:text}).optional(),
-  teamRerollCounter:z.strictObject({questionSourceId:text,spent:z.union([z.literal(0),z.literal(1)]),before:rerollCounterObservation,after:rerollCounterObservation.optional(),reconciliation:z.enum(["matched","mismatch","after_unavailable"])}).optional(),
+  teamRerollCounter:z.strictObject({questionSourceId:text,spent:z.union([z.literal(0),z.literal(1)]),before:rerollCounterObservation,decisionBefore:rerollCounterObservation.optional(),after:rerollCounterObservation.optional(),reconciliation:z.enum(["matched","mismatch","after_unavailable"])}).optional(),
   turnEndReason: z.literal(2).optional(),
   pickupTurnEnd:z.strictObject({catchSourceId:text,endSourceId:text,ordinaryMoves:z.strictObject({knownAvailablePlayerIds:z.array(text).max(64),unknownPlayerIds:z.array(text).max(64)}).optional()}).optional(),
   retainedRushContext:z.strictObject({declarationSourceId:text,declarationCheckpointAfter:count,resumeCheckpointAfter:count,
@@ -1858,6 +1858,8 @@ export const LuckReportSchema = z
       const counter = event.metadata.teamRerollCounter;
       if(counter) {
         const question=sources.get(counter.questionSourceId),choice=event.metadata.teamRerollDecision,before=counter.before,after=counter.after;
+        const refreshed=counter.decisionBefore;
+        require(!refreshed || (refreshed.teamId===before.teamId && refreshed.count===before.count && refreshed.teamTurn===before.teamTurn && refreshed.periodCode===before.periodCode && before.checkpointAfter<refreshed.checkpointAfter && refreshed.checkpointAfter<(event.metadata.sourceIndex??-1) && event.metadata.locator?.replayStep!==undefined && refreshed.replayStep<=event.metadata.locator.replayStep && (refreshed.replayStep!==event.metadata.locator.replayStep || refreshed.childIndex<(event.metadata.locator.childIndex??-1))), "A refreshed pre-decision counter must be an ordered same-clock observation before the choice, not a guessed baseline.");
         require(event.metadata.sourceTag === "ResultTeamRerollUsage" && event.scoringStatus === "excluded" && event.metadata.isRollCandidate === false &&
           !!question && ["QuestionTeamRerollUsage","QuestionBlockDice"].includes(question.metadata.sourceTag) && !!question.metadata.rerollOffer && !!choice &&
           question.metadata.rerollOffer.gamerId === choice.gamerId && choice.used === (counter.spent === 1) &&
@@ -1878,7 +1880,9 @@ export const LuckReportSchema = z
           (event.metadata.teamRerollDecision.used || counter?.spent === 0 || proAccessChoices.has(event.metadata.sourceId??"")),
           "A recorded team-reroll choice must be non-random decision evidence; a decline needs its counter receipt.");
       if(event.metadata.rerollOffer)
-        require(((event.metadata.sourceTag === "QuestionTeamRerollUsage" && event.scoringStatus === "excluded" && event.metadata.isRollCandidate === false) ||
+        require(((event.metadata.sourceTag === "QuestionTeamRerollUsage" &&
+          ((event.scoringStatus === "excluded" && event.metadata.isRollCandidate === false) ||
+            (event.scoringStatus === "scored" && event.metadata.isRollCandidate === true && !!event.metadata.numericOriginal))) ||
           (event.metadata.sourceTag === "QuestionBlockDice" && event.scoringStatus === "scored" && event.metadata.isRollCandidate === true && event.metadata.rollType === 3 &&
             event.metadata.block?.pool.attackerChooses === true && event.metadata.block.attackerId === event.playerId && event.metadata.block.chooserTeamId === event.teamId && event.metadata.block.chooserGamerId === event.metadata.rerollOffer.gamerId)) &&
           ((sources.get(event.metadata.rerollOffer.decisionSourceId)?.metadata.teamRerollCounter?.questionSourceId === event.metadata.sourceId && counterQuestions.has(event.metadata.sourceId ?? "")) ||

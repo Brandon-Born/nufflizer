@@ -8,6 +8,11 @@ import {
 } from "@/domain/replay/ownershipTimeline";
 import type { LuckEvent } from "./types";
 import type { CatchRerollResume } from "./catchRerollResume";
+import {
+  RerollResourceFlowSchema,
+  findRerollResourceFlow,
+  validRerollResourceFlow
+} from "./rerollResourceFlow";
 
 const count = z.number().int().min(0).max(REPLAY_LIMITS.events);
 const observedCode = z.number().int().min(0).max(Number.MAX_SAFE_INTEGER);
@@ -74,7 +79,8 @@ const decisionSchema = z.strictObject({
     .nullable()
 });
 export const RerollResourcesSchema = z.strictObject({
-  modelVersion: z.literal("recorded-reroll-resources-2"),
+  modelVersion: z.literal("recorded-reroll-resources-3"),
+  flow: RerollResourceFlowSchema,
   decisions: z.array(decisionSchema).max(REPLAY_LIMITS.events),
   decisionCount: count,
   recordedUsedCount: count,
@@ -200,7 +206,8 @@ function menuWaitControl(e: ReplayEvent, ordinal: number) {
 }
 
 // This matches a recorded identity continuation, not a legal action or retry
-// policy. CellTo is a choice parameter and may change while that menu is open.
+// policy. CellTo differs in a recorded continuation; no geometry or choice policy
+// is inferred from that difference.
 function sameWaitHeader(
   a: ReplayEvent | undefined,
   b: ReplayEvent | undefined
@@ -572,7 +579,8 @@ export function findRerollResources(
   }
   const linkedCount = decisions.filter((d) => d.status === "linked").length;
   return {
-    modelVersion: "recorded-reroll-resources-2",
+    modelVersion: "recorded-reroll-resources-3",
+    flow: findRerollResourceFlow(replay, owners, decisions, teamIds),
     decisions,
     decisionCount: decisions.length,
     recordedUsedCount: events.filter(
@@ -683,13 +691,28 @@ export function validReportedRerollResources(
       .slice(0, -1)
       .map((d, i) => [d.decisionEventId, ledger.decisions[i + 1]!.sourceIndex])
   );
+  const previousDecisions = new Map(
+    ledger.decisions
+      .slice(1)
+      .map((d, i) => [d.decisionEventId, ledger.decisions[i]!.sourceIndex])
+  );
   for (const e of events) {
-    const after = e.metadata.teamRerollCounter?.after;
+    const counter = e.metadata.teamRerollCounter,
+      after = counter?.after;
     if (
       after &&
       nextDecisions.has(e.id) &&
       (nextDecisions.get(e.id) === null ||
         nextDecisions.get(e.id)! <= after.checkpointAfter)
+    )
+      return false;
+    if (
+      after &&
+      counter &&
+      previousDecisions.has(e.id) &&
+      (previousDecisions.get(e.id) === null ||
+        previousDecisions.get(e.id)! >
+          (counter.decisionBefore ?? counter.before).checkpointAfter)
     )
       return false;
   }
@@ -836,9 +859,12 @@ export function validReportedRerollResources(
     if (raw.used) total.used++;
     else total.notUsed++;
   }
-  return ledger.byTeam.every(
-    (t) =>
-      t.used === totals.get(t.teamId)?.used &&
-      t.notUsed === totals.get(t.teamId)?.notUsed
+  return (
+    validRerollResourceFlow(ledger.flow, ledger.decisions, events, teamIds) &&
+    ledger.byTeam.every(
+      (t) =>
+        t.used === totals.get(t.teamId)?.used &&
+        t.notUsed === totals.get(t.teamId)?.notUsed
+    )
   );
 }

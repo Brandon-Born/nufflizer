@@ -1824,8 +1824,10 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       const numericOffer = numericTeamOffers.get(event.id ?? "");
       if(numericOffer){
         normalized.metadata.rerollOffer=numericOffer;
-        normalized.label="Recorded team reroll offer";
-        normalized.statusReason="Recorded original die and team reroll offer; the draw is counted once with its replacement.";
+        if(!normalized.metadata.numericOriginal) {
+          normalized.label="Recorded team reroll offer";
+          normalized.statusReason="Recorded original die and team reroll offer; the draw is counted once with its replacement.";
+        }
       }
       const numericChoice = numericTeamChoices.get(event.id ?? "");
       if (numericChoice !== undefined){

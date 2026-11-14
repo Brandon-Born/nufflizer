@@ -47,6 +47,7 @@ import {
 } from "@/domain/nufflizer/presentation";
 import { readAnalysisResponse } from "@/lib/readAnalysisResponse";
 import { REPLAY_LIMITS } from "@/domain/replay/limits";
+import { ResourceFlowPanel } from "./ResourceFlowPanel";
 
 const EVENT_TYPE_OPTIONS: Array<{
   value: "all" | LuckEventType;
@@ -71,6 +72,7 @@ const TAG_OPTIONS = [
 
 export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
   const abortRef = useRef<AbortController | null>(null);
+  const timelineRef = useRef<HTMLHeadingElement | null>(null);
   const [teamFilter, setTeamFilter] = useState("all");
   const [scoringFilter, setScoringFilter] = useState("scored");
   const [sortOrder, setSortOrder] = useState("chronological");
@@ -84,6 +86,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<LuckReport | null>(null);
   const [resourceOnly, setResourceOnly] = useState(false);
+  const [resourceWindowChoices, setResourceWindowChoices] = useState<Set<string>|null>(null);
   const sourcesById = useMemo(
     () =>
       new Map(
@@ -121,6 +124,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
     return report.events
       .filter((event) => {
         if(resourceOnly && !event.metadata.recordedRerollChoice)return false;
+        if(resourceWindowChoices && !resourceWindowChoices.has(event.id))return false;
         if (
           query &&
           ![event.playerId, event.metadata.initialRosterName].some((value) =>
@@ -182,11 +186,13 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
     periodFilter,
     teamTurnFilter,
     activationFilter,
-    resourceOnly
+    resourceOnly,
+    resourceWindowChoices
   ]);
 
   function resetFilters() {
     setResourceOnly(false);
+    setResourceWindowChoices(null);
     setTagFilter("all");
     setTypeFilter("all");
     setTeamFilter("all");
@@ -431,6 +437,13 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
             ) : null}
           </div>
 
+          <ResourceFlowPanel key={report.id} report={report} onChoices={(ids)=>{
+            resetFilters();
+            setScoringFilter("excluded");
+            setResourceOnly(true);
+            setResourceWindowChoices(new Set(ids));
+            requestAnimationFrame(()=>timelineRef.current?.focus());
+          }}/>
           <section className="rounded-xl border border-amber-300/20 bg-black/20 p-4">
             <h3 className="text-base font-semibold text-amber-100">
               How to read this report
@@ -641,7 +654,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
 
           <div className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h4 className="text-sm font-semibold text-amber-100">
+              <h4 ref={timelineRef} tabIndex={-1} className="text-sm font-semibold text-amber-100">
                 Replay evidence
               </h4>
               <div className="flex flex-wrap items-center gap-2">

@@ -21,6 +21,7 @@ import {
   explainPickupBallChain,
   explainRerollCounter,
   explainRerollResource,
+  explainResourceWindow,
   explainActivationLoss,
   explainProGate,
   explainLonerGate,
@@ -170,6 +171,8 @@ function formatTeamSummary(
       .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainCatchRerollResume(event)}`),
     `Recorded team-reroll decisions: ${report.rerollResources.decisionCount} (${report.rerollResources.recordedUsedCount} used, ${report.rerollResources.recordedNotUsedCount} not used, ${report.rerollResources.unknownUsageCount} unknown); ${report.rerollResources.linkedCount} linked; ${report.rerollResources.unresolvedCount} unresolved. Linked team totals: ${report.rerollResources.byTeam.map(t=>`${t.teamId}: ${t.used} used, ${t.notUsed} not used`).join("; ")}.`,
     ...report.rerollResources.decisions.map(d=>explainRerollResource(eventsById.get(d.decisionEventId)!,new Map([[d.decisionEventId,d]]),sourcesById)!),
+    `Recorded counter flow: ${report.rerollResources.flow.clockSnapshots.length} source checkpoints; ${report.rerollResources.flow.clockWindows.length} observed windows. Full raw counters, clocks and source intervals are retained in JSON. Missing counters are unknown, not zero.`,
+    ...report.rerollResources.flow.clockWindows.map(w=>`Window ${w.id+1}, checkpoints ${w.startSnapshotId ?? "unknown"} to ${w.endSnapshotId ?? "unknown"}: ${explainResourceWindow(w, report.teams)}`),
     ...report.events.filter(event=>event.metadata.failedNumericRetry).slice(0,20)
       .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainFailedNumericRetry(event)}`),
     ...report.events.filter(event=>event.metadata.numericRetryAccess||event.metadata.numericGatedReplacement).slice(0,20)
@@ -361,7 +364,8 @@ async function run() {
   const report = await runAnalysis(replayInput);
 
   if (format === "json") {
-    console.log(JSON.stringify(report, null, 2));
+    // Keep the same compact bounded representation as the HTTP contract.
+    console.log(JSON.stringify(report));
     return;
   }
 

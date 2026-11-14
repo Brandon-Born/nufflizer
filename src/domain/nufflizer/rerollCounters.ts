@@ -2,6 +2,12 @@ import type { ReplayBoardCheckpoint } from "@/domain/replay/boardState";
 import type { ReplayEvent, ReplayModel } from "@/domain/replay/types";
 import { observedActorRoster } from "@/domain/replay/observedActorRoster";
 import type { LuckEvent } from "./types";
+import {
+  recordedResourceEndNotifications,
+  resourceEndIndex,
+  resourceClockSegments,
+  resourceClockSnapshotKey
+} from "./rerollResourceFlow";
 
 export type RerollCounterEvidence = NonNullable<
   LuckEvent["metadata"]["teamRerollCounter"]
@@ -98,16 +104,24 @@ export function findRerollCounterEvidence(replay: ReplayModel) {
   const checkpoints = replay.boardCheckpoints ?? [];
   const knownTeamIds = replay.teams.map((t) => t.id);
   const events = replay.turns.flatMap((t) => t.events);
+  const ends = recordedResourceEndNotifications(events),
+    endIndex = resourceEndIndex(ends),
+    segments = resourceClockSegments(checkpoints, ends);
+  const clockBySource = new Map(checkpoints.map((cp, i) => [cp, segments[i]]));
   // A shared snapshot can include more than one decision (for example a Pro
   // choice followed by a team retry of that gate). It cannot independently
   // corroborate the decrement for either choice. Include malformed/unsupported
   // later choices as barriers too; never select only the understood spends.
   const nextChoices = new Map<ReplayEvent, ReplayEvent>();
+  const previousChoices = new Map<ReplayEvent, ReplayEvent>();
   let nextChoice: ReplayEvent | undefined;
   for (let i = events.length - 1; i >= 0; i--) {
     const e = events[i]!;
     if (e.sourceTag === "ResultTeamRerollUsage") {
-      if (nextChoice) nextChoices.set(e, nextChoice);
+      if (nextChoice) {
+        nextChoices.set(e, nextChoice);
+        previousChoices.set(nextChoice, e);
+      }
       nextChoice = e;
     }
   }
@@ -120,6 +134,7 @@ export function findRerollCounterEvidence(replay: ReplayModel) {
         before: Observation;
         gamer: 0 | 1;
         canUse: boolean;
+        checkpoint: ReplayBoardCheckpoint;
       }
     | undefined;
   for (const event of events) {
@@ -195,7 +210,13 @@ export function findRerollCounterEvidence(replay: ReplayModel) {
         continue;
       const before = observation(last, event, gamer, knownTeamIds);
       if (before)
-        pending = { question: event, before, gamer, canUse: canUse === 1 };
+        pending = {
+          question: event,
+          before,
+          gamer,
+          canUse: canUse === 1,
+          checkpoint: last!
+        };
       continue;
     }
     if (!pending) continue;
@@ -222,15 +243,55 @@ export function findRerollCounterEvidence(replay: ReplayModel) {
       !current ||
       current.teamTurn !== q.before.teamTurn ||
       current.periodCode !== q.before.periodCode ||
-      current.count !== q.before.count
+      current.count !== q.before.count ||
+      !last ||
+      resourceClockSnapshotKey(q.checkpoint) !== resourceClockSnapshotKey(last)
     )
       continue;
     // Only the first following checkpoint may corroborate the decision. Never
     // skip an unknown observation or borrow a later turn's reset counter.
     const next = checkpoints[cursor];
     let after = observation(next, event, q.gamer, knownTeamIds);
+    const previous = previousChoices.get(event);
+    const previousIndexed =
+      previous &&
+      Number.isSafeInteger(previous.sourceIndex) &&
+      previous.sourceIndex! >= 0;
+    // A later menu snapshot can refresh the same count after an earlier
+    // decision. Retain that actual receipt; an old equal value alone cannot
+    // attribute a shared interval to this decision.
+    const needsRefresh =
+      (previousIndexed && previous.sourceIndex! > q.before.checkpointAfter) ||
+      endIndex.crosses(q.before.checkpointAfter, current.checkpointAfter);
+    const decisionBefore =
+      needsRefresh &&
+      !endIndex.unknown &&
+      (!previous ||
+        (previousIndexed &&
+          current.checkpointAfter >= previous.sourceIndex!)) &&
+      current.checkpointAfter > q.before.checkpointAfter
+        ? current
+        : undefined;
+    const baseline = decisionBefore ?? q.before;
+    if (
+      previous &&
+      (!previousIndexed || previous.sourceIndex! > baseline.checkpointAfter)
+    )
+      after = undefined;
+    if (
+      after &&
+      (endIndex.unknown ||
+        endIndex.crosses(baseline.checkpointAfter, next!.afterSourceIndex) ||
+        clockBySource.get(last) !== clockBySource.get(next!))
+    )
+      after = undefined;
     const intervening = nextChoices.get(event);
-    if (intervening && (intervening.sourceIndex === undefined || intervening.sourceIndex <= (next?.afterSourceIndex ?? Infinity)))
+    if (
+      intervening &&
+      (!Number.isSafeInteger(intervening.sourceIndex) ||
+        intervening.sourceIndex! < 0 ||
+        intervening.sourceIndex! <= (next?.afterSourceIndex ?? Infinity))
+    )
       after = undefined;
     if (
       after &&
@@ -246,6 +307,7 @@ export function findRerollCounterEvidence(replay: ReplayModel) {
       questionSourceId: q.question.id!,
       spent: p.Used,
       before: q.before,
+      ...(decisionBefore ? { decisionBefore } : {}),
       after,
       reconciliation: !after
         ? "after_unavailable"
@@ -289,7 +351,9 @@ export function attachRerollCounterEvidence(
     decision.metadata.teamRerollCounter = evidence;
     decision.label = proof.spent
       ? "Recorded team reroll used"
-      : canUseTeamReroll ? "Recorded team reroll declined" : "Recorded team reroll not used";
+      : canUseTeamReroll
+        ? "Recorded team reroll declined"
+        : "Recorded team reroll not used";
     decision.statusReason =
       "observed: team reroll decision and checkpoint counters; no additional random outcome or tactical value";
   }
