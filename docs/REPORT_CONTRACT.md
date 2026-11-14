@@ -2,7 +2,7 @@
 
 Updated 2026-11-13. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.60`, dice model `dice-only-30` and context model `mobility-possession-41`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.62`, dice model `dice-only-31` and context model `mobility-possession-42`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -731,3 +731,11 @@ contribute;818 previously raw-symbol scores become unscored. All1,403 other
 scored event objects, observed consequences, resource flow and27 context ranges
 are retained; full-match verdicts still abstain. See
 [CATEGORICAL_BLOCK_SCORING_EVIDENCE.md](CATEGORICAL_BLOCK_SCORING_EVIDENCE.md).
+
+## Schema2.62 / mobility-possession-42: qualified scoring Rush
+
+The new `ordinary_no_retry_scoring_rush` policy retains a complete current pre-roll `scoringRushState`, ordered declaration/checkpoint/header/prior-Rush receipts and two typed successor states. Success is a standing-holder touchdown/drive end. Failure is a prone actor at the destination, no carrier, unchanged scores and pending damage/ball movement. The policy excludes another required Dodge, possible later standing scorer, unknown/retry/reactive profiles, missing previously known roster members, unavailable clock/resource evidence and a third Rush. Current observations are not filled from future outcomes.
+
+Its single partial context contribution is `(actual - 5/6) * (4 + scorePressure)`. Score pressure is eight times the success/failure difference in the sign of the current lead, divided by one plus both teams' remaining scheduled regulation turns. These explicit weights are provisional heuristic units, not calibrated win probability or final-result certainty. All faces use the same pre-roll admission. Pending availability/possession and other tactical components remain unquantified.
+
+Team `impactByType` adds `movement_risk`, reconciled with event/action/category/team components. The actual later touchdown adds no second score. The schema validates branch arithmetic, source/physical checkpoint/clock/roster/draw linkage, policy and aggregates; API/CLI/UI share the same typed successor and explanation. Dice model31 and the existing public dice scores remain unchanged. See [full scope and independent references](SCORING_RUSH_CONTEXT_EVIDENCE.md).

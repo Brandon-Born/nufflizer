@@ -1,5 +1,11 @@
 import { currentMoveActor, isDeterministicMoveResult, preservesCurrentMoveEnd } from "./currentMoveActor";
 import { isInertReplayControl } from "./inertControls";
+import {
+  scoringRushState,
+  observedScoringRush,
+  type ScoringRushState,
+  type ScoringPriorRush,
+} from "./scoringRushState";
 import { buildPlayerOwnershipIndex } from "./attribution";
 import { unmodifiedD6Check } from "./numericCheck";
 import {
@@ -69,6 +75,7 @@ import {
 
 type Cell = { x: number; y: number };
 export type PreRollEvidence = {
+  scoringRushState?: ScoringRushState;
   pickupSuccessors?: PickupBounceSuccessors;
   pickupMoveAvailability?: OrdinaryMoveCandidates;
   pickupSettlementKnown?: boolean;
@@ -213,7 +220,10 @@ function summarize(
   pickupMoveDeclaration: string | undefined,
   lastMoveSource: { id: string; index: number } | undefined,
   pickupGeometryTrusted: boolean,
-  knownTeamIds: readonly string[]
+  knownTeamIds: readonly string[],
+  scoringRosterIds?: [number[], number[]],
+  scoringDeclarationId?: string,
+  scoringPriorRushes?: ScoringPriorRush[]
 ): PreRollEvidence {
   const actorId = id(event.playerId);
   const active = board.teams.find(
@@ -542,6 +552,30 @@ function summarize(
     )
   );
   return {
+    scoringRushState:
+      scoringAttempt &&
+      scoringPriorRushes &&
+      rollType === 1 &&
+      activationId &&
+      scoringDeclarationId === activationId &&
+      actorId !== null &&
+      step &&
+      event.sourceTag === "ResultRoll" &&
+      event.sourceIndex !== undefined &&
+      step.sourceIndex === event.sourceIndex - 1 &&
+      event.locator?.messageIndex === 0
+        ? scoringRushState(
+            board,
+            checkpoint,
+            activationId,
+            actorId,
+            scoringAttempt.destination,
+            standardPitch,
+            scoringRosterIds,
+            step,
+            scoringPriorRushes,
+          )
+        : undefined,
     activeMoveContinuation,
     pickupSuccessors,
     pickupMoveAvailability:
@@ -671,12 +705,17 @@ export function reconstructReplayContext(
   let activationEpoch: number | undefined;
   let activationCheckpointAfter: number | undefined;
   let standardPitch = false;
+  let scoringRosterIds: [number[], number[]] | undefined;
+  let scoringRosterStarted = false;
   let smallPitchObserved = false;
   let cursor = 0;
   let checkpoint: ReplayBoardCheckpoint | undefined;
   let board: ObservedBoard | null = null;
   let step: ReplayEvent | undefined;
   let activationId: string | null = null;
+  let scoringDeclarationId: string | undefined;
+  const scoringRushHistory = new Map<string, ScoringPriorRush[] | undefined>();
+  const scoringDeclarationsSeen = new Set<string>();
   let activationActionCode: number | undefined;
   let moveObserved = false;
   let moveOutcomeSourceIndex: number | undefined;
@@ -801,6 +840,37 @@ export function reconstructReplayContext(
         lastTeamMovement = undefined;
         actorDodgeMoveSourceId = undefined;
         const next = checkpoint.board;
+        if (checkpoint.kind === "initial") {
+          scoringRosterIds =
+            !scoringRosterStarted && checkpoint.afterSourceIndex === 0
+              ? [[], []]
+              : undefined;
+          scoringRosterStarted = true;
+        }
+        if (scoringRosterIds) {
+          if (
+            !next ||
+            checkpoint.status !== "observed" ||
+            next.issues.length ||
+            next.teams.length !== 2 ||
+            next.teams.some((t) => t.players.some((p) => p.id === null))
+          )
+            scoringRosterIds = undefined;
+          else
+            for (const t of next.teams) {
+              const observed = Array.from(
+                new Set([
+                  ...scoringRosterIds[t.rosterIndex as 0 | 1],
+                  ...t.players.map((p) => p.id!),
+                ]),
+              );
+              if (observed.length > 64) {
+                scoringRosterIds = undefined;
+                break;
+              }
+              scoringRosterIds[t.rosterIndex as 0 | 1] = observed;
+            }
+        }
         if (checkpoint.kind === "initial")
           standardPitch = next?.pitchLayout === "standard";
         if (next?.pitchLayout === "small") {
@@ -832,6 +902,37 @@ export function reconstructReplayContext(
         blockDeclarationActionId = undefined;
         foulAppearanceActionId = undefined;
       }
+      if (
+        event.sourceTag === "EventBuyMercenary" ||
+        event.sourceTag === "EventRemoveMercenary"
+      )
+        scoringRosterIds = undefined;
+      const scoringPriorRushes = scoringDeclarationId
+        ? scoringRushHistory.get(scoringDeclarationId)?.slice()
+        : undefined;
+      if (event.rollType === 1 && scoringDeclarationId) {
+        const prior = observedScoringRush(event, step),
+          history = scoringRushHistory.get(scoringDeclarationId);
+        scoringRushHistory.set(
+          scoringDeclarationId,
+          prior && history && history.length < 1 ? [...history, prior] : undefined,
+        );
+      }
+      const scoringActorTeam = board?.teams.find((t) =>
+        t.players.some((p) => String(p.id) === event.playerId),
+      );
+      const scoringDeclarationKey =
+        event.sourceTag === "ResultUseAction" &&
+        scoringActorTeam &&
+        board?.periodCode !== null &&
+        scoringActorTeam.gameTurn !== null
+          ? `${scoringActorTeam.rosterIndex}:${board?.periodCode}:${scoringActorTeam.gameTurn}:${event.playerId}`
+          : undefined;
+      const scoringAlreadyDeclared =
+        scoringDeclarationKey !== undefined &&
+        scoringDeclarationsSeen.has(scoringDeclarationKey);
+      if (scoringDeclarationKey)
+        scoringDeclarationsSeen.add(scoringDeclarationKey);
       const confirmed = event.id
         ? lossesByConfirmation.get(event.id)
         : undefined;
@@ -1468,7 +1569,10 @@ export function reconstructReplayContext(
               ? { id: moveOutcomeSourceId, index: moveOutcomeSourceIndex }
               : undefined,
             pickupGeometryTrusted,
-            replay.teams.map((t) => t.id)
+            replay.teams.map((t) => t.id),
+            scoringRosterIds,
+            scoringDeclarationId,
+            scoringPriorRushes,
           )
         );
         const context = result.get(event.id)!;
@@ -1918,6 +2022,19 @@ export function reconstructReplayContext(
         mentalActivationPending = !!currentPlayer?.mentalEffect;
         board = { ...board, activePlayerId: actor };
         activationId = event.id ?? null;
+        scoringDeclarationId =
+          !scoringAlreadyDeclared &&
+          event.actionCode === 1 &&
+          declarationOwned &&
+          event.actorTeamSource !== "turn_inferred" &&
+          currentPlayer?.canAct === true &&
+          step.payload?.Skill === 0 &&
+          step.payload.IsEvaluation === 0 &&
+          same(cell(currentPlayer.cell), stepCell(step.payload.CellFrom))
+            ? event.id
+            : undefined;
+        if (scoringDeclarationId)
+          scoringRushHistory.set(scoringDeclarationId, []);
         activationEpoch = epochs.get(checkpoint);
         activationCheckpointAfter = checkpoint.afterSourceIndex;
         activationActionCode = event.actionCode;

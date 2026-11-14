@@ -5,8 +5,9 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, it, vi } from "vitest";
 
-import { envelope, sequence, rollXml } from "../helpers/replay";
+import { sequence, rollXml } from "../helpers/replay";
 import { POST } from "@/app/api/nufflizier/analyze/route";
+import { scoringRushXml } from "../helpers/scoringRush";
 
 describe("POST /api/nufflizier/analyze", () => {
   it("exports demo1's original failed Catch envelope through the real bounded worker", async () => {
@@ -29,14 +30,18 @@ describe("POST /api/nufflizier/analyze", () => {
     try {
       const data = new FormData();
       const hidden=Array.from({length:100},(_,i)=>`<Unknown${i}><Dice><Die><DieType>0</DieType><Value>3</Value></Die></Dice></Unknown${i}>`).join("");
-      data.set("replay",new File([envelope(`<ReplayStep>${sequence([rollXml(7,6,2)])}<BoardState>${hidden}</BoardState></ReplayStep>`)],"private-input.xml"));
+      const xml=scoringRushXml().replace("</Replay>",`<ReplayStep>${sequence([rollXml(7,6,2)])}<BoardState>${hidden}</BoardState></ReplayStep></Replay>`);
+      data.set("replay",new File([xml],"private-input.xml"));
       const response = await POST(new Request("http://localhost/api/nufflizier/analyze", {
         method: "POST", body: data
       }));
       expect(response.status).toBe(200);
       const report = LuckReportSchema.parse(await response.json());
-      expect(report.coverage.rollCandidates).toMatchObject({scoredCount:1,excludedCount:100,scoredRate:1/101});
-      expect(report.coverage.diceRecords).toMatchObject({eventRecordCount:1,snapshotRecordCount:100,unresolvedCount:100});
+      expect(report.coverage.rollCandidates).toMatchObject({scoredCount:2,excludedCount:100,scoredRate:2/102});
+      expect(report.coverage.diceRecords).toMatchObject({eventRecordCount:2,snapshotRecordCount:100,unresolvedCount:100});
+      expect(report.events.find(e=>e.metadata.rollType===7)).toMatchObject({scoringStatus:"scored",actualSuccess:true,probabilitySuccess:5/6});
+      expect(report.events.find(e=>e.metadata.rollType===1)?.contextualImpact).toMatchObject({policy:"ordinary_no_retry_scoring_rush",difference:12,contribution:-10});
+      expect(report.teams[0]!.impactByType.movement_risk).toBe(-10);
       expect(report.coverage.rollFamilies.find(f=>f.sourceTag==="BoardState")).toMatchObject({unattributedCount:100,unresolvedIdentityCount:100,malformedCount:0});
       const records = log.mock.calls.map(([s]) => JSON.parse(s));
       expect(records.map(r => r.stage)).toEqual([
@@ -230,7 +235,7 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(report.events.find(e=>e.metadata.sourceId==="source-3272")!.metadata.preRoll!.ordinaryMoveAvailability!.unknownPlayerIds).not.toContain("41");
     const skillPools=report.events.filter(e=>e.metadata.block?.skillModel);
     expect(skillPools.map(e=>e.metadata.sourceId)).toEqual(["source-98","source-132","source-367","source-386","source-409"]);
-    expect(report.schemaVersion).toBe("2.61");
+    expect(report.schemaVersion).toBe("2.62");
     expect(report.modelVersion).toBe("dice-only-31");
     const positive=report.events.find(e=>e.metadata.sourceId==="source-98")!;
     const negative=report.events.find(e=>e.metadata.sourceId==="source-132")!;

@@ -24,6 +24,8 @@ import {
 } from "@/domain/replay/blockActivationEnds";
 import { enumerateSkillBlock } from "./blockSkillModel";
 import { applyCategoricalBlockScore } from "./categoricalBlock";
+import { estimateScoringRushImpact } from "./scoringRushImpact";
+import { unmodifiedD6Check } from "@/domain/replay/numericCheck";
 import { findKeptDodgeContexts, attachKeptDodgeMoves } from "./keptDodgeMoves";
 import {
   findRetainedRushContexts,
@@ -1015,14 +1017,25 @@ function buildNormalizedEvent(
   const contextDeviation =
     rerollDraws ? rerollDraws.replacementDelta : delta;
   const contextualImpact =
-    preRoll?.activeTeamId === teamId
-      ? estimateNumericImpact(
-          preRoll,
-          rollType,
-          contextPolicy,
-          contextDeviation
+    preRoll?.scoringRushState &&
+    rollType === 1 &&
+    event.sourceTag === "ResultRoll" &&
+    !rerollLink &&
+    unmodifiedD6Check(event, 1, 1, actualSuccess) === 2 &&
+    probabilitySuccess === 5 / 6
+      ? estimateScoringRushImpact(
+          preRoll.scoringRushState,
+          probabilitySuccess,
+          actualSuccess,
         )
-      : undefined;
+      : preRoll?.activeTeamId === teamId
+        ? estimateNumericImpact(
+            preRoll,
+            rollType,
+            contextPolicy,
+            contextDeviation,
+          )
+        : undefined;
   const contextualBounds =
     preRoll?.activeTeamId === teamId && rollType === 2
       ? estimateDodgeImpactBounds(
@@ -1189,7 +1202,7 @@ function initialAggregate(teamId: string, teamName: string): LuckTeamAggregate {
     eventCount: 0,
     impactCount: 0,
     impactScore: 0,
-    impactByType: { dodge: 0, ball_handling: 0 }
+    impactByType: { dodge: 0, ball_handling: 0, movement_risk: 0 }
   };
 }
 
@@ -1433,6 +1446,14 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       move.outcomeSourceId
     ])
       activationEvidenceSources.add(source);
+  const scoringDeclarations = new Set(
+    Array.from(contextBySource.values()).flatMap((c) =>
+      c.scoringRushState ? [c.scoringRushState.declarationSourceId] : [],
+    ),
+  );
+  for (const source of scoringDeclarations)
+    activationEvidenceSources.add(source);
+
   for (const end of activationEnds.values())
     for (const source of [
       end.sourceId,
@@ -1821,6 +1842,11 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       );
       if (!normalized) {
         continue;
+      }
+      if (scoringDeclarations.has(event.id ?? "")) {
+        normalized.label = "Ordinary Move declaration before scoring Rush";
+        normalized.explainability.inputsSummary =
+          "This recorded declaration anchors the subsequent pre-roll scoring state. It adds no dice or context contribution.";
       }
       const numericOffer = numericTeamOffers.get(event.id ?? "");
       if(numericOffer){
@@ -2492,7 +2518,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     if (!aggregate) continue;
     if (
       event.contextualImpact &&
-      (event.type === "dodge" || event.type === "ball_handling")
+      (event.type === "dodge" || event.type === "ball_handling" || event.type === "movement_risk")
     ) {
       aggregate.impactCount++;
       aggregate.impactScore += event.contextualImpact.contribution;
@@ -2606,7 +2632,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       "Supported source and dice policies are scoped to their evidence; unknown variants remain unscored.",
       "Block scoring uses source-qualified current-skill tables under a fixed knockdown-balance policy. Unverified pools retain symbols and observed outcomes without a point; optional choices, legal full-turn eligibility and tactical impact remain separate.",
       "Categorical injury luck scores a qualified initial unmodified table, separately from treatment, recovery and match impact.",
-      "Context estimates require a reconciled board and a verified terminal roll policy. The mobility/possession scale is a heuristic, not calibrated match impact."
+      "Context estimates require qualified pre-roll state and a stated successor policy. Movement, possession and regulation score-pressure units are provisional heuristics, not calibrated match impact."
     ],
     id: hashId(idSeed),
     generatedAt: new Date().toISOString(),

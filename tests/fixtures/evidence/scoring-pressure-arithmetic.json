@@ -1,0 +1,1076 @@
+{
+  "scope": "Exact synthetic score/clock references; no application imports/admission.",
+  "cases": [
+    {
+      "period": 0,
+      "ownTurn": 1,
+      "opponentTurn": 0,
+      "ownScore": 0,
+      "opponentScore": 0,
+      "scorePressure": "1/4",
+      "difference": "17/4",
+      "contributions": [
+        "-85/24",
+        "17/24",
+        "17/24",
+        "17/24",
+        "17/24",
+        "17/24"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 1,
+      "opponentTurn": 0,
+      "ownScore": 0,
+      "opponentScore": 1,
+      "scorePressure": "1/4",
+      "difference": "17/4",
+      "contributions": [
+        "-85/24",
+        "17/24",
+        "17/24",
+        "17/24",
+        "17/24",
+        "17/24"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 1,
+      "opponentTurn": 0,
+      "ownScore": 0,
+      "opponentScore": 2,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 1,
+      "opponentTurn": 0,
+      "ownScore": 1,
+      "opponentScore": 0,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 1,
+      "opponentTurn": 0,
+      "ownScore": 1,
+      "opponentScore": 1,
+      "scorePressure": "1/4",
+      "difference": "17/4",
+      "contributions": [
+        "-85/24",
+        "17/24",
+        "17/24",
+        "17/24",
+        "17/24",
+        "17/24"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 1,
+      "opponentTurn": 0,
+      "ownScore": 1,
+      "opponentScore": 2,
+      "scorePressure": "1/4",
+      "difference": "17/4",
+      "contributions": [
+        "-85/24",
+        "17/24",
+        "17/24",
+        "17/24",
+        "17/24",
+        "17/24"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 1,
+      "opponentTurn": 0,
+      "ownScore": 2,
+      "opponentScore": 0,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 1,
+      "opponentTurn": 0,
+      "ownScore": 2,
+      "opponentScore": 1,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 1,
+      "opponentTurn": 0,
+      "ownScore": 2,
+      "opponentScore": 2,
+      "scorePressure": "1/4",
+      "difference": "17/4",
+      "contributions": [
+        "-85/24",
+        "17/24",
+        "17/24",
+        "17/24",
+        "17/24",
+        "17/24"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 8,
+      "opponentTurn": 7,
+      "ownScore": 0,
+      "opponentScore": 0,
+      "scorePressure": "4/9",
+      "difference": "40/9",
+      "contributions": [
+        "-100/27",
+        "20/27",
+        "20/27",
+        "20/27",
+        "20/27",
+        "20/27"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 8,
+      "opponentTurn": 7,
+      "ownScore": 0,
+      "opponentScore": 1,
+      "scorePressure": "4/9",
+      "difference": "40/9",
+      "contributions": [
+        "-100/27",
+        "20/27",
+        "20/27",
+        "20/27",
+        "20/27",
+        "20/27"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 8,
+      "opponentTurn": 7,
+      "ownScore": 0,
+      "opponentScore": 2,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 8,
+      "opponentTurn": 7,
+      "ownScore": 1,
+      "opponentScore": 0,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 8,
+      "opponentTurn": 7,
+      "ownScore": 1,
+      "opponentScore": 1,
+      "scorePressure": "4/9",
+      "difference": "40/9",
+      "contributions": [
+        "-100/27",
+        "20/27",
+        "20/27",
+        "20/27",
+        "20/27",
+        "20/27"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 8,
+      "opponentTurn": 7,
+      "ownScore": 1,
+      "opponentScore": 2,
+      "scorePressure": "4/9",
+      "difference": "40/9",
+      "contributions": [
+        "-100/27",
+        "20/27",
+        "20/27",
+        "20/27",
+        "20/27",
+        "20/27"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 8,
+      "opponentTurn": 7,
+      "ownScore": 2,
+      "opponentScore": 0,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 8,
+      "opponentTurn": 7,
+      "ownScore": 2,
+      "opponentScore": 1,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 8,
+      "opponentTurn": 7,
+      "ownScore": 2,
+      "opponentScore": 2,
+      "scorePressure": "4/9",
+      "difference": "40/9",
+      "contributions": [
+        "-100/27",
+        "20/27",
+        "20/27",
+        "20/27",
+        "20/27",
+        "20/27"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 8,
+      "opponentTurn": 8,
+      "ownScore": 0,
+      "opponentScore": 0,
+      "scorePressure": "8/17",
+      "difference": "76/17",
+      "contributions": [
+        "-190/51",
+        "38/51",
+        "38/51",
+        "38/51",
+        "38/51",
+        "38/51"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 8,
+      "opponentTurn": 8,
+      "ownScore": 0,
+      "opponentScore": 1,
+      "scorePressure": "8/17",
+      "difference": "76/17",
+      "contributions": [
+        "-190/51",
+        "38/51",
+        "38/51",
+        "38/51",
+        "38/51",
+        "38/51"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 8,
+      "opponentTurn": 8,
+      "ownScore": 0,
+      "opponentScore": 2,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 8,
+      "opponentTurn": 8,
+      "ownScore": 1,
+      "opponentScore": 0,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 8,
+      "opponentTurn": 8,
+      "ownScore": 1,
+      "opponentScore": 1,
+      "scorePressure": "8/17",
+      "difference": "76/17",
+      "contributions": [
+        "-190/51",
+        "38/51",
+        "38/51",
+        "38/51",
+        "38/51",
+        "38/51"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 8,
+      "opponentTurn": 8,
+      "ownScore": 1,
+      "opponentScore": 2,
+      "scorePressure": "8/17",
+      "difference": "76/17",
+      "contributions": [
+        "-190/51",
+        "38/51",
+        "38/51",
+        "38/51",
+        "38/51",
+        "38/51"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 8,
+      "opponentTurn": 8,
+      "ownScore": 2,
+      "opponentScore": 0,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 8,
+      "opponentTurn": 8,
+      "ownScore": 2,
+      "opponentScore": 1,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 0,
+      "ownTurn": 8,
+      "opponentTurn": 8,
+      "ownScore": 2,
+      "opponentScore": 2,
+      "scorePressure": "8/17",
+      "difference": "76/17",
+      "contributions": [
+        "-190/51",
+        "38/51",
+        "38/51",
+        "38/51",
+        "38/51",
+        "38/51"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 9,
+      "opponentTurn": 8,
+      "ownScore": 0,
+      "opponentScore": 0,
+      "scorePressure": "1/2",
+      "difference": "9/2",
+      "contributions": [
+        "-15/4",
+        "3/4",
+        "3/4",
+        "3/4",
+        "3/4",
+        "3/4"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 9,
+      "opponentTurn": 8,
+      "ownScore": 0,
+      "opponentScore": 1,
+      "scorePressure": "1/2",
+      "difference": "9/2",
+      "contributions": [
+        "-15/4",
+        "3/4",
+        "3/4",
+        "3/4",
+        "3/4",
+        "3/4"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 9,
+      "opponentTurn": 8,
+      "ownScore": 0,
+      "opponentScore": 2,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 9,
+      "opponentTurn": 8,
+      "ownScore": 1,
+      "opponentScore": 0,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 9,
+      "opponentTurn": 8,
+      "ownScore": 1,
+      "opponentScore": 1,
+      "scorePressure": "1/2",
+      "difference": "9/2",
+      "contributions": [
+        "-15/4",
+        "3/4",
+        "3/4",
+        "3/4",
+        "3/4",
+        "3/4"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 9,
+      "opponentTurn": 8,
+      "ownScore": 1,
+      "opponentScore": 2,
+      "scorePressure": "1/2",
+      "difference": "9/2",
+      "contributions": [
+        "-15/4",
+        "3/4",
+        "3/4",
+        "3/4",
+        "3/4",
+        "3/4"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 9,
+      "opponentTurn": 8,
+      "ownScore": 2,
+      "opponentScore": 0,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 9,
+      "opponentTurn": 8,
+      "ownScore": 2,
+      "opponentScore": 1,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 9,
+      "opponentTurn": 8,
+      "ownScore": 2,
+      "opponentScore": 2,
+      "scorePressure": "1/2",
+      "difference": "9/2",
+      "contributions": [
+        "-15/4",
+        "3/4",
+        "3/4",
+        "3/4",
+        "3/4",
+        "3/4"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 15,
+      "opponentTurn": 15,
+      "ownScore": 0,
+      "opponentScore": 0,
+      "scorePressure": "8/3",
+      "difference": "20/3",
+      "contributions": [
+        "-50/9",
+        "10/9",
+        "10/9",
+        "10/9",
+        "10/9",
+        "10/9"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 15,
+      "opponentTurn": 15,
+      "ownScore": 0,
+      "opponentScore": 1,
+      "scorePressure": "8/3",
+      "difference": "20/3",
+      "contributions": [
+        "-50/9",
+        "10/9",
+        "10/9",
+        "10/9",
+        "10/9",
+        "10/9"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 15,
+      "opponentTurn": 15,
+      "ownScore": 0,
+      "opponentScore": 2,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 15,
+      "opponentTurn": 15,
+      "ownScore": 1,
+      "opponentScore": 0,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 15,
+      "opponentTurn": 15,
+      "ownScore": 1,
+      "opponentScore": 1,
+      "scorePressure": "8/3",
+      "difference": "20/3",
+      "contributions": [
+        "-50/9",
+        "10/9",
+        "10/9",
+        "10/9",
+        "10/9",
+        "10/9"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 15,
+      "opponentTurn": 15,
+      "ownScore": 1,
+      "opponentScore": 2,
+      "scorePressure": "8/3",
+      "difference": "20/3",
+      "contributions": [
+        "-50/9",
+        "10/9",
+        "10/9",
+        "10/9",
+        "10/9",
+        "10/9"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 15,
+      "opponentTurn": 15,
+      "ownScore": 2,
+      "opponentScore": 0,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 15,
+      "opponentTurn": 15,
+      "ownScore": 2,
+      "opponentScore": 1,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 15,
+      "opponentTurn": 15,
+      "ownScore": 2,
+      "opponentScore": 2,
+      "scorePressure": "8/3",
+      "difference": "20/3",
+      "contributions": [
+        "-50/9",
+        "10/9",
+        "10/9",
+        "10/9",
+        "10/9",
+        "10/9"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 16,
+      "opponentTurn": 15,
+      "ownScore": 0,
+      "opponentScore": 0,
+      "scorePressure": "4",
+      "difference": "8",
+      "contributions": [
+        "-20/3",
+        "4/3",
+        "4/3",
+        "4/3",
+        "4/3",
+        "4/3"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 16,
+      "opponentTurn": 15,
+      "ownScore": 0,
+      "opponentScore": 1,
+      "scorePressure": "4",
+      "difference": "8",
+      "contributions": [
+        "-20/3",
+        "4/3",
+        "4/3",
+        "4/3",
+        "4/3",
+        "4/3"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 16,
+      "opponentTurn": 15,
+      "ownScore": 0,
+      "opponentScore": 2,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 16,
+      "opponentTurn": 15,
+      "ownScore": 1,
+      "opponentScore": 0,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 16,
+      "opponentTurn": 15,
+      "ownScore": 1,
+      "opponentScore": 1,
+      "scorePressure": "4",
+      "difference": "8",
+      "contributions": [
+        "-20/3",
+        "4/3",
+        "4/3",
+        "4/3",
+        "4/3",
+        "4/3"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 16,
+      "opponentTurn": 15,
+      "ownScore": 1,
+      "opponentScore": 2,
+      "scorePressure": "4",
+      "difference": "8",
+      "contributions": [
+        "-20/3",
+        "4/3",
+        "4/3",
+        "4/3",
+        "4/3",
+        "4/3"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 16,
+      "opponentTurn": 15,
+      "ownScore": 2,
+      "opponentScore": 0,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 16,
+      "opponentTurn": 15,
+      "ownScore": 2,
+      "opponentScore": 1,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 16,
+      "opponentTurn": 15,
+      "ownScore": 2,
+      "opponentScore": 2,
+      "scorePressure": "4",
+      "difference": "8",
+      "contributions": [
+        "-20/3",
+        "4/3",
+        "4/3",
+        "4/3",
+        "4/3",
+        "4/3"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 16,
+      "opponentTurn": 16,
+      "ownScore": 0,
+      "opponentScore": 0,
+      "scorePressure": "8",
+      "difference": "12",
+      "contributions": [
+        "-10",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 16,
+      "opponentTurn": 16,
+      "ownScore": 0,
+      "opponentScore": 1,
+      "scorePressure": "8",
+      "difference": "12",
+      "contributions": [
+        "-10",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 16,
+      "opponentTurn": 16,
+      "ownScore": 0,
+      "opponentScore": 2,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 16,
+      "opponentTurn": 16,
+      "ownScore": 1,
+      "opponentScore": 0,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 16,
+      "opponentTurn": 16,
+      "ownScore": 1,
+      "opponentScore": 1,
+      "scorePressure": "8",
+      "difference": "12",
+      "contributions": [
+        "-10",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 16,
+      "opponentTurn": 16,
+      "ownScore": 1,
+      "opponentScore": 2,
+      "scorePressure": "8",
+      "difference": "12",
+      "contributions": [
+        "-10",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 16,
+      "opponentTurn": 16,
+      "ownScore": 2,
+      "opponentScore": 0,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 16,
+      "opponentTurn": 16,
+      "ownScore": 2,
+      "opponentScore": 1,
+      "scorePressure": "0",
+      "difference": "4",
+      "contributions": [
+        "-10/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3",
+        "2/3"
+      ]
+    },
+    {
+      "period": 1,
+      "ownTurn": 16,
+      "opponentTurn": 16,
+      "ownScore": 2,
+      "opponentScore": 2,
+      "scorePressure": "8",
+      "difference": "12",
+      "contributions": [
+        "-10",
+        "2",
+        "2",
+        "2",
+        "2",
+        "2"
+      ]
+    }
+  ]
+}

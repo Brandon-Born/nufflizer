@@ -407,6 +407,11 @@ export function explainContextImpact(
 ): string | null {
   const impact = event.contextualImpact;
   if (!impact) return null;
+  if (impact.policy === "ordinary_no_retry_scoring_rush") {
+    const state = event.metadata.preRoll?.scoringRushState;
+    const position = state ? ` Before the die, the score from this team's perspective was ${state.frame.teams[state.ownRoster].score}-${state.frame.teams[1-state.ownRoster]!.score}; the teams had ${state.frame.teams.map(t=>2*state.frame.turnsPerPeriod-t.turn).join(" and ")} scheduled regulation turns remaining.` : "";
+    return `A successful Rush carries the standing ball holder into the end zone and adds one touchdown. Failure puts the carrier prone there, with armor and ball movement still pending. Under the stated current ordinary profiles, no other player can score during those pending stages. The pre-roll state records zero team rerolls and no applicable skill retry or extra Dodge check.${position} This partial scoring component compares those two legal successors: ${impact.components.touchdown} touchdown units plus ${impact.components.scorePressure.toFixed(3)} score-pressure units, multiplied by actual result minus ${(100 * (event.probabilitySuccess ?? 0)).toFixed(1)}%: ${impact.contribution.toFixed(3)} provisional context units. Score pressure uses the current score and both teams' remaining scheduled regulation turns. It is a heuristic, not a win probability or final-match prediction; overtime, future decisions, player damage and the later ball result are outside this component.`;
+  }
   const { availableMoves, possession, markedBounce } = impact.components;
   return (
     [

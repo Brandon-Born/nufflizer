@@ -7,6 +7,8 @@ import { isFixedNumericModifier } from "./numericCheckContract";
 import { summarizeDiceRecords } from "./diceEvidence";
 import { enumerateSkillBlock } from "./blockSkillModel";
 import { validReportedCategoricalBlock } from "./categoricalBlock";
+import { ScoringRushStateSchema } from "@/domain/replay/scoringRushState";
+import { validReportedScoringRushImpact } from "./scoringRushImpact";
 import {
   contextComponent,
   summarizeContextComponents,
@@ -434,6 +436,7 @@ export const LuckEventMetadataSchema = z.strictObject({
     .optional(),
   preRoll: z
     .strictObject({
+      scoringRushState: ScoringRushStateSchema.optional(),
       checkpointAfter: count,
       activeMoveContinuation:activeMoveContinuation.optional(),
       actorDodgeMoveSourceId:text.optional(),
@@ -603,7 +606,8 @@ export const LuckEventSchema = z.strictObject({
   possessionBounds:z.strictObject({policy:z.literal("sure_hands_reroll"),successChance:probability,minimumDifference:finite.min(0).max(3),maximumDifference:finite.min(0).max(3),lower:finite,upper:finite}).optional(),
   contextualBounds:z.strictObject({policy:z.enum(["dodge_skill_reroll","team_reroll_terminal_moves","team_reroll_rush_moves","kept_rush_terminal_moves","kept_dodge_terminal_moves"]),terminalCheckpointAfter:count.optional(),minimumMoves:count,maximumMoves:count,successChance:probability,activeContinuation:z.strictObject({minimum:z.union([z.literal(0),z.literal(1)]),maximum:z.union([z.literal(0),z.literal(1)])}).optional(),lower:finite,upper:finite}).optional(),
   contextualImpact: z
-    .strictObject({
+    .union([
+      z.strictObject({
       policy: z.enum(["declined_team_reroll", "full_team_reroll", "dodge_skill_reroll"]),
       components: z.strictObject({
         availableMoves: finite.min(0),
@@ -614,7 +618,39 @@ export const LuckEventSchema = z.strictObject({
       difference: finite.min(0),
       deviation:finite,
       contribution: finite
-    })
+    }),
+      z.strictObject({
+        policy: z.literal("ordinary_no_retry_scoring_rush"),
+        components: z.strictObject({
+          touchdown: z.literal(4),
+          scorePressure: finite.min(0).max(8),
+        }),
+        difference: finite.min(4).max(12),
+        deviation: finite.min(-1).max(1),
+        contribution: finite,
+        successors: z.strictObject({
+          success: z.strictObject({
+            kind: z.literal("touchdown"),
+            actorCell: pitchCell,
+            actorStatus: z.literal(0),
+            ballCarrierId: count,
+            ownScore: count,
+            opponentScore: count,
+            phase: z.literal("drive_end"),
+          }),
+          failure: z.strictObject({
+            kind: z.literal("fall_before_damage"),
+            actorCell: pitchCell,
+            actorStatus: z.literal(1),
+            ballCarrierId: z.null(),
+            ownScore: count,
+            opponentScore: count,
+            phase: z.literal("turnover_pending"),
+            pending: z.tuple([z.literal("armor"), z.literal("ball_bounce")]),
+          }),
+        }),
+      }),
+    ])
     .optional(),
   label: text,
   tags: z.array(LuckMomentTagSchema).max(2),
@@ -646,7 +682,7 @@ export const LuckTeamAggregateSchema = z.strictObject({
   eventCount: count,
   impactCount: count,
   impactScore: finite,
-  impactByType: z.strictObject({ dodge: finite, ball_handling: finite })
+  impactByType: z.strictObject({ dodge: finite, ball_handling: finite, movement_risk: finite })
 });
 const componentBucket = {
   componentCount: count,
@@ -2360,7 +2396,13 @@ export const LuckReportSchema = z
           ), "A Dodge-skill context policy requires the owned committed reroll, original failed die and two-attempt odds.");
       }
       const impact = event.contextualImpact;
-      if (impact) {
+      require(validReportedScoringRushImpact(
+        event,
+        report,
+        sources,
+        rootDiceBySource,
+      ), "A scoring Rush component requires a complete pre-roll ordinary/no-retry state, current score and both clocks, ordered declaration/checkpoint/draw receipts and legal branch states without a hidden second check or later scorer.");
+      if (impact && impact.policy !== "ordinary_no_retry_scoring_rush") {
         require(event.scoringStatus === "scored" &&
           !!context &&
           context.activeTeamId === event.teamId &&
@@ -2869,7 +2911,7 @@ export const LuckReportSchema = z
             0
           )
         ), "Context totals must reconcile.");
-      for (const type of ["dodge", "ball_handling"] as const)
+      for (const type of ["dodge", "ball_handling", "movement_risk"] as const)
         require(near(
           team.impactByType[type],
           impacts

@@ -9,6 +9,7 @@ export const HOW_TO_READ_LINES = [
   "A single binary roll contributes actual result minus its chance. A linked reroll adds that calculation for each actual draw, including the failed first die once, before applying the provisional category weight. A qualified Block compares the knockdown balance offered by its fresh pool with its fair conditional mean under the stated skill/choice policy. A qualified initial injury compares more-severe and less-severe tiers. Team dice totals add these contributions; context units require separate pre-roll evidence. Neither unit is a win probability.",
   "A qualified Loner or Pro gate shows its own pass chance. Its contribution is the unexpected change in access to one Dodge rescue: single-Dodge chance times (gate result minus gate chance). The original die and any fresh replacement keep separate contributions; a kept summary adds no draw.",
   "Excluded records have unknown odds where the contract is unverified. Unknown does not mean an even match.",
+  "A qualified scoring Rush compares legal touchdown and fall states using the current score and both teams’ remaining regulation turns. It requires known retry eligibility and no extra check or later scorer. Score pressure is a partial heuristic component, not a final-result prediction.",
   "Replay segments follow source order. A half or team turn is shown only when the pre-roll state verifies it."
 ] as const;
 export const CATEGORY_EXAMPLE_LINES = [

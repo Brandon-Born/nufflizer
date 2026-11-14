@@ -190,7 +190,9 @@ const oldProjection = (r: LuckReport, file: string) => {
     t.luckScore = 0;
     t.impactCount = 0;
     t.impactScore = 0;
-    t.impactByType = { dodge: 0, ball_handling: 0 };
+    t.impactByType = { dodge: 0, ball_handling: 0, movement_risk: 0 };
+    // The frozen historical cohort predates movement context.
+    delete (t.impactByType as Record<string,number>).movement_risk;
     for (const k of Object.keys(t.categoryScores))
       t.categoryScores[k as keyof typeof t.categoryScores] = 0;
   }
