@@ -28,7 +28,7 @@ it("[cli-worker] exports real retained initial injury and first reserves states 
   };
   try {
     const r = LuckReportSchema.parse(JSON.parse(run("demo3", "json")));
-    expect(r.schemaVersion).toBe("2.68");
+    expect(r.schemaVersion).toBe("2.69");
     expect(r.modelVersion).toBe("dice-only-35");
     expect(r.events.filter((e) => e.metadata.recordedTreatment)).toHaveLength(
       5
@@ -67,8 +67,51 @@ it("[cli-worker] exports real retained initial injury and first reserves states 
       });
       expect(e.weightedDelta).toBe(0);
     }
+    expect(
+      r.events.find((e) => e.metadata.sourceId === "source-2043")!.metadata
+        .treatmentReturn
+    ).toEqual({
+      status: "unverified",
+      stop: { reason: "identity_transition", sourceIndex: 2466 }
+    });
+    expect(
+      r.events.find((e) => e.metadata.sourceId === "source-3060")!.metadata
+        .treatmentReturn
+    ).toMatchObject({
+      status: "observed",
+      setup: { checkpointAfter: 3809, activeGamerId: null },
+      playing: { checkpointAfter: 3876 },
+      activation: {
+        sourceId: "source-4175",
+        before: { checkpointAfter: 4172, activeGamerId: null, statusCode: null }
+      }
+    });
+    expect(
+      r.events.find((e) => e.metadata.sourceId === "source-4175")
+    ).toMatchObject({
+      playerId: "7",
+      teamId: "0",
+      scoringStatus: "excluded",
+      weightedDelta: 0,
+      metadata: {
+        isRollCandidate: false,
+        treatmentReturnActivation: { treatmentSourceId: "source-3060" },
+        ownership: { role: "actor", teamId: "0", playerId: "7" }
+      }
+    });
     const text = run("demo3", "text");
     expect(text).toContain("Recorded treatment notifications: 5.");
+    expect(text).toContain(
+      "Player 7 is later observed back on the pitch during setup (source 3809), then in regular play (source 3876)"
+    );
+    expect(text).toContain("A Move declaration is recorded at source-4175");
+    expect(text).toContain(
+      "This treated player's Move declaration is linked to treatment source-3060"
+    );
+    expect(text).toContain(
+      "A later return cannot be linked to this treatment."
+    );
+
     expect(text).toContain(
       "source source-636: Recorded Apothecary decision: no resource used; retained the recorded initial injury without a new roll"
     );
@@ -85,4 +128,47 @@ it("[cli-worker] exports real retained initial injury and first reserves states 
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+}, 20000);
+
+it("[cli-worker] keeps treatment setup/play observations before an unsupported later action", () => {
+  const run = (format: string) => {
+    const out = spawnSync(
+      process.execPath,
+      [
+        "--import",
+        "tsx",
+        "src/cli/nufflizier.ts",
+        "analyze",
+        "demo-replays/demo1.bbr",
+        "--format",
+        format
+      ],
+      { encoding: "utf8", maxBuffer: 4_000_000 }
+    );
+    expect(out.status, out.stderr).toBe(0);
+    return out.stdout;
+  };
+  const r = LuckReportSchema.parse(JSON.parse(run("json"))),
+    e = r.events.find((e) => e.metadata.sourceId === "source-5188")!;
+  expect(e.teamId).toBe("1");
+  expect(e.metadata.treatmentReturn).toMatchObject({
+    status: "observed",
+    setup: { checkpointAfter: 5302 },
+    playing: { checkpointAfter: 5366 },
+    stop: { reason: "unsupported_activation", sourceIndex: 5397 }
+  });
+  expect(
+    e.metadata.treatmentReturn &&
+      "activation" in e.metadata.treatmentReturn &&
+      e.metadata.treatmentReturn.activation
+  ).toBeFalsy();
+  expect(r.events.some((e) => e.metadata.treatmentReturnActivation)).toBe(
+    false
+  );
+  const text = run("text");
+  expect(text).toContain(
+    "Player 37 is later observed back on the pitch during setup (source 5302), then in regular play (source 5366)"
+  );
+  expect(text).toContain("the first later declaration is not qualified");
+  expect(text).toContain("No extra luck or contextual value is added");
 }, 20000);

@@ -42,6 +42,7 @@ import { summarizeDamageSteps } from "./damageSteps";
 import { validReportedArmorModifierUse } from "./armorModifierBudget";
 import { validReportedRecoveryControl,validReportedRegenerationAftermath } from "./regenerationAftermath";
 import { validReportedRegenerationReturn,validReportedRecoveryReturnActivation } from "./regenerationReturn";
+import {validReportedTreatmentReturn,validReportedTreatmentReturnActivation} from "./treatmentReturn";
 import { validReportedNumericRerollScore } from "./numericRerollScore";
 import { summarizeContextEvidence } from "./contextCoverage";
 import { observedBounceDirection } from "./ballConsequences";
@@ -160,6 +161,18 @@ const recoveryReturnStop=z.discriminatedUnion("reason",[
   z.strictObject({reason:z.enum(["identity_transition","roster_conflict","unknown_position","unsupported_setup","new_damage","unsupported_activation"]),sourceIndex:count})
 ]);
 const recoveryReturnActivation=z.strictObject({sourceId:text,stepSourceIndex:count,actionCode:z.union([z.literal(1),z.literal(2)]),before:recoveryReturnSnapshot});
+const treatmentReturnSnapshot=recoveryReturnSnapshot.extend({recordedFlags:z.strictObject({status:z.boolean(),situation:z.boolean(),canAct:z.boolean(),tackleZone:z.boolean()})});
+const treatmentReturnTrace=z.discriminatedUnion("status",[
+  z.strictObject({status:z.literal("not_observed")}),
+  z.strictObject({status:z.literal("unverified"),stop:recoveryReturnStop}),
+  z.strictObject({status:z.literal("observed"),setup:treatmentReturnSnapshot,playing:treatmentReturnSnapshot.optional(),activation:recoveryReturnActivation.extend({before:treatmentReturnSnapshot}).optional(),stop:recoveryReturnStop.optional()})
+]);
+const reservesReturnTrace=z.discriminatedUnion("status",[
+    z.strictObject({status:z.literal("not_observed")}),
+    z.strictObject({status:z.literal("unverified"),stop:recoveryReturnStop}),
+    z.strictObject({status:z.literal("observed"),setup:recoveryReturnSnapshot,playing:recoveryReturnSnapshot.optional(),activation:recoveryReturnActivation.optional(),stop:recoveryReturnStop.optional()})
+  ]);
+
 const pushMove=z.strictObject({playerId:text,teamId:text,from:pitchCell,to:bounceCell,destination:z.enum(["pitch","crowd"])});
 const pushBranch=z.strictObject({moves:z.array(pushMove).min(1).max(64),follow:z.boolean(),positions:z.array(z.strictObject({playerId:text,teamId:text,cell:pitchCell.nullable()})).min(1).max(65)});
 const pushModel=z.discriminatedUnion("status",[
@@ -316,11 +329,9 @@ export const LuckEventMetadataSchema = z.strictObject({
   ]).optional(),
   regenerationAftermath:z.strictObject({beforeCheckpointAfter:count,checkpointAfter:count,replayStep:z.number().int().positive(),childIndex:count,rosterIndex:z.union([z.literal(0),z.literal(1)]),
     controlSourceIds:z.array(text).min(1).max(5),observation:z.strictObject({cell:z.strictObject({x:z.literal(-1),y:z.literal(-1)}),situationCode:z.union([z.literal(1),z.literal(4)]),statusCode:z.number().int().nullable(),canAct:z.boolean().nullable(),tackleZone:z.boolean().nullable()})}).optional(),
-  regenerationReturn:z.discriminatedUnion("status",[
-    z.strictObject({status:z.literal("not_observed")}),
-    z.strictObject({status:z.literal("unverified"),stop:recoveryReturnStop}),
-    z.strictObject({status:z.literal("observed"),setup:recoveryReturnSnapshot,playing:recoveryReturnSnapshot.optional(),activation:recoveryReturnActivation.optional(),stop:recoveryReturnStop.optional()})
-  ]).optional(),
+  regenerationReturn:reservesReturnTrace.optional(),
+  treatmentReturn:treatmentReturnTrace.optional(),
+  treatmentReturnActivation:z.strictObject({treatmentSourceId:text,stepSourceIndex:count,actionCode:z.union([z.literal(1),z.literal(2)]),before:treatmentReturnSnapshot}).optional(),
   recoveryReturnActivation:z.strictObject({regenerationSourceId:text,stepSourceIndex:count,actionCode:z.union([z.literal(1),z.literal(2)]),before:recoveryReturnSnapshot}).optional(),
   activationLoss: z.strictObject({
     rollSourceId: text, rollSourceIndex: count, declarationSourceId: text, skillSourceId: text,
@@ -2504,6 +2515,7 @@ export const LuckReportSchema = z
       ), "A staff injury original retains its prompt code1 separately; only exact original dice, current Stunty traits and an unmodified nine can establish the initial Badly Hurt table result.");
       if(event.metadata.casualtyObservation)require(teamIds.has(event.teamId) && validReportedCasualtyObservation(event,casualtyDiceBySource.get(event.metadata.sourceId)),"A recorded casualty needs its uniquely owned DamageStep, exact direct/original/replacement dice path and separate outcome namespace; copied summaries, probabilities and match-impact claims cannot certify it.");
       require(validReportedRecoveryControl(event)&&validReportedRegenerationAftermath(event,sources,report.coverage.sourceRecordCount),"Regeneration aftermath requires its first same-frame owned off-pitch observation and the exact supported ordered control bridge, separately from dice and availability.");
+      require(validReportedTreatmentReturn(event,sources,report)&&validReportedTreatmentReturnActivation(event,sources,report),"A treatment reserves return requires ordered same-instance setup/play and its own observed declaration; gaps, omitted flags and another recovery cause cannot create availability or luck.");
       require(validReportedRegenerationReturn(event,sources,report.coverage.sourceRecordCount)&&validReportedRecoveryReturnActivation(event,sources,report.coverage.sourceRecordCount),"A recovered-player return requires ordered same-instance setup/play observations and its own supported declaration; gaps and missing observations cannot establish useful availability or add luck.");
       require(validReportedArmorModifierUse(event,sources),"A recorded Mighty Blow armor use requires its separate holder, adjacent affected subject and exact committed +1 armor evidence without odds or a score.");
       if (injuryObservation)

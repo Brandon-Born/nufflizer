@@ -1,8 +1,8 @@
 # Project Blueprint: Nufflizier (Web + API + CLI)
 
-## Current Planning Authority (2026-11-09)
+## Current Planning Authority (2026-11-14)
 
-[PROJECT_PLAN.md](PROJECT_PLAN.md) and [REMEDIATION_BACKLOG.md](REMEDIATION_BACKLOG.md) supersede the milestone ordering and readiness claims in the February implementation history below. The adversarial review found real block/injury exclusions, unreachable dodge scoring, reroll and damage-attribution errors, misleading coverage, parser failures, and upload-security gaps. Context-sensitive impact requires state reconstruction and a versioned consequence model (NUF-016–019); fixed category weights do not implement that capability. The current ledger records seven locally verified closures and the remaining semantic/deployment work. The historical sections below do not override those statuses.
+[PROJECT_PLAN.md](PROJECT_PLAN.md) and [REMEDIATION_BACKLOG.md](REMEDIATION_BACKLOG.md) supersede the milestone ordering and readiness claims in the February implementation history below. The adversarial review found real block/injury exclusions, unreachable dodge scoring, reroll and damage-attribution errors, misleading coverage, parser failures, and upload-security gaps. Context-sensitive impact requires state reconstruction and a versioned consequence model (NUF-016–019); fixed category weights do not implement that capability. The authoritative ledger records scoped closures and the remaining semantic/state/context/deployment acceptance. Current reports abstain from whole-match comparisons; historical milestone labels do not establish completion. The historical sections below do not override those statuses.
 
 ## Product Summary
 Nufflizier is a replay-driven luck analysis tool for Blood Bowl 3.

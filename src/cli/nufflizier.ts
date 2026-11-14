@@ -32,6 +32,7 @@ import {
   explainApothecaryDecision,
   explainRecordedTreatment,
   explainTreatmentAftermath,
+  explainTreatmentReturn,
   explainRegenerationAftermath,
   explainRegenerationReturn,
   explainNumericRerollScore,
@@ -149,8 +150,9 @@ function formatTeamSummary(
     ...report.events.filter(e=>e.metadata.apothecary&&!e.metadata.recordedTreatment).map(e=>`Player ${e.playerId}; source ${e.metadata.sourceId}: ${explainApothecaryDecision(e)}`),
     ...(report.events.some(e=>e.metadata.recordedTreatment)?[
       `Recorded treatment notifications: ${report.events.filter(e=>e.metadata.recordedTreatment).length}. Resource observations, selected results and first observed aftermath stay separate from dice and useful availability.`,
-      ...report.events.filter(e=>e.metadata.recordedTreatment).map(e=>`Player ${e.playerId}; source ${e.metadata.sourceId}: ${[explainApothecaryDecision(e),explainRecordedTreatment(e),explainTreatmentAftermath(e)].filter(Boolean).join(" ")}`)
+      ...report.events.filter(e=>e.metadata.recordedTreatment).map(e=>`Player ${e.playerId}; source ${e.metadata.sourceId}: ${[explainApothecaryDecision(e),explainRecordedTreatment(e),explainTreatmentAftermath(e),explainTreatmentReturn(e)].filter(Boolean).join(" ")}`)
     ]:[]),
+    ...report.events.filter(e=>e.metadata.treatmentReturnActivation).map(e=>`Player ${e.playerId}; source ${e.metadata.sourceId}: ${explainTreatmentReturn(e)}`),
     ...report.events.filter(e=>e.metadata.blockPush?.status==="modeled").slice(0,20).map(e=>`Source ${e.metadata.sourceId}: ${explainBlockPush(e)}`),
     ...(report.events.some(e=>e.metadata.recordedSpp)?[
       `Recorded SPP notifications: ${report.events.filter(e=>e.metadata.recordedSpp).length}. Source annotations add no random draw, skill advancement or injury value.`,

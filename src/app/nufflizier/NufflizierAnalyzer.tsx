@@ -34,6 +34,7 @@ import {
   explainApothecaryDecision,
   explainRecordedTreatment,
   explainTreatmentAftermath,
+  explainTreatmentReturn,
   explainRegenerationAftermath,
   explainRegenerationReturn,
   explainNumericRerollScore,
@@ -924,6 +925,9 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                             ) : null}
                             {moment.metadata.treatmentAftermath ? (
                               <p className="mt-1 text-xs text-amber-100/80">{explainTreatmentAftermath(moment)}</p>
+                            ) : null}
+                            {moment.metadata.treatmentReturn || moment.metadata.treatmentReturnActivation ? (
+                              <p className="mt-1 text-xs text-amber-100/80">{explainTreatmentReturn(moment)}</p>
                             ) : null}
                             {moment.metadata.regenerationAftermath ? (
                               <p className="mt-1 text-xs text-amber-100/80">

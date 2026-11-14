@@ -1,0 +1,1169 @@
+{
+  "scope": "Independent raw milestones, source hashes, complete structured-event prefix field/identity fingerprints and selected-player/full-roster boards. Not application admission, identity continuity, legal setup, useful availability or causal value.",
+  "cases": [
+    {
+      "file": "demo1.bbr",
+      "sha256": "1e637c37bfa46907c4ee0ffa4492f54a862a0dd1b2b0c1e367ec9e2f3dc8bf18",
+      "treatmentLocator": {
+        "replayStep": 646,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "reserveLocator": {
+        "replayStep": 646,
+        "childIndex": 6
+      },
+      "subjectId": 37,
+      "reserve": {
+        "locator": {
+          "replayStep": 646,
+          "childIndex": 6
+        },
+        "phase": 5,
+        "stable": 1,
+        "activeGamerId": null,
+        "periodCode": 1,
+        "teamTurns": [
+          15,
+          14
+        ],
+        "teams": [
+          {
+            "rosterIndex": 0,
+            "teamId": null,
+            "playerIds": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ]
+          },
+          {
+            "rosterIndex": 1,
+            "teamId": 1,
+            "playerIds": [
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ]
+          }
+        ],
+        "members": [
+          {
+            "rosterIndex": 1,
+            "id": 37,
+            "dataId": null,
+            "dataTeamId": null,
+            "playerTypeId": null,
+            "cell": {
+              "x": -1,
+              "y": -1
+            },
+            "statusCode": null,
+            "situationCode": 1,
+            "canAct": null,
+            "tackleZone": 1
+          }
+        ]
+      },
+      "setup": {
+        "locator": {
+          "replayStep": 658,
+          "childIndex": 6
+        },
+        "phase": 3,
+        "stable": 1,
+        "activeGamerId": 1,
+        "periodCode": 1,
+        "teamTurns": [
+          16,
+          15
+        ],
+        "teams": [
+          {
+            "rosterIndex": 0,
+            "teamId": null,
+            "playerIds": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ]
+          },
+          {
+            "rosterIndex": 1,
+            "teamId": 1,
+            "playerIds": [
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ]
+          }
+        ],
+        "members": [
+          {
+            "rosterIndex": 1,
+            "id": 37,
+            "dataId": null,
+            "dataTeamId": null,
+            "playerTypeId": null,
+            "cell": {
+              "x": 13,
+              "y": 7
+            },
+            "statusCode": null,
+            "situationCode": null,
+            "canAct": 1,
+            "tackleZone": 1
+          }
+        ]
+      },
+      "playing": {
+        "locator": {
+          "replayStep": 673,
+          "childIndex": 6
+        },
+        "phase": 5,
+        "stable": 1,
+        "activeGamerId": 1,
+        "periodCode": 1,
+        "teamTurns": [
+          16,
+          16
+        ],
+        "teams": [
+          {
+            "rosterIndex": 0,
+            "teamId": null,
+            "playerIds": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ]
+          },
+          {
+            "rosterIndex": 1,
+            "teamId": 1,
+            "playerIds": [
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ]
+          }
+        ],
+        "members": [
+          {
+            "rosterIndex": 1,
+            "id": 37,
+            "dataId": null,
+            "dataTeamId": null,
+            "playerTypeId": null,
+            "cell": {
+              "x": 13,
+              "y": 7
+            },
+            "statusCode": null,
+            "situationCode": null,
+            "canAct": 1,
+            "tackleZone": 1
+          }
+        ]
+      },
+      "declaration": {
+        "locator": {
+          "replayStep": 676,
+          "childIndex": 1,
+          "stepIndex": 0,
+          "messageIndex": 0
+        },
+        "step": {
+          "Probability": [
+            "100.0"
+          ],
+          "PlayerId": [
+            "37"
+          ],
+          "TargetId": [
+            "-1"
+          ],
+          "IsEvaluation": [
+            "0"
+          ],
+          "StepType": [
+            "0"
+          ],
+          "CellTo": [
+            {
+              "Y": [
+                "8"
+              ],
+              "X": [
+                "13"
+              ]
+            }
+          ],
+          "State": [
+            "3"
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "7"
+              ],
+              "X": [
+                "13"
+              ]
+            }
+          ],
+          "Skill": [
+            "0"
+          ]
+        },
+        "message": {
+          "Action": [
+            "4"
+          ],
+          "TeamId": [
+            "0"
+          ]
+        },
+        "before": {
+          "locator": {
+            "replayStep": 675,
+            "childIndex": 3
+          },
+          "phase": 5,
+          "stable": 1,
+          "activeGamerId": 1,
+          "periodCode": 1,
+          "teamTurns": [
+            16,
+            16
+          ],
+          "teams": [
+            {
+              "rosterIndex": 0,
+              "teamId": null,
+              "playerIds": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11
+              ]
+            },
+            {
+              "rosterIndex": 1,
+              "teamId": 1,
+              "playerIds": [
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48,
+                49,
+                50,
+                51
+              ]
+            }
+          ],
+          "members": [
+            {
+              "rosterIndex": 1,
+              "id": 37,
+              "dataId": null,
+              "dataTeamId": null,
+              "playerTypeId": null,
+              "cell": {
+                "x": 13,
+                "y": 7
+              },
+              "statusCode": null,
+              "situationCode": null,
+              "canAct": 1,
+              "tackleZone": 1
+            }
+          ]
+        }
+      },
+      "staffUsage": [],
+      "eventFingerprint": {
+        "count": 175,
+        "sha256": "bc95e2e2f87d0cc083d5f3ba849528b6ffa8d46bd654a5d645f0781e867e75f6"
+      },
+      "boardFingerprint": {
+        "count": 29,
+        "sha256": "41874dd164b367f892dfa09108b15cdcaa4ff8e8c1f58b13de7f768aee5de0a5"
+      }
+    },
+    {
+      "file": "demo3.bbr",
+      "sha256": "51e38feb7067985f6ee7a6fb623b10607482706040c5cc74d3d646d4a8e77cef",
+      "treatmentLocator": {
+        "replayStep": 244,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "reserveLocator": {
+        "replayStep": 244,
+        "childIndex": 6
+      },
+      "subjectId": 45,
+      "reserve": {
+        "locator": {
+          "replayStep": 244,
+          "childIndex": 6
+        },
+        "phase": 5,
+        "stable": 1,
+        "activeGamerId": null,
+        "periodCode": null,
+        "teamTurns": [
+          7,
+          6
+        ],
+        "teams": [
+          {
+            "rosterIndex": 0,
+            "teamId": null,
+            "playerIds": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ]
+          },
+          {
+            "rosterIndex": 1,
+            "teamId": 1,
+            "playerIds": [
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49
+            ]
+          }
+        ],
+        "members": [
+          {
+            "rosterIndex": 1,
+            "id": 45,
+            "dataId": null,
+            "dataTeamId": null,
+            "playerTypeId": null,
+            "cell": {
+              "x": -1,
+              "y": -1
+            },
+            "statusCode": null,
+            "situationCode": 1,
+            "canAct": 1,
+            "tackleZone": 1
+          }
+        ]
+      },
+      "setup": {
+        "locator": {
+          "replayStep": 298,
+          "childIndex": 6
+        },
+        "phase": 3,
+        "stable": 1,
+        "activeGamerId": 1,
+        "periodCode": 1,
+        "teamTurns": [
+          8,
+          8
+        ],
+        "teams": [
+          {
+            "rosterIndex": 0,
+            "teamId": null,
+            "playerIds": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ]
+          },
+          {
+            "rosterIndex": 1,
+            "teamId": 1,
+            "playerIds": [
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49
+            ]
+          }
+        ],
+        "members": [
+          {
+            "rosterIndex": 1,
+            "id": 45,
+            "dataId": null,
+            "dataTeamId": null,
+            "playerTypeId": null,
+            "cell": {
+              "x": 16,
+              "y": 7
+            },
+            "statusCode": null,
+            "situationCode": null,
+            "canAct": 1,
+            "tackleZone": 1
+          }
+        ]
+      },
+      "playing": {
+        "locator": {
+          "replayStep": 303,
+          "childIndex": 11
+        },
+        "phase": 5,
+        "stable": 1,
+        "activeGamerId": 1,
+        "periodCode": 1,
+        "teamTurns": [
+          8,
+          9
+        ],
+        "teams": [
+          {
+            "rosterIndex": 0,
+            "teamId": null,
+            "playerIds": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ]
+          },
+          {
+            "rosterIndex": 1,
+            "teamId": 1,
+            "playerIds": [
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49
+            ]
+          }
+        ],
+        "members": [
+          {
+            "rosterIndex": 1,
+            "id": 45,
+            "dataId": null,
+            "dataTeamId": null,
+            "playerTypeId": null,
+            "cell": {
+              "x": 16,
+              "y": 7
+            },
+            "statusCode": null,
+            "situationCode": null,
+            "canAct": 1,
+            "tackleZone": 1
+          }
+        ]
+      },
+      "declaration": {
+        "locator": {
+          "replayStep": 321,
+          "childIndex": 1,
+          "stepIndex": 0,
+          "messageIndex": 0
+        },
+        "step": {
+          "Probability": [
+            "100.0"
+          ],
+          "PlayerId": [
+            "45"
+          ],
+          "TargetId": [
+            "-1"
+          ],
+          "IsEvaluation": [
+            "0"
+          ],
+          "StepType": [
+            "0"
+          ],
+          "CellTo": [
+            {
+              "Y": [
+                "7"
+              ],
+              "X": [
+                "16"
+              ]
+            }
+          ],
+          "State": [
+            "3"
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "7"
+              ],
+              "X": [
+                "16"
+              ]
+            }
+          ],
+          "Skill": [
+            "0"
+          ]
+        },
+        "message": {
+          "Action": [
+            "1"
+          ],
+          "TeamId": [
+            "0"
+          ]
+        },
+        "before": {
+          "locator": {
+            "replayStep": 320,
+            "childIndex": 3
+          },
+          "phase": 5,
+          "stable": 1,
+          "activeGamerId": 1,
+          "periodCode": 1,
+          "teamTurns": [
+            8,
+            9
+          ],
+          "teams": [
+            {
+              "rosterIndex": 0,
+              "teamId": null,
+              "playerIds": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16
+              ]
+            },
+            {
+              "rosterIndex": 1,
+              "teamId": 1,
+              "playerIds": [
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48,
+                49
+              ]
+            }
+          ],
+          "members": [
+            {
+              "rosterIndex": 1,
+              "id": 45,
+              "dataId": null,
+              "dataTeamId": null,
+              "playerTypeId": null,
+              "cell": {
+                "x": 16,
+                "y": 7
+              },
+              "statusCode": null,
+              "situationCode": null,
+              "canAct": 1,
+              "tackleZone": 1
+            }
+          ]
+        }
+      },
+      "staffUsage": [
+        {
+          "locator": {
+            "replayStep": 291,
+            "childIndex": 1,
+            "stepIndex": 0,
+            "messageIndex": 0
+          },
+          "payload": {
+            "TeamId": [
+              "0"
+            ],
+            "Used": [
+              "0"
+            ],
+            "Staff": [
+              "255"
+            ]
+          }
+        },
+        {
+          "locator": {
+            "replayStep": 312,
+            "childIndex": 1,
+            "stepIndex": 0,
+            "messageIndex": 0
+          },
+          "payload": {
+            "TeamId": [
+              "0"
+            ],
+            "Used": [
+              "0"
+            ],
+            "Staff": [
+              "255"
+            ]
+          }
+        }
+      ],
+      "eventFingerprint": {
+        "count": 527,
+        "sha256": "9a73e4c91680ed53ab503ee264f1efa175c1523b3ed1d734011d4798fcff91be"
+      },
+      "boardFingerprint": {
+        "count": 76,
+        "sha256": "206fe2988189604353d6047da720fbdf95d127915caa512dae53b83796ee90e6"
+      }
+    },
+    {
+      "file": "demo3.bbr",
+      "sha256": "51e38feb7067985f6ee7a6fb623b10607482706040c5cc74d3d646d4a8e77cef",
+      "treatmentLocator": {
+        "replayStep": 368,
+        "childIndex": 1,
+        "stepIndex": 0,
+        "messageIndex": 1
+      },
+      "reserveLocator": {
+        "replayStep": 368,
+        "childIndex": 6
+      },
+      "subjectId": 7,
+      "reserve": {
+        "locator": {
+          "replayStep": 368,
+          "childIndex": 6
+        },
+        "phase": 5,
+        "stable": 1,
+        "activeGamerId": 1,
+        "periodCode": 1,
+        "teamTurns": [
+          9,
+          10
+        ],
+        "teams": [
+          {
+            "rosterIndex": 0,
+            "teamId": null,
+            "playerIds": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ]
+          },
+          {
+            "rosterIndex": 1,
+            "teamId": 1,
+            "playerIds": [
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49
+            ]
+          }
+        ],
+        "members": [
+          {
+            "rosterIndex": 0,
+            "id": 7,
+            "dataId": null,
+            "dataTeamId": null,
+            "playerTypeId": null,
+            "cell": {
+              "x": -1,
+              "y": -1
+            },
+            "statusCode": null,
+            "situationCode": 1,
+            "canAct": 1,
+            "tackleZone": 1
+          }
+        ]
+      },
+      "setup": {
+        "locator": {
+          "replayStep": 439,
+          "childIndex": 10
+        },
+        "phase": 3,
+        "stable": 1,
+        "activeGamerId": null,
+        "periodCode": 1,
+        "teamTurns": [
+          12,
+          12
+        ],
+        "teams": [
+          {
+            "rosterIndex": 0,
+            "teamId": null,
+            "playerIds": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ]
+          },
+          {
+            "rosterIndex": 1,
+            "teamId": 1,
+            "playerIds": [
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49
+            ]
+          }
+        ],
+        "members": [
+          {
+            "rosterIndex": 0,
+            "id": 7,
+            "dataId": null,
+            "dataTeamId": null,
+            "playerTypeId": null,
+            "cell": {
+              "x": 11,
+              "y": 2
+            },
+            "statusCode": null,
+            "situationCode": null,
+            "canAct": 1,
+            "tackleZone": 1
+          }
+        ]
+      },
+      "playing": {
+        "locator": {
+          "replayStep": 454,
+          "childIndex": 6
+        },
+        "phase": 5,
+        "stable": 1,
+        "activeGamerId": 1,
+        "periodCode": 1,
+        "teamTurns": [
+          12,
+          13
+        ],
+        "teams": [
+          {
+            "rosterIndex": 0,
+            "teamId": null,
+            "playerIds": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ]
+          },
+          {
+            "rosterIndex": 1,
+            "teamId": 1,
+            "playerIds": [
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49
+            ]
+          }
+        ],
+        "members": [
+          {
+            "rosterIndex": 0,
+            "id": 7,
+            "dataId": null,
+            "dataTeamId": null,
+            "playerTypeId": null,
+            "cell": {
+              "x": 8,
+              "y": 1
+            },
+            "statusCode": null,
+            "situationCode": null,
+            "canAct": 1,
+            "tackleZone": 1
+          }
+        ]
+      },
+      "declaration": {
+        "locator": {
+          "replayStep": 488,
+          "childIndex": 1,
+          "stepIndex": 0,
+          "messageIndex": 0
+        },
+        "step": {
+          "Probability": [
+            "100.0"
+          ],
+          "PlayerId": [
+            "7"
+          ],
+          "TargetId": [
+            "-1"
+          ],
+          "IsEvaluation": [
+            "0"
+          ],
+          "StepType": [
+            "0"
+          ],
+          "CellTo": [
+            {
+              "Y": [
+                "1"
+              ],
+              "X": [
+                "8"
+              ]
+            }
+          ],
+          "State": [
+            "3"
+          ],
+          "CellFrom": [
+            {
+              "Y": [
+                "1"
+              ],
+              "X": [
+                "8"
+              ]
+            }
+          ],
+          "Skill": [
+            "0"
+          ]
+        },
+        "message": {
+          "Action": [
+            "1"
+          ],
+          "TeamId": [
+            "0"
+          ]
+        },
+        "before": {
+          "locator": {
+            "replayStep": 487,
+            "childIndex": 3
+          },
+          "phase": 5,
+          "stable": 1,
+          "activeGamerId": null,
+          "periodCode": 1,
+          "teamTurns": [
+            13,
+            13
+          ],
+          "teams": [
+            {
+              "rosterIndex": 0,
+              "teamId": null,
+              "playerIds": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16
+              ]
+            },
+            {
+              "rosterIndex": 1,
+              "teamId": 1,
+              "playerIds": [
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48,
+                49
+              ]
+            }
+          ],
+          "members": [
+            {
+              "rosterIndex": 0,
+              "id": 7,
+              "dataId": null,
+              "dataTeamId": null,
+              "playerTypeId": null,
+              "cell": {
+                "x": 8,
+                "y": 1
+              },
+              "statusCode": null,
+              "situationCode": null,
+              "canAct": 1,
+              "tackleZone": 1
+            }
+          ]
+        }
+      },
+      "staffUsage": [],
+      "eventFingerprint": {
+        "count": 1034,
+        "sha256": "12ff47be22421ea2cf602d114b6847f608efddca6f96d9466309971b07729898"
+      },
+      "boardFingerprint": {
+        "count": 119,
+        "sha256": "d42de352e7bdeffff5e669ee65de0e54f787e885d2b5ff0e5b877a95a90078d5"
+      }
+    }
+  ]
+}

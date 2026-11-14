@@ -41,6 +41,7 @@ import { attachCategoricalInjuries } from "./categoricalInjury";
 import { findMightyBlowArmorUses } from "./armorModifierBudget";
 import { findRegenerationAftermath } from "./regenerationAftermath";
 import { findRegenerationReturns } from "./regenerationReturn";
+import {findTreatmentReturns} from "./treatmentReturn";
 import { numericRerollScore, formatNumericRerollFormula } from "./numericRerollScore";
 import { attachInjuryTables } from "./injuryTable";
 import { attachBlockPush } from "./blockPush";
@@ -1297,6 +1298,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   const treatmentEvidence = findTreatmentEvidence(replay, ownership);
   const recordedTreatmentIds = new Set(treatmentEvidence.records.keys());
   const recoveryReturns = findRegenerationReturns(replay, ownership, recoveryState.aftermath);
+  const treatmentReturns=findTreatmentReturns(replay,ownership,treatmentEvidence);
   const teamDiceIdentityByQuestion = new Map(
     findTeamDiceIdentities(replay).map((p) => [p.question.id, p])
   );
@@ -1339,6 +1341,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   for (const source of recoveryState.controls.keys()) activationEvidenceSources.add(source);
   for (const source of treatmentEvidence.controls.keys()) activationEvidenceSources.add(source);
   for (const source of recoveryReturns.activations.keys()) activationEvidenceSources.add(source);
+  for(const source of treatmentReturns.activations.keys())activationEvidenceSources.add(source);
   for (const [source, proof] of rerollCounters) {
     activationEvidenceSources.add(source);
     activationEvidenceSources.add(proof.questionSourceId);
@@ -1948,6 +1951,22 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       if(recoveryAfter && normalized.metadata.damage?.regeneration && normalized.scoringStatus==="scored")normalized.metadata.regenerationAftermath=recoveryAfter;
       const returned=recoveryReturns.traces.get(event.id??"");
       if(returned&&normalized.metadata.regenerationAftermath)normalized.metadata.regenerationReturn=returned;
+      const treatmentReturned=treatmentReturns.traces.get(event.id??"");
+      if(treatmentReturned&&normalized.metadata.treatmentAftermath)normalized.metadata.treatmentReturn=treatmentReturned;
+      const treatedActivation=treatmentReturns.activations.get(event.id??"");
+      if(treatedActivation){
+        normalized.metadata.treatmentReturnActivation=treatedActivation;
+        const actor=event.playerId?ownership.resolve(event.playerId,event):undefined;
+        if(actor?.status==="confirmed")normalized.metadata.ownership={...actor.proof,role:"actor"};
+        normalized.type="unknown";normalized.scoringStatus="excluded";normalized.metadata.isRollCandidate=false;
+        normalized.probabilitySuccess=null;normalized.actualSuccess=null;normalized.delta=0;normalized.weightedDelta=0;normalized.explainability.weight=0;
+        normalized.explainability.target="recorded declaration";
+        normalized.explainability.inputsSummary="A later owned action is recorded after reserves, setup and regular play. This observation adds no dice or tactical value.";
+        normalized.metadata.normalizationFlags=normalized.metadata.normalizationFlags?.filter(f=>f!=="missing_target_threshold");
+        normalized.metadata.normalizationNotes=normalized.metadata.normalizationNotes?.filter(n=>n!=="difficulty and requirement were both missing");
+        normalized.label=`Recorded treated-player ${treatedActivation.actionCode===1?"Move":"Block"} declaration`;
+        normalized.statusReason="A treated player's later declaration is an observed action, not another roll, a complete eligibility test or tactical value.";
+      }
       const returnActivation=recoveryReturns.activations.get(event.id??"");
       if(returnActivation){
         normalized.metadata.recoveryReturnActivation=returnActivation;

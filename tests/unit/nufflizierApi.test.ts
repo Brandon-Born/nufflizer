@@ -20,6 +20,7 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(measuredZero).toMatchObject({scoringStatus:"scored",delta:0,weightedDelta:0,probabilitySuccess:null,actualSuccess:null});
     expect(measuredZero.metadata.block!.skillModel!.nonKnockdownSkills).toEqual({policy:"outside_current_pool_knockdowns",attacker:[102],defender:[]});
     expect(report.rerollResources).toMatchObject({decisionCount:21,linkedCount:20,unresolvedCount:1});
+    expect(report.events.find(e=>e.metadata.sourceId==="source-5188")!.metadata.treatmentReturn).toMatchObject({status:"observed",setup:{checkpointAfter:5302},playing:{checkpointAfter:5366},stop:{reason:"unsupported_activation",sourceIndex:5397}});
     expect(report.rerollResources.flow.clockWindows.find(w=>w.recordedUsedCount===2&&w.before?.count===4&&w.after?.count===2)).toMatchObject({netDecrease:2,status:"observed_agreement"});
     expect(report.rerollResources.decisions.find(d=>d.decisionSourceId==="source-5407")).toMatchObject({status:"unresolved",questionSourceId:"source-5404",teamId:null});
     expect(report.events.find(e=>e.metadata.sourceId==="source-5407")?.label).toBe("Recorded team reroll use");
@@ -243,7 +244,7 @@ describe("POST /api/nufflizier/analyze", () => {
     const skillPools=report.events.filter(e=>e.metadata.block?.skillModel);
     expect(skillPools.filter(e=>!e.metadata.block!.skillModel!.nonKnockdownSkills).map(e=>e.metadata.sourceId)).toEqual(["source-98","source-132","source-367","source-386","source-409"]);
     expect(skillPools.filter(e=>e.metadata.block!.skillModel!.nonKnockdownSkills).map(e=>e.metadata.sourceId)).toEqual(["source-116","source-338","source-438","source-579","source-634","source-638"]);
-    expect(report.schemaVersion).toBe("2.68");
+    expect(report.schemaVersion).toBe("2.69");
     expect(report.modelVersion).toBe("dice-only-35");
     const positive=report.events.find(e=>e.metadata.sourceId==="source-98")!;
     const negative=report.events.find(e=>e.metadata.sourceId==="source-132")!;
@@ -486,6 +487,10 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(r.events.find(e=>e.metadata.sourceId==="source-636")?.metadata.apothecary).toMatchObject({applied:"injury_original",originalSourceId:"source-628",initialRemovalSourceId:"source-635",treatmentSppSourceId:"source-634",resourceSpent:0,appliedCasualty:1});
     expect(r.events.find(e=>e.metadata.sourceId==="source-634")?.metadata.treatmentSpp).toEqual({points:2,treatmentSourceId:"source-636",originalSourceId:"source-628"});
     expect(r.events.find(e=>e.metadata.sourceId==="source-2043")?.metadata.treatmentAftermath).toMatchObject({observedActiveGamerId:null,recordedFlags:{status:false,canAct:true,tackleZone:true},observation:{cell:{x:-1,y:-1},situationCode:1,statusCode:null,canAct:true,tackleZone:true}});
+    expect(r.events.find(e=>e.metadata.sourceId==="source-2043")!.metadata.treatmentReturn).toEqual({status:"unverified",stop:{reason:"identity_transition",sourceIndex:2466}});
+    expect(r.events.find(e=>e.metadata.sourceId==="source-3060")!.metadata.treatmentReturn).toMatchObject({status:"observed",setup:{checkpointAfter:3809,activeGamerId:null},playing:{checkpointAfter:3876},activation:{sourceId:"source-4175",before:{checkpointAfter:4172,statusCode:null,activeGamerId:null}}});
+    expect(r.events.find(e=>e.metadata.sourceId==="source-4175")).toMatchObject({playerId:"7",teamId:"0",scoringStatus:"excluded",actualSuccess:null,probabilitySuccess:null,weightedDelta:0,metadata:{isRollCandidate:false,treatmentReturnActivation:{treatmentSourceId:"source-3060"},ownership:{role:"actor",playerId:"7",teamId:"0"}}});
+
     expect(r.events.find(e=>e.metadata.sourceId==="source-628")?.metadata.injuryTable).toBeUndefined();
     for(const e of [casualtyOriginal,casualtyReplacement])expect(e).toMatchObject({scoringStatus:"excluded",actualSuccess:null,probabilitySuccess:null,delta:0,weightedDelta:0});
     expect(r.diceRecords.find(d=>d.parentSourceId==="source-2039"&&d.path.join()==="OriginalRoll,Dice")).toMatchObject({disposition:"summary",aliasOf:expect.any(String)});
