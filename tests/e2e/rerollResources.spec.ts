@@ -20,9 +20,9 @@ for (const c of [
   {
     file: "demo1",
     count: 21,
-    unresolved: 1,
+    unresolved: 0,
     source: "source-5407",
-    line: "Its offer/owner continuation is unresolved"
+    line: "The recorded Throw Team-mate step identifies player 37 as the thrower"
   },
   {
     file: "demo11",
@@ -88,7 +88,7 @@ for (const c of [
     await expect(row).toContainText(
       c.file === "demo11"
         ? "Recorded team reroll not used"
-        : c.file === "demo6"
+        : ["demo6","demo1"].includes(c.file)
           ? "Recorded team reroll spend"
           : "Recorded team reroll use"
     );
@@ -97,7 +97,7 @@ for (const c of [
     await expect(row).toContainText(
       "This decision adds no random outcome or luck score"
     );
-    await expect(row.locator("td").nth(3)).toHaveText("Unknown");
+    await expect(row.locator("td").nth(3)).toHaveText(c.file==="demo1"?"No new roll":"Unknown");
     await expect(row.locator("td").nth(5)).toHaveText("Not scored");
     await row.scrollIntoViewIfNeeded();
     await page.screenshot({
@@ -116,7 +116,7 @@ for (const c of [
     const saved = JSON.parse(
       readFileSync((await (await pending).path())!, "utf8")
     );
-    expect(saved.schemaVersion).toBe("2.69");
+    expect(saved.schemaVersion).toBe("2.70");
     expect(saved.rerollResources).toEqual(report.rerollResources);
     expect(saved.verdict.luckierTeam).toBe("unknown");
     await page.getByRole("button", { name: "Reset filters" }).click();

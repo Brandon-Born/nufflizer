@@ -19,11 +19,14 @@ describe("POST /api/nufflizier/analyze", () => {
     const measuredZero=report.events.find(e=>e.metadata.sourceId==="source-272")!;
     expect(measuredZero).toMatchObject({scoringStatus:"scored",delta:0,weightedDelta:0,probabilitySuccess:null,actualSuccess:null});
     expect(measuredZero.metadata.block!.skillModel!.nonKnockdownSkills).toEqual({policy:"outside_current_pool_knockdowns",attacker:[102],defender:[]});
-    expect(report.rerollResources).toMatchObject({decisionCount:21,linkedCount:20,unresolvedCount:1});
+    expect(report.rerollResources).toMatchObject({decisionCount:21,linkedCount:21,unresolvedCount:0});
     expect(report.events.find(e=>e.metadata.sourceId==="source-5188")!.metadata.treatmentReturn).toMatchObject({status:"observed",setup:{checkpointAfter:5302},playing:{checkpointAfter:5366},stop:{reason:"unsupported_activation",sourceIndex:5397}});
     expect(report.rerollResources.flow.clockWindows.find(w=>w.recordedUsedCount===2&&w.before?.count===4&&w.after?.count===2)).toMatchObject({netDecrease:2,status:"observed_agreement"});
-    expect(report.rerollResources.decisions.find(d=>d.decisionSourceId==="source-5407")).toMatchObject({status:"unresolved",questionSourceId:"source-5404",teamId:null});
-    expect(report.events.find(e=>e.metadata.sourceId==="source-5407")?.label).toBe("Recorded team reroll use");
+    expect(report.rerollResources.decisions.find(d=>d.decisionSourceId==="source-5407")).toMatchObject({status:"linked",questionSourceId:"source-5404",teamId:"1"});
+    expect(report.events.filter(e=>e.metadata.throwTeamMate)).toHaveLength(11);
+    expect(report.events.find(e=>e.metadata.sourceId==="source-5410")!.metadata.teamDiceIdentity).toMatchObject({questionSourceId:"source-5404",decisionSourceId:"source-5407",originalDie:4,finalDie:3,gateSourceId:"source-5409"});
+    for(const e of report.events.filter(e=>e.metadata.throwTeamMate))expect(e).toMatchObject({scoringStatus:"excluded",probabilitySuccess:null,weightedDelta:0});
+    expect(report.events.find(e=>e.metadata.sourceId==="source-5407")?.label).toBe("Recorded team reroll spend");
     expect(e.metadata.sourceId).toBe("source-548");expect(e.metadata.retainedCatchReaction).toMatchObject({beforeCheckpointAfter:538,waitingCheckpointAfter:545});
     expect(e.catchPossessionBounds).toMatchObject({policy:"kept_catch_failure_envelope",lower:-2/3,upper:0});
     expect(e.probabilitySuccess).toBe(1/3);expect(e.weightedDelta).toBeCloseTo(-11/30,12);
@@ -244,7 +247,7 @@ describe("POST /api/nufflizier/analyze", () => {
     const skillPools=report.events.filter(e=>e.metadata.block?.skillModel);
     expect(skillPools.filter(e=>!e.metadata.block!.skillModel!.nonKnockdownSkills).map(e=>e.metadata.sourceId)).toEqual(["source-98","source-132","source-367","source-386","source-409"]);
     expect(skillPools.filter(e=>e.metadata.block!.skillModel!.nonKnockdownSkills).map(e=>e.metadata.sourceId)).toEqual(["source-116","source-338","source-438","source-579","source-634","source-638"]);
-    expect(report.schemaVersion).toBe("2.69");
+    expect(report.schemaVersion).toBe("2.70");
     expect(report.modelVersion).toBe("dice-only-35");
     const positive=report.events.find(e=>e.metadata.sourceId==="source-98")!;
     const negative=report.events.find(e=>e.metadata.sourceId==="source-132")!;

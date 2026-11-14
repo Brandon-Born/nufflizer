@@ -92,11 +92,7 @@ describe("recorded reroll resource transactions", () => {
       );
       const ledger = report.rerollResources;
       expect(ledger.decisionCount).toBe(f.decisions.length);
-      const unqualified = (raw: (typeof f.decisions)[number]) =>
-        !!raw.choice.step.ThrowTeamMateStep;
-      expect(ledger.unresolvedCount).toBe(
-        f.decisions.filter(unqualified).length
-      );
+      expect(ledger.unresolvedCount).toBe(0);
       const counts = new Map([
         ["0", { used: 0, notUsed: 0 }],
         ["1", { used: 0, notUsed: 0 }]
@@ -115,30 +111,19 @@ describe("recorded reroll resource transactions", () => {
         const d = ledger.decisions.find(
           (d) => d.decisionSourceId === choice.metadata.sourceId
         )!;
-        expect(d).toMatchObject(
-          unqualified(raw)
-            ? {
-                questionSourceId: q.metadata.sourceId,
-                teamId: null,
-                status: "unresolved",
-                reason: "source_or_owner_conflict",
-                clock: null
-              }
-            : {
-                questionSourceId: q.metadata.sourceId,
-                teamId: String(gamer),
-                status: "linked",
-                reason: "matching_offer"
-              }
-        );
+        expect(d).toMatchObject({questionSourceId:q.metadata.sourceId,teamId:String(gamer),status:"linked",reason:"matching_offer"});
+        if(raw.choice.step.ThrowTeamMateStep) {
+          const h=raw.choice.step.ThrowTeamMateStep;
+          expect(choice.metadata.throwTeamMate).toMatchObject({throwerId:String(n(h!,"ThrowerId")),thrownMateId:String(n(h!,"ThrownMateId")),state:3,role:"thrower"});
+          expect(q.metadata.throwTeamMate).toMatchObject({state:1,role:"thrower"});
+          expect(choice.playerId).not.toBe(choice.metadata.targetId);
+        }
         expect(
           sources.get(d.questionSourceId!)?.metadata.recordedRerollOffer
         ).toMatchObject({ gamerId: gamer });
         const total = counts.get(String(gamer))!;
-        if (!unqualified(raw)) {
-          if (used) total.used++;
-          else total.notUsed++;
-        }
+        if (used) total.used++;
+        else total.notUsed++;
         expect(choice).toMatchObject({
           scoringStatus: "excluded",
           delta: 0,
@@ -634,15 +619,21 @@ it.each(["demo1.bbr", "demo11.bbr", "demo6.bbr", "demo7.bbr"])(
         (d) => n(d.choice.payload.ResultTeamRerollUsage!, "Used") === 1
       ).length
     );
-    expect(r.rerollResources.unresolvedCount).toBe(
-      file === "demo1.bbr" ? 1 : 0
-    );
+    expect(r.rerollResources.unresolvedCount).toBe(0);
     if (["demo6.bbr", "demo7.bbr"].includes(file))
       expect(
         r.rerollResources.decisions.filter((d) => d.decisionWait)
       ).toHaveLength(1);
+    if(file==="demo1.bbr") {
+      expect(r.events.filter(e=>e.metadata.throwTeamMate)).toHaveLength(11);
+      expect(r.events.find(e=>e.metadata.sourceId==="source-5410")!.metadata.teamDiceIdentity).toMatchObject({originalDie:4,finalDie:3,gateSourceId:"source-5409"});
+    }
     const text = run("text");
     expect(text.status, text.stderr).toBe(0);
+    if(["demo1.bbr","demo6.bbr"].includes(file)){
+      expect(text.stdout).toContain(`Recorded Throw Team-mate headers: ${file==="demo1.bbr"?2:1}`);
+      expect(text.stdout).toContain(`player 37 as the thrower and player ${file==="demo1.bbr"?50:45} as the thrown player`);
+    }
     expect(text.stdout).toContain(`Recorded counter flow: ${r.rerollResources.flow.clockSnapshots.length} source checkpoints`);
     for(const w of r.rerollResources.flow.clockWindows) {
       expect(text.stdout).toContain(`Window ${w.id+1}, checkpoints ${w.startSnapshotId}`);

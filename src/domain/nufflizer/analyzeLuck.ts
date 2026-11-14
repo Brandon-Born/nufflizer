@@ -36,6 +36,7 @@ import { findDamageSppNotices, attachDamageSppLinks } from "./damageSpp";
 import { attachInjuryObservations } from "./injuryObservation";
 import { findStaffInjuryOriginals } from "./staffInjuryOriginal";
 import { findTreatmentEvidence } from "./treatmentAftermath";
+import {canonicalizeThrowTeamMateParticipants} from "@/domain/replay/throwTeamMateParticipants";
 import { attachCasualtyObservations } from "./casualtyObservation";
 import { attachCategoricalInjuries } from "./categoricalInjury";
 import { findMightyBlowArmorUses } from "./armorModifierBudget";
@@ -1264,6 +1265,7 @@ function buildHowScoredSummary(
 }
 
 export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
+  inputReplay=canonicalizeThrowTeamMateParticipants(inputReplay);
   const ownership = createOwnershipTimeline(inputReplay);
   const replay = applyCurrentOwnership(inputReplay, ownership);
   // Inventory and bound all observed fields before probability admission.
@@ -1325,6 +1327,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       loss.followingActivationSourceId
     ])
   );
+  for(const turn of inputReplay.turns)for(const raw of turn.events)if(raw.throwTeamMate&&raw.id)activationEvidenceSources.add(raw.id);
   const rerollCounters = findRerollCounterEvidence(inputReplay);
   for (const d of rerollResources.decisions) if (d.decisionWait) {
     const w = d.decisionWait;
@@ -1892,6 +1895,23 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
         };
         normalized.label="Recorded team reroll used";
         normalized.statusReason="Recorded use of one team reroll; the decision is not another random outcome.";
+      }
+      const ttm=event.throwTeamMate;
+      if(ttm){
+        normalized.metadata.throwTeamMate=ttm;
+        const actor=event.playerId?ownership.resolve(event.playerId,event):undefined;
+        if(actor?.status==="confirmed")normalized.metadata.ownership={...actor.proof,role:"actor"};
+        normalized.scoringStatus="excluded";normalized.probabilitySuccess=null;normalized.delta=0;normalized.weightedDelta=0;normalized.explainability.weight=0;
+        if(ttm.role==="header"||ttm.role==="skill_holder"){
+          normalized.type="unknown";normalized.metadata.isRollCandidate=false;normalized.actualSuccess=null;
+          normalized.label=ttm.role==="header"?"Recorded Throw Team-mate participants":"Recorded skill decision in a Throw Team-mate step";
+          normalized.statusReason="Source role/skill observation; no random draw, legal eligibility or luck value is established.";
+          normalized.explainability.target="recorded source roles";
+          normalized.explainability.inputsSummary="The thrower, thrown player and skill holder are separate source roles; current skills, resource legality and tactical value require independent evidence.";
+          normalized.metadata.normalizationFlags=normalized.metadata.normalizationFlags?.filter(f=>f!=="missing_target_threshold");
+          normalized.metadata.normalizationNotes=normalized.metadata.normalizationNotes?.filter(n=>n!=="difficulty and requirement were both missing");
+          if(ttm.role==="skill_holder")normalized.metadata.skillUsage={skillId:ttm.skillId!,used:ttm.used!};
+        }
       }
       const sppNotice=damageSppNotices.get(event.id??"");
       if(sppNotice){

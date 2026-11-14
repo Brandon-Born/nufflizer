@@ -1,4 +1,5 @@
 import { validReportedFailedNumericRetry } from "./failedNumericRetry";
+import {validReportedThrowTeamMate} from "./throwTeamMateEvidence";
 import { RerollResourcesSchema, RecordedRerollChoiceSchema, RecordedRerollOfferSchema, validReportedRerollResources } from "./rerollResources";
 import { validReportedNumericRetryAccess, validReportedNumericGatedReplacement, retryAccessDelta } from "./numericRetryAccess";
 import { validReportedCatchRerollResume } from "./catchRerollResume";
@@ -262,6 +263,7 @@ export const LuckEventMetadataSchema = z.strictObject({
     ]),
     lessSevereChance:probability, sameSeverityChance:probability, moreSevereChance:probability
   }).optional(),
+  throwTeamMate:z.strictObject({variant:z.literal("typed_thrower_and_mate"),throwerId:text,thrownMateId:text,headerSourceId:text,headerSourceIndex:count,state:z.union([z.literal(1),z.literal(3)]),headerCellFrom:pitchCell,role:z.enum(["header","thrower","skill_holder"]),holderId:text.optional(),skillId:z.number().int().min(0).max(1_000_000).optional(),used:z.boolean().optional()}).optional(),
   recordedSpp:z.strictObject({points:z.literal(2),damage:z.strictObject({armorSourceId:text,injurySourceId:text,damageStepSourceIndex:count}).optional()}).optional(),
   recordedTreatment:z.strictObject({stage:z.enum(["initial_injury","casualty"]),wireIsInjury:z.union([z.literal(0),z.literal(1)]),resourceSpent:z.union([z.literal(0),z.literal(1)]),appliedOutcomeCode:z.number().int().min(0).max(10),playerStatusCode:z.number().int().min(0).max(10),subjectId:text,subjectTeamId:text,sourceCode:z.number().int().min(0).max(64),damageStepSourceIndex:count}).optional(),
   treatmentSpp:z.strictObject({points:z.literal(2),treatmentSourceId:text,originalSourceId:text}).optional(),
@@ -1553,6 +1555,7 @@ export const LuckReportSchema = z
         "A resumed Catch reroll requires its exact readiness/timer prefix, observed controller/turn/actor snapshots and one ordered team decision; unknown period or availability stays unknown.");
       require(validReportedNumericRerollScore(event,sources,initialRerollDiceBySource,rootDiceBySource),
         "Numeric reroll luck must count its two source-qualified actual draws exactly once, separately from the whole-check policy chance.");
+      require(validReportedThrowTeamMate(event,sources,report),"Typed Throw Team-mate roles require their own source header, exact actor/thrown-player and holder roles, physical dice and current ownership. Role evidence adds no odds, legal eligibility or luck.");
       require(validReportedOwnership(event,report,sources,identityMutations),
         "Scored outcomes need source-qualified actor/subject ownership and opposing block roles; a time-local conflict or pending identity cannot contribute favorable luck.");
       require(validReportedTreatment(event,sources,report)&&validReportedTreatmentControl(event)&&validReportedTreatmentSpp(event,sources)&&(!event.metadata.treatmentControl||treatmentControls.has(event.metadata.sourceId??"")),

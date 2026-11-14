@@ -98,6 +98,7 @@ export function formatContextComponentSum(
 export function formatExpectedOutcome(
   event: LuckReport["events"][number]
 ): string {
+  if(event.metadata.throwTeamMate&&["ThrowTeamMateStep","ResultSkillUsage","ResultTeamRerollUsage"].includes(event.metadata.sourceTag??""))return "No new roll";
   if(event.metadata.recordedSpp || event.metadata.treatmentSpp)return "No new roll";
   if(event.metadata.recordedTreatment || event.metadata.treatmentControl || event.metadata.treatmentReturnActivation)return "No new roll";
   if(event.metadata.apothecary)return "No new roll";
@@ -110,6 +111,8 @@ export function formatExpectedOutcome(
 export function formatActualOutcome(
   event: LuckReport["events"][number]
 ): string {
+  if(event.metadata.throwTeamMate?.role==="header")return "Recorded participants";
+  if(event.metadata.throwTeamMate?.role==="skill_holder")return event.metadata.throwTeamMate.used?"Recorded skill use":"Recorded skill not used";
   if(event.metadata.recordedSpp || event.metadata.treatmentSpp)return "Recorded +2 SPP";
   if(event.metadata.casualtyObservation)return `${CASUALTY_NAMES[event.metadata.casualtyObservation.outcome]} (recorded)`;
   if(event.metadata.apothecary){
@@ -180,6 +183,11 @@ export function explainObservedDice(
   if (team)
     return `${event.metadata.failedNumericRetry?.kind === "pro" ? "Recorded team reroll not used" : `Recorded team-reroll decision ${team.teamUsed ? "used" : "declined"}`}: original die ${team.originalDie}, final die ${team.finalDie}; ${team.replacementRolled ? "a replacement was rolled" : "the original was retained"}.${team.gateSourceId ? ` A separate ${team.gateSkillId === 50 ? "Pro" : "Loner"} gate ${team.gatePassed ? "passed" : "failed"}.` : ""} ${event.metadata.failedNumericRetry ? "This receipt establishes dice identity; conditional policy arithmetic is explained separately. General resource eligibility and tactical value remain unverified." : "This is dice identity evidence; resource eligibility and probability/value remain unverified."} No luck score is added.`;
   return null;
+}
+
+export function explainThrowTeamMateRoles(event:LuckReport["events"][number]):string|null{
+  const p=event.metadata.throwTeamMate;if(!p)return null;
+  return `The recorded Throw Team-mate step identifies player ${p.throwerId} as the thrower and player ${p.thrownMateId} as the thrown player.${p.role==="skill_holder"?` This notification belongs to skill holder ${p.holderId}.`:""} A Pass-budget declaration and any later landing are separate records. These roles do not establish legal eligibility, current skills or dice odds. Header source ${p.headerSourceId}. No extra luck or contextual value is added.`;
 }
 
 export function explainRegenerationReturn(event:LuckReport["events"][number]):string|null {

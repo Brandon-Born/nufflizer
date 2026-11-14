@@ -1,4 +1,5 @@
 import { XMLParser } from "fast-xml-parser";
+import {readThrowTeamMateHeader,readThrowTeamMateMessage} from "./throwTeamMateParticipants";
 import {
   observeBoardCheckpoint,
   type ReplayBoardCheckpoint
@@ -389,12 +390,16 @@ export function extractStructuredTurnsFromReplayXml(
         ? decode(data)
         : { tag: "UnknownStep", payload: {} as RecordLike };
       const p = step.payload;
+      const typedTtm=step.tag==="ThrowTeamMateStep";
+      const ttmHeader=readThrowTeamMateHeader(step.tag,p,replayVersion,eventCount+1);
+      const actor=typedTtm?ttmHeader?.throwerId:str(p.PlayerId);
+      const target=typedTtm?ttmHeader?.thrownMateId:str(p.TargetId);
       const context = {
         sequenceId: `sequence-${sequence}`,
         actionId: `sequence-${sequence}-step-${stepIndex}`,
         stepTag: step.tag,
-        stepActorId: str(p.PlayerId),
-        stepTargetId: str(p.TargetId),
+        stepActorId: actor,
+        stepTargetId: target,
         damageSource: step.tag === "DamageStep" ? num(p.Source) : undefined,
         locator: {
           replayStep,
@@ -402,8 +407,8 @@ export function extractStructuredTurnsFromReplayXml(
           stepIndex
         },
         stepType: num(p.StepType),
-        playerId: str(p.PlayerId),
-        targetId: str(p.TargetId),
+        playerId: actor,
+        targetId: target,
         teamId: str(p.TeamId),
         gamerId: str(p.GamerId)
       };
@@ -412,7 +417,8 @@ export function extractStructuredTurnsFromReplayXml(
         type: step.tag === "BallStep" ? "ball_state" : "step",
         sourceTag: step.tag,
         payload: p,
-        ...context
+        ...context,
+        ...(ttmHeader?{throwTeamMate:ttmHeader}:{})
       });
       for (const [messageIndex, message] of find(
         stepNodes,
@@ -421,9 +427,9 @@ export function extractStructuredTurnsFromReplayXml(
         const { tag, payload } = decode(
           field(children(message, "StringMessage"), "MessageData")
         );
-        const playerId = str(
-          payload.PlayerId ?? payload.PushedPlayerId ?? p.PlayerId
-        );
+        const ttmRole=readThrowTeamMateMessage(ttmHeader,tag,payload);
+        const playerId = str(payload.PlayerId ?? payload.PushedPlayerId ??
+          (typedTtm?(ttmRole?.holderId??ttmRole?.throwerId):p.PlayerId));
         // ResultUseAction.TeamId is zero for actors on both rosters in all
         // 6,342 corpus emissions (UI-096/097 also independently show away
         // actors). Preserve the raw field, but do not treat it as ownership.
@@ -459,7 +465,8 @@ export function extractStructuredTurnsFromReplayXml(
           type,
           sourceTag: tag,
           playerId,
-          targetId: str(payload.TargetId ?? p.TargetId),
+          targetId: str(payload.TargetId ?? (typedTtm?ttmRole?.thrownMateId:p.TargetId)),
+          ...(typedTtm?{stepActorId:ttmRole?.throwerId,stepTargetId:ttmRole?.thrownMateId,throwTeamMate:ttmRole}:{}),
           teamId,
           actorTeamId: teamId,
           actorTeamSource: teamId ? "explicit" : undefined,

@@ -1,4 +1,5 @@
 import type { ReplayBoardCheckpoint } from "./boardState";
+import type { ThrowTeamMateRoleEvidence } from "./throwTeamMateParticipants";
 
 export type ReplayTeam = {
   id: string;
@@ -28,6 +29,7 @@ export type ReplayEvent = {
   stepActorId?: string;
   stepTargetId?: string;
   damageSource?: number;
+  throwTeamMate?: ThrowTeamMateRoleEvidence;
   carrierObject?: "ball" | "bomb";
   checkpointCarrier?: boolean;
   unclassifiedDice?: boolean;
@@ -116,7 +118,11 @@ export type ReplayModel = {
   unknownCodes: ReplayUnknownCode[];
   parserDiagnostics?: ReplayParserDiagnostics;
   boardCheckpoints?: ReplayBoardCheckpoint[];
-  endDiceSnapshots?: { afterSourceIndex: number; xmlPath: (string | number)[]; payload: Record<string,unknown> }[];
+  endDiceSnapshots?: {
+    afterSourceIndex: number;
+    xmlPath: (string | number)[];
+    payload: Record<string, unknown>;
+  }[];
   raw: unknown;
 };
 

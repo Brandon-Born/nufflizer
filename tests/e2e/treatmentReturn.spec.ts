@@ -161,7 +161,7 @@ for (const partial of [false, true])
       readFileSync((await (await pending).path())!, "utf8")
     );
     expect(saved).toEqual(report);
-    expect(saved.schemaVersion).toBe("2.69");
+    expect(saved.schemaVersion).toBe("2.70");
     expect(saved.verdict.luckierTeam).toBe("unknown");
     expect(
       saved.teams.every((t: { impactCount: number }) => t.impactCount === 0)

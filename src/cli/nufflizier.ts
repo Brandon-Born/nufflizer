@@ -33,6 +33,7 @@ import {
   explainRecordedTreatment,
   explainTreatmentAftermath,
   explainTreatmentReturn,
+  explainThrowTeamMateRoles,
   explainRegenerationAftermath,
   explainRegenerationReturn,
   explainNumericRerollScore,
@@ -146,6 +147,10 @@ function formatTeamSummary(
     ...(report.events.some(e=>e.metadata.casualtyObservation) ? [
       `Recorded casualty results: ${report.events.filter(e=>e.metadata.casualtyObservation).length}. Original and replacement dice remain separate; all have unverified odds and no current-match luck score.`,
       ...report.events.filter(e=>e.metadata.casualtyObservation).map(e=>`Player ${e.playerId}; source ${e.metadata.sourceId}: ${formatActualOutcome(e)}; Not scored. ${explainCasualtyObservation(e)}`)
+    ]:[]),
+    ...(report.events.some(e=>e.metadata.throwTeamMate)?[
+      `Recorded Throw Team-mate headers: ${report.events.filter(e=>e.metadata.throwTeamMate?.role==="header").length}. Thrower, thrown player and skill holder remain distinct; roles add no dice odds or luck score.`,
+      ...report.events.filter(e=>e.metadata.throwTeamMate?.role==="header").map(e=>`Source ${e.metadata.sourceId}: ${explainThrowTeamMateRoles(e)}`)
     ]:[]),
     ...report.events.filter(e=>e.metadata.apothecary&&!e.metadata.recordedTreatment).map(e=>`Player ${e.playerId}; source ${e.metadata.sourceId}: ${explainApothecaryDecision(e)}`),
     ...(report.events.some(e=>e.metadata.recordedTreatment)?[

@@ -28,7 +28,7 @@ it("[cli-worker] exports real retained initial injury and first reserves states 
   };
   try {
     const r = LuckReportSchema.parse(JSON.parse(run("demo3", "json")));
-    expect(r.schemaVersion).toBe("2.69");
+    expect(r.schemaVersion).toBe("2.70");
     expect(r.modelVersion).toBe("dice-only-35");
     expect(r.events.filter((e) => e.metadata.recordedTreatment)).toHaveLength(
       5

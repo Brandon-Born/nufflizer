@@ -147,6 +147,12 @@ export function recordedRerollOffer(
 }
 
 function sameParticipant(a: ReplayEvent, b: ReplayEvent) {
+  if(a.stepTag==="ThrowTeamMateStep"||b.stepTag==="ThrowTeamMateStep"){
+    const x=a.throwTeamMate,y=b.throwTeamMate;
+    if(!x||!y||x.role!=="thrower"||!["header","thrower"].includes(y.role)||x.state!==1||y.state!==3||
+      x.throwerId!==y.throwerId||x.thrownMateId!==y.thrownMateId||
+      x.headerCellFrom.x!==y.headerCellFrom.x||x.headerCellFrom.y!==y.headerCellFrom.y)return false;
+  }
   return (
     !!a.playerId &&
     a.playerId === b.playerId &&
@@ -338,6 +344,11 @@ export function findRerollResources(
     if (g === null || !e.playerId) return null;
     const owner = ownerAt(owners, e.playerId, e);
     if (owner !== String(g)) return null;
+    if(e.stepTag==="ThrowTeamMateStep"){
+      const t=e.throwTeamMate;
+      if(!t||t.role!=="thrower"||t.throwerId!==e.playerId||t.thrownMateId!==e.targetId||ownerAt(owners,t.thrownMateId,e)!==owner)return null;
+    }
+
     if (!last)
       return e.actorTeamSource === "explicit"
         ? { basis: "explicit_team", actorPlayerId: e.playerId }
@@ -351,7 +362,9 @@ export function findRerollResources(
       t.players.some((p) => String(p.id) === e.playerId)
     );
     const roster = rosters[0];
+    const mate=e.throwTeamMate?.thrownMateId;
     const consistent =
+      (!mate||(roster?.players.filter(p=>String(p.id)===mate).length===1&&b.teams.flatMap(t=>t.players).filter(p=>String(p.id)===mate).length===1)) &&
       rosters.length === 1 &&
       roster?.players.filter((p) => String(p.id) === e.playerId).length === 1 &&
       b.teams.length === 2 &&
@@ -752,6 +765,18 @@ export function validReportedRerollResources(
       continue;
     }
     const offer = q?.metadata.recordedRerollOffer;
+    if(e.metadata.stepType===13||q?.metadata.stepType===13){
+      const a=q?.metadata.throwTeamMate,b=e.metadata.throwTeamMate;
+      const ns=d.namespace;
+      const cp=ns?.basis==="observed_roster"?ledger.flow.clockSnapshots.find(c=>c.source.checkpointAfter===ns.checkpointAfter&&c.source.kind===ns.kind&&c.source.replayStep===ns.replayStep&&c.source.childIndex===ns.childIndex):undefined;
+      if(!a||!b||a.role!=="thrower"||b.role!=="thrower"||a.state!==1||b.state!==3||
+        a.throwerId!==e.playerId||a.throwerId!==b.throwerId||a.thrownMateId!==b.thrownMateId||
+        a.headerCellFrom.x!==b.headerCellFrom.x||a.headerCellFrom.y!==b.headerCellFrom.y||
+        !ns||ns.basis!=="observed_roster"||!cp||
+        cp.playerIds.flat().filter(p=>String(p)===b.thrownMateId).length!==1||
+        !cp.playerIds[ns.rosterIndex]?.some(p=>String(p)===b.thrownMateId))return false;
+    }
+
     if (
       q?.metadata.sourceIndex !== undefined &&
       d.sourceIndex !== null &&

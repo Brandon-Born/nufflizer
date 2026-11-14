@@ -2,7 +2,7 @@
 
 Updated 2026-11-14. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.69`, dice model `dice-only-35` and context model `mobility-possession-42`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.70`, dice model `dice-only-35` and context model `mobility-possession-42`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -789,3 +789,8 @@ A qualified treatment/reserves observation now requires `treatmentReturn` with `
 The generic `reservesReturn` reducer is shared with the existing Regeneration wrapper, whose public references and all five source traces remain unchanged. Cause-specific seeds prevent a treatment notification becoming a successful recovery roll. First incompatible roster namespace, known player-type change, identity/unknown-policy boundary, new damage or unsupported declaration stops tracking. Missing type does not reset a known type. Earlier milestones and completed prefixes survive future edits; no hypothetical legal/useful activation, immediate return, permanent loss or value follows.
 
 Three public treatment traces comprise two observed setup/play prefixes, one accepted Move and one unverified staff gap. Demo1's Action4 remains a raw budget declaration outside this return marker's contract. A new marker for demo3/source4175 adds no score. Full current source, exact-parent defect reproduction, nullable/clock/role/export guards, complete conservation and transport scope: [TREATMENT_RETURN_EVIDENCE.md](TREATMENT_RETURN_EVIDENCE.md). All1,480 prior scored objects,18,441 physical records and prior report results remain, apart from independently validated observation/visibility metadata.
+
+
+## Schema2.70: typed Throw Team-mate source roles
+
+Optional `metadata.throwTeamMate` binds the exact typed thrower/thrown pair, header source ID/index, state, raw from-cell and role (`header`, `thrower`, `skill_holder`). Holder notifications additionally retain explicit holder/skill/use fields. Exact source/action/sequence/locator, current actor ownership and physical actor/target metadata must agree. Every annotated row stays excluded with null odds, zero score/weight and no context value. A linked Step13 resource choice requires matching State1→3/from/pair and a unique same-roster mate in its observed namespace. No current position or throwing odds are inferred from the header's future CellTo. Shared Why/CLI copy and complete JSON preserve roles separately from legal policy, Pass budgets and later landing. See [independent role evidence](THROW_TEAM_MATE_ROLE_EVIDENCE.md).
