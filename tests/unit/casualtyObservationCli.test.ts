@@ -27,7 +27,7 @@ it("[cli-worker] keeps original, replacement and applied casualty roles without 
     const json = run("json");
     expect(json.status, json.stderr).toBe(0);
     const r = LuckReportSchema.parse(JSON.parse(json.stdout));
-    expect(r.schemaVersion).toBe("2.72");
+    expect(r.schemaVersion).toBe("2.73");
     const original = r.events.find(
         (e) => e.metadata.sourceId === "source-2033"
       )!,
@@ -61,6 +61,9 @@ it("[cli-worker] keeps original, replacement and applied casualty roles without 
       expect(e.weightedDelta).toBe(0);
       expect(e.contextualImpact).toBeUndefined();
     }
+    expect(original.metadata.casualtyTable).toMatchObject({modifierTotal:0,counts:[6,3,3,2,2]});
+    expect(replacement.metadata.casualtyTable).toMatchObject({modifierTotal:0,counts:[6,3,3,2,2]});
+    expect(applied.metadata.casualtyTable).toBeUndefined();
     expect(
       r.diceRecords.find(
         (d) =>
@@ -83,6 +86,8 @@ it("[cli-worker] keeps original, replacement and applied casualty roles without 
     expect(text.stdout).toContain(
       "Long-term league damage is not priced as current-match impact."
     );
+    expect(text.stdout).toContain("6/16 Badly Hurt");
+    expect(text.stdout).toContain("returning to reserves still requires that result to be applied");
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

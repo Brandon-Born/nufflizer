@@ -21,6 +21,7 @@ import { directInjuryOutcome,
 import { validReportedStaffInjuryOriginal } from "./staffInjuryOriginal";
 import { validReportedTreatment, validReportedTreatmentControl, validReportedTreatmentSpp } from "./treatmentAftermath";
 import { validReportedCasualtyObservation } from "./casualtyObservation";
+import { validReportedCasualtyTable } from "./casualtyTable";
 import { validReportedDamageSpp } from "./damageSpp";
 import { validReportedCategoricalInjury } from "./categoricalInjury";
 import { injuryTableForTraits } from "./injuryTable";
@@ -286,6 +287,10 @@ export const LuckEventMetadataSchema = z.strictObject({
       wireOutcomeCode: z.literal(1)
     }).optional(),
   casualtyObservation:z.strictObject({outcome:z.enum(["no_injury","badly_hurt","seriously_hurt","serious_injury","lasting_injury","smashed_knee","head_injury","broken_arm","neck_injury","dislocated_shoulder","dead"]),recordKind:z.enum(["direct","apothecary_original","apothecary_replacement"]),subjectId:text,subjectTeamId:text,sourceCode:z.number().int().min(0).max(64),damageStepSourceIndex:count}).optional(),
+  casualtyTable:z.strictObject({rules:z.literal("bb2020"),policy:z.literal("fixed_recorded_casualty_modifiers"),
+    modifiers:z.array(z.strictObject({kind:z.enum(["decay","niggling_injury"]),playerId:z.number().int().min(-1),skillId:z.number().int().min(-1),modifierType:z.union([z.literal(27),z.literal(31)]),effectId:z.literal(-1),value:z.literal(1)})).max(2),
+    modifierTotal:z.number().int().min(0).max(2),counts:z.tuple([count,count,count,count,count]),probabilities:z.tuple([finite,finite,finite,finite,finite]),
+    lastingInjuryCounts:z.tuple([count,count,count,count,count]),lastingInjuryProbabilities:z.tuple([finite,finite,finite,finite,finite]),observedResultChance:finite}).optional(),
   crowdPush:z.strictObject({playerId:text,from:pitchCell,to:z.strictObject({x:z.number().int().min(-1).max(26),y:z.number().int().min(-1).max(15)}),resolution:z.literal(3)}).optional(),
   crowdRemoval:z.strictObject({reason:z.union([z.literal(0),z.literal(1)]),situation:z.union([z.literal(1),z.literal(2)]),status:z.union([z.literal(0),z.literal(3)])}).optional(),
   blockCrowd:z.strictObject({pushSourceId:text,initialRemovalSourceId:text,finalRemovalSourceId:text,injurySourceId:text,subjectId:text,subjectTeamId:text,
@@ -2519,6 +2524,7 @@ export const LuckReportSchema = z
         initialRerollDiceBySource.get(event.metadata.sourceId)
       ), "A staff injury original retains its prompt code1 separately; only exact original dice, current Stunty traits and an unmodified nine can establish the initial Badly Hurt table result.");
       if(event.metadata.casualtyObservation)require(teamIds.has(event.teamId) && validReportedCasualtyObservation(event,casualtyDiceBySource.get(event.metadata.sourceId)),"A recorded casualty needs its uniquely owned DamageStep, exact direct/original/replacement dice path and separate outcome namespace; copied summaries, probabilities and match-impact claims cannot certify it.");
+      require(validReportedCasualtyTable(event),"A conditional casualty table needs its observed draw, exact automatic modifier vector, categorical/D6 probabilities and null binary/value fields; it cannot certify a treatment decision or useful availability.");
       require(validReportedRecoveryControl(event)&&validReportedRegenerationAftermath(event,sources,report.coverage.sourceRecordCount),"Regeneration aftermath requires its first same-frame owned off-pitch observation and the exact supported ordered control bridge, separately from dice and availability.");
       require(validReportedTreatmentReturn(event,sources,report)&&validReportedTreatmentReturnActivation(event,sources,report),"A treatment reserves return requires ordered same-instance setup/play and its own observed declaration; gaps, omitted flags and another recovery cause cannot create availability or luck.");
       require(validReportedRegenerationReturn(event,sources,report)&&validReportedRecoveryReturnActivation(event,sources,report),"A recovered-player return requires ordered same-instance setup/play observations and its own supported declaration; gaps and missing observations cannot establish useful availability or add luck.");

@@ -1,5 +1,7 @@
 # Recorded casualty outcomes and treatment roles
 
+Current extension (2026-11-14): schema2.73 adds separately validated conditional D16/secondary-D6 tables under exact recorded automatic modifier vectors. All59 public observations retain zero contributions, null binary values and their existing roles/coverage. This does not certify a complete treatment policy or useful availability. The original observational checkpoint below is preserved; see [conditional table evidence](CASUALTY_TABLE_EVIDENCE.md).
+
 Observed2026-11-14. Schema2.66 / dice-only-34 / mobility-possession-42. Partial progress under NUF-011/014/018/020/021/022/027; every original incomplete acceptance requirement remains.
 
 The report now names recorded D16 casualty results and distinguishes direct rolls, originals embedded in treatment questions, replacement dice and the later applied treatment decision. These observations retain unknown odds, null binary results and no luck or contextual contribution. A permanent league injury is not silently priced as current-match impact. Existing initial-injury and recovery scores remain separate.

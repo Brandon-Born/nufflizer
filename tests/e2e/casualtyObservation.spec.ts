@@ -92,14 +92,16 @@ test("casualty originals, replacements and applied treatment stay distinct on de
     await expect(r.locator("td").nth(4)).toHaveText(name);
     await expect(r.locator("td").nth(5)).toHaveText("Not scored");
   }
-  await expect(original.locator("td").nth(3)).toHaveText("Unknown");
-  await expect(replacement.locator("td").nth(3)).toHaveText("Unknown");
+  await expect(original.locator("td").nth(3)).toHaveText("Conditional table");
+  await expect(replacement.locator("td").nth(3)).toHaveText("Conditional table");
   await expect(applied.locator("td").nth(3)).toHaveText("No new roll");
   await replacement.locator("summary").click();
   await expect(replacement).toContainText(
     "copied outcome cannot rename the original"
   );
-  await expect(replacement).toContainText("no luck contribution is assigned");
+  await expect(replacement).toContainText("No casualty luck contribution is assigned");
+  await expect(replacement).toContainText("6/16 Badly Hurt");
+  await expect(replacement).toContainText("returning to reserves still requires that result to be applied");
   await applied.locator("summary").click();
   await expect(applied).toContainText(
     "applied the replacement casualty: No injury"
@@ -132,8 +134,9 @@ test("casualty originals, replacements and applied treatment stay distinct on de
     path: "/tmp/nufflizier-casualty-treatment-mobile.png"
   });
   await revealText(replacement.locator("td").nth(4));
+  await revealText(replacement.locator("td").nth(3));
   const saved = await exported(page);
-  expect(saved.schemaVersion).toBe("2.72");
+  expect(saved.schemaVersion).toBe("2.73");
   expect(saved.modelVersion).toBe("dice-only-36");
   for (const id of ["source-2033", "source-2039", "source-2043"])
     expect(
@@ -143,6 +146,20 @@ test("casualty originals, replacements and applied treatment stay distinct on de
     ).toEqual(report.events.find((e) => e.metadata.sourceId === id));
   expect(saved.diceRecords).toEqual(report.diceRecords);
   expect(saved.verdict.luckierTeam).toBe("unknown");
+  await page.getByLabel("Player ID or initial roster name").fill("7");
+  const modified=row(page,"source-3056");
+  await expect(modified).toHaveCount(1);
+  await expect(modified.locator("td").nth(3)).toHaveText("Conditional table");
+  await expect(modified.locator("td").nth(5)).toHaveText("Not scored");
+  await modified.locator("summary").click();
+  await expect(modified).toContainText("niggling injury +1");
+  await expect(modified).toContainText("5/16 Badly Hurt");
+  await expect(modified).toContainText("3/16 Dead");
+  await expect(modified).toContainText("not a complete pre-roll treatment policy");
+  await modified.locator("p").filter({hasText:"The recorded casualty result"}).scrollIntoViewIfNeeded();
+  await page.screenshot({path:"/tmp/nufflizier-casualty-table-modified-mobile.png"});
+  await revealText(modified.locator("td").nth(3));
+  await page.screenshot({path:"/tmp/nufflizier-casualty-table-chance-mobile.png"});
   await page.getByRole("button", { name: "Reset filters" }).click();
   await expect(page.getByLabel("Player ID or initial roster name")).toHaveValue(
     ""
@@ -166,9 +183,11 @@ test("a lasting casualty label adds no score while its separate Regeneration rem
   await expect(casualty.locator("td").nth(4)).toHaveText(
     "Head Injury (recorded)"
   );
-  await expect(casualty.locator("td").nth(3)).toHaveText("Unknown");
+  await expect(casualty.locator("td").nth(3)).toHaveText("Conditional table");
   await expect(casualty.locator("td").nth(5)).toHaveText("Not scored");
   await casualty.locator("summary").click();
+  await expect(casualty).toContainText("Head Injury 2/6");
+  await expect(casualty).toContainText("2/16 Lasting Injury");
   await expect(casualty).toContainText(
     "Long-term league damage is not priced as current-match impact"
   );

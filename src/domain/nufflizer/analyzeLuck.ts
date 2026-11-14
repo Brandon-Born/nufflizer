@@ -39,6 +39,7 @@ import { findStaffInjuryOriginals } from "./staffInjuryOriginal";
 import { findTreatmentEvidence } from "./treatmentAftermath";
 import {canonicalizeThrowTeamMateParticipants} from "@/domain/replay/throwTeamMateParticipants";
 import { attachCasualtyObservations } from "./casualtyObservation";
+import { attachCasualtyTables } from "./casualtyTable";
 import { attachCategoricalInjuries } from "./categoricalInjury";
 import { findMightyBlowArmorUses } from "./armorModifierBudget";
 import { findRegenerationAftermath } from "./regenerationAftermath";
@@ -2099,6 +2100,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   );
   attachInjuryObservations(replay, ballSources, staffInjuryOriginals);
   attachCasualtyObservations(replay, ballSources, ownership);
+  attachCasualtyTables(replay, ballSources);
   attachDamageSppLinks(ballSources);
   attachInjuryTables(replay, ballSources, ownership);
   attachCategoricalInjuries(replay, ballSources, blockConsequences, ownership);

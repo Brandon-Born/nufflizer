@@ -1,0 +1,150 @@
+{
+  "categories": [
+    "badly_hurt",
+    "seriously_hurt",
+    "serious_injury",
+    "lasting_injury",
+    "dead"
+  ],
+  "rules": {
+    "edition": "bb2020",
+    "pdfSha256": "8598ecc9283f7e5f49a5566392ae5cbbec55c0a5f994b1eba4dec0414e2982e3",
+    "printedPages": [
+      61,
+      62,
+      84
+    ]
+  },
+  "scope": "Conditional fixed recorded-modifier casualty draw. No eligibility, selection policy, recovery, final availability or league/current-match value is inferred.",
+  "secondaryFaces": [
+    "head_injury",
+    "head_injury",
+    "smashed_knee",
+    "broken_arm",
+    "neck_injury",
+    "dislocated_shoulder"
+  ],
+  "sourceReceipt": {
+    "file": "tests/fixtures/evidence/bb3-casualty-observations.json",
+    "sha256": "c24445dd60ce5327b35b30cee0cbb0468b8d868dd050ad0427afdb325209b366"
+  },
+  "tables": [
+    {
+      "counts": [
+        6,
+        3,
+        3,
+        2,
+        2
+      ],
+      "faces": [
+        "badly_hurt",
+        "badly_hurt",
+        "badly_hurt",
+        "badly_hurt",
+        "badly_hurt",
+        "badly_hurt",
+        "seriously_hurt",
+        "seriously_hurt",
+        "seriously_hurt",
+        "serious_injury",
+        "serious_injury",
+        "serious_injury",
+        "lasting_injury",
+        "lasting_injury",
+        "dead",
+        "dead"
+      ],
+      "jointCounts": {
+        "badly_hurt": 36,
+        "broken_arm": 2,
+        "dead": 12,
+        "dislocated_shoulder": 2,
+        "head_injury": 4,
+        "neck_injury": 2,
+        "serious_injury": 18,
+        "seriously_hurt": 18,
+        "smashed_knee": 2
+      },
+      "modifierTotal": 0
+    },
+    {
+      "counts": [
+        5,
+        3,
+        3,
+        2,
+        3
+      ],
+      "faces": [
+        "badly_hurt",
+        "badly_hurt",
+        "badly_hurt",
+        "badly_hurt",
+        "badly_hurt",
+        "seriously_hurt",
+        "seriously_hurt",
+        "seriously_hurt",
+        "serious_injury",
+        "serious_injury",
+        "serious_injury",
+        "lasting_injury",
+        "lasting_injury",
+        "dead",
+        "dead",
+        "dead"
+      ],
+      "jointCounts": {
+        "badly_hurt": 30,
+        "broken_arm": 2,
+        "dead": 18,
+        "dislocated_shoulder": 2,
+        "head_injury": 4,
+        "neck_injury": 2,
+        "serious_injury": 18,
+        "seriously_hurt": 18,
+        "smashed_knee": 2
+      },
+      "modifierTotal": 1
+    },
+    {
+      "counts": [
+        4,
+        3,
+        3,
+        2,
+        4
+      ],
+      "faces": [
+        "badly_hurt",
+        "badly_hurt",
+        "badly_hurt",
+        "badly_hurt",
+        "seriously_hurt",
+        "seriously_hurt",
+        "seriously_hurt",
+        "serious_injury",
+        "serious_injury",
+        "serious_injury",
+        "lasting_injury",
+        "lasting_injury",
+        "dead",
+        "dead",
+        "dead",
+        "dead"
+      ],
+      "jointCounts": {
+        "badly_hurt": 24,
+        "broken_arm": 2,
+        "dead": 24,
+        "dislocated_shoulder": 2,
+        "head_injury": 4,
+        "neck_injury": 2,
+        "serious_injury": 18,
+        "seriously_hurt": 18,
+        "smashed_knee": 2
+      },
+      "modifierTotal": 2
+    }
+  ]
+}

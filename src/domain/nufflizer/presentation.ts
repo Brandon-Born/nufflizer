@@ -103,6 +103,7 @@ export function formatExpectedOutcome(
   if(event.metadata.recordedSpp || event.metadata.treatmentSpp)return "No new roll";
   if(event.metadata.recordedTreatment || event.metadata.treatmentControl || event.metadata.treatmentReturnActivation || event.metadata.recoveryReturnActivation)return "No new roll";
   if(event.metadata.apothecary)return "No new roll";
+  if(event.metadata.casualtyTable)return "Conditional table";
   return event.metadata.injuryScoring || event.metadata.blockScoring
     ? "Categorical"
     : event.probabilitySuccess === null
@@ -142,7 +143,9 @@ export function explainCasualtyObservation(event: LuckReport["events"][number]):
   const o=event.metadata.casualtyObservation;
   if(!o)return null;
   const role=o.recordKind==="direct" ? "This is a directly recorded casualty roll." : o.recordKind==="apothecary_original" ? "These are the original casualty dice in an Apothecary usage question; they are not a second roll or the applied treatment decision." : "These are the replacement dice in an Apothecary choice. Repeated original dice are a copied summary and add no random draw; their copied outcome cannot rename the original result. This replacement does not by itself establish which result was applied.";
-  return `The recorded casualty result for player ${o.subjectId} is ${CASUALTY_NAMES[o.outcome]}. ${role} This is a categorical observation, not binary success or failure. The full modifier and treatment policy and its odds are unverified, so no luck contribution is assigned. The initial injury roll remains a separate stage. Long-term league damage is not priced as current-match impact. Final removal, recovery and useful availability require separate evidence.`;
+  const t=event.metadata.casualtyTable;
+  const table=t ? `With the recorded fixed modifiers (${t.modifiers.length?t.modifiers.map(m=>m.kind==="decay"?"Decay +1":"niggling injury +1").join(", "):"none"}), the conditional D16 table is ${t.counts[0]}/16 Badly Hurt, ${t.counts[1]}/16 Seriously Hurt, ${t.counts[2]}/16 Serious Injury, ${t.counts[3]}/16 Lasting Injury and ${t.counts[4]}/16 Dead. Only a Lasting Injury then uses a separate unmodified D6: Head Injury 2/6; Smashed Knee, Broken Arm, Neck Injury and Dislocated Shoulder 1/6 each. These are this draw's conditional probabilities, not a complete pre-roll treatment policy. ${o.recordKind==="apothecary_replacement"?"A Badly Hurt replacement is recorded as No injury; returning to reserves still requires that result to be applied. ":""}No casualty luck contribution is assigned.` : "The full modifier and treatment policy and its odds are unverified, so no luck contribution is assigned.";
+  return `The recorded casualty result for player ${o.subjectId} is ${CASUALTY_NAMES[o.outcome]}. ${role} This is a categorical observation, not binary success or failure. ${table} The initial injury roll remains a separate stage. Long-term league damage is not priced as current-match impact. Final removal, recovery and useful availability require separate evidence.`;
 }
 
 export function explainApothecaryDecision(event: LuckReport["events"][number]): string | null {

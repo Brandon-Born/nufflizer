@@ -256,7 +256,7 @@ describe("POST /api/nufflizier/analyze", () => {
     const skillPools=report.events.filter(e=>e.metadata.block?.skillModel);
     expect(skillPools.filter(e=>!e.metadata.block!.skillModel!.nonKnockdownSkills).map(e=>e.metadata.sourceId)).toEqual(["source-98","source-132","source-367","source-386","source-409"]);
     expect(skillPools.filter(e=>e.metadata.block!.skillModel!.nonKnockdownSkills).map(e=>e.metadata.sourceId)).toEqual(["source-116","source-338","source-438","source-579","source-634","source-638"]);
-    expect(report.schemaVersion).toBe("2.72");
+    expect(report.schemaVersion).toBe("2.73");
     expect(report.modelVersion).toBe("dice-only-36");
     const positive=report.events.find(e=>e.metadata.sourceId==="source-98")!;
     const negative=report.events.find(e=>e.metadata.sourceId==="source-132")!;
@@ -494,6 +494,7 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(casualtyOriginal.metadata.casualtyObservation).toMatchObject({outcome:"serious_injury",recordKind:"apothecary_original",subjectId:"45",subjectTeamId:"1"});
     expect(casualtyOriginal.metadata.ownership).toMatchObject({role:"subject",playerId:"45",teamId:"1"});
     expect(casualtyReplacement.metadata.casualtyObservation).toMatchObject({outcome:"no_injury",recordKind:"apothecary_replacement",subjectId:"45",subjectTeamId:"1"});
+    for(const e of [casualtyOriginal,casualtyReplacement])expect(e.metadata.casualtyTable).toMatchObject({policy:"fixed_recorded_casualty_modifiers",modifierTotal:0,counts:[6,3,3,2,2]});
     expect(r.events.find(e=>e.metadata.sourceId==="source-2043")?.metadata.apothecary).toMatchObject({originalSourceId:"source-2033",replacementSourceId:"source-2039",resourceSpent:1,appliedCasualty:0,applied:"replacement"});
     expect(r.events.filter(e=>e.metadata.recordedTreatment)).toHaveLength(5);
     expect(r.events.find(e=>e.metadata.sourceId==="source-636")?.metadata.apothecary).toMatchObject({applied:"injury_original",originalSourceId:"source-628",initialRemovalSourceId:"source-635",treatmentSppSourceId:"source-634",resourceSpent:0,appliedCasualty:1});

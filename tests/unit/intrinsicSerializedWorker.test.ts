@@ -18,7 +18,7 @@ it("[cli-worker] serializes both expanded original-source reports inside the unc
       })
     );
     expect(r.modelVersion).toBe("dice-only-36");
-    expect(r.schemaVersion).toBe("2.72");
+    expect(r.schemaVersion).toBe("2.73");
     expect(
       r.events.find((e) => e.metadata.sourceId === id)!.weightedDelta
     ).toBe(weighted);

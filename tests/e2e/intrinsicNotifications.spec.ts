@@ -116,7 +116,7 @@ for (const c of [
       readFileSync((await (await pending).path())!, "utf8")
     );
     expect(saved).toEqual(report);
-    expect(saved.schemaVersion).toBe("2.72");
+    expect(saved.schemaVersion).toBe("2.73");
     expect(saved.modelVersion).toBe("dice-only-36");
     expect(
       saved.events.find(

@@ -106,7 +106,7 @@ for (const c of [
     const saved = JSON.parse(
       readFileSync((await (await pending).path())!, "utf8")
     );
-    expect(saved.schemaVersion).toBe("2.72");
+    expect(saved.schemaVersion).toBe("2.73");
     expect(saved.modelVersion).toBe("dice-only-36");
     expect(saved.contextModelVersion).toBe("mobility-possession-42");
     const gate = saved.events.find(
