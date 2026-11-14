@@ -28,7 +28,7 @@ it("[cli-worker] exports real retained initial injury and first reserves states 
   };
   try {
     const r = LuckReportSchema.parse(JSON.parse(run("demo3", "json")));
-    expect(r.schemaVersion).toBe("2.70");
+    expect(r.schemaVersion).toBe("2.71");
     expect(r.modelVersion).toBe("dice-only-35");
     expect(r.events.filter((e) => e.metadata.recordedTreatment)).toHaveLength(
       5
@@ -130,7 +130,7 @@ it("[cli-worker] exports real retained initial injury and first reserves states 
   }
 }, 20000);
 
-it("[cli-worker] keeps treatment setup/play observations before an unsupported later action", () => {
+it("[cli-worker] retains the treated player's Pass budget before Throw Team-mate execution", () => {
   const run = (format: string) => {
     const out = spawnSync(
       process.execPath,
@@ -155,20 +155,39 @@ it("[cli-worker] keeps treatment setup/play observations before an unsupported l
     status: "observed",
     setup: { checkpointAfter: 5302 },
     playing: { checkpointAfter: 5366 },
-    stop: { reason: "unsupported_activation", sourceIndex: 5397 }
+    activation: {
+      sourceId: "source-5397",
+      actionCode: 4,
+      budget: {
+        kind: "pass",
+        headerCellFrom: { x: 13, y: 7 },
+        headerCellTo: { x: 13, y: 8 }
+      }
+    }
   });
-  expect(
-    e.metadata.treatmentReturn &&
-      "activation" in e.metadata.treatmentReturn &&
-      e.metadata.treatmentReturn.activation
-  ).toBeFalsy();
-  expect(r.events.some((e) => e.metadata.treatmentReturnActivation)).toBe(
-    false
-  );
+  expect(e.metadata.treatmentReturn).not.toHaveProperty("stop");
+  const marker = r.events.find((e) => e.metadata.sourceId === "source-5397")!;
+  expect(marker).toMatchObject({
+    playerId: "37",
+    teamId: "1",
+    probabilitySuccess: null,
+    weightedDelta: 0,
+    metadata: { isRollCandidate: false }
+  });
+  expect(marker.metadata.treatmentReturnActivation).toMatchObject({
+    treatmentSourceId: "source-5188",
+    actionCode: 4,
+    budget: { kind: "pass" }
+  });
   const text = run("text");
   expect(text).toContain(
     "Player 37 is later observed back on the pitch during setup (source 5302), then in regular play (source 5366)"
   );
-  expect(text).toContain("the first later declaration is not qualified");
+  expect(text).toContain(
+    "A Pass budget declaration is recorded at source-5397"
+  );
+  expect(text).toContain("Recorded Pass budget declaration");
+  expect(text).toContain("No new roll");
+  expect(text).toContain("are declaration parameters");
   expect(text).toContain("No extra luck or contextual value is added");
 }, 20000);

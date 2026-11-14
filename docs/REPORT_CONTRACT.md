@@ -2,7 +2,7 @@
 
 Updated 2026-11-14. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.70`, dice model `dice-only-35` and context model `mobility-possession-42`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.71`, dice model `dice-only-35` and context model `mobility-possession-42`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -794,3 +794,12 @@ Three public treatment traces comprise two observed setup/play prefixes, one acc
 ## Schema2.70: typed Throw Team-mate source roles
 
 Optional `metadata.throwTeamMate` binds the exact typed thrower/thrown pair, header source ID/index, state, raw from-cell and role (`header`, `thrower`, `skill_holder`). Holder notifications additionally retain explicit holder/skill/use fields. Exact source/action/sequence/locator, current actor ownership and physical actor/target metadata must agree. Every annotated row stays excluded with null odds, zero score/weight and no context value. A linked Step13 resource choice requires matching State1→3/from/pair and a unique same-roster mate in its observed namespace. No current position or throwing odds are inferred from the header's future CellTo. Shared Why/CLI copy and complete JSON preserve roles separately from legal policy, Pass budgets and later landing. See [independent role evidence](THROW_TEAM_MATE_ROLE_EVIDENCE.md).
+
+
+## Schema2.71: declared activation budgets after reserves return
+
+A qualified treatment/recovery return can reach the first typed ResultUseAction Blitz3/Pass4/Hand-off5/Foul6 budget declaration, in addition to the existing Move1/Block2 policy. The optional budget receipt retains exact code/kind, literal header State1/2/3, target and from/to cells. It requires its own canonical adjacent PlayerStep, known raw field set, actor/target roles and first step/message in the same action/sequence/frame. Header cells and Probability100 establish neither movement, action execution, success odds, remaining budget nor useful availability. Current source/roster/type/clock/phase/flag restrictions and first-gap stops remain.
+
+Both cause-specific markers require reciprocal origin/code/budget/before receipts, last-board source binding and actor ownership, with null chance/outcome, zero weight/deviation, no new roll and no context value. Recovery snapshot validation now uses the same retained clock/roster source checks as treatment. These are structural joins, not complete legal eligibility or raw-byte authentication. Shared Why/Actual text names the declared budget and explains its parameters.
+
+Demo1 treatment5188 now reaches Pass5397 before the separate Throw Team-mate sequence. Complete twelve-report acceptance preserves all1,480 scored objects/18,441 physical records/resources/five recovery traces/27 ranges/zero public points/verdicts, allowing one new non-random row, two recovery actor proofs and independently recomputed derived metadata. No dice/context model or runtime cap changes. [Source, reproduction and validation evidence](RETURN_BUDGET_EVIDENCE.md).

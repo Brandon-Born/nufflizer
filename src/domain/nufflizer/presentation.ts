@@ -1,3 +1,4 @@
+import { returnDeclarationName } from "@/domain/replay/activationBudget";
 import { explainInjuryOtherActions } from "./injurySkillScope";
 import { CASUALTY_NAMES, casualtyOutcome } from "./casualtyObservation";
 import { explainBlockNonKnockdownSkills } from "./blockNonKnockdownSkills";
@@ -100,7 +101,7 @@ export function formatExpectedOutcome(
 ): string {
   if(event.metadata.throwTeamMate&&["ThrowTeamMateStep","ResultSkillUsage","ResultTeamRerollUsage"].includes(event.metadata.sourceTag??""))return "No new roll";
   if(event.metadata.recordedSpp || event.metadata.treatmentSpp)return "No new roll";
-  if(event.metadata.recordedTreatment || event.metadata.treatmentControl || event.metadata.treatmentReturnActivation)return "No new roll";
+  if(event.metadata.recordedTreatment || event.metadata.treatmentControl || event.metadata.treatmentReturnActivation || event.metadata.recoveryReturnActivation)return "No new roll";
   if(event.metadata.apothecary)return "No new roll";
   return event.metadata.injuryScoring || event.metadata.blockScoring
     ? "Categorical"
@@ -128,7 +129,7 @@ export function formatActualOutcome(
     return outcome?`${CASUALTY_NAMES[outcome]} (applied)`:"Initial injury result (unverified)";
   }
   if(event.metadata.treatmentControl)return "Recorded control";
-  if(event.metadata.treatmentReturnActivation)return `Recorded ${event.metadata.treatmentReturnActivation.actionCode===1?"Move":"Block"} declaration`;
+  if(event.metadata.treatmentReturnActivation || event.metadata.recoveryReturnActivation)return `Recorded ${returnDeclarationName((event.metadata.treatmentReturnActivation ?? event.metadata.recoveryReturnActivation)!.actionCode)} declaration`;
   if(event.metadata.blockScoring)return `Offered balance ${event.metadata.blockScoring.observedValue>0?"+":""}${event.metadata.blockScoring.observedValue}`;
   if(event.metadata.block)return "Observed symbols";
   if (event.metadata.injuryObservation)
@@ -192,23 +193,26 @@ export function explainThrowTeamMateRoles(event:LuckReport["events"][number]):st
 
 export function explainRegenerationReturn(event:LuckReport["events"][number]):string|null {
   const marker=event.metadata.recoveryReturnActivation;
-  if(marker)return `This recovered player's ${marker.actionCode===1?"Move":"Block"} declaration is linked to Regeneration ${marker.regenerationSourceId}. It records later participation, not another roll or a complete legal-activation test. No extra luck or contextual value is added.`;
+  if(marker)return `This recovered player's ${returnDeclarationName(marker.actionCode)} declaration is linked to Regeneration ${marker.regenerationSourceId}. It records later participation, not another roll or a complete legal-activation test.${explainBudgetParameters(marker.budget)} No extra luck or contextual value is added.`;
   const trace=event.metadata.regenerationReturn;if(!trace)return null;
   return explainReturnMilestones(event.playerId,trace,"recovery");
 }
 
 export function explainTreatmentReturn(event:LuckReport["events"][number]):string|null{
   const marker=event.metadata.treatmentReturnActivation;
-  if(marker)return `This treated player's ${marker.actionCode===1?"Move":"Block"} declaration is linked to treatment ${marker.treatmentSourceId}. It records later participation, not another roll or a complete legal-activation test. No extra luck or contextual value is added.`;
+  if(marker)return `This treated player's ${returnDeclarationName(marker.actionCode)} declaration is linked to treatment ${marker.treatmentSourceId}. It records later participation, not another roll or a complete legal-activation test.${explainBudgetParameters(marker.budget)} No extra luck or contextual value is added.`;
   const trace=event.metadata.treatmentReturn;
   return trace?explainReturnMilestones(event.playerId,trace,"treatment"):null;
+}
+function explainBudgetParameters(budget: {headerCellFrom:{x:number;y:number};headerCellTo:{x:number;y:number}}|undefined):string {
+  return budget?` The header cells [${budget.headerCellFrom.x}, ${budget.headerCellFrom.y}] to [${budget.headerCellTo.x}, ${budget.headerCellTo.y}] are declaration parameters. They do not establish actual movement, execution of that action, remaining budget or useful availability.`:"";
 }
 function explainReturnMilestones(playerId:string|undefined,trace:NonNullable<LuckReport["events"][number]["metadata"]["regenerationReturn"]>,origin:"recovery"|"treatment"):string{
   if(trace.status==="not_observed")return "No later source-qualified return is linked in the available replay. This does not prove permanent unavailability.";
   const stop="stop" in trace?trace.stop:undefined;
   const gap=stop?` Tracking stops ${stop.sourceIndex===null?"at an unindexed source":`at source ${stop.sourceIndex}`}: ${stop.reason==="invalid_source"?"an event lacks ordered source evidence":stop.reason==="identity_transition"?"roster-instance continuity is unverified":stop.reason==="roster_conflict"?"roster evidence conflicts":stop.reason==="new_damage"?`another removal or damage interrupts the ${origin} trace`:stop.reason==="unsupported_activation"?"the first later declaration is not qualified":stop.reason==="unsupported_setup"?"the first on-pitch return is not a qualified setup observation":"position or phase evidence is unknown"}. A later convenient snapshot cannot repair that gap.`:"";
   if(trace.status==="unverified")return `A later return cannot be linked to this ${origin}.${gap} No permanent loss or extra score is inferred.`;
-  return `Player ${playerId} is later observed back on the pitch during setup (source ${trace.setup.checkpointAfter})${trace.playing?`, then in regular play (source ${trace.playing.checkpointAfter})`:""}.${trace.activation?` A ${trace.activation.actionCode===1?"Move":"Block"} declaration is recorded at ${trace.activation.sourceId}.`:" No later activation is linked under this policy."} Setup CanAct flags are not legal-activation evidence. These are observed milestones, not a complete eligibility test or a value for a hypothetical return.${gap} No extra luck or contextual value is added.`;
+  return `Player ${playerId} is later observed back on the pitch during setup (source ${trace.setup.checkpointAfter})${trace.playing?`, then in regular play (source ${trace.playing.checkpointAfter})`:""}.${trace.activation?` A ${returnDeclarationName(trace.activation.actionCode)} declaration is recorded at ${trace.activation.sourceId}.${explainBudgetParameters(trace.activation.budget)}`:" No later activation is linked under this policy."} Setup CanAct flags are not legal-activation evidence. These are observed milestones, not a complete eligibility test or a value for a hypothetical return.${gap} No extra luck or contextual value is added.`;
 }
 
 export function explainRegenerationAftermath(event:LuckReport["events"][number]):string|null {

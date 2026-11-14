@@ -1,3 +1,4 @@
+import { validReturnBudget } from "@/domain/replay/activationBudget";
 import type { ReplayModel } from "@/domain/replay/types";
 import type { OwnershipTimeline } from "@/domain/replay/ownershipTimeline";
 import type { LuckEvent, LuckReport } from "./types";
@@ -5,6 +6,7 @@ import type { findTreatmentEvidence } from "./treatmentAftermath";
 import {
   findReservesReturns,
   validReservesSnapshot,
+  validReturnSnapshotSource,
   isReturnSnapshotAfter,
   isReturnSnapshotAtOrAfter,
   type ReservesReturnSeed
@@ -113,34 +115,7 @@ function snapshotMatches(
     s.recordedFlags.tackleZone !== (s.tackleZone !== null)
   )
     return false;
-  const cp = report.rerollResources.flow.clockSnapshots.find(
-    (c) =>
-      c.source.checkpointAfter === s.checkpointAfter &&
-      c.source.replayStep === s.replayStep &&
-      c.source.childIndex === s.childIndex &&
-      c.source.kind === "board"
-  );
-  if (
-    !cp?.clock ||
-    !cp.identityStructureObserved ||
-    cp.rosterCount !== 2 ||
-    cp.clock.phaseCode !== phase ||
-    cp.clock.activeGamerId !== s.activeGamerId ||
-    cp.clock.periodCode !== s.periodCode ||
-    cp.clock.teamTurns[slot] !== s.teamTurn ||
-    cp.playerIds.flat().filter((id) => String(id) === e.playerId).length !==
-      1 ||
-    !cp.playerIds[slot]?.some((id) => String(id) === e.playerId)
-  )
-    return false;
-  const teams = new Set(report.teams.map((t) => t.teamId));
-  return (
-    cp.explicitTeamIds.every((id) => id === null || teams.has(String(id))) &&
-    (cp.explicitTeamIds[slot] === null ||
-      String(cp.explicitTeamIds[slot]) === e.teamId) &&
-    (cp.explicitTeamIds[1 - slot] === null ||
-      String(cp.explicitTeamIds[1 - slot]) !== e.teamId)
-  );
+  return validReturnSnapshotSource(s, e, report, phase, slot);
 }
 function noValue(e: LuckEvent) {
   return (
@@ -209,6 +184,7 @@ export function validReportedTreatmentReturn(
     validReportedTreatmentReturnActivation(use, sources, report) &&
     t.activation.stepSourceIndex === marker.stepSourceIndex &&
     t.activation.actionCode === marker.actionCode &&
+    JSON.stringify(t.activation.budget) === JSON.stringify(marker.budget) &&
     JSON.stringify(t.activation.before) === JSON.stringify(marker.before) &&
     isReturnSnapshotAtOrAfter(t.activation.before, t.playing)
   );
@@ -259,9 +235,17 @@ export function validReportedTreatmentReturnActivation(
     e.metadata.ownership?.role === "actor" &&
     e.metadata.ownership.playerId === e.playerId &&
     e.metadata.ownership.teamId === e.teamId &&
+    validReturnBudget(
+      a.actionCode,
+      a.budget,
+      a.before.cell,
+      e.metadata.targetId
+    ) &&
     (a.actionCode === 1
       ? e.metadata.targetId === "-1"
-      : !!e.metadata.targetId && e.metadata.targetId !== e.playerId) &&
+      : a.actionCode === 2
+        ? !!e.metadata.targetId && e.metadata.targetId !== e.playerId
+        : true) &&
     !e.metadata.recoveryReturnActivation
   );
 }

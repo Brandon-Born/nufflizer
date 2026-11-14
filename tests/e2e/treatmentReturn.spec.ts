@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Locator } from "@playwright/test";
 import { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
+import { regenerationReturnXml } from "../helpers/regenerationReturn";
 
 // Browser plugin absent; use the repository production Playwright workflow.
 async function reveal(cell: Locator) {
@@ -25,7 +26,7 @@ async function reveal(cell: Locator) {
   ).toBe(true);
 }
 for (const partial of [false, true])
-  test(`treatment reserves ${partial ? "partial return" : "later Move and staff gap"} keeps observed participation separate from value`, async ({
+  test(`treatment reserves ${partial ? "Pass budget before Throw Team-mate" : "later Move and staff gap"} keeps observed participation separate from value`, async ({
     page
   }) => {
     const errors: string[] = [];
@@ -83,11 +84,10 @@ for (const partial of [false, true])
     );
     if (partial) {
       await expect(row).toContainText(
-        "the first later declaration is not qualified"
+        "A Pass budget declaration is recorded at source-5397"
       );
-      await expect(row).toContainText(
-        "No later activation is linked under this policy"
-      );
+      await expect(row).toContainText("are declaration parameters");
+      await expect(row).toContainText("do not establish actual movement");
     } else
       await expect(row).toContainText(
         "A Move declaration is recorded at source-4175"
@@ -155,13 +155,46 @@ for (const partial of [false, true])
         path: "/tmp/nufflizier-treatment-return-move-mobile-marker.png"
       });
     }
+    if (partial) {
+      await page.getByLabel("Category", { exact: true }).selectOption("all");
+      const marker = page
+        .locator("tbody tr")
+        .filter({ hasText: "Source: source-5397;" });
+      for (let i = 0; (await marker.count()) === 0 && i < 10; i++)
+        await page.getByRole("button", { name: "Next page" }).click();
+      await expect(marker).toHaveCount(1);
+      await marker.locator("summary").click();
+      await expect(marker).toContainText(
+        "This treated player's Pass budget declaration is linked to treatment source-5188"
+      );
+      await expect(marker).toContainText(
+        "header cells [13, 7] to [13, 8] are declaration parameters"
+      );
+      await expect(marker.locator("td").nth(3)).toHaveText("No new roll");
+      await expect(marker.locator("td").nth(4)).toHaveText(
+        "Recorded Pass budget declaration"
+      );
+      await expect(marker.locator("td").nth(5)).toHaveText("Not scored");
+      await reveal(marker.locator("td").nth(4));
+      await page.screenshot({
+        path: "/tmp/nufflizier-budget-pass-mobile-marker.png"
+      });
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await marker
+        .locator("p")
+        .filter({ hasText: /This treated player's/ })
+        .scrollIntoViewIfNeeded();
+      await page.screenshot({
+        path: "/tmp/nufflizier-budget-pass-desktop-marker.png"
+      });
+    }
     const pending = page.waitForEvent("download");
     await page.getByRole("button", { name: "Download JSON" }).click();
     const saved = JSON.parse(
       readFileSync((await (await pending).path())!, "utf8")
     );
     expect(saved).toEqual(report);
-    expect(saved.schemaVersion).toBe("2.70");
+    expect(saved.schemaVersion).toBe("2.71");
     expect(saved.verdict.luckierTeam).toBe("unknown");
     expect(
       saved.teams.every((t: { impactCount: number }) => t.impactCount === 0)
@@ -175,3 +208,90 @@ for (const partial of [false, true])
     expect(await page.locator("nextjs-portal").count()).toBe(0);
     expect(errors).toEqual([]);
   });
+
+test("recovered player's Pass budget retains its recovery cause and zero value", async ({
+  page
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  page.on("console", (m) => {
+    if (["warning", "error"].includes(m.type())) errors.push(m.text());
+  });
+  const input = regenerationReturnXml({ action: 4 }),
+    report = analyzeNufflizerInput(input);
+  const use = report.events.find((e) => e.metadata.recoveryReturnActivation)!;
+  await page.route("**/api/nufflizier/analyze", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(report)
+    })
+  );
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/nufflizier");
+  await expect(page).toHaveTitle("Nufflizier");
+  await expect(page).toHaveURL(/\/nufflizier$/);
+  await expect(
+    page.getByRole("button", { name: "Analyze Nuffle Luck" })
+  ).toBeVisible();
+  await page.setInputFiles('input[name="replay"]', {
+    name: "return.xml",
+    mimeType: "text/xml",
+    buffer: Buffer.from(input)
+  });
+  await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Nuffle Match Report" })
+  ).toBeVisible();
+  await page.getByLabel("Player ID or initial roster name").fill("42");
+  await page.getByLabel("Scoring status").selectOption("excluded");
+  const marker = page
+    .locator("tbody tr")
+    .filter({ hasText: `Source: ${use.metadata.sourceId};` });
+  await expect(marker).toHaveCount(1);
+  await marker.locator("summary").click();
+  await expect(marker).toContainText(
+    "This recovered player's Pass budget declaration is linked to Regeneration"
+  );
+  await expect(marker).toContainText("are declaration parameters");
+  await expect(marker).toContainText("remaining budget or useful availability");
+  await expect(marker.locator("td").nth(3)).toHaveText("No new roll");
+  await expect(marker.locator("td").nth(4)).toHaveText(
+    "Recorded Pass budget declaration"
+  );
+  await expect(marker.locator("td").nth(5)).toHaveText("Not scored");
+  await marker
+    .locator("p")
+    .filter({ hasText: /This recovered player's/ })
+    .scrollIntoViewIfNeeded();
+  await page.screenshot({
+    path: "/tmp/nufflizier-budget-recovery-desktop.png"
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await marker
+    .locator("p")
+    .filter({ hasText: /This recovered player's/ })
+    .scrollIntoViewIfNeeded();
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth)
+  ).toBeLessThanOrEqual(390);
+  await page.screenshot({ path: "/tmp/nufflizier-budget-recovery-mobile.png" });
+  await page.getByLabel("Scoring status").selectOption("scored");
+  await expect(marker).toHaveCount(0);
+  await page.getByRole("button", { name: "Reset filters" }).click();
+  const pending = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download JSON" }).click();
+  const saved = JSON.parse(
+    readFileSync((await (await pending).path())!, "utf8")
+  );
+  expect(saved).toEqual(report);
+  expect(saved.schemaVersion).toBe("2.71");
+  expect(saved.verdict.luckierTeam).toBe("unknown");
+  expect(
+    saved.teams.every((t: { impactCount: number }) => t.impactCount === 0)
+  ).toBe(true);
+  await page.getByRole("button", { name: "Upload Another Replay" }).click();
+  await expect(page.getByLabel("Scoring status")).toHaveCount(0);
+  expect(await page.locator("nextjs-portal").count()).toBe(0);
+  expect(errors).toEqual([]);
+});

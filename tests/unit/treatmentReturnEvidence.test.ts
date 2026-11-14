@@ -249,9 +249,7 @@ describe("independent raw treated-player return evidence", () => {
           for (const [actual, observed] of [
             [trace!.setup, c.setup],
             [trace!.playing, c.playing],
-            ...(c.subjectId === 7
-              ? [[trace!.activation?.before, c.declaration?.before]]
-              : [])
+            [trace!.activation?.before, c.declaration?.before]
           ] as [object | undefined, Snapshot | null | undefined][]) {
             expect(actual).toBeDefined();
             const m = observed!.members[0]!;
@@ -270,27 +268,32 @@ describe("independent raw treated-player return evidence", () => {
               teamTurn: observed!.teamTurns[m.rosterIndex]
             });
           }
-          if (c.subjectId === 37) {
-            expect(trace!.activation).toBeUndefined();
-            expect(trace!.stop).toEqual({
-              reason: "unsupported_activation",
-              sourceIndex: 5397
+          expect(trace!.stop).toBeUndefined();
+          expect(trace!.activation?.sourceId).toBe(
+            c.subjectId === 37 ? "source-5397" : "source-4175"
+          );
+          if (c.subjectId === 37)
+            expect(trace!.activation!.budget).toEqual({
+              actionCode: 4,
+              kind: "pass",
+              headerState: 3,
+              headerTargetId: -1,
+              headerCellFrom: { x: 13, y: 7 },
+              headerCellTo: { x: 13, y: 8 }
             });
-          } else {
-            expect(trace!.activation?.sourceId).toBe("source-4175");
-            const use = r.events.find(
-              (e) => e.metadata.sourceId === trace!.activation!.sourceId
-            )!;
-            expect(compare(use.metadata.locator!, c.declaration!.locator)).toBe(
-              0
-            );
-            expect(use.metadata).toHaveProperty(
-              "treatmentReturnActivation.treatmentSourceId",
-              e.metadata.sourceId
-            );
-            expect(use.scoringStatus).toBe("excluded");
-            expect(use.weightedDelta).toBe(0);
-          }
+          else expect(trace!.activation!.budget).toBeUndefined();
+          const use = r.events.find(
+            (e) => e.metadata.sourceId === trace!.activation!.sourceId
+          )!;
+          expect(compare(use.metadata.locator!, c.declaration!.locator)).toBe(
+            0
+          );
+          expect(use.metadata).toHaveProperty(
+            "treatmentReturnActivation.treatmentSourceId",
+            e.metadata.sourceId
+          );
+          expect(use.scoringStatus).toBe("excluded");
+          expect(use.weightedDelta).toBe(0);
         }
       }
     }

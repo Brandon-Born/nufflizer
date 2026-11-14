@@ -1,3 +1,4 @@
+import { returnDeclarationName } from "@/domain/replay/activationBudget";
 import { findRerollResources, recordedRerollChoice, recordedRerollOffer } from "./rerollResources";
 import { findFailedNumericRetries } from "./failedNumericRetry";
 import {findNumericRetryAccess,scoreNumericRetryAccess} from "./numericRetryAccess";
@@ -1984,13 +1985,15 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
         normalized.explainability.inputsSummary="A later owned action is recorded after reserves, setup and regular play. This observation adds no dice or tactical value.";
         normalized.metadata.normalizationFlags=normalized.metadata.normalizationFlags?.filter(f=>f!=="missing_target_threshold");
         normalized.metadata.normalizationNotes=normalized.metadata.normalizationNotes?.filter(n=>n!=="difficulty and requirement were both missing");
-        normalized.label=`Recorded treated-player ${treatedActivation.actionCode===1?"Move":"Block"} declaration`;
+        normalized.label=`Recorded treated-player ${returnDeclarationName(treatedActivation.actionCode)} declaration`;
         normalized.statusReason="A treated player's later declaration is an observed action, not another roll, a complete eligibility test or tactical value.";
       }
       const returnActivation=recoveryReturns.activations.get(event.id??"");
       if(returnActivation){
         normalized.metadata.recoveryReturnActivation=returnActivation;
-        normalized.label=`Recorded recovered-player ${returnActivation.actionCode===1?"Move":"Block"} declaration`;
+        const actor=event.playerId?ownership.resolve(event.playerId,event):undefined;
+        if(actor?.status==="confirmed")normalized.metadata.ownership={...actor.proof,role:"actor"};
+        normalized.label=`Recorded recovered-player ${returnDeclarationName(returnActivation.actionCode)} declaration`;
         normalized.statusReason="A recovered player's later declaration is an observed action, not another roll or a complete eligibility test.";
       }
       if (armorUse) {

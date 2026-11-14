@@ -42,6 +42,7 @@ import {
   explainFailedNumericRetry,
   explainNumericRetryAccess,
   formatActualOutcome,
+  formatExpectedOutcome,
   formatContextComponentSum,
   PARTIAL_CONTEXT_SCOPE,
   explainDriveEffectExpiry,
@@ -157,7 +158,7 @@ function formatTeamSummary(
       `Recorded treatment notifications: ${report.events.filter(e=>e.metadata.recordedTreatment).length}. Resource observations, selected results and first observed aftermath stay separate from dice and useful availability.`,
       ...report.events.filter(e=>e.metadata.recordedTreatment).map(e=>`Player ${e.playerId}; source ${e.metadata.sourceId}: ${[explainApothecaryDecision(e),explainRecordedTreatment(e),explainTreatmentAftermath(e),explainTreatmentReturn(e)].filter(Boolean).join(" ")}`)
     ]:[]),
-    ...report.events.filter(e=>e.metadata.treatmentReturnActivation).map(e=>`Player ${e.playerId}; source ${e.metadata.sourceId}: ${explainTreatmentReturn(e)}`),
+    ...report.events.filter(e=>e.metadata.treatmentReturnActivation).map(e=>`Player ${e.playerId}; source ${e.metadata.sourceId}: ${formatExpectedOutcome(e)}; ${formatActualOutcome(e)}; Not scored. ${explainTreatmentReturn(e)}`),
     ...report.events.filter(e=>e.metadata.blockPush?.status==="modeled").slice(0,20).map(e=>`Source ${e.metadata.sourceId}: ${explainBlockPush(e)}`),
     ...(report.events.some(e=>e.metadata.recordedSpp)?[
       `Recorded SPP notifications: ${report.events.filter(e=>e.metadata.recordedSpp).length}. Source annotations add no random draw, skill advancement or injury value.`,
@@ -191,6 +192,8 @@ function formatTeamSummary(
       .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainRegenerationAftermath(event)}`),
     ...report.events.filter(event=>event.metadata.regenerationReturn).slice(0,20)
       .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainRegenerationReturn(event)}`),
+    ...report.events.filter(event=>event.metadata.recoveryReturnActivation)
+      .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${formatExpectedOutcome(event)}; ${formatActualOutcome(event)}; Not scored. ${explainRegenerationReturn(event)}`),
     ...report.events.filter(event=>event.metadata.catchRerollResume).slice(0,20)
       .map(event=>`Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainCatchRerollResume(event)}`),
     `Recorded team-reroll decisions: ${report.rerollResources.decisionCount} (${report.rerollResources.recordedUsedCount} used, ${report.rerollResources.recordedNotUsedCount} not used, ${report.rerollResources.unknownUsageCount} unknown); ${report.rerollResources.linkedCount} linked; ${report.rerollResources.unresolvedCount} unresolved. Linked team totals: ${report.rerollResources.byTeam.map(t=>`${t.teamId}: ${t.used} used, ${t.notUsed} not used`).join("; ")}.`,

@@ -161,7 +161,9 @@ const recoveryReturnStop=z.discriminatedUnion("reason",[
   z.strictObject({reason:z.literal("invalid_source"),sourceIndex:z.null()}),
   z.strictObject({reason:z.enum(["identity_transition","roster_conflict","unknown_position","unsupported_setup","new_damage","unsupported_activation"]),sourceIndex:count})
 ]);
-const recoveryReturnActivation=z.strictObject({sourceId:text,stepSourceIndex:count,actionCode:z.union([z.literal(1),z.literal(2)]),before:recoveryReturnSnapshot});
+const returnActionCode=z.union([z.literal(1),z.literal(2),z.literal(3),z.literal(4),z.literal(5),z.literal(6)]);
+const activationBudget=z.strictObject({actionCode:z.union([z.literal(3),z.literal(4),z.literal(5),z.literal(6)]),kind:z.enum(["blitz","pass","handoff","foul"]),headerState:z.union([z.literal(1),z.literal(2),z.literal(3)]),headerTargetId:z.number().int().min(-1).max(1_000_000),headerCellFrom:pitchCell,headerCellTo:pitchCell});
+const recoveryReturnActivation=z.strictObject({sourceId:text,stepSourceIndex:count,actionCode:returnActionCode,budget:activationBudget.optional(),before:recoveryReturnSnapshot});
 const treatmentReturnSnapshot=recoveryReturnSnapshot.extend({recordedFlags:z.strictObject({status:z.boolean(),situation:z.boolean(),canAct:z.boolean(),tackleZone:z.boolean()})});
 const treatmentReturnTrace=z.discriminatedUnion("status",[
   z.strictObject({status:z.literal("not_observed")}),
@@ -333,8 +335,8 @@ export const LuckEventMetadataSchema = z.strictObject({
     controlSourceIds:z.array(text).min(1).max(5),observation:z.strictObject({cell:z.strictObject({x:z.literal(-1),y:z.literal(-1)}),situationCode:z.union([z.literal(1),z.literal(4)]),statusCode:z.number().int().nullable(),canAct:z.boolean().nullable(),tackleZone:z.boolean().nullable()})}).optional(),
   regenerationReturn:reservesReturnTrace.optional(),
   treatmentReturn:treatmentReturnTrace.optional(),
-  treatmentReturnActivation:z.strictObject({treatmentSourceId:text,stepSourceIndex:count,actionCode:z.union([z.literal(1),z.literal(2)]),before:treatmentReturnSnapshot}).optional(),
-  recoveryReturnActivation:z.strictObject({regenerationSourceId:text,stepSourceIndex:count,actionCode:z.union([z.literal(1),z.literal(2)]),before:recoveryReturnSnapshot}).optional(),
+  treatmentReturnActivation:z.strictObject({treatmentSourceId:text,stepSourceIndex:count,actionCode:returnActionCode,budget:activationBudget.optional(),before:treatmentReturnSnapshot}).optional(),
+  recoveryReturnActivation:z.strictObject({regenerationSourceId:text,stepSourceIndex:count,actionCode:returnActionCode,budget:activationBudget.optional(),before:recoveryReturnSnapshot}).optional(),
   activationLoss: z.strictObject({
     rollSourceId: text, rollSourceIndex: count, declarationSourceId: text, skillSourceId: text,
     followingActivationSourceId: text, followingSourceIndex: count, followingPlayerId: text,
@@ -2519,7 +2521,7 @@ export const LuckReportSchema = z
       if(event.metadata.casualtyObservation)require(teamIds.has(event.teamId) && validReportedCasualtyObservation(event,casualtyDiceBySource.get(event.metadata.sourceId)),"A recorded casualty needs its uniquely owned DamageStep, exact direct/original/replacement dice path and separate outcome namespace; copied summaries, probabilities and match-impact claims cannot certify it.");
       require(validReportedRecoveryControl(event)&&validReportedRegenerationAftermath(event,sources,report.coverage.sourceRecordCount),"Regeneration aftermath requires its first same-frame owned off-pitch observation and the exact supported ordered control bridge, separately from dice and availability.");
       require(validReportedTreatmentReturn(event,sources,report)&&validReportedTreatmentReturnActivation(event,sources,report),"A treatment reserves return requires ordered same-instance setup/play and its own observed declaration; gaps, omitted flags and another recovery cause cannot create availability or luck.");
-      require(validReportedRegenerationReturn(event,sources,report.coverage.sourceRecordCount)&&validReportedRecoveryReturnActivation(event,sources,report.coverage.sourceRecordCount),"A recovered-player return requires ordered same-instance setup/play observations and its own supported declaration; gaps and missing observations cannot establish useful availability or add luck.");
+      require(validReportedRegenerationReturn(event,sources,report)&&validReportedRecoveryReturnActivation(event,sources,report),"A recovered-player return requires ordered same-instance setup/play observations and its own supported declaration; gaps and missing observations cannot establish useful availability or add luck.");
       require(validReportedArmorModifierUse(event,sources),"A recorded Mighty Blow armor use requires its separate holder, adjacent affected subject and exact committed +1 armor evidence without odds or a score.");
       if (injuryObservation)
         require(event.type === "injury" && (event.metadata.injuryScoring ? event.scoringStatus === "scored" : event.scoringStatus === "excluded") && event.metadata.isRollCandidate === true &&

@@ -106,6 +106,7 @@ export function validReportedOwnership(
       !event.metadata.recordedTreatment &&
       !event.metadata.treatmentSpp &&
       !event.metadata.treatmentReturnActivation &&
+      !event.metadata.recoveryReturnActivation &&
       !event.metadata.throwTeamMate) ||
     conflict ||
     !teams.has(ownership.teamId) ||

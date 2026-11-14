@@ -1,3 +1,4 @@
+import { readActivationBudget } from "@/domain/replay/activationBudget";
 import type { ReplayEvent, ReplayModel } from "@/domain/replay/types";
 import type {
   ReplayBoardCheckpoint,
@@ -8,7 +9,7 @@ import {
   preservesRosterOwnership,
   type OwnershipTimeline
 } from "@/domain/replay/ownershipTimeline";
-import type { LuckEvent } from "./types";
+import type { LuckEvent, LuckReport } from "./types";
 import { recruitmentIdentityObservation } from "@/domain/replay/recruitment";
 type Trace = NonNullable<LuckEvent["metadata"]["regenerationReturn"]>;
 type Observed = Extract<Trace, { status: "observed" }>;
@@ -100,19 +101,21 @@ function declaration(
   step: ReplayEvent | undefined,
   p: Pending,
   owners: OwnershipTimeline,
-  memberIndex: ReadonlyMap<string, Member | null>
+  memberIndex: ReadonlyMap<string, Member | null>,
+  version: string | undefined
 ): Activation | undefined {
   const before = p.latest,
     action = e.payload?.Action,
     owner = owners.resolve(p.playerId, e),
     from = cell(step?.payload?.CellFrom),
-    to = cell(step?.payload?.CellTo);
+    to = cell(step?.payload?.CellTo),
+    budget = readActivationBudget(e, step, version);
   if (
     !before ||
     before.phase !== 5 ||
     before.canAct === false ||
     before.statusCode === 2 ||
-    (action !== 1 && action !== 2) ||
+    (action !== 1 && action !== 2 && !budget) ||
     !fields(e.payload, ["Action", "TeamId"]) ||
     (e.payload!.TeamId !== undefined &&
       !Number.isSafeInteger(e.payload!.TeamId)) ||
@@ -167,7 +170,7 @@ function declaration(
       to.y !== from.y
     )
       return;
-  } else {
+  } else if (action === 2) {
     const target = step.targetId ? memberIndex.get(step.targetId) : undefined;
     const targetOwner = step.targetId
       ? owners.resolve(step.targetId, e)
@@ -187,7 +190,8 @@ function declaration(
   return {
     originSourceId: p.sourceId,
     stepSourceIndex: step.sourceIndex!,
-    actionCode: action as 1 | 2,
+    actionCode: action as 1 | 2 | 3 | 4 | 5 | 6,
+    ...(budget ? { budget } : {}),
     before
   };
 }
@@ -263,7 +267,14 @@ export function findReservesReturns(
     const p = pending.get(e.playerId),
       trace = p ? traces.get(p.sourceId) : undefined;
     if (!p || trace?.status !== "observed" || !trace.playing) return;
-    const a = declaration(e, previous, p, owners, memberIndex);
+    const a = declaration(
+      e,
+      previous,
+      p,
+      owners,
+      memberIndex,
+      replay.replayVersion
+    );
     if (!a) {
       stop(p, "unsupported_activation", index);
       return;
@@ -275,6 +286,7 @@ export function findReservesReturns(
         sourceId: e.id,
         stepSourceIndex: a.stepSourceIndex,
         actionCode: a.actionCode,
+        ...(a.budget ? { budget: a.budget } : {}),
         before: a.before
       }
     });
@@ -408,5 +420,46 @@ export function isReturnSnapshotAtOrAfter(a: Snapshot, b: Snapshot) {
     a.checkpointAfter >= b.checkpointAfter &&
     (a.replayStep > b.replayStep ||
       (a.replayStep === b.replayStep && a.childIndex >= b.childIndex))
+  );
+}
+
+// Reported observations share the retained clock/roster source, independently
+// of whether their origin was recovery or treatment. Missing values stay null.
+export function validReturnSnapshotSource(
+  s: Snapshot,
+  e: LuckEvent,
+  report: LuckReport,
+  phase: 3 | 5,
+  slot: number
+) {
+  if (!validReservesSnapshot(s, phase, slot, report.coverage.sourceRecordCount))
+    return false;
+  const cp = report.rerollResources.flow.clockSnapshots.find(
+    (c) =>
+      c.source.checkpointAfter === s.checkpointAfter &&
+      c.source.replayStep === s.replayStep &&
+      c.source.childIndex === s.childIndex &&
+      c.source.kind === "board"
+  );
+  if (
+    !cp?.clock ||
+    !cp.identityStructureObserved ||
+    cp.rosterCount !== 2 ||
+    cp.clock.phaseCode !== phase ||
+    cp.clock.activeGamerId !== s.activeGamerId ||
+    cp.clock.periodCode !== s.periodCode ||
+    cp.clock.teamTurns[slot] !== s.teamTurn ||
+    cp.playerIds.flat().filter((id) => String(id) === e.playerId).length !==
+      1 ||
+    !cp.playerIds[slot]?.some((id) => String(id) === e.playerId)
+  )
+    return false;
+  const teams = new Set(report.teams.map((t) => t.teamId));
+  return (
+    cp.explicitTeamIds.every((id) => id === null || teams.has(String(id))) &&
+    (cp.explicitTeamIds[slot] === null ||
+      String(cp.explicitTeamIds[slot]) === e.teamId) &&
+    (cp.explicitTeamIds[1 - slot] === null ||
+      String(cp.explicitTeamIds[1 - slot]) !== e.teamId)
   );
 }

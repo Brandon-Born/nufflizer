@@ -1,9 +1,10 @@
+import { validReturnBudget } from "@/domain/replay/activationBudget";
 import type { ReplayModel } from "@/domain/replay/types";
 import type { OwnershipTimeline } from "@/domain/replay/ownershipTimeline";
-import type { LuckEvent } from "./types";
+import type { LuckEvent, LuckReport } from "./types";
 import {
   findReservesReturns,
-  validReservesSnapshot as validSnapshot,
+  validReturnSnapshotSource,
   isReturnSnapshotAfter as after,
   isReturnSnapshotAtOrAfter as sameOrLater,
   type ReservesReturnSeed
@@ -57,8 +58,9 @@ export function findRegenerationReturns(
 export function validReportedRegenerationReturn(
   e: LuckEvent,
   sources: ReadonlyMap<string, LuckEvent>,
-  count: number
+  report: LuckReport
 ) {
+  const count = report.coverage.sourceRecordCount;
   const trace = e.metadata.regenerationReturn;
   if (!trace) return true;
   const base = e.metadata.regenerationAftermath;
@@ -81,11 +83,13 @@ export function validReportedRegenerationReturn(
     p = trace.playing,
     a = trace.activation;
   if (
-    !validSnapshot(s, 3, base.rosterIndex, count) ||
+    !validReturnSnapshotSource(s, e, report, 3, base.rosterIndex) ||
     s.checkpointAfter <= base.checkpointAfter ||
     s.replayStep < base.replayStep ||
     (s.replayStep === base.replayStep && s.childIndex <= base.childIndex) ||
-    (p && (!validSnapshot(p, 5, base.rosterIndex, count) || !after(p, s))) ||
+    (p &&
+      (!validReturnSnapshotSource(p, e, report, 5, base.rosterIndex) ||
+        !after(p, s))) ||
     (stop &&
       stop.sourceIndex !== null &&
       stop.sourceIndex < (p ?? s).checkpointAfter)
@@ -102,9 +106,10 @@ export function validReportedRegenerationReturn(
     marker.regenerationSourceId === e.metadata.sourceId &&
     use.playerId === e.playerId &&
     use.teamId === e.teamId &&
-    validReportedRecoveryReturnActivation(use, sources, count) &&
+    validReportedRecoveryReturnActivation(use, sources, report) &&
     a.stepSourceIndex === marker.stepSourceIndex &&
     a.actionCode === marker.actionCode &&
+    JSON.stringify(a.budget) === JSON.stringify(marker.budget) &&
     JSON.stringify(a.before) === JSON.stringify(marker.before) &&
     sameOrLater(a.before, p)
   );
@@ -112,13 +117,22 @@ export function validReportedRegenerationReturn(
 export function validReportedRecoveryReturnActivation(
   e: LuckEvent,
   sources: ReadonlyMap<string, LuckEvent>,
-  count: number
+  report: LuckReport
 ) {
   const a = e.metadata.recoveryReturnActivation;
   if (!a) return true;
+  const previous = report.rerollResources.flow.clockSnapshots
+    .filter(
+      (c) =>
+        c.source.kind === "board" &&
+        c.source.checkpointAfter < a.stepSourceIndex
+    )
+    .at(-1);
   const regen = sources.get(a.regenerationSourceId),
     trace = regen?.metadata.regenerationReturn;
   return (
+    e.explainability.weight === 0 &&
+    e.type === "unknown" &&
     e.scoringStatus === "excluded" &&
     !e.metadata.isRollCandidate &&
     e.probabilitySuccess === null &&
@@ -133,10 +147,12 @@ export function validReportedRecoveryReturnActivation(
     e.metadata.stepType === 0 &&
     e.metadata.actionCode === a.actionCode &&
     !!e.metadata.actionId &&
+    !!e.metadata.sequenceId &&
     e.metadata.locator?.stepIndex === 0 &&
     e.metadata.locator.messageIndex === 0 &&
     e.metadata.sourceIndex === a.stepSourceIndex + 1 &&
     a.before.checkpointAfter < a.stepSourceIndex &&
+    previous?.source.checkpointAfter === a.before.checkpointAfter &&
     (a.before.replayStep < (e.metadata.locator?.replayStep ?? -1) ||
       (a.before.replayStep === e.metadata.locator?.replayStep &&
         a.before.childIndex < (e.metadata.locator.childIndex ?? -1))) &&
@@ -144,14 +160,33 @@ export function validReportedRecoveryReturnActivation(
     a.before.statusCode !== 2 &&
     !!regen?.metadata.regenerationAftermath &&
     trace?.status === "observed" &&
+    !trace.stop &&
     trace.activation?.sourceId === e.metadata.sourceId &&
     !!trace.playing &&
-    validSnapshot(a.before, 5, trace.setup.rosterIndex, count) &&
+    validReturnSnapshotSource(
+      a.before,
+      e,
+      report,
+      5,
+      trace.setup.rosterIndex
+    ) &&
     sameOrLater(a.before, trace.playing) &&
     regen.playerId === e.playerId &&
     regen.teamId === e.teamId &&
+    e.metadata.ownership?.role === "actor" &&
+    e.metadata.ownership.playerId === e.playerId &&
+    e.metadata.ownership.teamId === e.teamId &&
+    !e.metadata.treatmentReturnActivation &&
+    validReturnBudget(
+      a.actionCode,
+      a.budget,
+      a.before.cell,
+      e.metadata.targetId
+    ) &&
     (a.actionCode === 1
       ? e.metadata.targetId === "-1"
-      : !!e.metadata.targetId && e.metadata.targetId !== e.playerId)
+      : a.actionCode === 2
+        ? !!e.metadata.targetId && e.metadata.targetId !== e.playerId
+        : true)
   );
 }
