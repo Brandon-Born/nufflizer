@@ -14,7 +14,7 @@
     "test:legacy": "vitest run tests/unit/analyzeReplay.test.ts tests/unit/coachingOutput.test.ts tests/unit/teamScoping.test.ts tests/unit/demoReplayStructured.test.ts tests/unit/rulesPlayerLinking.test.ts tests/unit/legacyReplayApiRoute.test.ts",
     "test:quota": "node --import tsx scripts/verify-shared-quota.ts",
     "test:watch": "vitest",
-    "test:e2e": "node scripts/build-analyzer.mjs && next build && playwright test",
+    "test:e2e": "node scripts/build-analyzer.mjs && next build && node scripts/run-e2e-gates.mjs",
     "nufflizier": "node scripts/build-analyzer.mjs && node --import tsx src/cli/nufflizier.ts",
     "prepare:analyzer": "node scripts/build-analyzer.mjs",
     "verify": "corepack pnpm lint && corepack pnpm typecheck && corepack pnpm test && corepack pnpm test:quota && corepack pnpm test:e2e"

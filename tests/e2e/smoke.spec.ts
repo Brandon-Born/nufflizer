@@ -245,7 +245,7 @@ test("block carrier bounce explains source motion while omitted possession stays
 
 const DEMO = path.resolve("demo-replays/demo1.bbr");
 
-test("Foul Appearance and terminal mental failures retain distinct activation consequences", async ({
+test("[real-worker] Foul Appearance and terminal mental failures retain distinct activation consequences", async ({
   page
 }) => {
   await page.goto("/nufflizier");
@@ -356,7 +356,7 @@ test("source-backed3+ gates and drive ends explain their distinct evidence", asy
   }
 });
 
-test("replacement purchases retain separate source-backed trait lists", async ({
+test("[real-worker] replacement purchases retain separate source-backed trait lists", async ({
   page
 }) => {
   await page.goto("/nufflizier");
@@ -394,7 +394,7 @@ test("replacement purchases retain separate source-backed trait lists", async ({
   expect(report.recruitments[1].acquiredSkills).toBeNull();
 });
 
-test("saved staff-question injury remains visible with unknown odds", async ({
+test("[real-worker] saved staff-question injury remains visible with unknown odds", async ({
   page
 }) => {
   await page.goto("/nufflizier");
@@ -440,7 +440,7 @@ test("saved staff-question injury remains visible with unknown odds", async ({
   });
 });
 
-test("real final-turn carrier explains a scoring attempt at the left end zone", async ({
+test("[real-worker] real final-turn carrier explains a scoring attempt at the left end zone", async ({
   page
 }) => {
   await page.goto("/nufflizier");
@@ -488,7 +488,7 @@ test("real final-turn carrier explains a scoring attempt at the left end zone", 
   ).toHaveCount(0);
 });
 
-test("real BBR explains the pickup and touchdown around a carrier's Rush", async ({
+test("[real-worker] real BBR explains the pickup and touchdown around a carrier's Rush", async ({
   page
 }) => {
   await page.goto("/nufflizier");
@@ -514,7 +514,7 @@ test("real BBR explains the pickup and touchdown around a carrier's Rush", async
   );
 });
 
-test("real BBR upload exposes evidence, full filters, export and reset", async ({
+test("[real-worker] real BBR upload exposes evidence, full filters, export and reset", async ({
   page
 }) => {
   const errors: string[] = [];
@@ -854,7 +854,7 @@ test("complete pre-roll evidence explains the cost of an exposed pickup", async 
     "Current skills or effects leave bounce reactions unresolved"
   );
 });
-test("invalid replay and hosting-generated text errors are understandable", async ({
+test("[real-worker] invalid replay and hosting-generated text errors are understandable", async ({
   page
 }) => {
   await page.goto("/nufflizier");

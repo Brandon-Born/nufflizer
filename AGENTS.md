@@ -68,6 +68,8 @@ Use the following unless explicitly changed by the user:
 
 Agents should run lint + typecheck + tests + build before declaring significant work complete.
 
+`pnpm test:e2e` runs real upload/route cases serially before the report-fixture browser gate. Mark every browser case containing any unmocked POST with `[real-worker]`, including mixed error cases. Keep CPU-heavy report-fixture analysis out of that gate and retain the production four-second deadline. The two title filters are complementary; every browser case still runs once.
+
 ## 8) Definition of Done (Per Feature)
 1. Type-safe implementation aligned with architecture boundaries.
 2. Tests cover changed parser/probability/scoring behavior and relevant UI/API states.
