@@ -56,7 +56,7 @@ export function retainEmbeddedInjuries(
 ): Map<number, EmbeddedInjuryRecord> {
   const records = new Map<number, EmbeddedInjuryRecord>();
   let actionId: string | undefined;
-  const direct = new Map<string, string>();
+  const direct = new Map<string, string | undefined>();
   for (const [index, event] of events.entries()) {
     if (event.actionId !== actionId) {
       actionId = event.actionId;
@@ -100,7 +100,8 @@ export function retainEmbeddedInjuries(
       (event.sourceTag === "ResultInjuryRoll" ||
         event.sourceTag === "ResultRoll")
     ) {
-      direct.set(JSON.stringify([subject, owner, key(roll)]), event.id);
+      const signature = JSON.stringify([subject, owner, key(roll)]);
+      direct.set(signature, direct.has(signature) ? undefined : event.id);
     }
   }
   return records;

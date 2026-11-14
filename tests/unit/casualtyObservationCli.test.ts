@@ -27,7 +27,7 @@ it("[cli-worker] keeps original, replacement and applied casualty roles without 
     const json = run("json");
     expect(json.status, json.stderr).toBe(0);
     const r = LuckReportSchema.parse(JSON.parse(json.stdout));
-    expect(r.schemaVersion).toBe("2.66");
+    expect(r.schemaVersion).toBe("2.67");
     const original = r.events.find(
         (e) => e.metadata.sourceId === "source-2033"
       )!,

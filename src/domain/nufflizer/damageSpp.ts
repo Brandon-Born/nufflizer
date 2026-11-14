@@ -4,12 +4,16 @@ import type {
   OwnershipTimeline
 } from "@/domain/replay/ownershipTimeline";
 import type { LuckEvent } from "./types";
+import type { StaffInjuryOriginal } from "./staffInjuryOriginal";
+import { koInjuryRoll } from "./initialInjurySources";
+import { isInitialInjuryObservation } from "./injuryObservation";
 
 // Retains a recorded annotation, not proof that the SPP award is legal, that
 // a skill was learned, or that any casualty/availability value is known.
 export function findDamageSppNotices(
   replay: ReplayModel,
-  owners: OwnershipTimeline
+  owners: OwnershipTimeline,
+  staffOriginals: ReadonlyMap<string, StaffInjuryOriginal> = new Map()
 ) {
   const result = new Map<string, { ownership: OwnershipProof }>();
   if (replay.replayVersion !== "1-4-0-0") return result;
@@ -35,8 +39,13 @@ export function findDamageSppNotices(
         e.damageSource !== 1 ||
         armor?.sourceTag !== "ResultRoll" ||
         armor.rollType !== 10 ||
-        injury?.sourceTag !== "ResultInjuryRoll" ||
-        injury.rollType !== 11 ||
+        !(
+          (injury?.sourceTag === "ResultInjuryRoll" &&
+            injury.rollType === 11) ||
+          (injury?.sourceTag === "QuestionApothecaryCasualtyUsage" &&
+            staffOriginals.has(injury.id ?? "")) ||
+          (injury && !!koInjuryRoll(injury))
+        ) ||
         !e.actionId ||
         !e.sequenceId ||
         [armor, injury].some(
@@ -75,7 +84,7 @@ export function attachDamageSppLinks(sources: ReadonlyMap<string, LuckEvent>) {
         !armor ||
         !injury ||
         !observation ||
-        observation.recordKind !== "direct" ||
+        !isInitialInjuryObservation(injury) ||
         observation.sourceCode !== 1 ||
         armor.type !== "armor_break" ||
         armor.metadata.rollType !== 10 ||
@@ -135,7 +144,7 @@ export function validReportedDamageSpp(
     !!armor &&
     !!injury &&
     !!o &&
-    o.recordKind === "direct" &&
+    isInitialInjuryObservation(injury) &&
     o.sourceCode === 1 &&
     o.damageStepSourceIndex === d.damageStepSourceIndex &&
     d.damageStepSourceIndex < armor.metadata.sourceIndex! &&

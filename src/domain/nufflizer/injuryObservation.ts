@@ -1,5 +1,27 @@
 import type { ReplayEvent, ReplayModel } from "@/domain/replay/types";
 import type { LuckEvent } from "./types";
+import type { StaffInjuryOriginal } from "./staffInjuryOriginal";
+
+export function isInitialInjuryObservation(event: LuckEvent) {
+  const o = event.metadata.injuryObservation,
+    m = event.metadata;
+  return (
+    !!o &&
+    ((o.recordKind === "direct" && m.sourceTag === "ResultInjuryRoll") ||
+      (o.recordKind === "embedded_ko" &&
+        m.sourceTag === "QuestionKORecovery" &&
+        m.outcomeCode === 2 &&
+        o.outcome === "ko") ||
+      (o.recordKind === "apothecary_original" &&
+        m.sourceTag === "QuestionApothecaryCasualtyUsage" &&
+        m.initialInjuryOriginal?.policy === "stunty_nine_usage_original" &&
+        m.outcomeCode === 1 &&
+        o.outcome === "badly_hurt" &&
+        m.injuryTable?.stunty === true &&
+        m.dice?.length === 2 &&
+        m.dice[0]! + m.dice[1] === 9))
+  );
+}
 
 export function recordedInjuryName(
   outcome: "stunned" | "ko" | "badly_hurt" | "casualty"
@@ -96,7 +118,8 @@ function observedRoll(roll: Record<string, unknown> | undefined) {
 // injury table, freshness of unrelated records or a coach's mitigation choice.
 export function attachInjuryObservations(
   replay: ReplayModel,
-  sources: ReadonlyMap<string, LuckEvent>
+  sources: ReadonlyMap<string, LuckEvent>,
+  staffOriginals: ReadonlyMap<string, StaffInjuryOriginal> = new Map()
 ) {
   if (replay.replayVersion !== "1-4-0-0") return;
   for (const turn of replay.turns) {
@@ -111,8 +134,10 @@ export function attachInjuryObservations(
       const report = sources.get(raw.id ?? ""),
         step = raw.actionId ? steps.get(raw.actionId) : undefined;
       const embedded = raw.sourceTag === "QuestionKORecovery";
-      const roll = embedded ? object(raw.payload?.RollInfos) : raw.payload;
-      const outcome = directInjuryOutcome(roll?.Outcome);
+      const staff = staffOriginals.get(raw.id ?? "");
+      const roll =
+        embedded || staff ? object(raw.payload?.RollInfos) : raw.payload;
+      const outcome = staff ? "badly_hurt" : directInjuryOutcome(roll?.Outcome);
       if (
         !report ||
         report.scoringStatus !== "excluded" ||
@@ -123,7 +148,7 @@ export function attachInjuryObservations(
         report.metadata.rollType !== 11 ||
         report.metadata.embeddedDamageOriginalId ||
         report.metadata.mergedRerollAnchorId ||
-        (!embedded && raw.sourceTag !== "ResultInjuryRoll") ||
+        (!embedded && !staff && raw.sourceTag !== "ResultInjuryRoll") ||
         (embedded && outcome !== "ko") ||
         !outcome ||
         !roll ||
@@ -181,12 +206,23 @@ export function attachInjuryObservations(
         continue;
       report.metadata.injuryObservation = {
         outcome,
-        recordKind: embedded ? "embedded_ko" : "direct",
+        recordKind: staff
+          ? "apothecary_original"
+          : embedded
+            ? "embedded_ko"
+            : "direct",
         subjectId: raw.playerId,
         subjectTeamId: report.teamId,
         sourceCode: Number(roll.Source),
         damageStepSourceIndex: step.sourceIndex
       };
+      if (staff) {
+        report.metadata.initialInjuryOriginal = {
+          policy: "stunty_nine_usage_original",
+          wireOutcomeCode: 1
+        };
+        report.metadata.injuryTable = staff.table;
+      }
       report.metadata.damage = {
         ...report.metadata.damage,
         subjectId: raw.playerId,
@@ -197,11 +233,13 @@ export function attachInjuryObservations(
         observedInjury: true
       };
       const name = recordedInjuryName(outcome);
-      report.label = `Recorded injury: ${name} (not scored)`;
+      report.label = `${staff ? "Initial" : "Recorded"} injury: ${name} (not scored)`;
       report.statusReason =
         "excluded: recorded injury outcome has no verified odds for the applicable trait-dependent distribution";
       report.explainability.target = "categorical injury outcome";
-      report.explainability.inputsSummary = `Recorded 2D6 injury [${report.metadata.dice!.join(", ")}] produced ${name}; outcome odds are unverified and no binary threshold is assumed`;
+      report.explainability.inputsSummary = staff
+        ? `Original 2D6 injury [${report.metadata.dice!.join(", ")}] and the current Stunty profile establish initial ${name}; the treatment question's code is retained separately and no binary threshold is assumed`
+        : `Recorded 2D6 injury [${report.metadata.dice!.join(", ")}] produced ${name}; outcome odds are unverified and no binary threshold is assumed`;
       report.metadata.normalizationFlags =
         report.metadata.normalizationFlags?.filter(
           (f) => f !== "missing_target_threshold"

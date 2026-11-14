@@ -14,7 +14,10 @@ import {
   summarizeContextComponents,
   type ContextComponentSummary
 } from "./contextComponents";
-import { directInjuryOutcome } from "./injuryObservation";
+import { directInjuryOutcome,
+  isInitialInjuryObservation
+} from "./injuryObservation";
+import { validReportedStaffInjuryOriginal } from "./staffInjuryOriginal";
 import { validReportedCasualtyObservation } from "./casualtyObservation";
 import { validReportedDamageSpp } from "./damageSpp";
 import { validReportedCategoricalInjury } from "./categoricalInjury";
@@ -247,7 +250,13 @@ export const LuckEventMetadataSchema = z.strictObject({
   }).optional(),
   recordedSpp:z.strictObject({points:z.literal(2),damage:z.strictObject({armorSourceId:text,injurySourceId:text,damageStepSourceIndex:count}).optional()}).optional(),
   injuryTable:injuryTable.optional(),
-  injuryObservation:z.strictObject({outcome:z.enum(["stunned","ko","badly_hurt","casualty"]),recordKind:z.enum(["direct","embedded_ko"]),subjectId:text,subjectTeamId:text,sourceCode:z.number().int().min(0).max(64),damageStepSourceIndex:count}).optional(),
+  injuryObservation:z.strictObject({outcome:z.enum(["stunned","ko","badly_hurt","casualty"]),recordKind:z.enum(["direct","embedded_ko", "apothecary_original"]),subjectId:text,subjectTeamId:text,sourceCode:z.number().int().min(0).max(64),damageStepSourceIndex:count
+    })
+    .optional(),
+  initialInjuryOriginal: z.strictObject({
+      policy: z.literal("stunty_nine_usage_original"),
+      wireOutcomeCode: z.literal(1)
+    }).optional(),
   casualtyObservation:z.strictObject({outcome:z.enum(["no_injury","badly_hurt","seriously_hurt","serious_injury","lasting_injury","smashed_knee","head_injury","broken_arm","neck_injury","dislocated_shoulder","dead"]),recordKind:z.enum(["direct","apothecary_original","apothecary_replacement"]),subjectId:text,subjectTeamId:text,sourceCode:z.number().int().min(0).max(64),damageStepSourceIndex:count}).optional(),
   crowdPush:z.strictObject({playerId:text,from:pitchCell,to:z.strictObject({x:z.number().int().min(-1).max(26),y:z.number().int().min(-1).max(15)}),resolution:z.literal(3)}).optional(),
   crowdRemoval:z.strictObject({reason:z.union([z.literal(0),z.literal(1)]),situation:z.union([z.literal(1),z.literal(2)]),status:z.union([z.literal(0),z.literal(3)])}).optional(),
@@ -2473,31 +2482,49 @@ export const LuckReportSchema = z
       else require(fixed===undefined,"Only a supported scored numeric check carries a fixed-modifier receipt.");
       if(event.metadata.recordedSpp)require(validReportedDamageSpp(event,sources),"Recorded SPP is a non-random owned notification; any damage link needs its adjacent armor/injury source records and separate subject.");
       const injuryObservation=event.metadata.injuryObservation;
+      require(validReportedStaffInjuryOriginal(
+        event,
+        initialRerollDiceBySource.get(event.metadata.sourceId)
+      ), "A staff injury original retains its prompt code1 separately; only exact original dice, current Stunty traits and an unmodified nine can establish the initial Badly Hurt table result.");
       if(event.metadata.casualtyObservation)require(teamIds.has(event.teamId) && validReportedCasualtyObservation(event,casualtyDiceBySource.get(event.metadata.sourceId)),"A recorded casualty needs its uniquely owned DamageStep, exact direct/original/replacement dice path and separate outcome namespace; copied summaries, probabilities and match-impact claims cannot certify it.");
       require(validReportedRecoveryControl(event)&&validReportedRegenerationAftermath(event,sources,report.coverage.sourceRecordCount),"Regeneration aftermath requires its first same-frame owned off-pitch observation and the exact supported ordered control bridge, separately from dice and availability.");
       require(validReportedRegenerationReturn(event,sources,report.coverage.sourceRecordCount)&&validReportedRecoveryReturnActivation(event,sources,report.coverage.sourceRecordCount),"A recovered-player return requires ordered same-instance setup/play observations and its own supported declaration; gaps and missing observations cannot establish useful availability or add luck.");
       require(validReportedArmorModifierUse(event,sources),"A recorded Mighty Blow armor use requires its separate holder, adjacent affected subject and exact committed +1 armor evidence without odds or a score.");
-      if(injuryObservation)require(event.type === "injury" && (event.metadata.injuryScoring ? event.scoringStatus === "scored" : event.scoringStatus === "excluded") && event.metadata.isRollCandidate === true &&
+      if (injuryObservation)
+        require(event.type === "injury" && (event.metadata.injuryScoring ? event.scoringStatus === "scored" : event.scoringStatus === "excluded") && event.metadata.isRollCandidate === true &&
         event.probabilitySuccess === null && event.actualSuccess === null && (event.metadata.injuryScoring || (event.delta === 0 && event.weightedDelta === 0)) &&
         !event.contextualImpact && !event.contextualBounds && !event.possessionBounds && !event.catchPossessionBounds &&
         event.metadata.rollType === 11 && event.metadata.stepType === 2 && event.playerId === injuryObservation.subjectId && event.teamId === injuryObservation.subjectTeamId &&
         teamIds.has(event.teamId) && event.metadata.targetId === event.playerId && !!event.metadata.actionId && !!event.metadata.sequenceId &&
         event.metadata.sourceIndex !== undefined && injuryObservation.damageStepSourceIndex < event.metadata.sourceIndex &&
         event.metadata.dice?.length === 2 && event.metadata.dice.every(d=>Number.isInteger(d)&&d>=1&&d<=6) && event.metadata.dieTypes?.join() === "0,0" &&
-        directInjuryOutcome(event.metadata.outcomeCode) === injuryObservation.outcome && !event.metadata.embeddedDamageOriginalId && !event.metadata.mergedRerollAnchorId &&
-        (injuryObservation.recordKind === "direct" ? event.metadata.sourceTag === "ResultInjuryRoll" : event.metadata.sourceTag === "QuestionKORecovery" && injuryObservation.outcome === "ko") &&
-        event.metadata.damage?.observedInjury === true && event.metadata.damage.sourceCode === injuryObservation.sourceCode,
-        "A recorded injury outcome needs its supported direct/embedded source namespace, uniquely affected player, ordered damage step and two D6; its initial categorical odds are scored only under the separate qualified injury policy; final posture remains unknown.");
-      if(event.metadata.injuryTable) {
+          (injuryObservation.recordKind === "apothecary_original"
+            ? isInitialInjuryObservation(event)
+            : directInjuryOutcome(event.metadata.outcomeCode) === injuryObservation.outcome &&
+              (injuryObservation.recordKind === "direct" ? event.metadata.sourceTag === "ResultInjuryRoll" : event.metadata.sourceTag === "QuestionKORecovery" && injuryObservation.outcome === "ko")) &&
+          !event.metadata.embeddedDamageOriginalId &&
+          !event.metadata.mergedRerollAnchorId &&
+          event.metadata.damage?.observedInjury === true &&
+          event.metadata.damage.sourceCode === injuryObservation.sourceCode, "A recorded injury outcome needs its supported direct/embedded source namespace, uniquely affected player, ordered damage step and two D6; its initial categorical odds are scored only under the separate qualified injury policy; final posture remains unknown.");
+      if (event.metadata.injuryTable) {
         const table=event.metadata.injuryTable, proof=table.traitEvidence;
         const expected=injuryTableForTraits(proof,event.metadata.dice??[],injuryObservation?.outcome??"");
-        require(!!injuryObservation && injuryObservation.recordKind==="direct" && [0,1,9].includes(injuryObservation.sourceCode) && event.metadata.modifiers?.length===0 && event.metadata.modifiersSum===0 &&
-          proof.playerId===event.playerId && proof.teamId===event.teamId && proof.observedCheckpointAfter<=proof.currentCheckpointAfter &&
-          proof.prayersCheckpointAfter<=proof.currentCheckpointAfter && proof.currentCheckpointAfter<injuryObservation.damageStepSourceIndex &&
-          !!expected && table.stunty===expected.stunty && table.thickSkull===expected.thickSkull &&
+        require(!!injuryObservation &&
+          isInitialInjuryObservation(event) &&
+          [0,1,9].includes(injuryObservation.sourceCode) &&
+          event.metadata.modifiers?.length === 0 &&
+          event.metadata.modifiersSum === 0 &&
+          proof.playerId===event.playerId &&
+          proof.teamId===event.teamId &&
+          proof.observedCheckpointAfter<=proof.currentCheckpointAfter &&
+          proof.prayersCheckpointAfter<=proof.currentCheckpointAfter &&
+          proof.currentCheckpointAfter<injuryObservation.damageStepSourceIndex &&
+          !!expected &&
+          table.stunty===expected.stunty &&
+          table.thickSkull===expected.thickSkull &&
           JSON.stringify(table.otherActionSkills)===JSON.stringify(expected.otherActionSkills) &&
-          table.counts.every((n,i)=>n===expected.counts[i]) && table.probabilities.every((n,i)=>near(n,expected.probabilities[i]!)),
-          "An injury table requires an owned current trait receipt before damage, no applied modifier, matching recorded outcome and exact fair 2D6 categorical probabilities; no treatment, availability or luck value is implied.");
+          table.counts.every((n,i)=>n===expected.counts[i]) &&
+          table.probabilities.every((n,i)=>near(n,expected.probabilities[i]!)), "An injury table requires an owned current trait receipt before damage, no applied modifier, matching recorded outcome and exact fair 2D6 categorical probabilities; no treatment, availability or luck value is implied.");
       }
       if(event.metadata.blockCrowd)
         require(validReportedBlockCrowd(event,sources,report.coverage.sourceRecordCount),"Crowd damage requires one direct defender push, ordered removal/injury stages, confirmed off-pitch observation and no invented odds or armor.");

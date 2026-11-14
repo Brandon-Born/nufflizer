@@ -34,6 +34,7 @@ import {
 import { summarizeContextComponents } from "./contextComponents";
 import { findDamageSppNotices, attachDamageSppLinks } from "./damageSpp";
 import { attachInjuryObservations } from "./injuryObservation";
+import { findStaffInjuryOriginals } from "./staffInjuryOriginal";
 import { attachCasualtyObservations } from "./casualtyObservation";
 import { attachCategoricalInjuries } from "./categoricalInjury";
 import { findMightyBlowArmorUses } from "./armorModifierBudget";
@@ -1281,9 +1282,14 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   const normalizedByRaw = new Map<ReplayEvent, LuckEvent>();
   const questionCandidates: {turn:ReplayTurn;event:ReplayEvent;eventIndex:number;original:NumericQuestionOriginal}[]=[];
   const diceLinks: DiceLinks = new Map();
+  const staffInjuryOriginals = findStaffInjuryOriginals(replay, ownership);
   const observedRerollDice = findObservedRerollDice(replay);
   const armorModifierUses = findMightyBlowArmorUses(replay, ownership);
-  const damageSppNotices = findDamageSppNotices(replay, ownership);
+  const damageSppNotices = findDamageSppNotices(
+    replay,
+    ownership,
+    staffInjuryOriginals
+  );
   const recoveryState = findRegenerationAftermath(replay, ownership);
   const recoveryReturns = findRegenerationReturns(replay, ownership, recoveryState.aftermath);
   const teamDiceIdentityByQuestion = new Map(
@@ -1778,6 +1784,15 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       replay.replayVersion,
       ownership
     );
+    for (const [index, record] of embeddedInjuries)
+      addDiceLink(
+        diceLinks,
+        replayTurn.events[index]?.id,
+        ["RollInfos","Dice"],
+        record.repeatedOriginalId,
+        ["Dice"],
+        "summary"
+      );
     // Keep the source offer/decline beside retained Pickup/Catch originals.
     // These are non-random receipts, not new dice or inferred counter values.
     for (const [index, link] of rerollLinks)
@@ -1993,7 +2008,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       e.metadata.sourceId ? [[e.metadata.sourceId, e] as const] : []
     )
   );
-  attachInjuryObservations(replay, ballSources);
+  attachInjuryObservations(replay, ballSources, staffInjuryOriginals);
   attachCasualtyObservations(replay, ballSources, ownership);
   attachDamageSppLinks(ballSources);
   attachInjuryTables(replay, ballSources, ownership);

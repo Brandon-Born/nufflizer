@@ -69,6 +69,14 @@ test("casualty originals, replacements and applied treatment stay distinct on de
   page
 }) => {
   const { report, errors } = await openReport(page, "demo3");
+  await page.getByLabel("Player ID or initial roster name").fill("13");
+  await page.getByLabel("Category", { exact: true }).selectOption("injury");
+  await page.getByLabel("Scoring status").selectOption("excluded");
+  const pendingInitial=row(page,"source-628");
+  await expect(pendingInitial).toHaveCount(1);
+  await expect(pendingInitial.locator("td").nth(3)).toHaveText("Unknown");
+  await expect(pendingInitial.locator("td").nth(5)).toHaveText("Not scored");
+  expect(report.events.find(e=>e.metadata.sourceId==="source-628")?.metadata.initialInjuryOriginal).toBeUndefined();
   await page.getByLabel("Player ID or initial roster name").fill("45");
   await page.getByLabel("Category", { exact: true }).selectOption("injury");
   await page.getByLabel("Scoring status").selectOption("excluded");
@@ -125,8 +133,8 @@ test("casualty originals, replacements and applied treatment stay distinct on de
   });
   await revealText(replacement.locator("td").nth(4));
   const saved = await exported(page);
-  expect(saved.schemaVersion).toBe("2.66");
-  expect(saved.modelVersion).toBe("dice-only-34");
+  expect(saved.schemaVersion).toBe("2.67");
+  expect(saved.modelVersion).toBe("dice-only-35");
   for (const id of ["source-2033", "source-2039", "source-2043"])
     expect(
       saved.events.find(

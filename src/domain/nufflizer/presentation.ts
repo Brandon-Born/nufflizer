@@ -95,10 +95,14 @@ export function formatContextComponentSum(
     : "No supported context components";
 }
 
-export function formatExpectedOutcome(event: LuckReport["events"][number]): string {
+export function formatExpectedOutcome(
+  event: LuckReport["events"][number]
+): string {
   if(event.metadata.recordedSpp)return "No new roll";
   if(event.metadata.apothecary)return "No new roll";
-  return (event.metadata.injuryScoring || event.metadata.blockScoring) ? "Categorical" : event.probabilitySuccess === null
+  return event.metadata.injuryScoring || event.metadata.blockScoring
+    ? "Categorical"
+    : event.probabilitySuccess === null
     ? "Unknown" : `${(event.probabilitySuccess * 100).toFixed(1)}%`;
 }
 
@@ -115,7 +119,8 @@ export function formatActualOutcome(
   }
   if(event.metadata.blockScoring)return `Offered balance ${event.metadata.blockScoring.observedValue>0?"+":""}${event.metadata.blockScoring.observedValue}`;
   if(event.metadata.block)return "Observed symbols";
-  if(event.metadata.injuryObservation) return `${recordedInjuryName(event.metadata.injuryObservation.outcome)} (recorded)`;
+  if (event.metadata.injuryObservation)
+    return `${recordedInjuryName(event.metadata.injuryObservation.outcome)} (${event.metadata.initialInjuryOriginal ? "initial" : "recorded"})`;
   if (event.actualSuccess === null) return "Unknown";
   return event.actualSuccess ? "Success" : "Fail";
 }
@@ -173,20 +178,29 @@ export function explainRegenerationAftermath(event:LuckReport["events"][number])
   return `After Regeneration ${event.actualSuccess ? "succeeded" : "failed"}, the first supported snapshot shows player ${event.playerId} off the pitch in ${a.observation.situationCode === 1 ? "reserves" : "the injured box"} (checkpoint after source ${a.checkpointAfter}). The earlier removal alone did not determine this recovery result. ${a.observation.canAct===null ? "The snapshot omits the action-availability flag; it stays unknown." : `The action-availability flag is recorded as ${a.observation.canAct}; an off-pitch flag does not establish a legal activation.`} ${a.observation.statusCode===null ? "The omitted status flag also stays unknown. " : ""}This does not prove immediate re-entry, a useful activation or final match availability. No extra luck score or contextual value is added.`;
 }
 
-export function explainInjuryObservation(event:LuckReport["events"][number]):string|null {
+export function explainInjuryObservation(
+  event: LuckReport["events"][number]
+): string | null {
   const observation=event.metadata.injuryObservation;
   if(!observation)return null;
   const table=explainInjuryTable(event);
   const scored=event.metadata.injuryScoring;
-  if(scored) return `The recorded injury result for player ${observation.subjectId} is ${recordedInjuryName(observation.outcome)}. The replay establishes an unmodified initial injury roll after ${scored.cause.kind === "block" ? "the applied block" : "the failed movement check"}.${scored.cause.kind === "block" && scored.cause.armorModifierBudget ? ` Mighty Blow's +1 was already spent on this damage action's armor roll (recorded use ${scored.cause.armorModifierBudget.useSourceId}); none remains for this injury. The earlier post-roll armor choice has no scored probability. This does not consume the skill for a different Block.` : ""} Compared with the same fair injury table, ${(scored.moreSevereChance*100).toFixed(1)}% of results are more severe, ${(scored.lessSevereChance*100).toFixed(1)}% less severe, and ${(scored.sameSeverityChance*100).toFixed(1)}% in the same tier. Raw injury luck is the more-severe chance minus the less-severe chance, weighted by ${event.explainability.weight}. Positive favors the injured player's team. Badly Hurt and a pending Casualty roll share one tier; later league damage is not priced. Treatment, recovery and match impact remain separate.${scored.sppSourceId?` Recorded SPP notification ${scored.sppSourceId} sits between this armor and injury roll; it adds no random draw, modifier or injury value.`:""}${scored.cause.kind==="block" && scored.cause.attackerTraitEvidence?explainInjuryOtherActions(scored.cause.attackerTraitEvidence,"Blocker"):""} ${table ?? ""}`;
-  return `The recorded injury result for player ${observation.subjectId} is ${recordedInjuryName(observation.outcome)}. This is a categorical observation, not a success or failure check. ${table ? "The separate table describes the original injury roll with no modifier. Modifier choice and treatment can change the applied result; their full policy and luck value are not established, so no luck contribution is assigned." : "Its odds depend on the applicable injury table, current traits and modifiers; those are not verified here, so no luck contribution is assigned."} This result does not establish final posture, removal, recovery or availability after treatment. Later mitigation and state observations remain separate evidence.${table ? ` ${table}` : ""}`;
+  const origin = event.metadata.initialInjuryOriginal
+    ? "The original injury dice are stored in a treatment question. Their total nine and the verified current Stunty profile establish initial Badly Hurt; treatment and resource use remain separate evidence. "
+    : observation.recordKind === "embedded_ko" && event.metadata.injuryTable
+      ? "These original injury dice are stored in a recovery question. This initial injury contribution is separate from later recovery or treatment. "
+      : "";
+  if (scored)
+    return `${origin}The recorded injury result for player ${observation.subjectId} is ${recordedInjuryName(observation.outcome)}. The replay establishes an unmodified initial injury roll after ${scored.cause.kind === "block" ? "the applied block" : "the failed movement check"}.${scored.cause.kind === "block" && scored.cause.armorModifierBudget ? ` Mighty Blow's +1 was already spent on this damage action's armor roll (recorded use ${scored.cause.armorModifierBudget.useSourceId}); none remains for this injury. The earlier post-roll armor choice has no scored probability. This does not consume the skill for a different Block.` : ""} Compared with the same fair injury table, ${(scored.moreSevereChance*100).toFixed(1)}% of results are more severe, ${(scored.lessSevereChance*100).toFixed(1)}% less severe, and ${(scored.sameSeverityChance*100).toFixed(1)}% in the same tier. Raw injury luck is the more-severe chance minus the less-severe chance, weighted by ${event.explainability.weight}. Positive favors the injured player's team. Badly Hurt and a pending Casualty roll share one tier; later league damage is not priced. Treatment, recovery and match impact remain separate.${scored.sppSourceId?` Recorded SPP notification ${scored.sppSourceId} sits between this armor and injury roll; it adds no random draw, modifier or injury value.`:""}${scored.cause.kind==="block" && scored.cause.attackerTraitEvidence?explainInjuryOtherActions(scored.cause.attackerTraitEvidence,"Blocker"):""} ${table ?? ""}`;
+  return `${origin}The recorded injury result for player ${observation.subjectId} is ${recordedInjuryName(observation.outcome)}. This is a categorical observation, not a success or failure check. ${table ? "The separate table describes the original injury roll with no modifier. Modifier choice and treatment can change the applied result; their full policy and luck value are not established, so no luck contribution is assigned." : "Its odds depend on the applicable injury table, current traits and modifiers; those are not verified here, so no luck contribution is assigned."} This result does not establish final posture, removal, recovery or availability after treatment. Later mitigation and state observations remain separate evidence.${table ? ` ${table}` : ""}`;
 }
 
-export function explainInjuryTable(event:LuckReport["events"][number]):string|null {
+export function explainInjuryTable(event: LuckReport["events"][number]):string | null {
   const table=event.metadata.injuryTable;
   if(!table)return null;
   const names=["Stunned","KO","Badly Hurt","Casualty"];
-  const odds=table.counts.map((n,i)=>`${names[i]} ${n}/36 (${(100*n/36).toFixed(1)}%)`).join(", ");
+  const odds=table.counts.map((n,i)=>`${names[i]} ${n}/36 (${((100*n) /36).toFixed(1)}%)`)
+    .join(", ");
   return `Conditional unmodified injury table for player ${event.playerId}: ${table.stunty ? "Stunty" : "ordinary"}${table.thickSkull ? " with Thick Skull" : ""}; ${odds}. This enumerates 36 fair 2D6 results with no injury modifier, using complete traits observed at source ${table.traitEvidence.observedCheckpointAfter} and continued to checkpoint ${table.traitEvidence.currentCheckpointAfter}. It is conditional on reaching this injury roll, before treatment or recovery.${explainInjuryOtherActions(table.traitEvidence,"Subject")} ${event.metadata.injuryScoring ? "A separate source-qualified receipt establishes the unmodified initial-roll policy and its categorical dice contribution. It does not establish final availability or match impact." : "It does not certify modifier eligibility or the coach's actual policy, final availability, or match impact; no luck score is added."}`;
 }
 

@@ -5,7 +5,10 @@ import {
   type CurrentTraitEvidence
 } from "@/domain/replay/traitContinuity";
 import type { LuckEvent } from "./types";
-import { recordedInjuryName } from "./injuryObservation";
+import {
+  recordedInjuryName,
+  isInitialInjuryObservation
+} from "./injuryObservation";
 import {
   injuryOtherActionScope,
   isOtherActionInjurySkill
@@ -266,7 +269,7 @@ export function attachCategoricalInjuries(
         !injury ||
         !armor ||
         injury.scoringStatus !== "excluded" ||
-        observation.recordKind !== "direct" ||
+        !isInitialInjuryObservation(injury) ||
         observation.damageStepSourceIndex !== damage.sourceIndex ||
         injury.metadata.actionId !== damage.actionId ||
         (!armorUse && armor.scoringStatus !== "scored") ||
@@ -433,8 +436,7 @@ export function validReportedCategoricalInjury(
     !near(score.lessSevereChance, rank.lessSevereChance) ||
     !near(score.moreSevereChance, rank.moreSevereChance) ||
     !near(score.sameSeverityChance, rank.sameSeverityChance) ||
-    observation.recordKind !== "direct" ||
-    event.metadata.sourceTag !== "ResultInjuryRoll" ||
+    !isInitialInjuryObservation(event) ||
     !armor ||
     armor.type !== "armor_break" ||
     armor.teamId !== event.teamId ||

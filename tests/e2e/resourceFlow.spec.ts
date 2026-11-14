@@ -156,7 +156,7 @@ for (const c of [
     const saved = JSON.parse(
       readFileSync((await (await pending).path())!, "utf8")
     );
-    expect(saved.schemaVersion).toBe("2.66");
+    expect(saved.schemaVersion).toBe("2.67");
     expect(saved.rerollResources.flow).toEqual(flow);
     await page.getByRole("button", { name: "Reset filters" }).click();
     await expect(page.getByLabel("Scoring status")).toHaveValue("scored");

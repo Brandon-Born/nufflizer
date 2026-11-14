@@ -1,4 +1,7 @@
-import { ownerAt, type OwnershipLookup } from "@/domain/replay/ownershipTimeline";
+import {
+  ownerAt,
+  type OwnershipLookup
+} from "@/domain/replay/ownershipTimeline";
 import type { ReplayEvent } from "@/domain/replay/types";
 
 const USAGE = "QuestionApothecaryCasualtyUsage";
@@ -140,7 +143,7 @@ export function linkApothecary(
 ): Map<number, ApothecaryRecord> {
   const records = new Map<number, ApothecaryRecord>();
   let step: ReplayEvent | undefined;
-  const direct = new Map<string,string>();
+  const direct = new Map<string, string | undefined>();
   let pending:
     | {
         subject: string;
@@ -166,7 +169,7 @@ export function linkApothecary(
     )
       continue;
     const subject = subjectOf(event);
-    const owner = subject ? ownerAt(owners,subject,event) : undefined;
+    const owner = subject ? ownerAt(owners, subject, event) : undefined;
     const isStep = tag === "DamageStep";
     if (isStep) {
       if (
@@ -194,12 +197,18 @@ export function linkApothecary(
 
     if (tag === USAGE) {
       const roll = readRoll(payload?.RollInfos, event.damageSource);
-      const key = roll && JSON.stringify([rollKey(roll), roll.Outcome]);
+      // RollInfos repeats an original physical draw. Its serialized outcome
+      // can use the treatment namespace; identity does not depend on traits
+      // or on interpreting that outcome. Multiple matches stay ambiguous.
+      const key = roll && rollKey(roll);
       const repeatedOriginal = Boolean(
-        key && sameStep && owned && direct.has(key)
+        key && sameStep && owned && direct.get(key)
       );
-      records.set(index, { roll, repeatedOriginal,
-        repeatedOriginalSourceId: key ? direct.get(key) : undefined });
+      records.set(index, {
+        roll,
+        repeatedOriginal,
+        repeatedOriginalSourceId: repeatedOriginal && key ? direct.get(key) : undefined
+      });
       pending = undefined;
       const source = event.damageSource;
       if (
@@ -232,9 +241,15 @@ export function linkApothecary(
       const copied = readRoll(payload?.OriginalRoll, event.damageSource, true);
       // Copy identity is separate from chooser/resource validity. A wrong
       // chooser invalidates treatment, but cannot make OriginalRoll fresh dice.
-      if (pending && !pending.replacement && !pending.removal && copied &&
-          event.actionId && event.actionId !== pending.lastActionId &&
-          rollKey(copied) === rollKey(pending.original))
+      if (
+        pending &&
+        !pending.replacement &&
+        !pending.removal &&
+        copied &&
+        event.actionId &&
+        event.actionId !== pending.lastActionId &&
+        rollKey(copied) === rollKey(pending.original)
+      )
         records.get(index)!.copiedOriginalSourceId = pending.originalSourceId;
       if (
         !pending ||
@@ -312,8 +327,10 @@ export function linkApothecary(
       owned
     ) {
       const roll = readRoll(payload, event.damageSource);
-      if (roll) direct.set(JSON.stringify([rollKey(roll), roll.Outcome]),
-          event.id ?? "");
+      if (roll) {
+        const key = rollKey(roll);
+        direct.set(key, direct.has(key) ? undefined : event.id);
+      }
     }
   }
   return records;

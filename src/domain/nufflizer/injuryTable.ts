@@ -5,7 +5,11 @@ import {
   type CurrentTraitEvidence
 } from "@/domain/replay/traitContinuity";
 import type { LuckEvent } from "./types";
-import { injuryOtherActionScope, isOtherActionInjurySkill } from "./injurySkillScope";
+import {
+  injuryOtherActionScope,
+  isOtherActionInjurySkill
+} from "./injurySkillScope";
+import { koInjuryRoll } from "./initialInjurySources";
 
 export const INJURY_OUTCOMES = [
   "stunned",
@@ -69,7 +73,9 @@ export function injuryTableForTraits(
     [t.innateSkills, t.acquiredSkills].some(
       (a) => new Set(a).size !== a.length
     ) ||
-    [...t.innateSkills, ...t.acquiredSkills].some((s) => !supported.has(s) && !isOtherActionInjurySkill(s)) ||
+    [...t.innateSkills, ...t.acquiredSkills].some(
+      (s) => !supported.has(s) && !isOtherActionInjurySkill(s)
+    ) ||
     dice.length !== 2 ||
     dice.some((d) => !Number.isInteger(d) || d < 1 || d > 6)
   )
@@ -88,7 +94,9 @@ export function injuryTableForTraits(
     stunty,
     thickSkull,
     traitEvidence,
-    ...(injuryOtherActionScope(traitEvidence) ? {otherActionSkills:injuryOtherActionScope(traitEvidence)} : {}),
+    ...(injuryOtherActionScope(traitEvidence)
+      ? { otherActionSkills: injuryOtherActionScope(traitEvidence) }
+      : {}),
     ...enumerateUnmodifiedInjury(stunty, thickSkull)
   };
 }
@@ -96,24 +104,27 @@ export function injuryTableForTraits(
 export function attachInjuryTables(
   replay: ReplayModel,
   sources: ReadonlyMap<string, LuckEvent>,
-  owners?:OwnershipTimeline
+  owners?: OwnershipTimeline
 ) {
   const raw = new Map(
     replay.turns.flatMap((t) => t.events).map((e) => [e.id, e])
   );
   const subjects = new Map(
     [...sources].flatMap(([id, event]) =>
-      event.metadata.injuryObservation?.recordKind === "direct" &&
+      (event.metadata.injuryObservation?.recordKind === "direct" ||
+        event.metadata.injuryObservation?.recordKind === "embedded_ko") &&
       event.metadata.modifiers?.length === 0 &&
       event.metadata.modifiersSum === 0 &&
       event.playerId &&
-      raw.get(id)?.payload?.Modifiers === "" &&
+      (event.metadata.injuryObservation?.recordKind === "direct"
+        ? raw.get(id)?.payload?.Modifiers === ""
+        : !!raw.get(id) && !!koInjuryRoll(raw.get(id)!)) &&
       [0, 1, 9].includes(event.metadata.injuryObservation.sourceCode)
         ? [[id, event.playerId] as const]
         : []
     )
   );
-  const evidence = findSubjectTraitEvidence(replay, subjects,owners);
+  const evidence = findSubjectTraitEvidence(replay, subjects, owners);
   for (const [id, traits] of evidence) {
     const event = sources.get(id)!;
     if (
