@@ -107,7 +107,8 @@ describe("source-qualified direct defender crowd damage", () => {
     expect(p.metadata.blockResolution).toMatchObject({
       damageActionIds: [c.damageActionId],
       unscoredDamageRolls: 1,
-      diceByTeam: { "0": p.weightedDelta }
+      unscoredPool:true,
+      diceByTeam: {}
     });
     expect(source(c.initialRemovalSourceId).metadata.crowdRemoval).toEqual({
       reason: 1,
@@ -148,9 +149,8 @@ describe("source-qualified direct defender crowd damage", () => {
       expect(
         p.metadata.blockResolution!.diceByTeam[c.subjectTeamId]
       ).toBeUndefined();
-      expect(p.metadata.blockResolution!.diceByTeam[p.teamId]).toBe(
-        p.weightedDelta
-      );
+      expect(p.metadata.blockResolution!.unscoredPool).toBe(true);
+      expect(p.metadata.blockResolution!.diceByTeam[p.teamId]).toBeUndefined();
       expect(r.verdict.luckierTeam).toBe("unknown");
     }
   );

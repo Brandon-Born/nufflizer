@@ -179,7 +179,6 @@ export function attachBlockPush(
       block = pool?.metadata.block;
     if (
       !pool ||
-      pool.scoringStatus !== "scored" ||
       !block ||
       !["push", "defender_pushed_down"].includes(fact.outcome)
     )
@@ -517,7 +516,6 @@ export function validReportedBlockPush(
   if (
     !m ||
     !block ||
-    pool.scoringStatus !== "scored" ||
     !["push", "defender_pushed_down"].includes(
       pool.metadata.blockResolution?.outcome ?? ""
     )

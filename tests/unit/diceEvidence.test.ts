@@ -1,5 +1,7 @@
 import { summarizeDamageSteps } from "@/domain/nufflizer/damageSteps";
 import { summarizeBlockConsequence } from "@/domain/nufflizer/blockConsequences";
+import {BLOCK_FACES,explainBlockEvidence} from "@/domain/nufflizer/blockPools";
+import {LuckEventMetadataSchema} from "@/domain/nufflizer/reportSchema";
 import { summarizeMovementFall } from "@/domain/nufflizer/movementConsequences";
 import { beforeAll, describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
@@ -122,6 +124,27 @@ const oldProjection = (r: LuckReport, file: string) => {
   // 110 XML-prefix arithmetic joins require the current actual-draw scores.
   const legacyEvents=r.events.map(e=>{
     const copy=structuredClone(e);
+    // This frozen receipt used the former raw-symbol metric. Reconstruct only
+    // that declared historical calculation, from the unchanged source pool.
+    // Current skill-conditioned values have separate exact prefix/oracle tests.
+    if(copy.metadata.block) {
+      const b=copy.metadata.block,p=b.distribution[3]!+b.distribution[4]!,success=b.rankedSymbol>=3;
+      copy.probabilitySuccess=p;copy.actualSuccess=success;
+      copy.delta=Number(success)-p;copy.weightedDelta=copy.delta*copy.explainability.weight;
+      copy.scoringStatus="scored";
+      copy.label=`Block pool: ${BLOCK_FACES[b.rankedSymbol]} opportunity`;
+      copy.statusReason="verified block pool; six-sided block dice with two Push faces; raw symbol opportunity, independent of coach choice and applied skills";
+      copy.tags=[];if(success&&p<=0.3)copy.tags.push("blessed");if(!success&&p>=0.7)copy.tags.push("shaftaroonie");
+      copy.metadata.probabilityPolicy="block_pool";delete copy.metadata.blockScoring;
+      copy.explainability.target="Defender Stumbles or Defender Down under the raw symbol order";
+      copy.explainability.baseOdds=p;copy.explainability.rerollAdjustedOdds=p;
+      copy.explainability.formulaSummary=`weighted delta = (${success?1:0} - ${p.toFixed(3)}) x ${copy.explainability.weight.toFixed(2)} = ${copy.weightedDelta.toFixed(3)}`;
+      copy.explainability.inputsSummary=explainBlockEvidence(b).replace("These observed symbols and choices are separate from a qualified skill-conditioned luck score.","The score measures raw symbols before skills and the coach's choice.");
+      // Canonical field order is part of this historical JSON fingerprint.
+      copy.metadata=LuckEventMetadataSchema.parse(copy.metadata);
+      const x=copy.explainability;
+      copy.explainability={target:x.target,baseOdds:p,rerollAdjustedOdds:p,weight:x.weight,formulaSummary:x.formulaSummary,inputsSummary:x.inputsSummary};
+    }
     if(e.metadata.rerollDraws){
       copy.delta=Number(e.actualSuccess)-e.probabilitySuccess!;
       copy.weightedDelta=copy.delta*e.explainability.weight;
@@ -143,6 +166,7 @@ const oldProjection = (r: LuckReport, file: string) => {
     events = legacyEvents.filter((e) => ids.has(e.metadata.sourceId!)).map(e=>{
       const copy=structuredClone(e);
       if(copy.metadata.blockResolution) Object.assign(copy.metadata.blockResolution,summarizeBlockConsequence(copy,priorDamage.filter(step=>copy.metadata.blockResolution!.damageActionIds.includes(step.actionId))));
+      if(copy.metadata.blockResolution)delete (copy.metadata.blockResolution as unknown as Record<string,unknown>).unscoredPool;
       // Only the versioned pre-roll context fields changed by committed-Block
       // state are projected back. Their current semantics and exact footprint
       // have independent source/availability tests; no frozen SHA is reset.

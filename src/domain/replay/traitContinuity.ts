@@ -72,15 +72,9 @@ function visitCurrentTraits(
   const ledger = new Map<string, CurrentTraitEvidence>();
   const emptyPrayers = new Map<number, number>();
   const checkpoints = replay.boardCheckpoints ?? [];
-  if (
-    checkpoints.some(
-      (c, i) =>
-        i > 0 && c.afterSourceIndex <= checkpoints[i - 1]!.afterSourceIndex
-    )
-  )
-    return;
   let cursor = 0,
     current: ReplayBoardCheckpoint | undefined,
+    previousCheckpoint: ReplayBoardCheckpoint | undefined,
     previousIndex = -1;
   function observe(cp: ReplayBoardCheckpoint) {
     const board = cp.board,
@@ -208,6 +202,19 @@ function visitCurrentTraits(
         checkpoints[cursor]!.afterSourceIndex < index
       ) {
         current = checkpoints[cursor++]!;
+        const previous = previousCheckpoint;
+        previousCheckpoint = current;
+        // A malformed later refresh cannot erase an already recorded prefix.
+        // At that refresh, invalidate continuity rather than borrowing it.
+        if (previous && (
+          current.afterSourceIndex < previous.afterSourceIndex ||
+          (current.afterSourceIndex === previous.afterSourceIndex &&
+            !orderedSameIndexCheckpoints(previous, current))
+        )) {
+          ledger.clear();
+          emptyPrayers.clear();
+          continue;
+        }
         observe(current);
       }
       visit(event, current, ledger);
@@ -229,6 +236,20 @@ function visitCurrentTraits(
         emptyPrayers.clear();
       }
     }
+}
+
+// Several boards can precede the next emitted event. Their physical XML
+// locations establish refresh order even when the event coordinate is equal.
+// Equal or missing physical locations never establish a continuation.
+function orderedSameIndexCheckpoints(a: ReplayBoardCheckpoint, b: ReplayBoardCheckpoint) {
+  const located = (c: ReplayBoardCheckpoint) =>
+    c.kind === "board" && Number.isSafeInteger(c.replayStep) &&
+    c.replayStep! > 0 && Number.isSafeInteger(c.childIndex) && c.childIndex! >= 0;
+  if (!located(b)) return false;
+  if (a.kind === "initial")
+    return a.replayStep === null && a.childIndex === null && a.afterSourceIndex === 0;
+  return located(a) && (b.replayStep! > a.replayStep! ||
+    (b.replayStep === a.replayStep && b.childIndex! > a.childIndex!));
 }
 
 export function findBlockTraitEvidence(replay: ReplayModel,owners?:OwnershipTimeline) {

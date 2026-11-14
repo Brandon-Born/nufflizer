@@ -23,6 +23,7 @@ import {
   type BlockCommitment
 } from "@/domain/replay/blockActivationEnds";
 import { enumerateSkillBlock } from "./blockSkillModel";
+import { applyCategoricalBlockScore } from "./categoricalBlock";
 import { findKeptDodgeContexts, attachKeptDodgeMoves } from "./keptDodgeMoves";
 import {
   findRetainedRushContexts,
@@ -1871,6 +1872,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
           traitEvidence
         );
       }
+      applyCategoricalBlockScore(normalized);
       if (
         normalized.teamId !== "unresolved" &&
         normalized.playerId &&
@@ -2602,7 +2604,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     contextModelVersion: CONTEXT_MODEL_VERSION,
     limitations: [
       "Supported source and dice policies are scoped to their evidence; unknown variants remain unscored.",
-      "Block scoring measures linked raw symbol pools; skill-adjusted resolution and unsupported damage variants are retained as evidence.",
+      "Block scoring uses source-qualified current-skill tables under a fixed knockdown-balance policy. Unverified pools retain symbols and observed outcomes without a point; optional choices, legal full-turn eligibility and tactical impact remain separate.",
       "Categorical injury luck scores a qualified initial unmodified table, separately from treatment, recovery and match impact.",
       "Context estimates require a reconciled board and a verified terminal roll policy. The mobility/possession scale is a heuristic, not calibrated match impact."
     ],

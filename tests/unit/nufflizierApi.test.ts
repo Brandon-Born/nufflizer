@@ -230,6 +230,19 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(report.events.find(e=>e.metadata.sourceId==="source-3272")!.metadata.preRoll!.ordinaryMoveAvailability!.unknownPlayerIds).not.toContain("41");
     const skillPools=report.events.filter(e=>e.metadata.block?.skillModel);
     expect(skillPools.map(e=>e.metadata.sourceId)).toEqual(["source-98","source-132","source-367","source-386","source-409"]);
+    expect(report.schemaVersion).toBe("2.61");
+    expect(report.modelVersion).toBe("dice-only-31");
+    const positive=report.events.find(e=>e.metadata.sourceId==="source-98")!;
+    const negative=report.events.find(e=>e.metadata.sourceId==="source-132")!;
+    expect(positive.metadata.blockScoring).toMatchObject({policy:"fixed_pool_knockdown_balance",observedValue:1,expectedValue:19/36});
+    expect(positive.weightedDelta).toBeCloseTo(17/48,12);
+    expect(negative.weightedDelta).toBeCloseTo(-19/48,12);
+    for(const e of [positive,negative]) {
+      expect(e.scoringStatus).toBe("scored");expect(e.actualSuccess).toBeNull();expect(e.probabilitySuccess).toBeNull();
+    }
+    const unknownPool=report.events.find(e=>e.metadata.sourceId==="source-1324")!;
+    expect(unknownPool).toMatchObject({scoringStatus:"excluded",weightedDelta:0,actualSuccess:null,probabilitySuccess:null});
+    expect(unknownPool.metadata.blockResolution).toMatchObject({unscoredPool:true,unscoredDamageRolls:1});
     expect(report.events.find(e=>e.metadata.sourceId==="source-367")!.metadata.blockPush).toMatchObject({status:"modeled"});
     expect(report.events.find(e=>e.metadata.sourceId==="source-402")!.metadata.injuryTable?.traitEvidence).toMatchObject({observedCheckpointAfter:0});
     const injuryTableEvent=report.events.find(e=>e.metadata.sourceId==="source-110")!;

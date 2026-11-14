@@ -103,13 +103,15 @@ describe("applied odds policy is separate from resource eligibility", () => {
     (id) => {
       const report = analyzeNufflizerInput(counters(id));
       const pools = report.events.filter(
-        (e) => e.scoringStatus === "scored" && e.type === "block"
+        (e) => !!e.metadata.block
       );
       expect(pools.length).toBeGreaterThan(0);
       for (const pool of pools) {
-        expect(pool.metadata.probabilityPolicy).toBe("block_pool");
-        expect(pool.probabilitySuccess).toBeCloseTo(5 / 9, 12);
-        expect(pool.explainability.baseOdds).toBeCloseTo(5 / 9, 12);
+        expect(pool.scoringStatus).toBe("excluded");
+        expect(pool.metadata.probabilityPolicy).toBeUndefined();
+        expect(pool.probabilitySuccess).toBeNull();
+        expect(pool.explainability.baseOdds).toBeUndefined();
+        expect(pool.metadata.block!.distribution[3]!+pool.metadata.block!.distribution[4]!).toBeCloseTo(5/9,12);
       }
       const gate = report.events.find((e) => e.metadata.lonerGate)!;
       expect(gate.scoringStatus).toBe("excluded");

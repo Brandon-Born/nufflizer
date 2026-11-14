@@ -93,17 +93,17 @@ export function formatContextComponentSum(
 }
 
 export function formatExpectedOutcome(event: LuckReport["events"][number]): string {
-  return event.metadata.injuryScoring ? "Categorical" : event.probabilitySuccess === null
+  return (event.metadata.injuryScoring || event.metadata.blockScoring) ? "Categorical" : event.probabilitySuccess === null
     ? "Unknown" : `${(event.probabilitySuccess * 100).toFixed(1)}%`;
 }
 
 export function formatActualOutcome(
   event: LuckReport["events"][number]
 ): string {
+  if(event.metadata.blockScoring)return `Offered balance ${event.metadata.blockScoring.observedValue>0?"+":""}${event.metadata.blockScoring.observedValue}`;
+  if(event.metadata.block)return "Observed symbols";
   if(event.metadata.injuryObservation) return `${recordedInjuryName(event.metadata.injuryObservation.outcome)} (recorded)`;
   if (event.actualSuccess === null) return "Unknown";
-  if (event.metadata.block)
-    return event.actualSuccess ? "Raw target met" : "Raw target missed";
   return event.actualSuccess ? "Success" : "Fail";
 }
 
@@ -218,7 +218,7 @@ export function explainBlockPush(
       cyclic_chain: "a cyclic chain is outside the verified scope",
       branch_limit: "the full alternative tree exceeds the bounded model",
     };
-    return `Ordinary push alternatives not modeled: ${reasons[model.reason]}. The existing block dice score is separate; missing alternatives add no tactical value.`;
+    return `Ordinary push alternatives not modeled: ${reasons[model.reason]}. Block dice luck is assessed separately; missing alternatives add no tactical value.`;
   }
   if (model?.status === "modeled") {
     const selected = model.branches[model.selectedBranch]!,
@@ -274,7 +274,7 @@ export function explainOwnership(
         : q.basis === "confirmed_recruitment"
           ? `a recorded recruitment and its first qualified roster observation (${q.identitySourceId})`
           : `a current roster observation before this outcome`;
-  return `Ownership: ${role} player ${p.playerId ?? "unknown"} belongs to team ${p.teamId}, established by ${describe(p)}.${p.defender ? ` Defender player ${p.defender.playerId} belongs to opposing team ${p.defender.teamId}, established by ${describe(p.defender)}.` : ""}${event.metadata.block ? ` The ${event.metadata.block.pool.attackerChooses ? "attacker" : "defender"} controls this block choice; the dice score uses the attacker's perspective.` : p.role === "subject" ? " Damage and recovery use the affected player's team perspective." : ""} Ownership alone does not establish current skills, usable activations or tactical value.`;
+  return `Ownership: ${role} player ${p.playerId ?? "unknown"} belongs to team ${p.teamId}, established by ${describe(p)}.${p.defender ? ` Defender player ${p.defender.playerId} belongs to opposing team ${p.defender.teamId}, established by ${describe(p.defender)}.` : ""}${event.metadata.block ? ` The ${event.metadata.block.pool.attackerChooses ? "attacker" : "defender"} controls this block choice; any qualified dice score uses the attacker's perspective.` : p.role === "subject" ? " Damage and recovery use the affected player's team perspective." : ""} Ownership alone does not establish current skills, usable activations or tactical value.`;
 }
 
 export function formatPlayerObservation(
@@ -544,6 +544,7 @@ export function explainBlockResolution(
   );
   return [
     `Recorded block resolution: ${outcome}.`,
+    resolution.unscoredPool?"The block pool has no qualified luck value. The subtotal includes only other supported linked dice; it is not an even-luck result for the block.":null,
     event.metadata.blockCrowd
       ? `This block pushed defender ${event.metadata.blockCrowd.subjectId} from [${event.metadata.blockCrowd.from.x},${event.metadata.blockCrowd.from.y}] off pitch to [${event.metadata.blockCrowd.to.x},${event.metadata.blockCrowd.to.y}]. Two removal records are stages for that one player, not two injuries. The linked crowd injury has unknown odds; this verified prefix contains no armor roll. The confirming snapshot places the player off pitch; other recorded activity flags do not establish availability. Omitted posture remains unknown. This does not infer a team turnover, future return or tactical value.`
       : null,
@@ -641,14 +642,15 @@ export function explainBlockSkillModel(
   event: LuckReport["events"][number]
 ): string | null {
   const traits=event.metadata.block?.traitEvidence,model=event.metadata.block?.skillModel;
-  if (!traits) return null;
+  if(!event.metadata.block)return null;
+  if (!traits) return "The current skill/eligibility observations do not establish a block outcome table. Raw symbols and any applied outcome remain visible without a block luck point.";
   const source=`Intrinsic skill evidence for attacker ${traits.attacker.playerId} and defender ${traits.defender.playerId} continues from checkpoints ${traits.attacker.observedCheckpointAfter}/${traits.defender.observedCheckpointAfter} through current roster checkpoint ${traits.attacker.currentCheckpointAfter}. Raw missing fields remain unknown; effects, transformations, changed identity and unsupported transitions break continuity.`;
-  if(!model)return `${source} This skill combination has no accepted block outcome model. The displayed dice score remains the separate raw-symbol calculation.`;
+  if(!model)return `${source} This skill combination has no accepted block outcome model. The observed symbols remain visible without a block luck point.`;
   const relevant = (side: "attacker" | "defender") => {
     const skills=new Set([...(traits[side].traits.innateSkills ?? []),...(traits[side].traits.acquiredSkills ?? [])]);
     return (
       ([[30,"Block"],[side==="attacker"?57:7,side==="attacker"?"Tackle":"Dodge"],[68,"Wrestle"]] as const).filter(([id])=>skills.has(id)).map(([,name])=>name).join(", ") || "none"
     );
   };
-  return `${source} Continued intrinsic block skills: attacker ${relevant("attacker")}; defender ${relevant("defender")}. Single-pool model: both coaches choose by defender knockdowns minus attacker knockdowns, maximizing for the attacker and minimizing for the defender. Block prevents Both Down knockdowns; Dodge prevents Defender Stumbles unless Tackle applies. ${model.wrestlePolicy==="improve_knockdown_balance"?"Wrestle is used only when it improves the holder's knockdown balance; ties decline Wrestle.":"Wrestle is declined."} Under this fixed policy, the chance of a positive knockdown balance is ${(model.positiveChance*100).toFixed(1)}%; its expected balance is ${model.expectedValue.toFixed(3)} and the rolled pool offers ${model.poolValue}. This is a conditional model of the offered pool, not the coach's actual choice or tactical impact. Prone through Wrestle, pushes, position, ball, reroll resources and later damage are outside this component. It is not added to dice or context totals.`;
+  return `${source} Continued intrinsic block skills: attacker ${relevant("attacker")}; defender ${relevant("defender")}. Single-pool model: both coaches choose by defender knockdowns minus attacker knockdowns, maximizing for the attacker and minimizing for the defender. Block prevents Both Down knockdowns; Dodge prevents Defender Stumbles unless Tackle applies. ${model.wrestlePolicy==="improve_knockdown_balance"?"Wrestle is used only when it improves the holder's knockdown balance; ties decline Wrestle.":"Wrestle is declined."} Under this fixed policy, the chance of a positive knockdown balance is ${(model.positiveChance*100).toFixed(1)}%; its expected balance is ${model.expectedValue.toFixed(3)} and the rolled pool offers ${model.poolValue}. This is a conditional model of the offered pool, not the coach's actual choice or tactical impact. Prone through Wrestle, pushes, position, ball, reroll resources and later damage are outside this component. Its pool value minus the fair conditional mean is included once in dice totals; no contextual impact is inferred.`;
 }

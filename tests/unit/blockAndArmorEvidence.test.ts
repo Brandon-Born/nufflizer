@@ -96,7 +96,7 @@ describe("block pools and actual resolutions (NUF-010/013/014)", () => {
       );
       expect(pools).toHaveLength(1);
       expect(pools[0]).toMatchObject({
-        scoringStatus: "scored",
+        scoringStatus: "excluded",
         teamId,
         metadata: {
           block: {
@@ -107,7 +107,8 @@ describe("block pools and actual resolutions (NUF-010/013/014)", () => {
           }
         }
       });
-      expect(pools[0]!.probabilitySuccess).toBeCloseTo(chance, 12);
+      expect(pools[0]!.probabilitySuccess).toBeNull();
+      expect(pools[0]!.metadata.block!.distribution[3]!+pools[0]!.metadata.block!.distribution[4]!).toBeCloseTo(chance,12);
       expect(
         pools[0]!.metadata.block!.distribution.reduce((a, b) => a + b)
       ).toBeCloseTo(1, 12);
@@ -125,10 +126,11 @@ describe("block pools and actual resolutions (NUF-010/013/014)", () => {
     );
     expect(pools).toHaveLength(1);
     expect(pools[0]).toMatchObject({
-      actualSuccess: false,
+      actualSuccess: null,
       metadata: { block: { pool: { faces: [0, 0] }, finalOutcome: 0 } }
     });
-    expect(pools[0]!.probabilitySuccess).toBeCloseTo(5 / 9, 12);
+    expect(pools[0]!.probabilitySuccess).toBeNull();
+    expect(pools[0]!.metadata.block!.distribution[3]!+pools[0]!.metadata.block!.distribution[4]!).toBeCloseTo(5/9,12);
     expect(r.events.find((e) => e.metadata.rollType === 71)).toMatchObject({
       scoringStatus: "excluded",
       probabilitySuccess: null,
@@ -174,12 +176,12 @@ describe("block pools and actual resolutions (NUF-010/013/014)", () => {
   it("conditions Brawler's replacement odds on the unrolled Both Down", () => {
     const r = report("007", "UI-071", [7], [38]);
     const pools = r.events.filter(
-      (e) => e.type === "block" && e.scoringStatus === "scored"
+      (e) => !!e.metadata.block
     );
     expect(pools).toHaveLength(2);
     expect(pools[0]!.metadata.block!.pool.faces).toEqual([1, 1]);
     expect(pools[1]).toMatchObject({
-      actualSuccess: true,
+      actualSuccess: null,
       metadata: {
         block: {
           reroll: "brawler",
@@ -187,7 +189,7 @@ describe("block pools and actual resolutions (NUF-010/013/014)", () => {
         }
       }
     });
-    expect(pools[1]!.probabilitySuccess).toBeCloseTo(1 / 3, 12);
+    expect(pools[1]!.probabilitySuccess).toBeNull();
     expect(pools[1]!.metadata.block!.distribution).toEqual([
       0,
       1 / 3,
@@ -223,7 +225,7 @@ describe("block pools and actual resolutions (NUF-010/013/014)", () => {
     replay.turns[0]!.events = events;
     const r = analyzeReplayLuck(replay);
     const pool = r.events.find((e) => e.metadata.block);
-    expect(pool?.scoringStatus).toBe("scored");
+    expect(pool?.scoringStatus).toBe("excluded");
     expect(pool?.metadata.block?.finalOutcome).toBeUndefined();
     expect(pool?.metadata.block?.selectedFace).toBeUndefined();
     expect(
@@ -238,7 +240,8 @@ describe("block pools and actual resolutions (NUF-010/013/014)", () => {
     const pools = r.events.filter((e) => e.metadata.block);
     expect(pools).toHaveLength(2);
     expect(pools.map((e) => e.metadata.block!.pool.faces)).toEqual([[0], [2]]);
-    expect(pools.map((e) => e.probabilitySuccess)).toEqual([1 / 3, 1 / 3]);
+    expect(pools.map((e) => e.probabilitySuccess)).toEqual([null,null]);
+    expect(pools.map(e=>e.metadata.block!.distribution[3]!+e.metadata.block!.distribution[4]!)).toEqual([1/3,1/3]);
     expect(pools[1]!.metadata.block).toMatchObject({
       reroll: "pro",
       pool: { rolledIndexes: [0] },
@@ -256,7 +259,8 @@ describe("block pools and actual resolutions (NUF-010/013/014)", () => {
     expect(pools[1]!.explainability.inputsSummary).toContain(
       "applied result is unknown"
     );
-    expect(r.teams[1]!.luckScore).toBeCloseTo(-1 / 2, 12);
+    expect(r.teams[1]!.luckScore).toBe(0);
+    expect(r.verdict.luckierTeam).toBe("unknown");
     pools[1]!.metadata.block!.proGateSourceId = "missing-gate";
     expect(LuckReportSchema.safeParse(r).success).toBe(false);
   });

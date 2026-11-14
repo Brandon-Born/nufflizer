@@ -11,9 +11,9 @@ The app is one-shot and ephemeral: upload -> analyze -> read/download report.
 
 ## Current Status and Agent Backlog
 
-The November 2026 remediation adds bounded ingestion, terminating workers, patched dependencies, versioned partial reports, and full-evidence filters. Reports currently abstain from whole-match comparisons. Supported dice contributions include numeric movement and ball handling, raw linked block pools, and verified armor and post-casualty Regeneration from the affected team’s side. Some Dodge and Pickup events can also show a separate pre-roll context estimate. Injury and casualty distributions, referee outcomes, broader tactical state and whole-match comparisons still need evidence. Passing the suite does not establish unverified game-rule mappings.
+The November 2026 remediation adds bounded ingestion, terminating workers, patched dependencies, versioned partial reports, and full-evidence filters. Reports currently abstain from whole-match comparisons. Supported dice contributions include numeric movement and ball handling, source-qualified categorical block and initial-injury tables, verified armor and scoped recovery from the affected team’s side. Raw block symbols, choices and observed consequences remain visible when their luck cannot be qualified. Some Dodge and Pickup events show separate partial context components or ranges. Broader effective-skill and damage policies, referee outcomes, valid tactical successors, calibration and whole-match comparisons still need evidence. Passing the suite does not establish unverified game-rule mappings.
 
-Start remediation with [PROJECT_PLAN.md](docs/PROJECT_PLAN.md) and [REMEDIATION_BACKLOG.md](docs/REMEDIATION_BACKLOG.md). The backlog contains 28 permanent issue IDs with source locations, reproduction evidence, dependencies, and acceptance criteria. The operating guide is [AGENTS.md](AGENTS.md).
+Start remediation with [PROJECT_PLAN.md](docs/PROJECT_PLAN.md) and [REMEDIATION_BACKLOG.md](docs/REMEDIATION_BACKLOG.md). The backlog preserves the 28 original permanent issue IDs and adds NUF-029–032 follow-ups, with source locations, reproduction evidence, dependencies, and acceptance criteria. The operating guide is [AGENTS.md](AGENTS.md).
 
 ## MVP Interfaces
 

@@ -195,13 +195,15 @@ function formatTeamSummary(
         (event) =>
           `Player ${event.playerId ?? "unknown"}; source ${event.metadata.sourceId ?? event.id}: ${explainRerollCounter(event)}`
       ),
+    `Block pools: ${report.events.filter(e=>e.metadata.block).length} observed; ${report.events.filter(e=>e.metadata.blockScoring).length} have qualified categorical luck; ${report.events.filter(e=>e.metadata.block&&!e.metadata.blockScoring).length} have no qualified luck value. Raw symbols and applied outcomes are separate evidence.`,
     ...report.events
-      .filter((event) => event.metadata.block?.traitEvidence)
-      .slice(0, 20)
+      .filter((event) => event.metadata.blockScoring)
       .map(
         (event) =>
-          `Player ${event.playerId}; source ${event.metadata.sourceId}: ${explainBlockSkillModel(event)}`
+          `Player ${event.playerId}; source ${event.metadata.sourceId}: ${formatActualOutcome(event)}; fair conditional mean ${event.metadata.blockScoring!.expectedValue.toFixed(6)}; dice contribution ${formatDiceContribution(event.weightedDelta,1,6)}. ${explainBlockSkillModel(event)}`
       ),
+    ...report.events.filter(e=>e.metadata.block&&!e.metadata.blockScoring).slice(0,20)
+      .map(e=>`Player ${e.playerId}; source ${e.metadata.sourceId}: Observed symbols; Not scored. ${explainBlockSkillModel(e)}`),
     ...report.events
       .filter((event) => event.metadata.blockResolution)
       .slice(0, 20)

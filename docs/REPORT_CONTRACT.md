@@ -695,3 +695,39 @@ Each indexed choice belongs to exactly one interval between consecutive source c
 `observed_agreement` means only that the raw numerical decrease equals recorded uses within that observed scope. `observed_difference` retains a different known decrease. Neither certifies legal full-turn eligibility, a free or permanent pool, reset frequency, general remaining availability or tactical price. The flow adds no random outcome, score, context estimate or reconstructed action state. Existing dice-only-30/context41 semantics remain unchanged. CLI JSON uses compact serialization with the same values as HTTP; pretty-print expansion cannot escape the bounded representation. Full source snapshots/changes and raw end notifications are exported; paged UI inspection and complete CLI window summaries share the same validated model.
 
 An individual legacy counter receipt may retain `decisionBefore` only when a real later checkpoint refreshes the same count after an earlier choice/continuity boundary and before the current decision. The old offer receipt remains separate. A prior or next choice inside its effective source interval prevents individual after-counter reconciliation; removing a required refresh receipt invalidates the report. A question can carry both an independently qualified numeric first die and an observed counter offer. This preserves the first die's score/label without claiming replacement dice or counting the offer as another outcome.
+
+## Schema2.61 / dice-only-31: categorical block contributions
+
+This supersedes raw-symbol scoring in the historical dice-only-5/16 sections.
+`metadata.block` still preserves the raw pool, symbol distribution, chooser,
+selected face and applied result. Its binary success/probability are now null.
+Only an existing prefix-qualified current intrinsic-trait model admits
+`blockScoring={policy:fixed_pool_knockdown_balance,poolSourceId,observedValue,expectedValue}`
+and `probabilityPolicy=categorical_block`. Defender knockdowns minus attacker
+knockdowns is maximized for an attacker chooser and minimized for a defender;
+Wrestle improves its holder's balance and ties decline. Enumerate fresh indexes
+only, retaining known dice. Delta is offered balance minus the fair conditional
+mean; weight stays0.75. Observed selection cannot determine that expectation.
+This is a conditional dice component, not an assertion of legal full-turn
+eligibility, actual coach policy, ball/armor consequences or calibrated impact.
+
+Unverified tables keep raw symbols/roles/aftermath without a block luck point.
+`blockResolution.unscoredPool` is mandatory and agrees with the pool's status;
+subtotals include only qualified pool/damage contributions and cannot represent
+an unknown pool as even luck. Source-qualified ownership, push, crowd, ball
+release and counter receipts do not depend on whether dice luck is measurable.
+The schema recomputes table/arithmetic and rejects categorical binary odds,
+changed policy/value/source/weight, missing proof and unsupported rarity tags.
+Explicitly unavailable team rerolls cannot fund replacement dice. Equal-index
+trait refreshes require ordered physical locations; later invalid refreshes
+break continuity without retroactively invalidating known earlier prefixes.
+
+The shared timeline displays Categorical / Offered balance, or Observed symbols
+/ Not scored, with the raw/selected/applied evidence and partial-subtotal scope.
+CLI text prints every qualified pool's offered/expected value and contribution,
+with observed/qualified/unknown counts; JSON/API/UI share schema2.61. All848 raw
+questions and833 pools join independent source evidence. Fifteen tables now
+contribute;818 previously raw-symbol scores become unscored. All1,403 other
+scored event objects, observed consequences, resource flow and27 context ranges
+are retained; full-match verdicts still abstain. See
+[CATEGORICAL_BLOCK_SCORING_EVIDENCE.md](CATEGORICAL_BLOCK_SCORING_EVIDENCE.md).

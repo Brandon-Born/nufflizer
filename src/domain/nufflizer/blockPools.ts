@@ -139,7 +139,7 @@ export function explainBlockEvidence(block: BlockEvidence): string {
       : block.reroll === "loner"
         ? "The fresh full-pool distribution is conditional on the recorded Loner pass. The gate itself adds no score."
         : null,
-    "The score measures raw symbols before skills and the coach's choice."
+    "These observed symbols and choices are separate from a qualified skill-conditioned luck score."
   ]
     .filter(Boolean)
     .join(" ");
@@ -354,6 +354,7 @@ export function linkBlockPools(
     if (
       event.sourceTag === "ResultTeamRerollUsage" &&
       p?.Used === 1 &&
+      chain.teamOffered &&
       p.GamerId === chain.gamer
     ) {
       chain.choice = "team";

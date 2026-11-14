@@ -31,9 +31,7 @@ describe("observed skill-resolved blocks and subject damage", () => {
       const pool = r.events.find((e) => e.metadata.blockResolution)!;
       expect(pool, id).toBeDefined();
       expect(pool.metadata.blockResolution!.outcome).toBe(outcome);
-      expect(formatActualOutcome(pool)).toBe(
-        pool.actualSuccess ? "Raw target met" : "Raw target missed"
-      );
+      expect(formatActualOutcome(pool)).toBe("Observed symbols");
       const uses = pool.metadata.blockResolution!.skillSourceIds.map((id) =>
         r.events.find((e) => e.metadata.sourceId === id)!
       );

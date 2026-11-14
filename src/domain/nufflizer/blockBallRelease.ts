@@ -62,7 +62,7 @@ export function attachBlockBallReleases(
     const pool = sources.get(fact.poolSourceId),
       location = locations.get(fact.finalSourceId);
     const block = pool?.metadata.block;
-    if (!pool || pool.scoringStatus !== "scored" || !block || !location)
+    if (!pool || !block || !location)
       continue;
     const { events, index } = location,
       final = events[index]!;
@@ -234,7 +234,7 @@ export function validReportedBlockBallRelease(
   const release = pool.metadata.blockBallRelease,
     block = pool.metadata.block,
     resolution = pool.metadata.blockResolution;
-  if (!release || !block || !resolution || pool.scoringStatus !== "scored")
+  if (!release || !block || !resolution)
     return false;
   const prone =
     resolution.outcome === "wrestled_prone"

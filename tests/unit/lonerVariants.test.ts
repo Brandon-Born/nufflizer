@@ -23,7 +23,7 @@ describe("source-backed Loner3+ gates and conditional fresh block pools", () => 
       }
     });
     const pools = r.events.filter(
-      (e) => e.metadata.block && e.scoringStatus === "scored"
+      (e) => !!e.metadata.block
     );
     expect(pools).toHaveLength(2);
     expect(pools[1]!.metadata.block).toMatchObject({
@@ -31,7 +31,7 @@ describe("source-backed Loner3+ gates and conditional fresh block pools", () => 
       lonerGateSourceId: gate.metadata.sourceId,
       pool: { faces: [1, 2], rolledIndexes: [0, 1] }
     });
-    expect(pools[1]!.probabilitySuccess).toBeCloseTo(5 / 9, 12);
+    expect(pools[1]!.probabilitySuccess).toBeNull();
     expect(pools[1]!.metadata.block!.distribution).toEqual([
       1 / 36,
       3 / 36,
@@ -40,7 +40,8 @@ describe("source-backed Loner3+ gates and conditional fresh block pools", () => 
       11 / 36
     ]);
 
-    expect(pools[1]!.weightedDelta).toBeCloseTo(-5 / 12, 12);
+    expect(pools[1]!.weightedDelta).toBe(0);
+    expect(pools[1]!.scoringStatus).toBe("excluded");
   });
   it("keeps a failed3+ gate's repeated pool out of fresh randomness", () => {
     const r = report("loner3_block_fail");
@@ -54,7 +55,7 @@ describe("source-backed Loner3+ gates and conditional fresh block pools", () => 
       }
     });
     expect(
-      r.events.filter((e) => e.metadata.block && e.scoringStatus === "scored")
+      r.events.filter((e) => !!e.metadata.block)
     ).toHaveLength(1);
     expect(r.events.some((e) => e.metadata.block?.reroll === "loner")).toBe(
       false
@@ -67,8 +68,9 @@ describe("source-backed Loner3+ gates and conditional fresh block pools", () => 
     ]);
     const pool = r.events.find((e) => e.metadata.block?.reroll === "loner")!;
     expect(pool.metadata.block?.pool.faces).toEqual([4, 0]);
-    expect(pool.probabilitySuccess).toBeCloseTo(5 / 9, 12);
-    expect(pool.weightedDelta).toBeCloseTo(1 / 3, 12);
+    expect(pool.probabilitySuccess).toBeNull();
+    expect(pool.metadata.block!.distribution[3]!+pool.metadata.block!.distribution[4]!).toBeCloseTo(5/9,12);
+    expect(pool.weightedDelta).toBe(0);
   });
   it("applies the same terminal original policy after the observed failed3+ mental gate", () => {
     const r = report("loner3_mental_fail");

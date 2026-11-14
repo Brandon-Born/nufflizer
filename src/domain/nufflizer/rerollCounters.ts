@@ -336,8 +336,7 @@ export function attachRerollCounterEvidence(
       decision.playerId !== question.playerId ||
       decision.scoringStatus !== "excluded" ||
       (question.metadata.sourceTag === "QuestionBlockDice" &&
-        (question.scoringStatus !== "scored" ||
-          !question.metadata.block?.pool.attackerChooses ||
+        (!question.metadata.block?.pool.attackerChooses ||
           question.metadata.block.chooserTeamId !== decision.teamId))
     )
       continue;

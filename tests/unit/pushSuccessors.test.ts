@@ -545,7 +545,7 @@ describe("source-qualified ordinary push decision model", () => {
     "root_tackle_zone",
     "missing_player"
   ])(
-    "withholds the model for %s without changing the original block dice score",
+    "withholds push alternatives for %s while keeping the earlier pool and its independent skill-policy scope",
     (kind) => {
       const r = replay(),
         es = r.turns.flatMap((t) => t.events),
@@ -604,8 +604,14 @@ describe("source-qualified ordinary push decision model", () => {
       const report = checked(r),
         e = report.events.find((e) => e.metadata.sourceId === "source-98")!;
       expect(e.metadata.blockPush?.status).toBe("unsupported");
-      expect(e.scoringStatus).toBe("scored");
-      expect(e.probabilitySuccess).toBeCloseTo(5 / 9, 12);
+      expect(e.metadata.block!.pool).toEqual(sourceReport().events.find(x=>x.metadata.sourceId==="source-98")!.metadata.block!.pool);
+      expect(e.probabilitySuccess).toBeNull();
+      if(kind==="unknown_skill") {
+        expect(e.scoringStatus).toBe("excluded");expect(e.weightedDelta).toBe(0);
+      } else {
+        expect(e.scoringStatus).toBe("scored");
+        expect(e.delta).toBeCloseTo(17/36,12);
+      }
     }
   );
   it("unexpected dice in a push menu remain an unscored random candidate", () => {

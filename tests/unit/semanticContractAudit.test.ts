@@ -281,14 +281,19 @@ describe("NUF-009 reproducible mapping and namespace acceptance", () => {
           (e) =>
             e.metadata.sourceTag === p[4] &&
             e.metadata.rollType === p[5] &&
-            e.scoringStatus === "scored"
+            (e.scoringStatus === "scored" || !!e.metadata.block)
         )!;
       expect(e).toMatchObject({
         type: p[6],
         teamId: p[7],
-        scoringStatus: "scored"
+        scoringStatus: e.metadata.block?"excluded":"scored"
       });
-      expect(e.probabilitySuccess).toBeCloseTo(p[8], 12);
+      if(e.metadata.block) {
+        // This identity-only fragment has no current skill table. The mapping
+        // and raw symbol sampler remain verified, without a fabricated point.
+        expect(e.probabilitySuccess).toBeNull();
+        expect(e.metadata.block.distribution[3]!+e.metadata.block.distribution[4]!).toBeCloseTo(p[8],12);
+      } else expect(e.probabilitySuccess).toBeCloseTo(p[8], 12);
     }
   );
   it.each(probes)("withholds %s %s after changing the rule version", (...p) => {

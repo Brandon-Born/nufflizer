@@ -97,8 +97,7 @@ export function attachBlockCrowd(
     const pool = sources.get(fact.poolSourceId),
       final = raw.get(fact.finalSourceId);
     if (
-      pool?.scoringStatus !== "scored" ||
-      !pool.metadata.block ||
+      !pool?.metadata.block ||
       !final ||
       !["push", "defender_pushed_down"].includes(fact.outcome)
     )
@@ -392,7 +391,6 @@ export function validReportedBlockCrowd(
     !c ||
     !b ||
     !r ||
-    pool.scoringStatus !== "scored" ||
     c.subjectId !== b.defenderId ||
     c.subjectTeamId !== b.defenderTeamId ||
     c.subjectTeamId === pool.teamId ||

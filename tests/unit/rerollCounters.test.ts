@@ -402,7 +402,7 @@ describe("attacker-selected Block counter offers preserve pool randomness and co
         (e) => e.metadata.sourceId === p.questionSourceId
       )!;
       expect(original).toMatchObject({
-        scoringStatus: "scored",
+        scoringStatus: "excluded",
         metadata: {
           sourceTag: "QuestionBlockDice",
           isRollCandidate: true,
@@ -418,11 +418,14 @@ describe("attacker-selected Block counter offers preserve pool randomness and co
         }
       });
       const fresh = r.events.filter(
-        (e) => e.metadata.block && e.scoringStatus === "scored"
+        (e) => !!e.metadata.block
       );
       expect(fresh).toHaveLength(pools);
-      for (const e of fresh)
-        expect(e.probabilitySuccess).toBeCloseTo(5 / 9, 12);
+      for (const e of fresh) {
+        expect(e.probabilitySuccess).toBeNull();
+        expect(e.weightedDelta).toBe(0);
+        expect(e.metadata.block!.distribution[3]!+e.metadata.block!.distribution[4]!).toBeCloseTo(5/9,12);
+      }
       expect(
         r.events.find((e) => e.metadata.lonerGate)?.metadata.lonerGate?.passed
       ).toBe(passed);

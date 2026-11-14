@@ -6,6 +6,7 @@ import { validReportedNumericQuestionOriginal,validReportedNumericQuestionCopy }
 import { isFixedNumericModifier } from "./numericCheckContract";
 import { summarizeDiceRecords } from "./diceEvidence";
 import { enumerateSkillBlock } from "./blockSkillModel";
+import { validReportedCategoricalBlock } from "./categoricalBlock";
 import {
   contextComponent,
   summarizeContextComponents,
@@ -228,6 +229,7 @@ export const LuckEventMetadataSchema = z.strictObject({
     from:pitchCell,to:pitchCell,movementBefore:z.number().int().min(1).max(16).nullable(),
     movementAfter:z.number().int().min(0).max(15).nullable(),carriesBall:z.boolean().nullable(),checkpointAfter:count}).optional(),
   blockSelection:z.strictObject({face:z.number().int().min(0).max(4)}).optional(),
+  blockScoring:z.strictObject({policy:z.literal("fixed_pool_knockdown_balance"),poolSourceId:text,observedValue:z.union([z.literal(-1),z.literal(0),z.literal(1)]),expectedValue:finite.min(-1).max(1)}).optional(),
   injuryScoring: z.strictObject({
     policy: z.literal("injury_table_order"), armorSourceId: text,
     cause: z.discriminatedUnion("kind", [
@@ -254,7 +256,7 @@ export const LuckEventMetadataSchema = z.strictObject({
   blockResolution: z.strictObject({
     outcome:z.enum(["attacker_down","both_down","wrestled_prone","both_stay_up","push","defender_down","defender_pushed_down"]),
     skillSourceIds:z.array(text).max(4),damageActionIds:z.array(text).max(2),
-    diceByTeam:z.record(text,finite),unscoredDamageRolls:count
+    diceByTeam:z.record(text,finite),unscoredDamageRolls:count,unscoredPool:z.boolean()
   }).optional(),
   setupPhase: z.strictObject({code:z.literal(3)}).optional(),
   driveEffectExpiry: z.strictObject({playerId:text,teamId:text,providerSkillId:z.union([z.literal(31),z.literal(51)]),phaseSourceId:text,
@@ -577,7 +579,7 @@ export const LuckEventMetadataSchema = z.strictObject({
   fixedNumericModifiers:z.array(z.strictObject({playerId:z.number().int().min(-1),modifierType:count,skillId:z.number().int().min(-1),effectId:z.literal(-1),value:finite})).max(64).optional(),
   modifiers: numbers.optional(),
   modifiersSum: finite.optional(),
-  probabilityPolicy: z.enum(["single_attempt", "two_attempt", "block_pool", "categorical_injury", "gated_retry_access"]).optional(),
+  probabilityPolicy: z.enum(["single_attempt", "two_attempt", "block_pool", "categorical_injury", "categorical_block", "gated_retry_access"]).optional(),
   rerollUsed: z.boolean().optional(),
   skillsUsed: numbers.optional(),
   normalizationFlags: z.array(text).max(REPLAY_LIMITS.events).optional(),
@@ -1475,7 +1477,8 @@ export const LuckReportSchema = z
         "Scored outcomes need source-qualified actor/subject ownership and opposing block roles; a time-local conflict or pending identity cannot contribute favorable luck.");
       const base = event.explainability.baseOdds;
       require(validReportedCategoricalInjury(event,sources), "Categorical injury scoring needs a qualified unmodified damage cause, current modifier policy, exact injury-tier probabilities and zero-mean subject-perspective deviation.");
-      if (event.scoringStatus === "scored" && policy !== "categorical_injury") {
+      require(validReportedCategoricalBlock(event), "Block luck requires one prefix-qualified current-trait table and the fresh-pool innovation under its stated choice policy; unverified pools retain source evidence without a point.");
+      if (event.scoringStatus === "scored" && policy !== "categorical_injury" && policy !== "categorical_block") {
         require(
           policy !== undefined && base !== undefined &&
             event.probabilitySuccess !== null &&
@@ -1883,7 +1886,7 @@ export const LuckReportSchema = z
         require(((event.metadata.sourceTag === "QuestionTeamRerollUsage" &&
           ((event.scoringStatus === "excluded" && event.metadata.isRollCandidate === false) ||
             (event.scoringStatus === "scored" && event.metadata.isRollCandidate === true && !!event.metadata.numericOriginal))) ||
-          (event.metadata.sourceTag === "QuestionBlockDice" && event.scoringStatus === "scored" && event.metadata.isRollCandidate === true && event.metadata.rollType === 3 &&
+          (event.metadata.sourceTag === "QuestionBlockDice" && event.metadata.isRollCandidate === true && event.metadata.rollType === 3 &&
             event.metadata.block?.pool.attackerChooses === true && event.metadata.block.attackerId === event.playerId && event.metadata.block.chooserTeamId === event.teamId && event.metadata.block.chooserGamerId === event.metadata.rerollOffer.gamerId)) &&
           ((sources.get(event.metadata.rerollOffer.decisionSourceId)?.metadata.teamRerollCounter?.questionSourceId === event.metadata.sourceId && counterQuestions.has(event.metadata.sourceId ?? "")) ||
             (event.metadata.sourceTag==="QuestionTeamRerollUsage" && numericTeamOffers.get(event.metadata.sourceId)?.metadata.rerollDecisionId===event.metadata.rerollOffer.decisionSourceId)),
@@ -2512,7 +2515,7 @@ export const LuckReportSchema = z
             ), "Block damage must retain the knocked-down subject, adjacent block-source damage step and original team perspective.");
           for (const step of linked) linkedDamageActions.add(step.actionId);
           const expected = summarizeBlockConsequence(event,linked);
-          require(blockAftermath.unscoredDamageRolls === expected.unscoredDamageRolls &&
+          require(blockAftermath.unscoredDamageRolls === expected.unscoredDamageRolls && blockAftermath.unscoredPool===expected.unscoredPool &&
             Object.keys(blockAftermath.diceByTeam).length === Object.keys(expected.diceByTeam).length &&
             Object.entries(expected.diceByTeam).every(([team,total])=>near(blockAftermath.diceByTeam[team] ?? NaN,total)),
             "Block subtotals reference the terminal pool and existing damage contributions once per team.");
@@ -2661,15 +2664,8 @@ export const LuckReportSchema = z
             (gate.metadata.sourceIndex ?? Infinity) < (event.metadata.sourceIndex ?? -1),
             "A conditional Loner pool requires the passed gate, prior pool and newly rolled full pool in order.");
         } else require(!block.lonerGateSourceId, "Only a conditional Loner pool can claim a Loner gate.");
-        if (event.scoringStatus === "scored")
-          require(event.probabilitySuccess !== null &&
-            near(
-              event.probabilitySuccess,
-              block.distribution[3]! + block.distribution[4]!
-            ) &&
-            event.actualSuccess ===
-              block.rankedSymbol >=
-                3, "Block chance and outcome must agree with the raw symbol contract.");
+        require(event.probabilitySuccess===null&&event.actualSuccess===null,
+          "Raw block symbols are separate from a categorical skill/choice policy, not a binary success check.");
       }
       if (damage) {
         require(event.type ===
@@ -2841,7 +2837,7 @@ export const LuckReportSchema = z
         require(teamIds.has(event.teamId) &&
           event.metadata.isRollCandidate ===
             true, "Scored outcomes require a known team and random-outcome evidence.");
-        require((event.metadata.injuryScoring || (event.probabilitySuccess !== null && event.actualSuccess !== null)) &&
+        require((event.metadata.injuryScoring || event.metadata.blockScoring || (event.probabilitySuccess !== null && event.actualSuccess !== null)) &&
           Boolean(event.explainability.formulaSummary), "Scored outcomes require verified binary or categorical odds, observed result and calculation.");
         if (event.probabilitySuccess !== null && event.actualSuccess !== null)
           require(near(

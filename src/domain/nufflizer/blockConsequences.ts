@@ -23,6 +23,7 @@ export type BlockResolution = {
   damageActionIds: string[];
   diceByTeam: Record<string, number>;
   unscoredDamageRolls: number;
+  unscoredPool: boolean;
 };
 export function blockOutcomeName(
   code: number
@@ -421,7 +422,7 @@ export function findBlockConsequences(
 export function summarizeBlockConsequence(
   pool: LuckEvent,
   damage: readonly DamageStepSummary[]
-): Pick<BlockResolution, "diceByTeam" | "unscoredDamageRolls"> {
+): Pick<BlockResolution, "diceByTeam" | "unscoredDamageRolls" | "unscoredPool"> {
   const diceByTeam: Record<string, number> = {};
   // A subtotal references the one terminal pool and linked damage contributions.
   // Earlier purchased/replaced pools remain separately visible dice evidence.
@@ -435,5 +436,5 @@ export function summarizeBlockConsequence(
       (diceByTeam[step.teamId] ?? 0) + step.diceContribution;
     unscoredDamageRolls += step.unscoredRolls;
   }
-  return { diceByTeam, unscoredDamageRolls };
+  return { diceByTeam, unscoredDamageRolls, unscoredPool:pool.scoringStatus!=="scored" };
 }

@@ -244,6 +244,37 @@ describe("continued intrinsic traits before an offered block pool", () => {
     if (kind === "unordered-checkpoints") r.boardCheckpoints!.reverse();
     expect(findBlockTraitEvidence(r).size).toBe(0);
   });
+  it("accepts physically ordered board refreshes before the same next event",()=>{
+    const r=replay();r.boardCheckpoints![1]!.afterSourceIndex=0;
+    const p=findBlockTraitEvidence(r).get("pool")!;
+    expect(p.attacker.currentCheckpointAfter).toBe(0);
+    expect(p.attacker.observedCheckpointAfter).toBe(0);
+  });
+  it.each(["duplicate","backward","missing","invalid_initial"])("rejects ambiguous equal-index checkpoint order: %s",kind=>{
+    const r=replay(),cp=r.boardCheckpoints![1]!;cp.afterSourceIndex=0;
+    if(kind==="missing")cp.childIndex=null;
+    else if(kind==="invalid_initial")r.boardCheckpoints![0]!.replayStep=1;
+    else {const next=structuredClone(cp);cp.childIndex=2;next.childIndex=kind==="duplicate"?2:1;r.boardCheckpoints!.push(next);}
+    expect(findBlockTraitEvidence(r).size).toBe(0);
+  });
+  it("keeps an established prefix when a later checkpoint has contradictory order", () => {
+    const r = replay();
+    const before = findBlockTraitEvidence(r).get("pool");
+    const later = structuredClone(r.turns[0]!.events[1]!);
+    later.id = "later-pool";
+    later.sourceIndex = 10;
+    r.turns[0]!.events.push(later);
+    const first = structuredClone(r.boardCheckpoints![1]!);
+    first.afterSourceIndex = 7;
+    first.replayStep = 4;
+    first.childIndex = 2;
+    const invalid = structuredClone(first);
+    invalid.childIndex = 1;
+    r.boardCheckpoints!.push(first, invalid);
+    const evidence = findBlockTraitEvidence(r);
+    expect(evidence.get("pool")).toEqual(before);
+    expect(evidence.has("later-pool")).toBe(false);
+  });
   it.each([
     "EventBuyMercenary",
     "EventRemoveMercenary",
@@ -315,7 +346,7 @@ describe("continued intrinsic traits before an offered block pool", () => {
           20 / 36
         ]);
         expect(explainBlockSkillModel(e)).toContain(
-          "not added to dice or context totals"
+          "included once in dice totals"
         );
       } else
         expect(explainBlockSkillModel(e)).toContain(

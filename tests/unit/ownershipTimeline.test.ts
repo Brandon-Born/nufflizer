@@ -374,7 +374,7 @@ describe("source-qualified time-local player ownership", () => {
           unknownCells: true
         }),
         e = candidate(r);
-      expect(e.scoringStatus).toBe("scored");
+      expect(e.scoringStatus).toBe(kind==="block"?"excluded":"scored");
       expect(e.metadata.ownership).toMatchObject({
         role: kind === "armor" ? "subject" : "actor",
         basis: "current_roster",
@@ -513,7 +513,7 @@ describe("source-qualified time-local player ownership", () => {
           unknownTransformations: kind === "transformation"
         }),
         e = candidate(r);
-      expect(e.scoringStatus).toBe("scored");
+      expect(e.scoringStatus).toBe("excluded");
       expect(e.metadata.ownership?.role).toBe("actor");
       expect(e.metadata.block?.skillModel).toBeUndefined();
       expect(e.metadata.block?.traitEvidence).toBeUndefined();
@@ -532,7 +532,7 @@ describe("source-qualified time-local player ownership", () => {
     expect(
       armor.every((e) => e.actualSuccess === false && e.weightedDelta < 0)
     ).toBe(true);
-    expect(r.teams[0].luckScore).toBeCloseTo(-0.25 - 21 / 36, 12);
+    expect(r.teams[0].luckScore).toBeCloseTo(-1/8 - 21 / 36, 12);
     expect(r.teams[1].luckScore).toBeCloseTo(-21 / 36, 12);
   });
   it("opponent choice is separate from the attacker and recipient-only questions do not confer control", () => {
