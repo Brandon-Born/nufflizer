@@ -1026,7 +1026,17 @@ test("block skills explain Wrestle and subject-specific damage without double co
     await expect(row).toContainText("existing dice contributions once");
     if (index) {
       await expect(row).toContainText("1 immediately linked damage step");
-      await expect(row).toContainText("2 damage rolls have unknown odds");
+      // UI-076 records armor [6,6], injury [5,6] and casualty [6].
+      // Current traits do not qualify the armor policy: it is an unknown stage,
+      // not a scored/neutral contribution or an omitted physical draw.
+      const damage = report.damageSteps[0]!;
+      expect(damage).toMatchObject({ playerId: "39", scoredRolls: 0, unscoredRolls: 3, diceContribution: 0 });
+      const draws = report.events.filter(e => damage.eventIds.includes(e.id) && (e.metadata.dice?.length ?? 0) > 0);
+      expect(draws.map(e => [e.metadata.sourceId, e.metadata.dice, e.scoringStatus]))
+        .toEqual([["source-10", [6,6], "excluded"], ["source-11", [5,6], "excluded"], ["source-13", [6], "excluded"]]);
+      expect(draws[0]).toMatchObject({ probabilitySuccess: null, actualSuccess: null, weightedDelta: 0 });
+      expect(draws[0]!.statusReason).toContain("policy is not established before the dice");
+      await expect(row).toContainText("3 damage rolls have unknown odds");
     } else
       await expect(row).toContainText(
         "Wrestle does not add a knockdown armor check"

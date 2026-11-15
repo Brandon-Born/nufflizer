@@ -99,6 +99,9 @@ test("evaluated damage remains inspectable without changing earlier actual dice 
   await page.screenshot({ path: "/tmp/nufflizier-execution-desktop.png" });
   await page.getByLabel("Scoring status").selectOption("under_review");
   await expect(row).toHaveCount(0);
+  // dice-only-37 exposes the earlier qualified self-fall, not evaluated damage.
+  await page.getByLabel("Scoring status").selectOption("scored");
+  await expect(row).toHaveCount(0);
   await expect(
     page
       .locator("tbody tr")
