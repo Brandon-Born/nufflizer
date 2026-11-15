@@ -369,6 +369,7 @@ test("[real-worker] replacement purchases retain separate source-backed trait li
   await expect(
     page.getByRole("heading", { name: "Nuffle Match Report" })
   ).toBeVisible();
+  await page.getByText("Scoring details and source coverage", { exact: true }).click();
   await expect(
     page.getByText(
       /Recorded mercenary purchase events: 2; linked roster observations: 2/
@@ -551,6 +552,13 @@ test("[real-worker] real BBR upload exposes evidence, full filters, export and r
       { exact: true }
     )
   ).toBeVisible();
+  await expect(page.getByRole("region", { name: "Report overview" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Key dice moments" })).toBeVisible();
+  await expect(page.getByRole("complementary", { name: "Armor scoring under review" })).toBeVisible();
+  await page.getByRole("button", { name: "Inspect this moment" }).first().click();
+  await expect(page.getByRole("heading", { name: "Replay evidence" })).toBeFocused();
+  await expect(page.locator("tbody tr:visible")).toHaveCount(1);
+  await page.getByRole("button", { name: "Show all replay evidence" }).click();
   // Independent raw references: home5/24+5/24; away-1/8+0.
   await expect(page.getByText("Block: 0.42",{exact:true})).toBeVisible();
   await expect(page.getByText("Block: -0.13",{exact:true})).toBeVisible();
@@ -616,6 +624,7 @@ test("[real-worker] real BBR upload exposes evidence, full filters, export and r
         event.contextualImpact !== undefined
     ).length
   );
+  await page.getByText("Scoring details and source coverage", { exact: true }).click();
   await expect(
     page.getByText(
       `Contextual impact quantified for ${context.quantifiedCount} of ${context.rollCount} roll candidates.`,
@@ -768,6 +777,7 @@ test("[real-worker] real BBR upload exposes evidence, full filters, export and r
   );
   await expect(page.getByLabel("Half", { exact: true })).toHaveValue("all");
   await expect(page.getByLabel("Team turn", { exact: true })).toHaveValue("");
+  await page.getByText("Scoring details and source coverage", { exact: true }).click();
   await expect(
     page.getByText("No scored evidence", { exact: true })
   ).toHaveCount(2);
@@ -1076,6 +1086,7 @@ test("real-source Dodge uncertainty and active continuation stay outside point t
     await expect(
       page.getByRole("heading", { name: "Nuffle Match Report" })
     ).toBeVisible();
+    await page.getByText("Scoring details and source coverage", { exact: true }).click();
     await expect(
       page.getByText(/Separate context ranges are available for 1 check/)
     ).toBeVisible();
@@ -1202,6 +1213,7 @@ test("reroll counters separate resource observations from dice and unknown reset
     if(c.id === "numeric_dodge_declined") {
       const kept=table.locator("tbody tr").filter({hasText:"Dodge failed"});await expect(kept).toHaveCount(1);await kept.locator("summary").click();
       await expect(kept).toContainText("odds policy one attempt");await expect(kept).not.toContainText("reroll available no");
+      await page.getByText("Scoring details and source coverage", { exact: true }).click();
       await expect(page.getByText("A single-attempt calculation does not establish whether a reroll was available. Recorded choices and counter observations are separate evidence.")).toBeVisible();
     }
     if(c.id.startsWith("block_")) {
@@ -1331,6 +1343,7 @@ test("committed team Dodge bounds keep terminal turn cost separate from compound
     await page.setInputFiles('input[name="replay"]',{name:"source-terminal-team-dodge.xml",mimeType:"application/xml",buffer:Buffer.from(xml)});
     await page.getByRole("button",{name:"Analyze Nuffle Luck"}).click();
     await expect(page.getByRole("heading",{name:"Nuffle Match Report"})).toBeVisible();
+    await page.getByText("Scoring details and source coverage", { exact: true }).click();
     await expect(page.getByText(/Separate context ranges are available for 1 check/)).toBeVisible();
     await page.getByLabel("Scoring status").selectOption("bounded");
     const row=page.getByRole("table").locator("tbody tr").filter({has:page.locator("summary")});

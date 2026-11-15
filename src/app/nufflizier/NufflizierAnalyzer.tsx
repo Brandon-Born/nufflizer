@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import {
   CATEGORY_EXAMPLE_LINES,
@@ -54,6 +54,8 @@ import {
 import { readAnalysisResponse } from "@/lib/readAnalysisResponse";
 import { REPLAY_LIMITS } from "@/domain/replay/limits";
 import { ResourceFlowPanel } from "./ResourceFlowPanel";
+import { ReportOverview } from "./ReportOverview";
+import { ARMOR_REVIEW_NOTICE, hasArmorUnderReview, isArmorUnderReview, summarizeForReader } from "@/domain/nufflizer/readerSummary";
 
 const EVENT_TYPE_OPTIONS: Array<{
   value: "all" | LuckEventType;
@@ -79,6 +81,12 @@ const TAG_OPTIONS = [
 export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
   const abortRef = useRef<AbortController | null>(null);
   const timelineRef = useRef<HTMLHeadingElement | null>(null);
+  const focusReportHeading = useCallback((heading: HTMLHeadingElement | null) => {
+    if (heading) {
+      heading.focus();
+      heading.scrollIntoView({ block: "start" });
+    }
+  }, []);
   const [teamFilter, setTeamFilter] = useState("all");
   const [scoringFilter, setScoringFilter] = useState("scored");
   const [sortOrder, setSortOrder] = useState("chronological");
@@ -91,6 +99,9 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<LuckReport | null>(null);
+  const [selectedMomentId, setSelectedMomentId] = useState<string | null>(null);
+  const readerSummary = useMemo(() => report ? summarizeForReader(report) : null, [report]);
+  const armorUnderReview = report ? hasArmorUnderReview(report) : false;
   const [resourceOnly, setResourceOnly] = useState(false);
   const [resourceWindowChoices, setResourceWindowChoices] = useState<Set<string>|null>(null);
   const sourcesById = useMemo(
@@ -129,6 +140,8 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
 
     return report.events
       .filter((event) => {
+        if (selectedMomentId && event.id !== selectedMomentId) return false;
+        if (scoringFilter === "scored" && isArmorUnderReview(event)) return false;
         if(resourceOnly && !event.metadata.recordedRerollChoice)return false;
         if(resourceWindowChoices && !resourceWindowChoices.has(event.id))return false;
         if (
@@ -154,14 +167,14 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
           return false;
         if (teamFilter !== "all" && event.teamId !== teamFilter) return false;
         if (
-          scoringFilter === "bounded"
+          scoringFilter === "under_review" ? !isArmorUnderReview(event) : scoringFilter === "bounded"
             ? !event.contextualBounds &&
               !event.possessionBounds &&
               !event.catchPossessionBounds
             : scoringFilter !== "all" && event.scoringStatus !== scoringFilter
         )
           return false;
-        if (tagFilter !== "all" && !event.tags.includes(tagFilter)) {
+        if (tagFilter !== "all" && (isArmorUnderReview(event) || !event.tags.includes(tagFilter))) {
           return false;
         }
 
@@ -183,6 +196,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
       );
   }, [
     report,
+    selectedMomentId,
     tagFilter,
     typeFilter,
     teamFilter,
@@ -197,6 +211,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
   ]);
 
   function resetFilters() {
+    setSelectedMomentId(null);
     setResourceOnly(false);
     setResourceWindowChoices(null);
     setTagFilter("all");
@@ -375,7 +390,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
       {report ? (
         <section className="space-y-6 rounded-xl border border-amber-300/30 bg-black/35 p-6 shadow-xl backdrop-blur">
           <header className="space-y-2">
-            <h2 className="text-xl font-bold text-amber-100">
+            <h2 ref={focusReportHeading} tabIndex={-1} className="text-xl font-bold text-amber-100">
               Nuffle Match Report
             </h2>
             <p className="text-xs text-amber-100/80">
@@ -386,17 +401,24 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
             </p>
           </header>
 
+          {readerSummary ? <ReportOverview report={report} summary={readerSummary}
+            onMoment={(event) => {
+              resetFilters();
+              setScoringFilter("all");
+              setSelectedMomentId(event.id);
+              requestAnimationFrame(() => { timelineRef.current?.focus(); timelineRef.current?.scrollIntoView({ block: "start" }); });
+            }}
+            onCategory={(type) => {
+              resetFilters(); setTypeFilter(type); setScoringFilter("all");
+              requestAnimationFrame(() => { timelineRef.current?.focus(); timelineRef.current?.scrollIntoView({ block: "start" }); });
+            }} /> : null}
+
+          <details className="rounded-xl border border-amber-300/20 p-4">
+          <summary className="cursor-pointer font-semibold text-amber-100">Scoring details and source coverage</summary>
+          <div className="mt-4 space-y-6">
           <div className="rounded-lg border border-amber-300/20 bg-amber-950/20 p-4">
-            <p className="text-lg font-semibold text-amber-100">
-              {report.verdict.summary}
-            </p>
             <p className="mt-1 text-sm text-amber-50/90">
-              Supported dice contribution gap:{" "}
-              {formatDiceContribution(
-                report.verdict.scoreGap,
-                report.coverage.allEvents.scoredCount,
-                1
-              )}
+              {armorUnderReview ? "Combined dice comparison withheld while armor scoring is under review." : <>Supported dice contribution gap:{" "}{formatDiceContribution(report.verdict.scoreGap, report.coverage.allEvents.scoredCount, 1)}</>}
             </p>
             <p className="mt-1 text-sm text-amber-50/90">
               Roll-candidate coverage:{" "}
@@ -443,13 +465,6 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
             ) : null}
           </div>
 
-          <ResourceFlowPanel key={report.id} report={report} onChoices={(ids)=>{
-            resetFilters();
-            setScoringFilter("excluded");
-            setResourceOnly(true);
-            setResourceWindowChoices(new Set(ids));
-            requestAnimationFrame(()=>timelineRef.current?.focus());
-          }}/>
           <section className="rounded-xl border border-amber-300/20 bg-black/20 p-4">
             <h3 className="text-base font-semibold text-amber-100">
               How to read this report
@@ -536,6 +551,16 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
             ) : null}
           </section>
 
+          </div>
+          </details>
+
+          <ResourceFlowPanel key={report.id} report={report} onChoices={(ids)=>{
+            resetFilters();
+            setScoringFilter("excluded");
+            setResourceOnly(true);
+            setResourceWindowChoices(new Set(ids));
+            requestAnimationFrame(()=>timelineRef.current?.focus());
+          }}/>
           <p className="text-xs text-amber-100/80">
             Partial component sums cover only the supported model components
             below. They do not rank the teams or bound whole-match luck.
@@ -555,10 +580,10 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                     {team.teamName}
                   </h3>
                   <p
-                    className={`mt-1 text-2xl font-black ${scoreColor(team.luckScore)}`}
+                    className={`mt-1 text-2xl font-black ${armorUnderReview ? "text-amber-100" : scoreColor(team.luckScore)}`}
                   >
                     {evidence.total > 0
-                      ? team.luckScore.toFixed(1)
+                      ? armorUnderReview ? "Total under review" : team.luckScore.toFixed(1)
                       : "No scored evidence"}
                   </p>
                   <p className="text-xs text-amber-100/75">
@@ -612,7 +637,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                     </div>
                     <div>
                       Armor:{" "}
-                      {formatDiceContribution(
+                      {armorUnderReview ? "Under review" : formatDiceContribution(
                         team.categoryScores.armorBreak,
                         evidence.byType.armor_break
                       )}
@@ -659,6 +684,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
           </div>
 
           <div className="space-y-3">
+            {selectedMomentId ? <p className="rounded-lg border border-amber-300/30 p-3 text-sm">Showing the selected key moment. <button type="button" className="underline" onClick={resetFilters}>Show all replay evidence</button></p> : null}
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h4 ref={timelineRef} tabIndex={-1} className="text-sm font-semibold text-amber-100">
                 Replay evidence
@@ -736,6 +762,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                   }}
                 >
                   <option value="scored">Scored</option>
+                  <option value="under_review">Under review</option>
                   <option value="bounded">Context range</option>
                   <option value="excluded">Excluded</option>
                   <option value="all">All evidence</option>
@@ -882,6 +909,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                             <summary className="cursor-pointer text-xs text-amber-100/80">
                               Why
                             </summary>
+                            {isArmorUnderReview(moment) ? <p className="mt-2 text-sm text-orange-100">{ARMOR_REVIEW_NOTICE} The following numbers are diagnostic model output.</p> : null}
                             <p className="mt-1 text-xs text-amber-100/80">
                               {moment.statusReason}. Target:{" "}
                               {moment.explainability.target}. Base odds{" "}
@@ -1061,21 +1089,21 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                           </details>
                         </td>
                         <td className="px-2 py-3">
-                          {formatExpectedOutcome(moment)}
+                          {isArmorUnderReview(moment) ? "Under review" : formatExpectedOutcome(moment)}
                         </td>
                         <td className="px-2 py-3">
                           {formatActualOutcome(moment)}
                         </td>
                         <td className="px-2 py-3">
-                          {formatDiceContribution(
+                          {isArmorUnderReview(moment) ? "Under review" : formatDiceContribution(
                             moment.weightedDelta,
                             moment.scoringStatus === "scored" ? 1 : 0,
                             3
                           )}
                         </td>
-                        <td className="px-2 py-3">{moment.scoringStatus}</td>
+                        <td className="px-2 py-3">{isArmorUnderReview(moment) ? "under review" : moment.scoringStatus}</td>
                         <td className="px-2 py-3">
-                          {moment.tags.length > 0 ? (
+                          {!isArmorUnderReview(moment) && moment.tags.length > 0 ? (
                             <span className="inline-flex rounded-full border border-amber-200/40 px-2 py-1 text-xs font-semibold uppercase">
                               {moment.tags.join(", ")}
                             </span>

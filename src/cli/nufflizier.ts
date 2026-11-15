@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { hasArmorUnderReview } from "@/domain/nufflizer/readerSummary";
 import { openSync, fstatSync, closeSync, readSync } from "node:fs";
 import path from "node:path";
 import { REPLAY_LIMITS } from "@/domain/replay/limits";
@@ -86,6 +87,7 @@ function formatTeamSummary(
   report: ReturnType<typeof analyzeNufflizerInput>
 ): string {
   const [home, away] = report.teams;
+  const armorUnderReview = hasArmorUnderReview(report);
   const topMoments = report.keyMoments.slice(0, 5);
   const lostActivations = report.events.filter(
     (event) => event.metadata.activationLoss || event.metadata.activationEnd
@@ -116,9 +118,9 @@ function formatTeamSummary(
 
   return [
     `Match: ${report.match.id}`,
-    `Home: ${home?.teamName ?? "Home"} (${formatDiceContribution(home.luckScore, scoredEvidenceForTeam(report, home.teamId).total, 1)})`,
-    `Away: ${away?.teamName ?? "Away"} (${formatDiceContribution(away.luckScore, scoredEvidenceForTeam(report, away.teamId).total, 1)})`,
-    `Verdict: ${report.verdict.summary} (dice contribution gap ${formatDiceContribution(report.verdict.scoreGap, report.coverage.allEvents.scoredCount, 1)})`,
+    `Home: ${home?.teamName ?? "Home"} (${armorUnderReview ? "total under review" : formatDiceContribution(home.luckScore, scoredEvidenceForTeam(report, home.teamId).total, 1)})`,
+    `Away: ${away?.teamName ?? "Away"} (${armorUnderReview ? "total under review" : formatDiceContribution(away.luckScore, scoredEvidenceForTeam(report, away.teamId).total, 1)})`,
+    `Verdict: ${report.verdict.summary}${armorUnderReview ? " (combined dice comparison withheld: armor under review)" : ` (dice contribution gap ${formatDiceContribution(report.verdict.scoreGap, report.coverage.allEvents.scoredCount, 1)})`}`,
     `Roll-candidate coverage: ${(report.coverage.rollCandidates.scoredRate * 100).toFixed(1)}% scored (${report.coverage.rollCandidates.scoredCount} scored, ${report.coverage.rollCandidates.excludedCount} excluded)`,
     `All-event coverage: ${(report.coverage.allEvents.scoredRate * 100).toFixed(1)}% scored (${report.coverage.allEvents.scoredCount} scored, ${report.coverage.allEvents.excludedCount} excluded)`,
     explainContextCoverage(report.coverage.contextEvidence),

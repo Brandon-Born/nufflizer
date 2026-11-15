@@ -1271,3 +1271,11 @@ The same original011/012 audit reproduces a separate optional armor modifier adm
 
 
 Final local execution-boundary acceptance passes3,923 unit/worker/HTTP cases, real Redis/lint/types/build and7+71=78 Chromium. Complete twelve-report equality and original34-packet/ledger/log-prefix preservation pass. Desktop/mobile screenshots are inspected, including one additional successful focused mobile text-bound visibility rerun. NUF-035 remains in_progress pending the exact published-head CI receipt; NUF-036 remains open with its failing reproduction. No production source changes follow verification.
+
+
+## 2026-11-14 — usable report overview and key dice moments
+
+Uploads now focus a readable results summary with support counts, up to six unlikely binary outcomes, category shortcuts and exact-row evidence navigation. Technical scoring details are expandable. The known armor-policy defect is disclosed and contained in the reading experience: reviewed armor is omitted from recommendations, its rows are flagged, and combined team totals are withheld. Original calculations remain diagnostic in JSON; NUF-036 stays open. API/CLI/UI share the limitation without changing dice math or limits. Original NUF-015/020/021 advance; no original issue is newly claimed complete. Prior exact b4bbf2e CI43646258930 is terminal SUCCESS, completing NUF-035's pending verification without rerunning it. Final milestone validation is recorded below in IMPLEMENTATION_LOG.
+
+
+Local milestone verification:3,928 aggregate unit/CLI/HTTP cases, Redis/lint/types/build, and79 distinct browser cases pass with focused corrections for the new diagnostic expander. Final real-upload and desktop/mobile reader/export/reset checks pass after copy/focus changes; screenshots are inspected. The known armor calculation remains diagnostic and unresolved. No original acceptance item is newly declared complete; NUF-035's earlier published verification is reconciled separately.
