@@ -28,6 +28,8 @@ Source-execution audit checkpoint (2026-11-14): new NUF-035 reproduces unsupport
 
 Reader checkpoint (2026-11-14): original NUF-015/020/021 advance through a clear evidence summary, probability-ordered key dice moments, exact-row navigation and category shortcuts. Armor and combined totals are withheld from the reading summary while original calculations remain explicitly flagged diagnostics/export; NUF-036 is not closed. Technical details are expandable. No original acceptance/status/dependency is dropped. See the reader milestone in [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md).
 
+Upload interaction checkpoint (2026-11-15): an isolated cloud recovery branch adds local file selection/drop validation, explicit Analyze, cancellation/retry and stale-response protection. NUF-020/021/022 advance only in upload interaction coverage; no issue closes, no armor policy changes and no deployment follows. See the upload recovery entry in IMPLEMENTATION_LOG.md for validation.
+
 ## Product outcome
 
 A user uploads a BB3 `.xml` or `.bbr` replay and receives a defensible account of dice luck and its match consequences. A failed 2+ dodge with one applicable full reroll has a 1/36 failure probability. Its impact depends on what the failure costs: useful activations, possession, scoring opportunities, player availability, and remaining time. A final optional block can matter little; a final action deciding the match can matter enormously.

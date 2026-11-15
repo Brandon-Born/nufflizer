@@ -951,7 +951,7 @@ test("cancelling an upload returns to an idle form without a fabricated report",
   await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
   await page.getByRole("button", { name: "Cancel analysis" }).click();
   await expect(
-    page.getByText("Analysis cancelled.", { exact: true })
+    page.getByRole("status").filter({ hasText: "Analysis cancelled." })
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Analyze Nuffle Luck" })

@@ -51,10 +51,9 @@ import {
   explainOwnership,
   explainBlockPush
 } from "@/domain/nufflizer/presentation";
-import { readAnalysisResponse } from "@/lib/readAnalysisResponse";
-import { REPLAY_LIMITS } from "@/domain/replay/limits";
 import { ResourceFlowPanel } from "./ResourceFlowPanel";
 import { ReportOverview } from "./ReportOverview";
+import { ReplayUploadPanel } from "./ReplayUploadPanel";
 import { ARMOR_REVIEW_NOTICE, hasArmorUnderReview, isArmorUnderReview, summarizeForReader } from "@/domain/nufflizer/readerSummary";
 
 const EVENT_TYPE_OPTIONS: Array<{
@@ -79,7 +78,6 @@ const TAG_OPTIONS = [
 ] as const;
 
 export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
-  const abortRef = useRef<AbortController | null>(null);
   const timelineRef = useRef<HTMLHeadingElement | null>(null);
   const focusReportHeading = useCallback((heading: HTMLHeadingElement | null) => {
     if (heading) {
@@ -95,9 +93,6 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
   const [teamTurnFilter, setTeamTurnFilter] = useState("");
   const [activationFilter, setActivationFilter] = useState<string | null>(null);
   const [page, setPage] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [status, setStatus] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<LuckReport | null>(null);
   const [selectedMomentId, setSelectedMomentId] = useState<string | null>(null);
   const readerSummary = useMemo(() => report ? summarizeForReader(report) : null, [report]);
@@ -226,57 +221,6 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
     setPage(0);
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-    setReport(null);
-    resetFilters();
-
-    const formData = new FormData(event.currentTarget);
-    const replayFile = formData.get("replay");
-    if (!(replayFile instanceof File)) {
-      setError("Choose a replay file first.");
-      return;
-    }
-
-    if (replayFile.size > REPLAY_LIMITS.inputBytes) {
-      setError("Replay file too large. Maximum size is 4 MB.");
-      return;
-    }
-    const controller = new AbortController();
-    abortRef.current = controller;
-    setIsLoading(true);
-    setStatus("Uploading replay...");
-
-    try {
-      const uploadData = new FormData();
-      uploadData.append("replay", replayFile);
-
-      setStatus("Reading replay and rolling Nufflizier...");
-      const response = await fetch("/api/nufflizier/analyze", {
-        method: "POST",
-        body: uploadData,
-        signal: controller.signal
-      });
-
-      const body = await readAnalysisResponse(response);
-      setReport(body);
-      setStatus("Analysis complete. Review the evidence limits below.");
-    } catch (requestError) {
-      const message =
-        requestError instanceof Error && requestError.name === "AbortError"
-          ? "Analysis cancelled."
-          : requestError instanceof Error
-            ? requestError.message
-            : "Unexpected error.";
-      setError(message);
-      setStatus(null);
-    } finally {
-      abortRef.current = null;
-      setIsLoading(false);
-    }
-  }
-
   function scoreColor(score: number): string {
     if (score > 0) {
       return "text-emerald-200";
@@ -321,71 +265,12 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
         </p>
       </section>
 
-      <form
-        onSubmit={handleSubmit}
-        className="rounded-xl border border-amber-300/30 bg-black/35 p-6 shadow-xl backdrop-blur"
-      >
-        <label className="block space-y-2 text-sm font-medium text-amber-100">
-          <span>Replay file (.xml or .bbr), maximum 4 MB</span>
-          <input
-            className="block w-full rounded-md border border-amber-200/40 bg-black/30 px-3 py-2 text-sm text-amber-50"
-            type="file"
-            name="replay"
-            accept=".xml,.bbr,text/xml,application/xml"
-            required
-          />
-        </label>
-
-        <div className="mt-4 flex items-center gap-3">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isLoading ? "Rolling..." : "Analyze Nuffle Luck"}
-          </button>
-
-          {isLoading ? (
-            <button type="button" onClick={() => abortRef.current?.abort()}>
-              Cancel analysis
-            </button>
-          ) : null}
-          {report ? (
-            <button
-              type="button"
-              onClick={() => {
-                resetFilters();
-                setReport(null);
-                setError(null);
-                setStatus(null);
-              }}
-              className="rounded-lg border border-amber-200/40 px-4 py-2 text-sm font-medium text-amber-100 hover:bg-amber-100/10"
-            >
-              Upload Another Replay
-            </button>
-          ) : null}
-
-          {report ? (
-            <button
-              type="button"
-              onClick={downloadJson}
-              className="rounded-lg border border-amber-200/40 px-4 py-2 text-sm font-medium text-amber-100 hover:bg-amber-100/10"
-            >
-              Download JSON
-            </button>
-          ) : null}
-        </div>
-
-        {status ? (
-          <p className="mt-3 text-xs text-amber-100/90">{status}</p>
-        ) : null}
-      </form>
-
-      {error ? (
-        <section className="rounded-lg border border-red-300/60 bg-red-900/30 px-4 py-3 text-sm text-red-100">
-          {error}
-        </section>
-      ) : null}
+      <ReplayUploadPanel
+        onReport={setReport}
+        onReset={() => { resetFilters(); setReport(null); }}
+        hasReport={report !== null}
+        onDownload={downloadJson}
+      />
 
       {report ? (
         <section className="space-y-6 rounded-xl border border-amber-300/30 bg-black/35 p-6 shadow-xl backdrop-blur">

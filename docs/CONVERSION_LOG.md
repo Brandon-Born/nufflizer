@@ -1279,3 +1279,7 @@ Uploads now focus a readable results summary with support counts, up to six unli
 
 
 Local milestone verification:3,928 aggregate unit/CLI/HTTP cases, Redis/lint/types/build, and79 distinct browser cases pass with focused corrections for the new diagnostic expander. Final real-upload and desktop/mobile reader/export/reset checks pass after copy/focus changes; screenshots are inspected. The known armor calculation remains diagnostic and unresolved. No original acceptance item is newly declared complete; NUF-035's earlier published verification is reconciled separately.
+
+## 2026-11-15 — upload interaction recovery
+
+The Nufflizier upload form is isolated into an accessible file-selection/drop panel with explicit Analyze, clear errors and file details, cancellation/retry, and stale-response protection. Existing report reading/export remains intact. No legacy behavior, scoring contract, backend limits or hosted state changes. See the matching implementation log for validation and remaining limits.
