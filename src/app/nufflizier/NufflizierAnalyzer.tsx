@@ -136,7 +136,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
     return report.events
       .filter((event) => {
         if (selectedMomentId && event.id !== selectedMomentId) return false;
-        if (scoringFilter === "scored" && isArmorUnderReview(event)) return false;
+        if (scoringFilter === "scored" && isArmorUnderReview(event, report.modelVersion)) return false;
         if(resourceOnly && !event.metadata.recordedRerollChoice)return false;
         if(resourceWindowChoices && !resourceWindowChoices.has(event.id))return false;
         if (
@@ -162,14 +162,14 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
           return false;
         if (teamFilter !== "all" && event.teamId !== teamFilter) return false;
         if (
-          scoringFilter === "under_review" ? !isArmorUnderReview(event) : scoringFilter === "bounded"
+          scoringFilter === "under_review" ? !isArmorUnderReview(event, report.modelVersion) : scoringFilter === "bounded"
             ? !event.contextualBounds &&
               !event.possessionBounds &&
               !event.catchPossessionBounds
             : scoringFilter !== "all" && event.scoringStatus !== scoringFilter
         )
           return false;
-        if (tagFilter !== "all" && (isArmorUnderReview(event) || !event.tags.includes(tagFilter))) {
+        if (tagFilter !== "all" && (isArmorUnderReview(event, report.modelVersion) || !event.tags.includes(tagFilter))) {
           return false;
         }
 
@@ -794,7 +794,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                             <summary className="cursor-pointer text-xs text-amber-100/80">
                               Why
                             </summary>
-                            {isArmorUnderReview(moment) ? <p className="mt-2 text-sm text-orange-100">{ARMOR_REVIEW_NOTICE} The following numbers are diagnostic model output.</p> : null}
+                            {isArmorUnderReview(moment, report.modelVersion) ? <p className="mt-2 text-sm text-orange-100">{ARMOR_REVIEW_NOTICE} The following numbers are diagnostic model output.</p> : null}
                             <p className="mt-1 text-xs text-amber-100/80">
                               {moment.statusReason}. Target:{" "}
                               {moment.explainability.target}. Base odds{" "}
@@ -974,21 +974,21 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                           </details>
                         </td>
                         <td className="px-2 py-3">
-                          {isArmorUnderReview(moment) ? "Under review" : formatExpectedOutcome(moment)}
+                          {isArmorUnderReview(moment, report.modelVersion) ? "Under review" : formatExpectedOutcome(moment)}
                         </td>
                         <td className="px-2 py-3">
                           {formatActualOutcome(moment)}
                         </td>
                         <td className="px-2 py-3">
-                          {isArmorUnderReview(moment) ? "Under review" : formatDiceContribution(
+                          {isArmorUnderReview(moment, report.modelVersion) ? "Under review" : formatDiceContribution(
                             moment.weightedDelta,
                             moment.scoringStatus === "scored" ? 1 : 0,
                             3
                           )}
                         </td>
-                        <td className="px-2 py-3">{isArmorUnderReview(moment) ? "under review" : moment.scoringStatus}</td>
+                        <td className="px-2 py-3">{isArmorUnderReview(moment, report.modelVersion) ? "under review" : moment.scoringStatus}</td>
                         <td className="px-2 py-3">
-                          {!isArmorUnderReview(moment) && moment.tags.length > 0 ? (
+                          {!isArmorUnderReview(moment, report.modelVersion) && moment.tags.length > 0 ? (
                             <span className="inline-flex rounded-full border border-amber-200/40 px-2 py-1 text-xs font-semibold uppercase">
                               {moment.tags.join(", ")}
                             </span>

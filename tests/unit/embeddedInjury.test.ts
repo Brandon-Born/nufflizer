@@ -35,7 +35,9 @@ describe("staff-question injury evidence (NUF-011/014)", () => {
     expect(
       r.coverage.rollFamilies.find((f) => f.sourceTag === "QuestionKORecovery")
     ).toMatchObject({ rollType: 11, unscoredCount: 1, scoredCount: 0 });
-    expect(r.damageSteps[0]!.unscoredRolls).toBe(1);
+    // The independently observed armor lacks a fixed pre-roll policy too.
+    expect(r.events.find(e => e.type === "armor_break")!.scoringStatus).toBe("excluded");
+    expect(r.damageSteps[0]!.unscoredRolls).toBe(2);
   });
 
   it("counts an exact earlier direct injury once and links its copied question", () => {
@@ -61,7 +63,7 @@ describe("staff-question injury evidence (NUF-011/014)", () => {
       isRollCandidate: false
     });
     expect(r.damageSteps[0]!).toMatchObject({
-      unscoredRolls: 1,
+      unscoredRolls: 2,
       contextRecords: 1
     });
     copied.metadata.embeddedDamageOriginalId = "missing-original";

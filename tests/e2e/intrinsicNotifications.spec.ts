@@ -117,7 +117,7 @@ for (const c of [
     );
     expect(saved).toEqual(report);
     expect(saved.schemaVersion).toBe("2.73");
-    expect(saved.modelVersion).toBe("dice-only-36");
+    expect(saved.modelVersion).toBe("dice-only-37");
     expect(
       saved.events.find(
         (e: { metadata: { sourceId: string } }) =>

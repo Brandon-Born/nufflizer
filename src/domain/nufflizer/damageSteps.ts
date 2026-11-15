@@ -20,7 +20,7 @@ export function summarizeDamageSteps(
   const summaries = new Map<string, DamageStepSummary>();
   for (const event of events) {
     const damage = event.metadata.damage;
-    if (!damage?.chainActionId || (event.scoringStatus !== "scored" && !damage.crowd)) continue;
+    if (!damage?.chainActionId || (event.scoringStatus !== "scored" && !damage.crowd && event.type !== "armor_break")) continue;
     if (!summaries.has(damage.chainActionId)) {
       summaries.set(damage.chainActionId, {
         actionId: damage.chainActionId,

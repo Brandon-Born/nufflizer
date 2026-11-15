@@ -1,3 +1,4 @@
+import type { FixedArmorPolicy } from "./armorPolicy";
 import type { ReplayEvent } from "@/domain/replay/types";
 
 // These modifiers are settled before rolling: ordinary attack/defence assists.
@@ -9,9 +10,11 @@ function fixedAssistTotal(raw: unknown): number | undefined {
   const modifiers = Array.isArray(entries) ? entries : [entries];
   if (modifiers.length === 0 || modifiers.length > 30) return;
   let sum = 0;
+  const assistants = new Set<number>();
   for (const rawModifier of modifiers) {
     const m = rawModifier as
       | {
+          PlayerId?: unknown;
           ModifierType?: unknown;
           Value?: unknown;
           Skill?: unknown;
@@ -21,6 +24,8 @@ function fixedAssistTotal(raw: unknown): number | undefined {
       | undefined;
     if (
       !m ||
+      Object.keys(m).some(k => !["PlayerId","ModifierType","Value","Skill","Effect"].includes(k)) ||
+      typeof m.PlayerId !== "number" || !Number.isSafeInteger(m.PlayerId) || m.PlayerId < 0 || assistants.has(m.PlayerId) ||
       !(
         (m.ModifierType === 11 && m.Value === 1) ||
         (m.ModifierType === 12 && m.Value === -1)
@@ -29,6 +34,7 @@ function fixedAssistTotal(raw: unknown): number | undefined {
       m.Effect !== -1
     )
       return;
+    assistants.add(m.PlayerId);
     sum += m.Value;
   }
   return sum;
@@ -36,14 +42,15 @@ function fixedAssistTotal(raw: unknown): number | undefined {
 
 type ArmorContract =
   | { kind: "verified"; held: boolean; probability: number; subject: string }
-  | { kind: "excluded"; reason: string };
+  | { kind: "excluded"; reason: string; observedSubject?: string };
 
 export function verifyArmorCheck(
   version: string | undefined,
   event: ReplayEvent,
   dice: readonly number[],
   dieTypes: readonly number[],
-  countInStep: number | undefined
+  countInStep: number | undefined,
+  policy: FixedArmorPolicy | undefined
 ): ArmorContract | undefined {
   if (event.sourceTag !== "ResultRoll" || event.rollType !== 10) return;
   if(event.executionExclusion)return {kind:"excluded",reason:event.executionExclusion};
@@ -81,6 +88,10 @@ export function verifyArmorCheck(
       kind: "excluded",
       reason: "armor requires fresh binary outcome evidence from exactly two D6"
     } as const;
+  if (!policy || policy.header.playerId !== subject || policy.header.damageSource !== event.damageSource || policy.header.sequenceId !== event.sequenceId || policy.header.actionId !== event.actionId || policy.header.sourceIndex! >= (event.sourceIndex ?? -1))
+    return {kind:"excluded",reason:"armor execution header is not established before the dice"};
+  if (policy.kind === "unknown")
+    return {kind:"excluded",observedSubject:subject,reason:"armor modifier policy is not established before the dice; optional choices or missing current traits cannot certify its odds"};
   const adjustment = fixedAssistTotal(p.Modifiers);
   const requirement = p.Requirement;
   const difficulty = p.Difficulty;
@@ -91,7 +102,8 @@ export function verifyArmorCheck(
     return {
       kind: "excluded",
       reason:
-        "armor uses a modifier or choice outside the fixed assist contract"
+        "armor uses a modifier or choice outside the fixed assist contract",
+      observedSubject: subject
     } as const;
   if (
     typeof requirement !== "number" ||

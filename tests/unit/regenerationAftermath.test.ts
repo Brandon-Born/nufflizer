@@ -39,9 +39,10 @@ describe("first observed Regeneration aftermath", () => {
       expect(removal.metadata.sourceTag).toBe("ResultPlayerRemoval");
       expect(removal.weightedDelta).toBe(0);
       expect(r.events.filter((x) => x.scoringStatus === "scored")).toHaveLength(
-        2
-      ); // Armor and existing recovery only.
-      expect(r.damageSteps[0]!.scoredRolls).toBe(2);
+        1
+      ); // Only recovery has a qualified policy; armor remains observed/unscored.
+      expect(r.damageSteps[0]!.scoredRolls).toBe(1);
+      expect(r.events.find(e => e.type === "armor_break")!.scoringStatus).toBe("excluded");
       expect(r.verdict.luckierTeam).toBe("unknown");
       const text = explainRegenerationAftermath(e)!;
       expect(text).toContain(die >= 4 ? "in reserves" : "in the injured box");

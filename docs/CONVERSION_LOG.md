@@ -1283,3 +1283,7 @@ Local milestone verification:3,928 aggregate unit/CLI/HTTP cases, Redis/lint/typ
 ## 2026-11-15 — upload interaction recovery
 
 The Nufflizier upload form is isolated into an accessible file-selection/drop panel with explicit Analyze, clear errors and file details, cancellation/retry, and stale-response protection. Existing report reading/export remains intact. No legacy behavior, scoring contract, backend limits or hosted state changes. See the matching implementation log for validation and remaining limits.
+
+## 2026-11-15 — fixed-policy armor candidate
+
+Recovered the saved NUF-036 work in an isolated branch over the validated upload checkpoint. Dice-only-37 distinguishes qualified unknown armor execution from missing execution and exposes only fixed pre-roll armor policies through API/CLI/reader; optional policies remain visibly unscored. Historical source/non-armor conservation and original fingerprints are preserved. Local3,955 unit/CLI/HTTP cases, lint/types/build, Redis, optional-policy grids and four affected browser flows pass. This is not deployment, remote-CI closure or completion of the broader analyzer. See ARMOR_POLICY_RECOVERY.md and the execution log.

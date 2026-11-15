@@ -42,9 +42,10 @@ describe("observed recovered-player return through setup and play", () => {
       expect(use.weightedDelta).toBe(0);
       expect(e.weightedDelta).toBe(3 / 4);
       expect(r.events.filter((e) => e.scoringStatus === "scored")).toHaveLength(
-        2
+        1
       );
-      expect(r.damageSteps[0]!.scoredRolls).toBe(2);
+      expect(r.damageSteps[0]!.scoredRolls).toBe(1);
+      expect(r.events.find(e => e.type === "armor_break")!.scoringStatus).toBe("excluded");
       expect(explainRegenerationReturn(e)).toContain(
         "Setup CanAct flags are not legal-activation evidence"
       );

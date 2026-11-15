@@ -85,7 +85,7 @@ it("[cli-worker] shares original-source categorical scores, unknown pools and pa
       newer.events.find((e) => e.metadata.sourceId === "source-4183")!
         .weightedDelta
     ).toBe(5 / 8);
-    expect(newer.modelVersion).toBe("dice-only-36");
+    expect(newer.modelVersion).toBe("dice-only-37");
     expect(newer.verdict.luckierTeam).toBe("unknown");
     const nextText = run("text");
     expect(nextText.status, nextText.stderr).toBe(0);

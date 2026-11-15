@@ -5,7 +5,7 @@ import { playbackFragmentXml } from "../helpers/playback";
 import { summarizeForReader } from "@/domain/nufflizer/readerSummary";
 
 // Browser plugin unavailable; repository Playwright fixture gate after real uploads.
-test("reader overview leads to exact evidence, reviewed armor, export and a fresh upload", async ({
+test("reader overview leads to exact evidence, qualified armor, export and a fresh upload", async ({
   page
 }) => {
   const input = playbackFragmentXml("001", "UI-009", [], [38]);
@@ -43,10 +43,9 @@ test("reader overview leads to exact evidence, reviewed armor, export and a fres
   await expect(overview).toContainText(`${expected.scored}scored dice checks`);
   await expect(
     page.getByRole("complementary", { name: "Armor scoring under review" })
-  ).toBeVisible();
+  ).toHaveCount(0);
   const reviewedTotals = page.getByText("Total under review", { exact: true });
-  await expect(reviewedTotals).toHaveCount(1);
-  for (const total of await reviewedTotals.all()) await expect(total).toHaveClass(/text-amber-100/);
+  await expect(reviewedTotals).toHaveCount(0);
 
   await expect(
     page.getByText("Scoring details and source coverage", { exact: true })
@@ -79,9 +78,13 @@ test("reader overview leads to exact evidence, reviewed armor, export and a fres
   const armor = page
     .locator("tbody tr")
     .filter({ hasText: "Source: source-14;" });
-  await expect(armor.locator("td").nth(3)).toHaveText("Under review");
-  await expect(armor.locator("td").nth(5)).toHaveText("Under review");
+  await expect(armor.locator("td").nth(3)).not.toHaveText("Under review");
+  await expect(armor.locator("td").nth(5)).not.toHaveText("Under review");
+  await armor.locator("summary").click();
+  await expect(armor).toContainText("Fixed pre-roll armor policy:");
   await page.getByLabel("Scoring status").selectOption("under_review");
+  await expect(armor).toHaveCount(0);
+  await page.getByLabel("Scoring status").selectOption("scored");
   await expect(armor).toHaveCount(1);
   await page.setViewportSize({ width: 390, height: 844 });
   await overview.getByRole("heading").first().scrollIntoViewIfNeeded();
@@ -104,4 +107,18 @@ test("reader overview leads to exact evidence, reviewed armor, export and a fres
   await expect(page.getByLabel("Scoring status")).toHaveCount(0);
   expect(await page.locator("nextjs-portal").count()).toBe(0);
   expect(errors).toEqual([]);
+});
+
+test("legacy report responses are rejected rather than silently upgraded", async ({ page }) => {
+  const input = playbackFragmentXml("001", "UI-009", [], [38]);
+  const report = { ...analyzeNufflizerInput(input), modelVersion: "dice-only-36" };
+  await page.route("**/api/nufflizier/analyze", route =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(report) }));
+  await page.goto("/nufflizier");
+  await page.setInputFiles('input[name="replay"]', {
+    name: "legacy.xml", mimeType: "application/xml", buffer: Buffer.from(input)
+  });
+  await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "report format or totals are inconsistent" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Nuffle Match Report" })).toHaveCount(0);
 });

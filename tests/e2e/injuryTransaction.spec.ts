@@ -242,7 +242,7 @@ test("qualified Stunty injury and its SPP recipient stay separate on desktop, mo
     readFileSync((await (await pending).path())!, "utf8")
   );
   expect(saved.schemaVersion).toBe("2.73");
-  expect(saved.modelVersion).toBe("dice-only-36");
+  expect(saved.modelVersion).toBe("dice-only-37");
   for (const id of ["source-248", "source-247", "source-3956"]) {
     expect(
       saved.events.find(

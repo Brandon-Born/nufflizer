@@ -101,6 +101,7 @@ export function validReportedOwnership(
   if (
     (event.scoringStatus !== "scored" &&
       !event.metadata.block &&
+      !(event.type === "armor_break" && event.metadata.rollType === 10 && event.metadata.damage?.subjectId === event.playerId) &&
       !event.metadata.casualtyObservation &&
       !event.metadata.recordedSpp &&
       !event.metadata.recordedTreatment &&

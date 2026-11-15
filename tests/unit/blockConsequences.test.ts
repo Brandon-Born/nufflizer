@@ -75,7 +75,9 @@ describe("observed skill-resolved blocks and subject damage", () => {
         damage
           .filter((step) => step.teamId === team.teamId)
           .reduce((sum, step) => sum + step.diceContribution, 0);
-      expect(resolution.diceByTeam[team.teamId]).toBeCloseTo(expected, 12);
+      const hasScored = (team.teamId === pool.teamId && pool.scoringStatus === "scored") || damage.some(step => step.teamId === team.teamId && step.scoredRolls > 0);
+      if (hasScored) expect(resolution.diceByTeam[team.teamId]).toBeCloseTo(expected, 12);
+      else expect(resolution.diceByTeam[team.teamId]).toBeUndefined();
     }
     expect(resolution.unscoredDamageRolls).toBe(
       damage.reduce((n, step) => n + step.unscoredRolls, 0)
@@ -232,8 +234,8 @@ describe("observed skill-resolved blocks and subject damage", () => {
         r.events.find((e) => e.metadata.blockResolution)?.metadata
           .blockResolution
       ).toMatchObject({ outcome: "defender_down", damageActionIds: [] });
-      if (change === "evaluation") {
-        // An evaluated armor draw previously anchored this scored summary.
+      if (change !== "interruption") {
+        // Missing/mismatched execution evidence cannot anchor a damage summary.
         // Keep its source observation, without asserting executed damage.
         expect(r.damageSteps).toHaveLength(0);
         expect(r.events.find((e) => e.type === "armor_break")).toMatchObject({
@@ -310,7 +312,7 @@ describe("observed skill-resolved blocks and subject damage", () => {
     const resolution = pools[1]!.metadata.blockResolution!;
     expect(resolution).toMatchObject({
       outcome: "both_down",
-      unscoredDamageRolls: 0
+      unscoredDamageRolls: 2
     });
     expect(
       r.damageSteps

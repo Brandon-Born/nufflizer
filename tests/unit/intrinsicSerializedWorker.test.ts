@@ -17,7 +17,7 @@ it("[cli-worker] serializes both expanded original-source reports inside the unc
         maxReportBytes: REPLAY_LIMITS.responseBytes
       })
     );
-    expect(r.modelVersion).toBe("dice-only-36");
+    expect(r.modelVersion).toBe("dice-only-37");
     expect(r.schemaVersion).toBe("2.73");
     expect(
       r.events.find((e) => e.metadata.sourceId === id)!.weightedDelta

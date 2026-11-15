@@ -218,8 +218,14 @@ describe("observed movement fall, damage and turnover (NUF-018)", () => {
       const report = analyzeReplayLuck(original);
       expect(fallAt(report, 342).metadata.movementFall).toBeUndefined();
       expect(fallAt(report, 342).weightedDelta).toBe(-5 / 6);
-      if (change !== "duplicate_armor")
+      if (change !== "duplicate_armor" && change !== "different_player")
         expect(report.teams).toEqual(baseline.teams);
+      if (change === "different_player") {
+        const changed = report.events.filter(e => e.scoringStatus === "scored");
+        const diceValue = (e: typeof report.events[number]) => [e.id,e.type,e.probabilitySuccess,e.actualSuccess,e.delta,e.weightedDelta];
+        expect(changed.filter(e => e.type !== "armor_break").map(diceValue)).toEqual(baseline.events.filter(e => e.scoringStatus === "scored" && e.type !== "armor_break").map(diceValue));
+        expect(report.events.find(e => e.metadata.sourceId === armor.id)!.scoringStatus).toBe("excluded");
+      }
     }
   );
 });

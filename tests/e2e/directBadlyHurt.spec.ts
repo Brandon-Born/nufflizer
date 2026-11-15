@@ -69,7 +69,7 @@ test("direct Badly Hurt is visible with unknown odds on desktop and mobile", asy
     readFileSync((await (await pending).path())!, "utf8")
   );
   expect(saved.schemaVersion).toBe("2.73");
-  expect(saved.modelVersion).toBe("dice-only-36");
+  expect(saved.modelVersion).toBe("dice-only-37");
   expect(
     saved.events.find(
       (e: { metadata: { sourceId: string } }) =>

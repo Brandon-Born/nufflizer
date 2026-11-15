@@ -106,7 +106,34 @@ const faces = (value: unknown = 1) => ({ Die: die(value) });
 const resummarize = (r: LuckReport) => {
   r.coverage.diceRecords = summarizeDiceRecords(r.diceRecords);
 };
+// Immutable dice36 armor receipts from verified63. These reproduce only the
+// historical fingerprint below, not a correctness oracle for current policies.
+// Raw source SHA and all non-armor scores remain independently conserved.
+const priorArmor = JSON.parse(readFileSync("tests/fixtures/evidence/armor-policy-prior-receipts.json", "utf8")) as {
+  baseCommit: string;
+  files: {file: string; sourceSha256: string; events: LuckReport["events"]; nonArmorScores: unknown[][]}[];
+};
 const oldProjection = (r: LuckReport, file: string) => {
+  const armorReceipt = priorArmor.files.find(f => f.file === file)!;
+  expect(priorArmor.baseCommit).toBe("63d66d8c31b032f5b92d25dc54c5d6aae5e67f08");
+  expect(armorReceipt.sourceSha256).toBe(census.files.find(f => f.file === file)!.sourceSha256);
+  expect(r.events.filter(e => e.type !== "armor_break" && e.scoringStatus === "scored").map(e =>
+    [e.metadata.sourceId,e.type,e.teamId,e.playerId,e.probabilitySuccess,e.actualSuccess,e.delta,e.weightedDelta]
+  )).toEqual(armorReceipt.nonArmorScores);
+  const oldArmor = new Map(armorReceipt.events.map(e => [e.metadata.sourceId,e]));
+  for (const old of armorReceipt.events) {
+    const current = r.events.find(e => e.metadata.sourceId === old.metadata.sourceId)!;
+    expect(current).toBeDefined();
+    expect([current.id,current.teamId,current.playerId,current.metadata.sourceId,current.metadata.dice])
+      .toEqual([old.id,old.teamId,old.playerId,old.metadata.sourceId,old.metadata.dice]);
+    if (current.scoringStatus === "scored") {
+      expect([current.probabilitySuccess,current.actualSuccess,current.delta,current.weightedDelta])
+        .toEqual([old.probabilitySuccess,old.actualSuccess,old.delta,old.weightedDelta]);
+      expect(current.explainability.inputsSummary).toContain("Fixed pre-roll armor policy:");
+    } else expect(current).toMatchObject({probabilitySuccess:null,actualSuccess:null,weightedDelta:0});
+  }
+  expect(r.events.filter(e => e.type === "armor_break" && e.scoringStatus === "scored").every(e => oldArmor.has(e.metadata.sourceId))).toBe(true);
+
   const cohort = ownershipCohort.files.find((c) => c.file === file)!;
   expect(cohort.priorProjectionSha256).toBe(
     prior.files.find((c) => c.file === file)!.sha256
@@ -123,7 +150,9 @@ const oldProjection = (r: LuckReport, file: string) => {
   // correctness oracle. Independent full-pipeline zero-mean enumeration and
   // 110 XML-prefix arithmetic joins require the current actual-draw scores.
   const legacyEvents=r.events.map(e=>{
-    const copy=structuredClone(e);
+    const copy=structuredClone(oldArmor.get(e.metadata.sourceId) ?? e);
+    // Earlier unknown armor did not anchor a source-qualified damage stage.
+    if(copy.type === "armor_break" && !oldArmor.has(copy.metadata.sourceId)) delete copy.metadata.damage;
     // This frozen receipt used the former raw-symbol metric. Reconstruct only
     // that declared historical calculation, from the unchanged source pool.
     // Current skill-conditioned values have separate exact prefix/oracle tests.
@@ -169,6 +198,10 @@ const oldProjection = (r: LuckReport, file: string) => {
     contexts = new Map(priorContext.files.find(f=>f.file===file)!.rows.map(r=>[r.sourceId,r.preRoll])),
     events = legacyEvents.filter((e) => ids.has(e.metadata.sourceId!)).map(e=>{
       const copy=structuredClone(e);
+      // Newly qualified unknown armor can link an unscored action. Remove only
+      // that new membership when reconstructing the pre-policy receipt.
+      if(copy.metadata.blockResolution) copy.metadata.blockResolution.damageActionIds =
+        copy.metadata.blockResolution.damageActionIds.filter(id => priorDamage.some(step => step.actionId === id));
       if(copy.metadata.blockResolution) Object.assign(copy.metadata.blockResolution,summarizeBlockConsequence(copy,priorDamage.filter(step=>copy.metadata.blockResolution!.damageActionIds.includes(step.actionId))));
       if(copy.metadata.blockResolution)delete (copy.metadata.blockResolution as unknown as Record<string,unknown>).unscoredPool;
       // Only the versioned pre-roll context fields changed by committed-Block
@@ -332,7 +365,7 @@ describe("independent source dice census", () => {
     }
   );
   it.each(prior.files)(
-    "preserves all prior scored events, context components and team values in $file",
+    "preserves physical identities and non-armor scores, reconciling the frozen historical fingerprint in $file",
     (c) => {
       expect(
         digest(JSON.stringify(oldProjection(reports.get(c.file)!, c.file)))

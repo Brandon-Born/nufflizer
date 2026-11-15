@@ -1,3 +1,4 @@
+import { findFixedArmorPolicies, fixedArmorPolicyKey, type FixedArmorPolicy } from "./armorPolicy";
 import { ARMOR_REVIEW_NOTICE, hasArmorUnderReview } from "./readerSummary";
 import { returnDeclarationName } from "@/domain/replay/activationBudget";
 import { findRerollResources, recordedRerollChoice, recordedRerollOffer } from "./rerollResources";
@@ -420,7 +421,8 @@ function buildNormalizedEvent(
   koRecoveryChecks: ReadonlyMap<string, number>,
   armorCountInStep: number | undefined,
   questionOriginal?: NumericQuestionOriginal,
-  verifiedGatedReplacement=false
+  verifiedGatedReplacement=false,
+  fixedArmorPolicy?: FixedArmorPolicy
 ): LuckEvent | null {
   const payload =
     questionOriginal?.roll ??
@@ -635,7 +637,8 @@ function buildNormalizedEvent(
     event,
     dice,
     dieTypes,
-    armorCountInStep
+    armorCountInStep,
+    fixedArmorPolicy
   );
   const armorAccepted = armor?.kind === "verified" ? armor : undefined;
   const armorOwner =
@@ -713,8 +716,9 @@ function buildNormalizedEvent(
           rankedSymbol: blockOdds.favoredSymbol
         }
       : undefined;
+  const observedArmorSubject = armor?.kind === "excluded" && armor.observedSubject && ownerAt(ownership, armor.observedSubject, event) === teamId ? armor.observedSubject : undefined;
   const damageSubject =
-    armorScored?.subject ?? recovery?.subject ?? koRecovery?.subject;
+    armorScored?.subject ?? observedArmorSubject ?? recovery?.subject ?? koRecovery?.subject;
   const damage = damageSubject
     ? {
         subjectId: damageSubject,
@@ -894,6 +898,7 @@ function buildNormalizedEvent(
       },
       metadata: {
         sourceTag: event.sourceTag,
+        ...(observedArmorSubject ? {damage, ...(playerOwnership?.status === "confirmed" ? {ownership: {...playerOwnership.proof, role: "subject" as const}} : {})} : {}),
         recordedRerollChoice: recordedRerollChoice(event),
         recordedRerollOffer: recordedRerollOffer(event),
         mercenary:
@@ -1265,7 +1270,7 @@ function buildHowScoredSummary(
     excludedTopReasons.length > 0
       ? `Top exclusions: ${excludedTopReasons.join("; ")}.`
       : "Top exclusions: none.",
-    hasArmorUnderReview({ events }) ? "Combined team dice totals are withheld from the reading summary while armor scoring is under review. Raw model totals in JSON remain diagnostic, not a validated comparison." :
+    hasArmorUnderReview({ events, modelVersion: DICE_MODEL_VERSION }) ? "Combined team dice totals are withheld from the reading summary while armor scoring is under review. Raw model totals in JSON remain diagnostic, not a validated comparison." :
     `${home.teamName} supported dice contribution: ${formatDiceContribution(home.luckScore, scoredEvidenceForTeam({ events }, home.teamId).total, 1)}; ${away.teamName}: ${formatDiceContribution(away.luckScore, scoredEvidenceForTeam({ events }, away.teamId).total, 1)}. ${verdictSummary}`
   ];
 }
@@ -1297,6 +1302,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   const staffInjuryOriginals = findStaffInjuryOriginals(replay, ownership);
   const observedRerollDice = findObservedRerollDice(replay);
   const armorModifierUses = findMightyBlowArmorUses(replay, ownership);
+  const fixedArmorPolicies = findFixedArmorPolicies(replay, ownership);
   const damageSppNotices = findDamageSppNotices(
     replay,
     ownership,
@@ -1876,10 +1882,17 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
         apothecary.get(eventIndex),
         embeddedInjuries.get(eventIndex),
         koRecoveryChecks,
-        event.actionId ? armorCounts.get(event.actionId) : undefined
+        event.actionId ? armorCounts.get(event.actionId) : undefined,
+        undefined,
+        false,
+        fixedArmorPolicies.get(fixedArmorPolicyKey(event))
       );
       if (!normalized) {
         continue;
+      }
+      if (normalized.type === "armor_break" && normalized.scoringStatus === "scored") {
+        const p = fixedArmorPolicies.get(fixedArmorPolicyKey(event))!;
+        normalized.explainability.inputsSummary += ` Fixed pre-roll armor policy: ${p.kind}; damage header ${p.header.id}${p.causeSourceId ? `; cause ${p.causeSourceId}` : ""}${p.holderId ? `; policy holder ${p.holderId}, observed trait checkpoint ${p.checkpointAfter}` : ""}.`;
       }
       if (scoringDeclarations.has(event.id ?? "")) {
         normalized.label = "Ordinary Move declaration before scoring Rush";
@@ -2685,7 +2698,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   }
 
   const keyMoments = events
-    .filter((event) => event.scoringStatus === "scored" && event.type !== "armor_break")
+    .filter((event) => event.scoringStatus === "scored")
     .sort((a, b) => Math.abs(b.weightedDelta) - Math.abs(a.weightedDelta));
 
   const verdict: LuckReport["verdict"] = {
@@ -2756,8 +2769,9 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     modelVersion: DICE_MODEL_VERSION,
     contextModelVersion: CONTEXT_MODEL_VERSION,
     limitations: [
-      ...(hasArmorUnderReview({ events }) ? [ARMOR_REVIEW_NOTICE] : []),
+      ...(hasArmorUnderReview({ events, modelVersion: DICE_MODEL_VERSION }) ? [ARMOR_REVIEW_NOTICE] : []),
       "Supported source and dice policies are scoped to their evidence; unknown variants remain unscored.",
+      "Armor is scored only under a fixed policy established before the dice. Unsupported armor remains unknown, not a neutral result; later optional skill choices cannot select its benchmark.",
       "Block scoring uses source-qualified current-skill tables under a fixed knockdown-balance policy. Unverified pools retain symbols and observed outcomes without a point; optional choices, legal full-turn eligibility and tactical impact remain separate.",
       "Categorical injury luck scores a qualified initial unmodified table, separately from treatment, recovery and match impact.",
       "Context estimates require qualified pre-roll state and a stated successor policy. Movement, possession and regulation score-pressure units are provisional heuristics, not calibrated match impact."

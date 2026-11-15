@@ -45,7 +45,7 @@ describe("reader summary and honest key dice moments", () => {
     );
     expect(events).toEqual(before);
   });
-  it("never promotes armor or excluded/unknown dice into the reading summary", () => {
+  it("never promotes legacy armor or excluded/unknown dice into the reading summary", () => {
     const base = seed();
     const events = [
       base,
@@ -106,17 +106,19 @@ describe("reader summary and honest key dice moments", () => {
       moments: []
     });
   });
-  it("shares the armor warning and safe recommendations in the actual serialized report", () => {
+  it("exposes qualified current armor while protecting older reports", () => {
     const r = LuckReportSchema.parse(
       analyzeNufflizerInput(playbackFragmentXml("001", "UI-009", [], [38]))
     );
-    expect(r.limitations).toContain(ARMOR_REVIEW_NOTICE);
+    expect(r.limitations).not.toContain(ARMOR_REVIEW_NOTICE);
+    expect(summarizeForReader(r).categories.find(c => c.type === "armor_break")).toMatchObject({scored: 1, underReview: 0});
+    expect(summarizeForReader({...r, modelVersion: "dice-only-36"}).categories.find(c => c.type === "armor_break")).toMatchObject({scored: 0, underReview: 1});
     expect(
       r.events.some(
         (e) => e.type === "armor_break" && e.scoringStatus === "scored"
       )
     ).toBe(true);
-    expect(r.keyMoments.every((e) => e.type !== "armor_break")).toBe(true);
+    expect(r.keyMoments.some((e) => e.type === "armor_break")).toBe(true);
     expect(r.verdict.luckierTeam).toBe("unknown");
     expect(r.verdict.status).toBe("partial_analysis");
   });

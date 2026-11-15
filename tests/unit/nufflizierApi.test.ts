@@ -101,8 +101,9 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(newlyOwned).toMatchObject({
       teamId: "0",
       playerId: "14",
-      scoringStatus: "scored",
-      probabilitySuccess: 7 / 12,
+      scoringStatus: "excluded",
+      probabilitySuccess: null,
+      actualSuccess: null,
       metadata: {
         ownership: {
           role: "subject",
@@ -112,7 +113,10 @@ describe("POST /api/nufflizier/analyze", () => {
         }
       }
     });
-    expect(newlyOwned.weightedDelta).toBeLessThan(0);
+    // Current ownership is not evidence of a fixed pre-roll armor policy.
+    expect(newlyOwned.weightedDelta).toBe(0);
+    expect(newlyOwned.statusReason).toContain("policy is not established before the dice");
+    expect(newlyOwned.metadata.dice).toEqual([3,5]);
     const rushes=report.events.filter(e=>e.contextualBounds?.policy === "team_reroll_rush_moves");
     const retained=report.events.find(e=>e.metadata.sourceId==="source-2704")!;
     expect(retained.contextualBounds).toMatchObject({policy:"kept_rush_terminal_moves",minimumMoves:0,maximumMoves:9,successChance:5/6,lower:-15/2,upper:0});
@@ -261,7 +265,7 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(skillPools.filter(e=>!e.metadata.block!.skillModel!.nonKnockdownSkills).map(e=>e.metadata.sourceId)).toEqual(["source-98","source-132","source-367","source-386","source-409"]);
     expect(skillPools.filter(e=>e.metadata.block!.skillModel!.nonKnockdownSkills).map(e=>e.metadata.sourceId)).toEqual(["source-116","source-338","source-438","source-579","source-634","source-638"]);
     expect(report.schemaVersion).toBe("2.73");
-    expect(report.modelVersion).toBe("dice-only-36");
+    expect(report.modelVersion).toBe("dice-only-37");
     const positive=report.events.find(e=>e.metadata.sourceId==="source-98")!;
     const negative=report.events.find(e=>e.metadata.sourceId==="source-132")!;
     expect(positive.metadata.blockScoring).toMatchObject({policy:"fixed_pool_knockdown_balance",observedValue:1,expectedValue:19/36});
@@ -272,7 +276,7 @@ describe("POST /api/nufflizier/analyze", () => {
     }
     const unknownPool=report.events.find(e=>e.metadata.sourceId==="source-1324")!;
     expect(unknownPool).toMatchObject({scoringStatus:"excluded",weightedDelta:0,actualSuccess:null,probabilitySuccess:null});
-    expect(unknownPool.metadata.blockResolution).toMatchObject({unscoredPool:true,unscoredDamageRolls:1});
+    expect(unknownPool.metadata.blockResolution).toMatchObject({unscoredPool:true,unscoredDamageRolls:2});
     expect(report.events.find(e=>e.metadata.sourceId==="source-367")!.metadata.blockPush).toMatchObject({status:"modeled"});
     expect(report.events.find(e=>e.metadata.sourceId==="source-402")!.metadata.injuryTable?.traitEvidence).toMatchObject({observedCheckpointAfter:0});
     const injuryTableEvent=report.events.find(e=>e.metadata.sourceId==="source-110")!;

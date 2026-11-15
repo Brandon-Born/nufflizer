@@ -1,16 +1,17 @@
+import { DICE_MODEL_VERSION } from "./constants";
 import type { LuckEvent, LuckEventType, LuckReport } from "./types";
 
 export const ARMOR_REVIEW_NOTICE =
   "Armor luck is under review: later modifier choices can bias the current calculation. Armor estimates and combined dice totals are not reliable and are withheld from the reading summary and key moments. Original calculations remain in the diagnostic evidence and JSON; NUF-036 is unresolved.";
 
-export function isArmorUnderReview(event: LuckEvent): boolean {
-  return event.type === "armor_break" && event.scoringStatus === "scored";
+export function isArmorUnderReview(event: LuckEvent, modelVersion?: string): boolean {
+  return event.type === "armor_break" && event.scoringStatus === "scored" && modelVersion !== DICE_MODEL_VERSION;
 }
 
 export function hasArmorUnderReview(
-  report: Pick<LuckReport, "events">
+  report: { events: LuckReport["events"]; modelVersion?: string }
 ): boolean {
-  return report.events.some(isArmorUnderReview);
+  return report.events.some((event) => isArmorUnderReview(event, report.modelVersion));
 }
 
 export const READER_CATEGORIES: { type: LuckEventType; label: string }[] = [
@@ -25,6 +26,7 @@ export const READER_CATEGORIES: { type: LuckEventType; label: string }[] = [
 ];
 
 export function readerMomentTitle(event: LuckEvent): string {
+  if (event.type === "armor_break") return event.actualSuccess ? "Armor held" : "Armor broke";
   const actions: Record<number, string> = {
     1: "Rush",
     2: "Dodge",
@@ -44,7 +46,7 @@ export function readerMomentTitle(event: LuckEvent): string {
 // A reading aid, never a match-impact or confidence model. An outcome no more
 // likely than its alternative (<= 50%) can be highlighted. Categorical models
 // have no binary chance and remain in the category/evidence views.
-export function summarizeForReader(report: Pick<LuckReport, "events">) {
+export function summarizeForReader(report: { events: LuckReport["events"]; modelVersion?: string }) {
   const categories = READER_CATEGORIES.map((category) => ({
     ...category,
     observed: 0,
@@ -60,7 +62,7 @@ export function summarizeForReader(report: Pick<LuckReport, "events">) {
       observed++;
       const category = byType.get(event.type)!;
       category.observed++;
-      if (isArmorUnderReview(event)) category.underReview++;
+      if (isArmorUnderReview(event, report.modelVersion)) category.underReview++;
       else if (event.scoringStatus === "scored") {
         scored++;
         category.scored++;
@@ -69,7 +71,7 @@ export function summarizeForReader(report: Pick<LuckReport, "events">) {
     const p = event.probabilitySuccess;
     if (
       event.scoringStatus !== "scored" ||
-      event.type === "armor_break" ||
+      isArmorUnderReview(event, report.modelVersion) ||
       event.actualSuccess === null ||
       p === null ||
       p <= 0 ||

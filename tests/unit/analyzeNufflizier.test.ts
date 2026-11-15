@@ -23,7 +23,7 @@ describe("analyzeNufflizerInput", () => {
     expect(report.events.length).toBeGreaterThan(0);
     expect(report.keyMoments.length).toBeGreaterThan(0);
     expect(report.keyMoments.length).toBe(
-      report.coverage.allEvents.scoredCount - report.coverage.scoredByType.armor_break
+      report.coverage.allEvents.scoredCount
     );
     expect(
       report.events.every(

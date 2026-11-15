@@ -2,10 +2,15 @@ import { categoricalInjuryXml } from "./categoricalInjury";
 import { encodedMessage } from "./replay";
 // Same complete pre-roll skill/state scaffold for every face. The policy,
 // never the observed report, chooses the post-roll Mighty Blow use.
-export function armorChoicePolicyXml(a: number, b: number, use: boolean) {
+export function armorChoicePolicyXml(
+  a: number,
+  b: number,
+  use: boolean,
+  attackerSkills: number[] = [13]
+) {
   const broken = a + b >= 8 || use;
   return categoricalInjuryXml({
-    attackerSkills: [13],
+    attackerSkills,
     armorMightyBlow: use,
     dice: [1, 1],
     outcome: 0,

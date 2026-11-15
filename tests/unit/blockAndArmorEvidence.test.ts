@@ -11,8 +11,8 @@ describe("damage step accounting (NUF-018/019)", () => {
     expect(step).toMatchObject({
       teamId: "1",
       playerId: "37",
-      scoredRolls: 2,
-      unscoredRolls: 2,
+      scoredRolls: 1,
+      unscoredRolls: 3,
       contextRecords: 1
     });
     expect(
@@ -26,8 +26,9 @@ describe("damage step accounting (NUF-018/019)", () => {
       "ResultPlayerRemoval",
       "ResultRoll"
     ]);
-    // 30 of 36 sums hold armor at 10+. Recovery succeeds at 4+ with weight 1.5.
-    expect(step.diceContribution).toBeCloseTo(-30 / 36 + (1 - 1 / 2) * 1.5, 12);
+    // The source-only scaffold has no current attacker trait policy. Its
+    // armor remains observed/unscored; the separate recorded recovery is 4+.
+    expect(step.diceContribution).toBeCloseTo((1 - 1 / 2) * 1.5, 12);
     expect(r.teams[1].luckScore).toBeCloseTo(step.diceContribution, 12);
     step.diceContribution++;
     expect(LuckReportSchema.safeParse(r).success).toBe(false);
@@ -59,7 +60,7 @@ describe("damage step accounting (NUF-018/019)", () => {
         expect(step.diceContribution).toBe(0.75);
       } else {
         expect(step.contextRecords).toBe(2);
-        expect(step.diceContribution).toBeCloseTo(-1 / 12, 12);
+        expect(step.diceContribution).toBeCloseTo(3 / 4, 12);
       }
     }
   );
@@ -319,16 +320,19 @@ describe("armor perspective and fixed modifiers (NUF-011/013)", () => {
     expect(armor.probabilitySuccess).toBeCloseTo(21 / 36, 12);
     expect(armor.weightedDelta).toBeCloseTo(-21 / 36, 12);
   });
-  it("uses UI-015's three pre-roll foul assists and attributes the opposing victim", () => {
+  it("retains UI-015's three foul assists without inventing a missing current fouler policy", () => {
     const r = report("001", "UI-015", [5, 6, 8, 10], [44]);
     const armor = r.events.find((e) => e.type === "armor_break")!;
     expect(armor).toMatchObject({
       teamId: "1",
-      actualSuccess: false,
-      scoringStatus: "scored",
+      actualSuccess: null,
+      scoringStatus: "excluded",
       metadata: { difficulty: 5, requirement: 8, modifiersSum: 3 }
     });
-    expect(armor.probabilitySuccess).toBeCloseTo(6 / 36, 12);
+    expect(armor.actualSuccess).toBeNull();
+    expect(armor.probabilitySuccess).toBeNull();
+    expect(armor.weightedDelta).toBe(0);
+    expect(armor.statusReason).toContain("policy is not established before the dice");
     expect(
       r.events.find((e) => e.metadata.sourceTag === "ResultInjuryRoll")!
         .scoringStatus
@@ -411,8 +415,9 @@ describe("post-casualty recovery evidence", () => {
           }
         }
       });
-      expect(armor.scoringStatus).toBe("scored");
-      expect(armor.actualSuccess).toBe(false);
+      expect(armor.scoringStatus).toBe("excluded");
+      expect(armor.actualSuccess).toBeNull();
+      expect(armor.probabilitySuccess).toBeNull();
       expect(casualty.scoringStatus).toBe("excluded");
       expect(removal.metadata.isRollCandidate).toBe(false);
       expect(report.coverage.scoredByType.injury).toBe(1);

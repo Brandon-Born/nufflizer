@@ -137,7 +137,7 @@ test("casualty originals, replacements and applied treatment stay distinct on de
   await revealText(replacement.locator("td").nth(3));
   const saved = await exported(page);
   expect(saved.schemaVersion).toBe("2.73");
-  expect(saved.modelVersion).toBe("dice-only-36");
+  expect(saved.modelVersion).toBe("dice-only-37");
   for (const id of ["source-2033", "source-2039", "source-2043"])
     expect(
       saved.events.find(
