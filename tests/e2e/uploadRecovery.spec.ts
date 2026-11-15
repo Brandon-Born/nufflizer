@@ -41,7 +41,7 @@ test("upload selection, drop replacement, cancellation and retry work on mobile"
   expect(requests).toBe(0);
   await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
   await page.getByRole("button", { name: "Cancel analysis" }).click();
-  await expect(page.getByRole("status")).toContainText("cancelled");
+  await expect(page.getByText("Analysis cancelled. You can retry or choose another replay.", { exact: true })).toContainText("cancelled");
   await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
   await expect(page.getByRole("alert")).toBeVisible();
   await expect(page.getByText(/Ready: dropped.bbr/)).toBeVisible();

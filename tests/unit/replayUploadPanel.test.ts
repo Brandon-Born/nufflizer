@@ -105,7 +105,7 @@ describe("replay upload workflow", () => {
     const signal = fetch.mock.calls[0][1].signal as AbortSignal;
     fireEvent.click(screen.getByRole("button", { name: "Cancel analysis" }));
     expect(signal.aborted).toBe(true);
-    expect(screen.getByRole("status").textContent).toContain("cancelled");
+    expect(screen.getByText(/Analysis cancelled/).textContent).toContain("cancelled");
     fireEvent.click(
       screen.getByRole("button", { name: "Analyze Nuffle Luck" })
     );

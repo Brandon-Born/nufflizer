@@ -196,7 +196,7 @@ export function ReplayUploadPanel({
           </>
         ) : null}
       </div>
-      <p role="status" className="mt-3 text-sm text-amber-100/90">
+      <p aria-live="polite" aria-atomic="true" className="mt-3 text-sm text-amber-100/90">
         {status}
       </p>
       {error ? (
