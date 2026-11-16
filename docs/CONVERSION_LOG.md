@@ -1287,3 +1287,8 @@ The Nufflizier upload form is isolated into an accessible file-selection/drop pa
 ## 2026-11-15 — fixed-policy armor candidate
 
 Recovered the saved NUF-036 work in an isolated branch over the validated upload checkpoint. Dice-only-37 distinguishes qualified unknown armor execution from missing execution and exposes only fixed pre-roll armor policies through API/CLI/reader; optional policies remain visibly unscored. Historical source/non-armor conservation and original fingerprints are preserved. Local3,955 unit/CLI/HTTP cases, lint/types/build, Redis, optional-policy grids and four affected browser flows pass. This is not deployment, remote-CI closure or completion of the broader analyzer. See ARMOR_POLICY_RECOVERY.md and the execution log.
+
+
+## 2026-11-16 — first-use sample selection
+
+Visitors can select the existing sanitized public demo1 without bringing a replay, then explicitly Analyze through the normal API. Selection alone sends nothing; provenance, partial evidence, file replacement, cancel/retry and reset remain clear. Homepage getting-started copy and repository link are corrected. Nine focused checks, lint/types/build, all seven existing real-worker cases and three bounded desktop/mobile fixture cases pass. The sample replaces an existing real-worker admission rather than expanding the quota-bounded gate. No scoring or hosted deployment changes; broader original acceptance remains open. Current NUF-036 status is reconciled to already verified merged master4c1aa2a and CI43757599194, not a new semantic expansion. See IMPLEMENTATION_LOG.md for the receipt and limits.

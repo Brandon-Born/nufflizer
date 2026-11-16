@@ -105,7 +105,9 @@ describe("replay upload workflow", () => {
     const signal = fetch.mock.calls[0][1].signal as AbortSignal;
     fireEvent.click(screen.getByRole("button", { name: "Cancel analysis" }));
     expect(signal.aborted).toBe(true);
-    expect(screen.getByText(/Analysis cancelled/).textContent).toContain("cancelled");
+    expect(screen.getByText(/Analysis cancelled/).textContent).toContain(
+      "cancelled"
+    );
     fireEvent.click(
       screen.getByRole("button", { name: "Analyze Nuffle Luck" })
     );
@@ -150,5 +152,92 @@ describe("replay upload workflow", () => {
     expect(screen.getByText("No replay selected.")).toBeTruthy();
     expect(document.activeElement).toBe(input);
     expect(onReset).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("public sample selection", () => {
+  it("does not fetch or submit on selection, and a normal file replaces it", () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const { input, onReset } = mount(true);
+    fireEvent.click(screen.getByRole("button", { name: "Use sample replay" }));
+    expect(screen.getByText(/Ready: sample replay/)).toBeTruthy();
+    expect(fetch).not.toHaveBeenCalled();
+    expect(onReset).not.toHaveBeenCalled();
+    choose(input, replay("mine.xml"));
+    expect(screen.getByText(/Ready: mine.xml/)).toBeTruthy();
+    expect(screen.queryByText(/Ready: sample replay/)).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("loads the public bytes only after Analyze and sends a file to the normal API", async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        blob: async () => new Blob(["sample bytes"])
+      })
+      .mockResolvedValueOnce({ json: async () => ({ id: "sample-result" }) });
+    vi.stubGlobal("fetch", fetch);
+    const { onReport } = mount();
+    fireEvent.click(screen.getByRole("button", { name: "Use sample replay" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Analyze Nuffle Luck" })
+    );
+    await waitFor(() =>
+      expect(onReport).toHaveBeenCalledWith({ id: "sample-result" })
+    );
+    expect(fetch.mock.calls[0][0]).toBe("/samples/demo1.bbr");
+    expect(fetch.mock.calls[1][0]).toBe("/api/nufflizier/analyze");
+    expect(fetch.mock.calls[1][1].method).toBe("POST");
+    const file = fetch.mock.calls[1][1].body.get("replay") as File;
+    expect(file.name).toBe("sample-demo1.bbr");
+    expect(file.size).toBe(12);
+  });
+
+  it("cancels a pending sample load without sending a late POST", async () => {
+    const pending = deferred<Response>();
+    const fetch = vi.fn().mockReturnValue(pending.promise);
+    vi.stubGlobal("fetch", fetch);
+    const { onReport } = mount();
+    fireEvent.click(screen.getByRole("button", { name: "Use sample replay" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Analyze Nuffle Luck" })
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Cancel analysis" }));
+    pending.resolve({
+      ok: true,
+      blob: async () => new Blob(["sample bytes"])
+    } as Response);
+    await waitFor(() =>
+      expect(screen.getByText(/Analysis cancelled/)).toBeTruthy()
+    );
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(fetch).toHaveBeenCalledOnce();
+    expect(onReport).not.toHaveBeenCalled();
+  });
+
+  it("shows a retryable error for a missing sample without calling the API", async () => {
+    const fetch = vi.fn().mockResolvedValue({ ok: false });
+    vi.stubGlobal("fetch", fetch);
+    mount();
+    fireEvent.click(screen.getByRole("button", { name: "Use sample replay" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Analyze Nuffle Luck" })
+    );
+    await waitFor(() =>
+      expect(screen.getByRole("alert").textContent).toContain(
+        "sample could not be loaded"
+      )
+    );
+    expect(fetch).toHaveBeenCalledOnce();
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "Analyze Nuffle Luck"
+        }) as HTMLButtonElement
+      ).disabled
+    ).toBe(false);
   });
 });

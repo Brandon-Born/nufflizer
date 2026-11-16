@@ -528,7 +528,13 @@ test("[real-worker] real BBR upload exposes evidence, full filters, export and r
   await expect(
     page.getByRole("heading", { name: "Blessed by Nuffle Analyzer" })
   ).toBeVisible();
-  await page.setInputFiles('input[name="replay"]', DEMO);
+  let analysisPosts = 0;
+  page.on("request", request => {
+    if (request.method() === "POST" && request.url().includes("/api/nufflizier/analyze")) analysisPosts++;
+  });
+  await page.getByRole("button", { name: "Use sample replay" }).click();
+  await expect(page.getByText(/Ready: sample replay/)).toBeVisible();
+  expect(analysisPosts).toBe(0);
   const uploaded = page.waitForResponse(
     (response) =>
       new URL(response.url()).pathname === "/api/nufflizier/analyze" &&

@@ -1,6 +1,6 @@
 # Bounded armor-policy correction (NUF-036)
 
-Local candidate, schema 2.73 / dice-only-37. This is not a deployment or whole-analyzer completion claim.
+Verified on merged master `4c1aa2a`, schema 2.73 / dice-only-37. This is not a deployment or whole-analyzer completion claim.
 
 ## Admission and presentation
 - Ordinary Block, fixed-assist Foul and verified self-fall reuse the saved pre-roll policy finder. Optional armor choices are uniformly excluded, including both 36-face Mighty Blow policies in the runnable probe.
@@ -16,4 +16,4 @@ Local candidate, schema 2.73 / dice-only-37. This is not a deployment or whole-a
 The dice census test preserves the original frozen fingerprint hashes. It checks physical source/owner/dice identity for every prior armor event, unchanged values for still-qualified armor, null probabilities for excluded armor, and exact non-armor score conservation. Only the historical projection restores old armor membership and its derived damage subtotals. Two additional unknown-armor action links in demo6/demo7 are removed solely from that historical projection. Current admissions are independently checked by the policy grids.
 
 ## Remaining scope
-NUF-036 stays open pending publication and exact-head CI. Optional/missing-policy armor is intentionally unsupported; broader context, tactical value and original incomplete backlog items remain. No production or legacy deployment, merge, release, billing or provider change occurred.
+NUF-036 is closed following literal-criteria review and [postmerge CI43757599194](https://github.com/Brandon-Born/nufflizer/actions/runs/43757599194) on `4c1aa2a`: 3,955 tests, Redis, build and all 81 browser cases passed. The 72-face optional-policy probe admits zero faces under either policy; positive plain-Block/fixed-assist-Foul 36-face zero-mean grids and self-fall controls remain, with current trait/modifier/execution guards, unknown physical dice, twelve original hashes, prior armor/non-armor conservation, and API/CLI/reader37/legacy guards. Optional/missing-policy armor is intentionally unsupported; broader context, tactical value and original incomplete backlog items remain. The authorized master fast-forward is verified; no current hosted deployment, release, billing or provider change is claimed.

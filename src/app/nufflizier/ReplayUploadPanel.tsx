@@ -19,6 +19,7 @@ export function ReplayUploadPanel({
   const inputRef = useRef<HTMLInputElement>(null);
   const activeRequest = useRef<AbortController | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [sampleSelected, setSampleSelected] = useState(false);
   const [busy, setBusy] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +38,7 @@ export function ReplayUploadPanel({
     setStatus(null);
     setError(null);
     setFile(null);
+    setSampleSelected(false);
     const next = files?.[0];
     if (!next) return;
     if (files.length !== 1) {
@@ -63,7 +65,7 @@ export function ReplayUploadPanel({
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (activeRequest.current) return;
-    if (!file) {
+    if (!file && !sampleSelected) {
       setError("Choose a replay file first.");
       inputRef.current?.focus();
       return;
@@ -72,11 +74,36 @@ export function ReplayUploadPanel({
     activeRequest.current = controller;
     setBusy(true);
     setError(null);
-    setStatus("Reading replay and rolling Nufflizier...");
+    setStatus(
+      sampleSelected
+        ? "Loading sample replay..."
+        : "Reading replay and rolling Nufflizier..."
+    );
     onReset();
-    const data = new FormData();
-    data.append("replay", file);
     try {
+      let uploadFile = file;
+      if (sampleSelected) {
+        const sample = await fetch("/samples/demo1.bbr", {
+          signal: controller.signal
+        });
+        if (!sample.ok)
+          throw new Error(
+            "The sample could not be loaded. Retry or choose your own replay."
+          );
+        const blob = await sample.blob();
+        if (blob.size === 0 || blob.size > REPLAY_LIMITS.inputBytes) {
+          throw new Error(
+            "The sample file is unavailable. Choose your own replay."
+          );
+        }
+        uploadFile = new File([blob], "sample-demo1.bbr", {
+          type: "application/octet-stream"
+        });
+      }
+      if (activeRequest.current !== controller || !uploadFile) return;
+      const data = new FormData();
+      data.append("replay", uploadFile);
+      setStatus("Reading replay and rolling Nufflizier...");
       const response = await fetch("/api/nufflizier/analyze", {
         method: "POST",
         body: data,
@@ -154,15 +181,48 @@ export function ReplayUploadPanel({
           className="mt-3 break-words text-sm text-amber-100"
           aria-live="polite"
         >
-          {file
-            ? `Ready: ${file.name} (${file.size < 1024 * 1024 ? `${Math.max(1, Math.ceil(file.size / 1024))} KB` : `${(file.size / (1024 * 1024)).toFixed(1)} MB`})`
-            : "No replay selected."}
+          {sampleSelected
+            ? "Ready: sample replay (demo1.bbr), not your match."
+            : file
+              ? `Ready: ${file.name} (${file.size < 1024 * 1024 ? `${Math.max(1, Math.ceil(file.size / 1024))} KB` : `${(file.size / (1024 * 1024)).toFixed(1)} MB`})`
+              : "No replay selected."}
+        </p>
+      </div>
+      <div className="mt-4 space-y-2">
+        <button
+          type="button"
+          className={buttonClass}
+          disabled={busy}
+          onClick={() => {
+            setSampleSelected(true);
+            setFile(null);
+            setError(null);
+            setStatus(null);
+            if (inputRef.current) inputRef.current.value = "";
+          }}
+        >
+          Use sample replay
+        </button>
+        <p className="text-sm text-amber-50/80">
+          No replay handy? Try demo1.bbr from the project&apos;s sanitized
+          public demo collection. Select it, then press Analyze. It uses the
+          same analysis as your own upload. Results show supported dice
+          evidence, not a calibrated whole-match verdict.{" "}
+          <a
+            href="https://github.com/Brandon-Born/nufflizer/blob/master/demo-replays/demo1.bbr"
+            target="_blank"
+            rel="noreferrer"
+            className="text-amber-200 underline"
+          >
+            Sample source
+          </a>
+          .
         </p>
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <button
           type="submit"
-          disabled={busy || !file}
+          disabled={busy || (!file && !sampleSelected)}
           className="rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200"
         >
           {busy ? "Rolling..." : "Analyze Nuffle Luck"}
@@ -180,6 +240,7 @@ export function ReplayUploadPanel({
               onClick={() => {
                 onReset();
                 setFile(null);
+                setSampleSelected(false);
                 setStatus(null);
                 setError(null);
                 if (inputRef.current) {
@@ -196,7 +257,11 @@ export function ReplayUploadPanel({
           </>
         ) : null}
       </div>
-      <p aria-live="polite" aria-atomic="true" className="mt-3 text-sm text-amber-100/90">
+      <p
+        aria-live="polite"
+        aria-atomic="true"
+        className="mt-3 text-sm text-amber-100/90"
+      >
         {status}
       </p>
       {error ? (

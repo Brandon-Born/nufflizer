@@ -36,8 +36,9 @@ export default function HomePage() {
         <div className="rounded-xl border border-amber-300/20 bg-black/30 p-5 shadow-sm">
           <h2 className="text-lg font-semibold text-amber-100">How it works</h2>
           <p className="mt-2 text-sm text-amber-50/90">
-            Upload one replay, get a luck scorecard, and review the top Nuffle
-            swings.
+            Choose your replay or the public sample, press Analyze, then explore
+            supported dice outcomes and their source evidence. Missing evidence
+            stays visible rather than becoming a confident verdict.
           </p>
         </div>
         <div className="rounded-xl border border-amber-300/20 bg-black/30 p-5 shadow-sm">
@@ -65,6 +66,10 @@ export default function HomePage() {
         >
           Start Nufflizier Analysis
         </Link>
+        <p className="mt-3 text-sm text-amber-50/90">
+          No replay needed to try it: choose Use sample replay on the next
+          screen. Your own .bbr or .xml replay can be up to 4 MB.
+        </p>
       </div>
 
       <section className="rounded-xl border border-amber-300/20 bg-black/30 p-5 shadow-sm">
@@ -74,12 +79,12 @@ export default function HomePage() {
         <p className="mt-2 text-sm text-amber-50/90">
           Source code:{" "}
           <a
-            href="https://github.com/Brandon-Born/bb-nuffilizer"
+            href="https://github.com/Brandon-Born/nufflizer"
             target="_blank"
             rel="noreferrer"
             className="font-semibold text-amber-200 underline decoration-amber-300/60 underline-offset-2 hover:text-amber-100"
           >
-            github.com/Brandon-Born/bb-nuffilizer
+            github.com/Brandon-Born/nufflizer
           </a>
         </p>
         <p className="mt-1 text-sm text-amber-50/90">
