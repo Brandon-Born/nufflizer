@@ -1,4 +1,4 @@
-import type { ReplayModel } from "@/domain/replay/types";
+import type { ReplayEvent, ReplayModel } from "@/domain/replay/types";
 import type { OwnershipTimeline } from "@/domain/replay/ownershipTimeline";
 import {
   findSubjectTraitEvidence,
@@ -18,6 +18,24 @@ export const INJURY_OUTCOMES = [
   "casualty"
 ] as const;
 type InjuryOutcome = (typeof INJURY_OUTCOMES)[number];
+
+export function supportsUnmodifiedInjuryTable(
+  observation: NonNullable<LuckEvent["metadata"]["injuryObservation"]>
+) {
+  return (
+    [0, 1, 9].includes(observation.sourceCode) ||
+    (observation.sourceCode === 7 && observation.recordKind === "direct")
+  );
+}
+
+function hasUnmodifiedDirectInjury(raw: ReplayEvent | undefined) {
+  if (!raw?.payload) return false;
+  // The paired UI-015 Foul omits Modifiers on its direct injury result.
+  return (
+    raw.payload.Modifiers === "" ||
+    (raw.damageSource === 7 && raw.payload.Modifiers === undefined)
+  );
+}
 
 // BB2020 p60; Thick Skull p80, corroborated by in-game GR-010.
 // The table is conditional on an injury roll, with no injury modifier applied.
@@ -117,9 +135,9 @@ export function attachInjuryTables(
       event.metadata.modifiersSum === 0 &&
       event.playerId &&
       (event.metadata.injuryObservation?.recordKind === "direct"
-        ? raw.get(id)?.payload?.Modifiers === ""
+        ? hasUnmodifiedDirectInjury(raw.get(id))
         : !!raw.get(id) && !!koInjuryRoll(raw.get(id)!)) &&
-      [0, 1, 9].includes(event.metadata.injuryObservation.sourceCode)
+      supportsUnmodifiedInjuryTable(event.metadata.injuryObservation)
         ? [[id, event.playerId] as const]
         : []
     )

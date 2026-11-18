@@ -1,3 +1,4 @@
+import { expectedPublicImpactCounts } from "../helpers/corpus";
 import { describe, expect, it } from "vitest";
 import {
   readFileSync,
@@ -452,7 +453,7 @@ describe("occupied-bounce fresh catch possession envelope", () => {
         (e) =>
           e.catchPossessionBounds?.policy === "fresh_catch_failure_envelope"
       ).length;
-      expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
+      expect(r.teams.map((t) => t.impactCount)).toEqual(expectedPublicImpactCounts(file));
       expect(r.verdict.luckierTeam).toBe("unknown");
     }
     expect(count).toBe(2);
@@ -566,6 +567,7 @@ describe("occupied-bounce fresh catch possession envelope", () => {
         : report();
     const p = r.events.find((e) => e.metadata.pickupTurnEnd)!,
       proof = p.metadata.pickupTurnEnd!;
+    if (proof.kind !== "catch") throw new Error("Expected a catch turnover");
     if (change === "catch") proof.catchSourceId = proof.endSourceId;
     if (change === "end") proof.endSourceId = proof.catchSourceId;
     if (change === "reason")

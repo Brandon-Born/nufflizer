@@ -18,10 +18,40 @@ describe("NUF-021 versioned report contract", () => {
   it("accepts truthful partial and insufficient reports without changing values", () => {
     const partial = report();
     expect(LuckReportSchema.parse(partial)).toEqual(partial);
+    expect(partial.verdict).toMatchObject({ scoreGap: 0, luckierTeam: "unknown" });
+    expect(partial.verdict.evidence).toMatchObject({
+      missingScoredTeamIds: [],
+      unscoredRollCandidates: 1
+    });
     const empty = analyzeNufflizerInput(envelope());
     expect(LuckReportSchema.parse(empty)).toEqual(empty);
+    expect(empty.verdict).toMatchObject({
+      status: "insufficient_evidence",
+      scoreGap: null,
+      evidence: {
+        missingScoredTeamIds: ["0", "1"],
+        unscoredRollCandidates: 0,
+        unscoredDiceFields: 0,
+        unresolvedDiceFields: 0
+      },
+      luckierTeam: "unknown"
+    });
+    empty.verdict.scoreGap = 0;
+    expect(LuckReportSchema.safeParse(empty).success).toBe(false);
   });
   it.each([
+    (r: ReturnType<typeof report>) => {
+      r.verdict.evidence.missingScoredTeamIds.push("0");
+    },
+    (r: ReturnType<typeof report>) => {
+      r.verdict.evidence.unscoredRollCandidates = 0;
+    },
+    (r: ReturnType<typeof report>) => {
+      r.verdict.evidence.unresolvedDiceFields++;
+    },
+    (r: ReturnType<typeof report>) => {
+      r.verdict.scoreGap = Number.EPSILON;
+    },
     (r: ReturnType<typeof report>) => {
       r.verdict.summary = "Home was decisively luckier.";
     },
@@ -111,6 +141,9 @@ describe("NUF-021 versioned report contract", () => {
     },
     (r: ReturnType<typeof report>) => {
       r.verdict.scoreGap = 99;
+    },
+    (r: ReturnType<typeof report>) => {
+      r.verdict.scoreGap = null;
     },
     (r: ReturnType<typeof report>) => {
       r.verdict.status = "insufficient_evidence";

@@ -78,11 +78,13 @@ export async function analyzeUpload(
         },
         { status: error.status }
       );
-    if (error instanceof ReplayValidationError)
+    if (error instanceof ReplayValidationError) {
+      const unsupportedVersion = !legacy && error.code === "UNSUPPORTED_REPLAY_VERSION";
       return NextResponse.json(
-        { error: error.message, code: "INVALID_REPLAY" },
-        { status: 400 }
+        { error: error.message, code: unsupportedVersion ? error.code : "INVALID_REPLAY" },
+        { status: unsupportedVersion ? 422 : 400 }
       );
+    }
     console.error(
       "Replay analysis failed",
       error instanceof Error ? error.message : "Unknown error"

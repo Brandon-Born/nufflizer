@@ -80,7 +80,7 @@ describe("source-backed Loner3+ gates and conditional fresh block pools", () => 
     ).toBe("failed_loner_kept_original");
   });
 
-  it("records a passed3+ mental gate without inventing a failure or a priced replacement", () => {
+  it("scores the activation replacement conditional on a passed 3+ Loner gate", () => {
     const r = report("loner3_mental_pass");
     const gate = r.events.find((e) => e.metadata.lonerGate)!;
     expect(gate.metadata.lonerGate).toMatchObject({
@@ -89,13 +89,15 @@ describe("source-backed Loner3+ gates and conditional fresh block pools", () => 
       passed: true
     });
     expect(gate.metadata.dice).toEqual([5]);
-    expect(
-      r.events.find((e) => e.metadata.rollType === 34)?.metadata
-    ).toMatchObject({ dice: [6], outcomeCode: 1 });
+    expect(gate.probabilitySuccess).toBe(2 / 3);
+    expect(gate.weightedDelta).toBeCloseTo(5 / 18, 12);
+    const first = r.events.find((e) => e.metadata.activationCheck?.draw === "original")!;
+    const replacement = r.events.find((e) => e.metadata.activationCheck?.draw === "replacement")!;
+    expect(first.weightedDelta).toBeCloseTo(-5 / 6, 12);
+    expect(replacement.metadata).toMatchObject({ dice: [6], outcomeCode: 1 });
+    expect(replacement.weightedDelta).toBeCloseTo(1 / 6, 12);
     expect(r.events.some((e) => e.metadata.activationEnd)).toBe(false);
-    expect(
-      r.events.find((e) => e.metadata.rollType === 34)?.probabilitySuccess
-    ).toBeNull();
+    expect(replacement.probabilitySuccess).toBe(5 / 6);
   });
   it.each([
     "threshold",

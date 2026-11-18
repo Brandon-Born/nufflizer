@@ -23,6 +23,7 @@ export type FixedArmorPolicy = {
   causeSourceId?: string;
   holderId?: string;
   checkpointAfter?: number;
+  foulActorTraits?: CurrentTraitEvidence;
 };
 
 // Known ordinary Block skills which cannot change its armor roll. Claws75
@@ -56,6 +57,11 @@ function fixedTraits(
       isOtherActionInjurySkill(s) ||
       ((role === "subject" || role === "foul_actor") && (s === 13 || s === 75))
   );
+}
+export function hasFixedFoulDamageTraits(proof: CurrentTraitEvidence) {
+  // Dirty Player can modify either stage of a foul. Mighty Blow and Claws
+  // apply to knockdowns from other actions, and foul assists affect armor only.
+  return fixedTraits(proof, "foul_actor");
 }
 function headerIsKnown(e: ReplayEvent) {
   const p = e.payload;
@@ -269,8 +275,11 @@ export function findFixedArmorPolicies(
     // Block action. Its own Mighty Blow/Claws cannot modify its own armor.
     if (
       !c.self &&
-      (!fixedTraits(holder, c.kind === "foul" ? "foul_actor" : "block_actor") ||
-        holder?.teamId === subject?.teamId)
+      (!holder ||
+        !(c.kind === "foul"
+          ? hasFixedFoulDamageTraits(holder)
+          : fixedTraits(holder, "block_actor")) ||
+        holder.teamId === subject?.teamId)
     )
       continue;
     policies.set(fixedArmorPolicyKey(header), {
@@ -278,7 +287,8 @@ export function findFixedArmorPolicies(
       header,
       causeSourceId: c.cause,
       holderId: c.holder,
-      checkpointAfter: holder?.currentCheckpointAfter
+      checkpointAfter: holder?.currentCheckpointAfter,
+      ...(c.kind === "foul" && holder ? { foulActorTraits: holder } : {})
     });
   }
   for (const key of policies.keys())

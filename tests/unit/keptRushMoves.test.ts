@@ -7,7 +7,9 @@ import { analyzeReplayLuck } from "@/domain/nufflizer/analyzeLuck";
 import { parseReplayXml } from "@/domain/replay/parseXml";
 import { LuckReportSchema } from "@/domain/nufflizer/reportSchema";
 import { explainContextBounds } from "@/domain/nufflizer/presentation";
+import { estimateExactTeamMoves } from "@/domain/nufflizer/contextImpact";
 import { lonerDriveXml } from "../helpers/lonerDrive";
+import { withExactOrdinaryMoves } from "../helpers/exactOrdinaryMoves";
 const evidence = "tests/fixtures/evidence/bb3-kept-rush-moves.json";
 const facts = JSON.parse(readFileSync(evidence, "utf8")).cases[0] as {
   sha256: string;
@@ -52,6 +54,35 @@ function source() {
   };
 }
 describe("retained original Rush under its fixed observed decline policy", () => {
+  it("prices the original two-plus Rush when two other ordinary moves are verified", () => {
+    const r = analyzeNufflizerInput(withExactOrdinaryMoves(
+      xml(), facts.possiblePlayerIds, ["37", "38"]
+    ));
+    const e = r.events.find((row) => row.metadata.rerollUsed === false && row.metadata.rollType === 1)!;
+    expect(e.contextualImpact).toMatchObject({
+      policy: "kept_rush_terminal_moves", successChance: 5 / 6,
+      difference: 2, deviation: -5 / 6, contribution: -5 / 3
+    });
+    expect(e.contextualBounds).toBeUndefined();
+    expect(e.metadata.teamRerollsSpent).toBe(0);
+    expect(e.metadata.rerollDraws).toBeUndefined();
+    expect(r.teams[1]).toMatchObject({ impactCount: 1, impactScore: -5 / 3 });
+    expect(r.contextComponents[1]).toMatchObject({
+      pointCount: 1, bounds: { lower: -5 / 3, upper: -5 / 3 }
+    });
+    expect(r.verdict.luckierTeam).toBe("unknown");
+    const allFaces = [1, 2, 3, 4, 5, 6].map((face) =>
+      estimateExactTeamMoves(
+        "kept_rush_terminal_moves", e.metadata.preRoll, face >= 2,
+        5 / 6, e.metadata.retainedRushContext!.waitingCheckpointAfter
+      )!.contribution
+    );
+    expect(allFaces[0]).toBe(-5 / 3);
+    expect(allFaces.slice(1).every((value) => Math.abs(value - 1 / 3) < 1e-12)).toBe(true);
+    expect(allFaces.reduce((sum, value) => sum + value, 0)).toBeCloseTo(0, 12);
+    delete e.metadata.preRoll!.ordinaryMoveRosterComplete;
+    expect(LuckReportSchema.safeParse(r).success).toBe(false);
+  });
   it("bounds the original failed die from its source-qualified ordinary prefix and terminal fall", () => {
     const r = report(),
       e = kept(r),
@@ -140,9 +171,10 @@ describe("retained original Rush under its fixed observed decline policy", () =>
     ).toEqual(facts.possiblePlayerIds);
     expect(facts.prefixMoves).toHaveLength(5);
     const summary = r.contextComponents.find((t) => t.teamId === "1")!;
-    expect(summary.componentCount).toBe(4);
-    expect(summary.bounds!.lower).toBeCloseTo(-77 / 6, 12);
-    expect(summary.bounds!.upper).toBeCloseTo(11 / 6, 12);
+    expect(summary.componentCount).toBe(5);
+    expect(summary.pointCount).toBe(1);
+    expect(summary.bounds!.lower).toBeCloseTo(-101 / 6, 12);
+    expect(summary.bounds!.upper).toBeCloseTo(-13 / 6, 12);
     expect(
       summary.byAction.find((a) => a.eventIds.includes(e.id))!.eventIds
     ).toEqual([e.id]);
@@ -166,7 +198,7 @@ describe("retained original Rush under its fixed observed decline policy", () =>
       events: t.events.filter((e) => e.locator?.replayStep !== 1)
     }));
     const e = kept(analyzeReplayLuck(s.replay));
-    expect(e.contextualBounds!.maximumMoves).toBe(10);
+    expect(e.contextualBounds).toMatchObject({ maximumMoves: 10 });
     expect(e.contextualBounds!.lower).toBeCloseTo(-25 / 3, 12);
     expect(
       e.metadata.preRoll!.ordinaryMoveAvailability!.unknownPlayerIds

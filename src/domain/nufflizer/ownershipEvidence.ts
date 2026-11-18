@@ -164,8 +164,12 @@ export function validReportedOwnership(
   }
   if (!proof(ownership)) return false;
   const block = event.metadata.block;
-  if (!block) return ownership.defender === undefined;
   const defender = ownership.defender;
+  if (event.metadata.foulAppearance)
+    return !block && ownership.role === "actor" && !!defender &&
+      defender.playerId === event.metadata.foulAppearance.defenderId &&
+      defender.teamId !== ownership.teamId && proof(defender);
+  if (!block) return defender === undefined;
   return (
     ownership.role === "actor" &&
     ownership.playerId === block.attackerId &&

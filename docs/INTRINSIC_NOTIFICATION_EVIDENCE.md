@@ -1,5 +1,7 @@
 # Intrinsic knowledge across mental and recovery notifications
 
+Schema 2.90 extends the notification scope to six provider 84 records. The [current contract](REPORT_CONTRACT.md#schema-290-and-dice-model-40--animal-savagery-notification-scope) records that extension. The evidence below describes the original schema 2.72 checkpoint.
+
 Schema2.72 / dice-only-36 / mobility-possession-42. Existing NUF-010/011/014/016/018/020/021/022/027 advance; no original issue closes. Nineteen done and fifteen original incomplete remains the authoritative backlog state.
 
 ## Independent source contracts

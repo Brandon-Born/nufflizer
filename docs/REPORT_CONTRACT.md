@@ -1,8 +1,8 @@
 # Versioned report contract
 
-Updated 2026-11-14. Owning IDs: NUF-007/009/012/013/015/019/021–023. Scoped semantic evidence below does not establish contextual scoring or complete BB3 rule support.
+Updated 2026-11-18. Owning IDs: NUF-007/009/012/013/015/019/021–023. The contracts below describe the supported scope of each replay policy.
 
-`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.73`, dice model `dice-only-36` and context model `mobility-possession-42`. All report/event/team TypeScript types are inferred from it in `types.ts`; API, CLI and UI cannot silently maintain different field definitions. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
+`src/domain/nufflizer/reportSchema.ts` is the executable Zod definition of schema `2.99`, dice model `dice-only-47` and context model `mobility-possession-54`. All report/event/team TypeScript types are inferred from it in `types.ts`. The shared service validates generated reports in the worker. The browser validates a received report before rendering it or enabling JSON export.
 
 ## Current model guarantees
 
@@ -830,3 +830,241 @@ Direct root KO recovery additionally requires the known root payload shape befor
 The schema2.73 event/calculation payload remains compatible. Newly generated reports include an explicit NUF-036 limitation when armor has a scored model calculation. Those original event scores, totals and coverage classifications remain **diagnostic**, with the unresolved policy bias disclosed; this milestone does not repair or certify them. API/JSON retain the original dice and calculations for inspection. Recommended `keyMoments` exclude armor. CLI and UI withhold the combined team total/gap when it includes reviewed armor; UI labels those armor rows Under review and excludes them from the Scored filter. The Under review filter and category links retain access to the evidence.
 
 The reading summary counts roll candidates, grouping existing linked policies and excluding known copies. Reviewed armor is counted with unscored/under-review checks. Counts are support measures, not confidence or a whole-match comparison. Up to six supported non-armor binary results with observed-outcome probability at most50% are ordered by that probability, then source index. This is a stated reading/presentation threshold, not significance, tactical impact or a new scoring rule. Categorical results remain in category/evidence views without fabricated binary odds. A linked reroll's displayed final-result chance retains its recorded policy; actual-draw innovations remain separate in Why. Moment navigation resets stale filters and isolates the unchanged source event; reset and new uploads clear that selection. Full JSON is preserved.
+
+## Schema 2.74 — initial injury after a verified ordinary foul
+
+A direct `ResultInjuryRoll` with damage source 7 can expose the conditional unmodified injury table when the subject's current traits and the observed result support it. The paired UI-015 replay omits the empty modifiers field on this source. An explicit modifier excludes the fixed table. The separate categorical score requires the same action's scored armor break, an adjacent applied Foul result naming the opposing actor and victim, and complete current role and trait evidence. A fouler with Dirty Player or unknown traits leaves the observed injury unscored.
+
+The `injuryScoring.cause` variant `foul` links `foulResultSourceId` to the preceding deterministic Foul result and records `foulerTraitEvidence`. The recorded assists change armor odds. The victim's own injury profile determines the conditional injury odds. Injury severity and armor luck enter the damage subtotal once each from the victim's team perspective. Recovery, final availability and contextual impact remain separate.
+
+A nonempty armor assist list is admitted only for a verified foul. Before the draw, each named assisting player must resolve to the fouler's side for an attack assist or the target's side for a defense assist. Neither participant may also be an assistant. Conflicting, unknown or repeated identities make the armor odds unknown and withhold that foul's dependent initial injury score. The underlying observations remain inspectable.
+
+
+## Context model 43 — exact teammate moves on a committed replacement
+
+A direct committed team Dodge replacement with an observed move or terminal fall, or a supported successful unmodified Rush replacement, can contribute a teammate-move point. The pre-roll frame must include every known roster member, resolve the ordinary-move eligibility of each candidate, and agree with the waiting frame. Existing qualified uncertainty still produces a range. An incomplete roster cannot certify an exact count.
+
+The point is `(replacement success indicator - replacement success chance) × known available teammate moves`. It belongs to the replacement's action and category. The original failed die remains in dice accounting. Actor continuation, possession, reroll cost, damage and final match outcome remain outside this component. Unsupported outcomes stay with their available dice and state evidence.
+
+
+## Context model 44 — retained Pickup possession
+
+A source-qualified kept Pickup can now carry `possessionBounds.policy = "kept_pickup_possession"`. It requires the same player's ordinary Move declaration and movement to the ball square immediately before the original pickup question, an available team reroll explicitly declined, and the matching kept die. The original roll's own success chance funds the component. The kept summary supplies no new random draw and spends no resource.
+
+The eight D8 alternatives retain the existing occupancy, marking and settlement bounds. Pending catches and returns remain unresolved. The original contribution enters its action, category and team interval sums once. In demo2, one occupied branch gives a possible contribution of −17/12 to 0. In demo11, two occupied branches and one marked empty branch give −19/12 to 0. Missing current reaction evidence leaves each upper contribution at zero. Later ball outcomes and whole-match interpretation remain separate.
+
+
+## Context model 45 — committed team Pickup possession
+
+The `team_pickup_possession` range carries `waitingCheckpointAfter` and values only the fresh replacement die after a committed team reroll. It requires a verified ordinary move to the ball, adjacent embedded original and choice evidence, an unmodified check, and a waiting snapshot at the original question with the same clock, ball and roster observations. Other players' positions and observed policies must agree across the boundary. The waiting actor must be at the reached square. The range can use unknown reaction evidence without assigning a point estimate.
+
+Both qualified public replays have eight empty and unmarked destinations with uncertain reactions. Demo4's failed 3+ replacement contributes −4/3 to 0. Demo8's successful replacement contributes 0 to 2/3. Both use the single replacement chance of 2/3. The report preserves the original die and one reroll spend separately, along with 8/9 two-attempt odds. Later ball outcomes remain separate.
+
+
+## Context model 46 — recorded rain on a team Pickup replacement
+
+A single source-qualified Pouring Rain modifier can now carry across the established team Pickup decision boundary. The original question and replacement must have the same modifier record. The record must be the global −1 weather modifier and the effective target must be exactly one above the base requirement. Unsupported modifiers leave the available dice evidence intact.
+
+Demo5 source-2409 has a 3+ base requirement and a 4+ effective target after the recorded rain. Its failed replacement contributes −1 to 0 provisional context units with eight empty, unmarked bounce destinations and uncertain reaction settlement. The base replacement chance is 1/2, the combined check chance is 3/4, and one team reroll was spent.
+
+
+## Schema 2.75 — availability of the supported dice gap
+
+`verdict.scoreGap` is nullable. It is the absolute difference between the additive supported dice totals only when both teams have at least one scored event. One supported team or no supported team leaves the gap null. CLI and UI render that gap as “Not scored.” A numeric zero records matching supported totals. Whole-match luck still abstains in every case because the supported totals can omit consequential events.
+
+
+## Explicitly unsupported replay versions
+
+A single explicit version other than the supported BB3 version 1-4-0-0 is rejected before dice analysis. The primary API returns HTTP 422 with `UNSUPPORTED_REPLAY_VERSION` and a message naming the supported version. CLI exits with status 1, emits the same code and message on stderr, and leaves stdout empty. Duplicate or structured version fields are malformed input and retain HTTP 400 with `INVALID_REPLAY`. A missing version retains the existing compatibility path. The deprecated enabled route retains its HTTP 400 / `INVALID_REPLAY` compatibility response.
+
+## Schema 2.76 and context model 47 — exact teammate moves on a retained original
+
+The `kept_dodge_terminal_moves` and `kept_rush_terminal_moves` policies can carry a point contribution when a complete pre-roll roster and a consistent waiting frame prove every other player's ordinary-move eligibility. The existing original question, explicit decline, matching kept die, and terminal self-fall and turn-end checks still apply. Incomplete eligibility can produce a range under the existing conditions.
+
+With the recorded decline held fixed, the observed failure contributes `−successChance × availableMoves`. The kept summary carries the original draw, and no reroll is spent. The point covers only other teammates' ordinary moves. It enters the event, recorded action, category and team once. The rest of the action, including damage dice, retains its own accounting. This is a provisional gameplay unit. The public corpus still reports ranges for these retained failures.
+
+## Schema 2.77 — failed end-zone Rush and ball aftermath
+
+`movementFall.ballPath` can carry a waiting checkpoint and three to eight ordered ball legs. Each leg names the recorded roll and its source and destination cells. This applies to a verified held ball at a failed ordinary 2+ Rush into the opponent's end zone after a direct team reroll. Both the original and the replacement are observed failures. A checked self-fall leads through an initial D8 out-of-bounds bounce, recorded throw-in movement, and an in-bounds landing before the same turnover. Contradictory or interrupted ball paths withhold this grouped fall receipt.
+
+Demo1 source-2901 and demo2 source-3528 each contribute −5/3 across the two Rush dice and +1/6 from the scored armor hold. Their movement and damage subtotal is −3/2. The ball rolls retain their own rows with unverified odds. A throw-in endpoint records observed movement. Possession at the next playable state and the tactical cost of the failed scoring chance remain unquantified.
+
+## Schema 2.78 — possession after a failed end-zone Rush
+
+`movementFall.ballPath.aftermath` can describe the first board after the recorded turnover in the same replay step. Only a bounded set of observed turnover controls may precede that board. A `loose` outcome requires a stable normal-turn board in the same period, matching roster identities, the ball at the final landing, and an observed coordinate that rules out every roster player's presence at that square. The exported `exclusions` name the player, axis and coordinate. An omitted held flag alone gives no possession evidence.
+
+Demo2 resumes at checkpoint 3546 with the ball loose at (12,8). Player 48's missing X stays unknown. That player's observed Y of 7 rules out the ball square. Demo1 instead records `turn_transition` at checkpoint 2913, with the ball at the off-pitch sentinel after a Bribe prompt. This leaves possession in the next drive unknown. Both receipts describe recorded aftermath. Causal value, later recoveries and the scoring alternative still need separate support.
+
+## Schema 2.79 and dice model 39 — bomb catches
+
+Five family-7 rows in demo2 and demo6 are linked to a bomb explosion at the catcher’s square. Three links occur in the same catch action. Two successful catches resume into an explosion through a recorded star-skill question, ready and timer controls, and a matching applied choice. `metadata.bombCatch` records the observed caught or missed outcome, the explosion source and the optional star question. These candidates keep their original dice and enter coverage as unscored. Ordinary Catch odds and favorable possession value require separate evidence.
+
+Demo6 source-674 is a regular ball catch after a recorded ball bounce following explosion damage. Demo4 source-1722 is also a regular ball catch following the witnessed ball launch, despite the matching numeric interception prompt. Both continue to score under their existing contracts.
+
+## Schema 2.80 — confirmed Pickup after a carrier Rush failure
+
+A loose-ball aftermath can carry `recovery` with the later `pickupSourceId`, its waiting checkpoint, the first confirmed held-ball checkpoint and cell, the count of intervening board observations, and any verified bomb catches in the interval. The regular ball must stay at the same square through compatible board observations and a bounded sequence of qualified actions. The confirmed bomb catch and explosion refer to a separate object. The opponent must reach the square through an ordinary Move and complete a recorded team Pickup reroll. The first later checkpoint must confirm the same player holding the ball at the end of the observed carry path.
+
+Demo2 has 15 compatible boards from checkpoint 3546 through 3682. Player 13 approaches (12,8) and rolls 1 then 4 for the 3+ Pickup at source-3685. Four ordinary moves lead to (16,4), where checkpoint 3698 explicitly confirms possession. The Pickup retains its own −11/30 dice contribution. The failed Rush and armor subtotal remains −3/2. The scoring alternative and later tactical value remain open.
+
+## Schema 2.81 and context model 48 — committed scoring Rush
+
+The `committed_team_scoring_rush` point values a fixed unmodified 2+ replacement after an observed team reroll decision. Admission requires a verified ordinary carry into the waiting frame, an active standing carrier with no unresolved effects, compatible attacking directions, and no extra Dodge or occupied end-zone square. It also requires regulation clocks, an explicitly tied 0–0 opening board and a compatible score prefix. Each prior counted touchdown links the scorer and carrier move to the drive-end notification and the next scoreboard. A later missing score counter may retain the proven score. A contradiction or unpaired touchdown blocks admission.
+
+In demo2 the waiting board at 3524 places player 48 at (1,7) with the clear goal at (0,7). The prior touchdown at 2202 and scoreboard at 2204 establish 0–1 from the carrier's perspective. Both teams' scheduled remaining regulation turns total nine. Success ties the game 1–1 immediately. Failure leaves 0–1 and puts the carrier down at (1,7) with armor and ball movement pending. The difference is 4 provisional touchdown units plus 0.8 score-pressure units. The contribution is `(actual - 5/6) × 4.8`, which gives −4 on the recorded failure and +0.8 on each successful face. These weights are heuristic and cover the immediate scoring window. The two dice and armor retain their −1.50 dice subtotal, and the later opponent Pickup retains its own contribution.
+
+The shared validator checks the published decision, observed roster and clock, pre-roll field position, goal evidence and successor arithmetic. API, CLI and browser show the same components. The 12 public replays have 32 prior ranges and one new point. The public verdicts all remain unknown.
+
+## Schema 2.82 and context model 49 — settled pickup possession
+
+The existing pickup policy records all eight equally likely first bounces after a failure. When the pre-roll evidence confirms each one settles on an empty square and determines its marking, both possession bounds coincide. The report records an `exact_pickup_possession` point with the original stage policy, the single-die chance, the marked landing fraction and the existing waiting checkpoint where applicable. This applies to a retained original under the recorded decline, an already committed Sure Hands replacement or a team replacement with verified waiting continuity.
+
+Success secures the ball here. For a failed pickup the immediate loose-ball cost is 2 provisional own-possession units plus the fraction of landings in a known opposing tackle zone. The contribution multiplies that difference by actual success minus single-die success chance. Movement options, reroll resource value, later possession and scoring have separate accounting. Occupied landings, off-pitch results, unknown tackle zones and unresolved reactions keep their intervals and add no point. The report validates the exact term against all eight branches and the existing action, draw and choice receipts.
+
+Matched controlled examples use demo6’s source-derived Sure Hands sequence, a 3+ replacement and a pickup at (5,7). The safe variant has eight unmarked squares and a failed-die contribution of −4/3 units. An opposing marker at (3,7) exposes three of the same eight squares. Its failed-die contribution is −19/12 units. Enumerating all six faces gives a zero-mean point in each variant. All seven public pickup ranges remain due to incomplete reaction evidence. Public dice scores, prior context components and whole-match abstention stay as recorded.
+
+## Schema 2.83 and context model 50 — continued pickup settlement
+
+The committed team Pickup policy can qualify all eight empty and known-marking bounce landings from complete current skill lists that survive the original and waiting frames. The same-instance trait tracker requires verified identities, explicit effects, empty prayers, absence of transformations and supported intervening records. The point receipt retains each player’s skill seed and original checkpoint. The schema matches the complete roster at both snapshots and verifies each seed’s roster. No raw checkpoint fields are filled.
+
+Under the scoped first-bounce policy, Pass and Animosity concern passes and handoffs. Loner on other players can affect their own later reroll decisions. The active picker’s Loner contract remains separate. These effects leave an empty first bounce unchanged. Occupied and off-pitch outcomes, unknown zones, unsupported skills and missing trait continuity retain their previous ranges. See the [2020 rules](https://tesera.ru/images/items/2493646/Blood_Bowl_%282020%29.pdf) and [Games Workshop commentary on rerolls and Animosity](https://assets.warhammer-community.com/eng_29-05_blood_bowl_faq_errata-s5alrome7m-3ic3dmiws6.pdf).
+
+Demo8 source-217 records player 9’s successful 3+ team replacement at (6,3), with all eight first landings empty and unmarked. Its point is `(1 − 2/3) × 2 = +2/3` provisional possession units. The two actual dice remain a −1/3 raw deviation with one team reroll spent. The public context census now contains two points and 31 ranges. All whole-match verdicts remain unknown.
+
+## Schema 2.84 and context model 51 — opening turn scoring Rush
+
+A committed scoring Rush can use a derived early first half when the waiting board omits the period. Its evidence records `periodBasis: "opening_turn_counters"`. The prefix begins at the explicit regulation opening and recorded cumulative turns must stay nondecreasing and within the early range. An observed later period, a counter reversal or a contradiction in the active side withholds the point. The two waiting turn counters must agree with the verified carry prefix. When the waiting board omits the active team, the matching active carrier, held-ball roster, offer and observed-roster reroll decision establish the side. The original replay observations retain their nullable fields.
+
+Demo5 source-799 reaches the end zone from (24,12) after a successful 2+ replacement. The opening score was 0–0, with team turns [3,2]. The touchdown term is 4 and the score-pressure term is `8 / (1 + 13 + 14) = 2/7`. Its contribution is `(1 − 5/6) × (4 + 2/7) = +5/7` provisional units. Its two actual dice have a −2/3 raw deviation and one team reroll was spent. With the same score and die policy a hypothetical terminal failure after both scheduled clocks are exhausted would contribute −10, compared with −25/7 in the early frame. This last-turn comparison checks the heuristic while the broader public late-game policy remains open.
+
+The public context census contains 31 ranges and three points. Supported dice values retain their previous accounting and whole-match verdicts remain unknown.
+
+## Schema 2.85 — confirmed scores before scoring Rushes
+
+`metadata.scoringAttemptScore` records the verified prior score by roster, the pre-roll checkpoint, the acting roster and the earlier touchdown receipts. The prefix begins at an explicitly tied opening board. Each goal requires a trace of how the scorer carried or acquired the ball in the offensive end zone. A carry can include ordinary Move steps, source-linked successful unmodified Dodge or Rush steps, the supported committed Rush replacement shape, and an unmodified successful pickup after reaching the loose ball. Where the prior board already shows the carrier, an exact continuation of the owned movement sequence can start from that board.
+
+The reducer also accepts a held-ball handoff with an applied transfer and the identified teammate’s successful unmodified Catch. A committed pickup in the end zone requires the reached square, original failed die, waiting board, team reroll use and fresh success at the same target. Demo6’s handoff catch takes the visitors to 1–0 at checkpoint 1879. Demo10’s pickup ties the score 1–1 at checkpoint 2623. All 23 public touchdown records reconcile.
+
+The terminal goal must agree with the scorer and end-zone position and lead into its adjacent touchdown turn end. The first subsequent confirming board must show the increment. When the direct goal record omits the left end-zone X coordinate, the verified applied step supplies the exact destination. Raw omissions stay intact. Unrecognized actions or contradictory scores break the chain. The report validator checks the current roster and the ordered earlier turn-end and scoreboard receipts.
+
+Demo5’s first home goal uses the committed Rush, and its second comes from five ordinary carry steps. They establish 2–0 at checkpoint 3970, before the visiting carrier’s final-turn Rush. The later touchdown changes the observed score to 2–1 and never enters the earlier receipt. The timeline and CLI explain the score from the acting team’s perspective. This is an observed match-state field, with the existing dice and provisional context scoring contracts. Late-game retry choices stay unresolved.
+
+## Schema 2.86 and context model 52 — scoring Rush before halftime
+
+The committed scoring Rush can recover a limited pre-roll frame from an applied carry and the closing clock. The carry must start on a stable held-ball board and account for the carrier’s entire observed ordinary movement allowance step by step. The waiting board must place the same active carrier on the final approach square. Known columns must exclude all other players from the goal columns. A missing opposing row is permissible only when the observed column rules out adjacency. The replacement must follow the original failed 2+ roll and recorded team reroll.
+
+`periodBasis: "half_boundary_counters"` ties both opening turn-counter histories to the waiting board, which shows the final turn number of the first half for both teams. The first observed post-turnover transition board must explicitly show the second half with those counters still equal. `carryCheckpointAfter` records the starting board. The pre-roll fields leave the omitted period, the missing movement counter and the absent active team unknown.
+
+Demo1’s home carrier uses five ordinary moves from (19,2) to (24,2), then fails both 2+ Rush dice. Success on the committed replacement would make the 0–0 score 1–0. Eight scheduled regulation turns per team remain, giving `(0 − 5/6) × (4 + 8/17) = −190/51` provisional scoring units at source-2901. The original die, reroll spend, armor check and later ball movement keep their separate records. The public corpus now contains eight pre-roll scoring receipts, four context points and 31 ranges.
+
+## Schema 2.87 and context model 53 — final-turn scoring Rush ranges
+
+`contextualBounds.policy: "final_turn_scoring_rush_envelope"` covers a fresh unmodified 2+ Rush that immediately scores in the actor’s final regulation turn. The preceding score and both team turns must be verified. A positive observed team reroll count provides the context for the unobserved first-roll failure. `confirmedGoal` links the observed result to the scorer, touchdown turn end and confirming scoreboard. The browser and CLI explain both the observed touchdown and the scoring range.
+
+The first die’s contribution is `(D − V) / 6`, where `D` is the immediate touchdown value and `V` is the expected immediate scoring value following a miss. The replay supports the outer bounds `0 ≤ V ≤ D`. These are bounds on an unknown continuation. A reroll count alone cannot establish legal use, a particular choice or the chance of scoring after a miss. The endpoints enter the additive range subtotal. The actual first die contributes separately to dice luck.
+
+Demo1 source-5271 takes a 1–0 lead with one opposing regulation turn scheduled, giving `D = 4 + 8/2 = 8` and a range of 0 to 4/3. Demo5 source-3997 reduces the deficit from 0–2 to 1–2, giving `D = 4` and a range of 0 to 2/3. The corpus now contains four context points and 33 ranges across the 12 public files.
+
+## Schema 2.88 — verdict evidence and supported dice gaps
+
+`verdict.evidence` names any team IDs with no scored roll and gives counts for excluded roll candidates, unscored raw dice fields and fields with unresolved identity. Team IDs follow roster order. The report validator reconciles the IDs against scored events and each count against its own coverage row. The roll-candidate and dice-field counts use different populations and can describe the same missing outcome. The browser and CLI explain missing team coverage and unresolved dice fields alongside the verdict.
+
+Zero scored checks yields `insufficient_evidence`. One or more yields `partial_analysis`. The supported dice gap is null until both teams have a scored roll, then equals the absolute difference of their published dice contributions. Only an exact zero difference displays as matching supported totals. A positive value that rounds to zero at one decimal place displays as less than 0.1. Coverage counts and the dice gap describe observed support. A supported whole-match conclusion still requires material outcome coverage and a contextual comparison validated on independent cases under NUF-014 and NUF-019.
+
+## Schema 2.89 and context model 54 — pickup ranges with verified empty landings
+
+The verified roster receipt from schema 2.83 now settles the empty branches of a committed pickup even if another first-bounce branch is occupied, off pitch or has unknown marking. The validation requirements for the roster, effects, initial move, waiting board and replacement remain in force. A narrowed range carries the proof as `possessionBounds.continuedTraits`. The range still uses the single replacement die and all eight equally weighted first-bounce branches.
+
+In a controlled demo8 variant, a teammate occupies one of the eight landing squares. Seven empty and unmarked squares each contribute 2 units to the failure difference. The occupied square contributes between 0 and 3. The successful 3+ replacement gives `(1/3) × [(14 + 0)/8, (14 + 3)/8]`, or 7/12 to 17/24. In another variant, eight landings are empty and three have unknown marking. The range is `(1/3) × [2, 2 + 3/8]`, or 2/3 to 19/24. Both continue to be ranges. The six existing public ranges still lack current trait continuity.
+
+## Schema 2.90 and dice model 40 — Animal Savagery notification scope
+
+The learned-trait ledger scopes the six demo5 Confused effect notifications from Animal Savagery to their recorded holder, player 37. The five step-local records must match their own ordinary activation header and have explicit empty characteristic and skill modifiers. The direct end notification has a distinct outer source shape and omits the skill modifiers field. Each form requires compatible player attribution and source order. The holder’s traits require a fresh complete observation after the transition. The notification provides no playable state or victim-selection evidence.
+
+At demo5 sources 682, 703 and 987, the recovered trait continuity yields categorical knockdown-balance contributions of −19/48, −5/24 and +17/48. Source 703 shows an offered balance of zero with the recorded die choice unavailable. The applied block at source 999 leads to source 1002, where the opposing player’s armor holds below 10 on `[5, 2]` and contributes +1/6 to that player’s team. The raw dice remain linked to their original records. Demo5 now scores 72 of 271 roll candidates. The 37 contextual components across the public corpus retain their prior values.
+
+## Schema 2.91 and dice model 41 — Fresh activation checks
+
+The `activation_check` category scores one fresh, same-step activation die from the acting team’s perspective. The report carries the ordered declaration and skill-use sources and, for assisted Really Stupid, the player ID in the recorded +2 modifier. Bone Head needs 2+. Really Stupid needs 4+ unassisted or 2+ with the qualified modifier. The acting team has a verified roster owner. The declaration’s raw TeamId field is zero for both teams in the admitted sources.
+
+A check contributes (observed pass − fair pass chance) × 1. The unit weight retains the single-die deviation and assigns no tactical multiplier. The verified pass chances are 5/6 at 2+ and 1/2 at 4+. Each source uses one physical die. The linked skill and declaration rows carry no random contribution. Lost activations, lost tackle zones and later recovery each require their own state evidence. Reroll questions, summaries and replacement dice retain their existing unresolved scoring policy under NUF-F017.
+
+## Schema 2.92 and dice model 42 — Activation reroll draws
+
+A Bone Head or Really Stupid team reroll question can carry a verified failed first die. Its score uses the same acting-team target and unit weight as a direct first die. The report identifies it with `activationCheck.draw = "original"` and the raw `RollInfos.Dice` path. The first die retains its score if a later choice or replacement cannot be verified.
+
+A replacement uses `activationCheck.draw = "replacement"` when the replay links the same actor, target and effective requirement to the next activation step, a matching team reroll spend, a passed Loner test and a fresh replacement. The original and the replacement each contribute their own observed outcome minus the recorded target’s D6 probability. A declined decision or failed Loner test preserves the first die through an alias on the kept result. The team reroll spend, Loner pass or failure, and any later loss of activation are separate evidence. The five Loner access rolls still have no value contribution under this activation policy.
+
+Demo7 shows a failed 2+ first die at source 714 and a successful 2+ replacement at source 720 after the team decision and Loner pass. The activation dice contribute −5/6 and +1/6, giving −2/3. The decision consumes one team reroll.
+
+## Schema 2.93 and dice model 43 — Loner access to an activation retry
+
+The qualified Bone Head and Really Stupid sequence can score the Loner access roll in the activation-check category. It requires the earlier failed first die, same-player team reroll decision, verified Loner usage and die, and the linked kept result or fresh replacement. The receipt adds `numericRetryAccess.terminalSourceId` to identify this activation policy.
+
+Let `p` be the fair pass chance at the original activation target, `g` the fair Loner pass chance, and `G` the observed Loner result (1 for pass, 0 for failure). The access contribution is `p × (G − g)`. The chance of rescue moves from `g × p` just before Loner to `G × p` after it. A rolled replacement adds its own observed result minus `p`. A kept result adds zero. Under a fixed policy of taking one Loner-gated retry on first failure, the whole-check chance is `p + (1 − p) × g × p`. Team reroll spend and later activation availability remain separately observed.
+
+In demo7, the replacement passes on 2+ and Loner passes on 3+. The Loner pass at source 719 adds 5/18. With the first die and replacement from sources 714 and 720, the chain contributes −7/18 dice units and spends one team reroll.
+
+## Schema 2.94 and dice model 44 — Foul Appearance
+
+A qualified fresh roll 37 is a single unmodified 2+ D6 check scored for the attacker. The `foulAppearance` receipt links the attacking player's Block or Blitz declaration and the opposing target's skill-10 use in the same step. A second Frenzy block links the attacker's skill-36 use and the earlier resolved push, with raw follow-up and push positions matching the new header. The ownership proof identifies both rosters.
+
+A pass contributes +1/6 and a failure contributes −5/6 dice units. The score represents the chance of getting past Foul Appearance. Applied block dice, later player actions and confirmed activation loss retain separate evidence. Other roll emissions or conflicting roles keep their observed evidence and unverified odds.
+
+## Schema 2.95 and dice model 45 — Animal Savagery
+
+A verified declaration and skill-84 use can qualify a fresh type-36 die for the acting team. The observed ordinary Move shape is unmodified at 4+. The qualified Block or Blitz shape has an opposing target and source modifier 18, which adds 2 to the die and gives an effective target of 2+. The contribution is the observed success indicator minus the chance of success, with weight 1. The first die can appear directly or in the team reroll offer. A matching declined decision and kept terminal copy preserve that die's identity and add zero.
+
+A kept result can include `metadata.animalSavageryOutcome`. An `actor_effect` identifies the following effect notification on the acting player. A `teammate_selected` records the offered IDs, selected teammate, offer and selection sources, and an optional linked armor source from a matching adjacent victim damage step. The replay must confirm the acting team and teammate ownership. Effects and choices carry zero dice contribution. Source-16 armor stays independently recorded with unresolved odds. Played-state availability and contextual consequences require further evidence.
+
+## Schema 2.96 — Animal Savagery continuation
+
+The kept check can carry `metadata.animalSavageryContinuation` after a linked effect notification or settled source-16 damage. The replay must supply the waiting board, a normal wait in the same phase and controller, a settled board in the same turn, and a different teammate's next declaration. The report identifies both checkpoint indices and the wait and declaration sources. It preserves the original player's nullable recorded action flag. The victim path also records the victim's nullable action flags and later pitch location, status and situation.
+
+The five verified public paths include three omitted actor flags after effects and two set actor flags after a teammate choice. Demo5 shows player 38 still on the pitch with status code 2 and player 46 off the pitch with situation 4. The observed next declaration identifies who actually acted. Whether the original player or another player could legally have acted remains open. The added observations contribute zero dice or contextual value.
+
+## Schema 2.97 and dice model 46 — Trait continuity through Animal Savagery choices
+
+A matching failed Animal Savagery die, declined retry, offered teammates and selection can preserve the learned skills of unrelated players. At selection, the acting player and selected victim require qualifying current profiles before their own skills can support another policy. The existing checks for current roster identity, effects, prayers and transformations continue to apply. Action availability and position still come from the current replay state.
+
+Demo5 gains 35 qualified categorical Block pools, 23 fixed-policy armor checks and six initial categorical injury scores. Its 13 additional modeled push menus retain their recorded choices and geometry. The two source-16 armor checks are still observed with unresolved odds. The current rain Pickup profile set is incomplete, so its possession range remains provisional.
+
+## Schema 2.98 — Pickup bounce turnovers
+
+`metadata.pickupTurnEnd` identifies either a linked successful catch or the direct bounce after a failed pickup. The bounce form requires the same regular ball, matching D8 geometry, exactly one linked bounce and its immediately following recorded reason-2 turn end. A turn with the observed type-2 boundary also requires the adjacent phase-6 transition. The turn-end event carries no score.
+
+When the same frame includes the supported controller and timer controls followed by a stable regular-play board, the receipt links that checkpoint and retains its nullable possession and controller fields. A conflicting or missing snapshot leaves the source-linked bounce and turnover available. The replay provides 20 direct turnovers and 13 matching post-turn boards in the public corpus. The pre-roll possession range uses its existing independent evidence.
+
+## Schema 2.99 and dice model 47 — Skill profiles after KO recovery
+
+A direct, executed KO injury and matching removal suspend a player's existing skill profile. The verified crowd shape can begin the suspension at the preceding reserves notification when its applied push identifies the same victim. A later board must place the player in the KO box. A qualified successful wake-up roll and a stable same-roster board with the player back on the pitch can restore the learned lists from their earlier source checkpoint. The current observation supplies physical flags. Contradictory roster identity, effects, missing players or intervening unsupported transitions break the chain. Activation eligibility remains a separate contract.
+
+This adds 15 dice scores in demo5 and demo9 through the existing Block, armor and injury contracts. The demo5 Pickup gains three current profiles, giving 16 of 22. The six unresolved Pickup reaction contracts retain their provisional ranges.
+
+## Schema 2.100 — Skill profiles after Animal Savagery
+
+A recognized Animal Savagery effect add suspends the holder's learned profile. A positive observation of the same effect on the holder, a matching recorded end and a stable on-pitch setup or play board with empty effects and an active tackle zone can restore the profile. A verified teammate choice can also preserve the participants' learned lists through its linked damage while withholding each current profile until a stable board confirms that player's upright on-pitch state. Each path checks the earlier data identity, current roster, effects, prayers and transformations. An intervening unqualified transition or a removal can end the chain. Legal activation and optional skill policies have their own evidence requirements.
+
+Demo5 gains current intrinsic trait evidence for eleven Block pools. Their existing outcome-policy exclusions remain. All 18 on-pitch players have current profiles at the demo5 rain Pickup. The four off-pitch profiles and ball-reaction policy still leave that Pickup's possession range at −1 to 0. Dice model 47 and context model 54 retain the same scores and estimates.
+
+## Schema 2.101 and context model 55 — Settled rain Pickup
+
+A committed ordinary team Pickup can qualify an empty first-bounce settlement with complete current skill lists for the on-pitch roster and matching evidence for players who are out of play. A player whose skills are omitted needs the recorded off-pitch cell [−1,−1], empty effects, and a supported KO or removal situation/status at both the original and reroll-wait boards. The two clock snapshots expose `pickupOffPitch`. `offPitchPlayerCount` on the possession component counts those entries. The skill receipts and verified off-pitch entries must together cover the same roster at both frames. An occupied landing still requires a catch and an off-pitch ball still requires a return.
+
+Mighty Blow (13), Bone Head (31), Frenzy (36), Prehensile Tail (49), Throw Team-mate (64) and Animal Savagery (84) have source-qualified triggers separate from this first bounce. An unclassified skill, including Diving Catch, or an incomplete current effect or removal observation leaves the reaction unresolved. Skill names use the installed enum evidence and the triggers use recorded BB3 actions and supporting rule evidence. [Semantic contracts](SEMANTIC_CONTRACT_AUDIT.md), [Frenzy](https://www.warhammer-community.com/en-gb/articles/Xl9Odt2V/raid-the-blood-bowl-pitch-with-the-boozy-new-norse-team-rules/), [Second Season designer’s commentary](https://assets.warhammer-community.com/bloodbowl_faqs%26errata_errata%26designerscommentary_eng_24.09-axlajwasve.pdf)
+
+Demo5 source 2409 fails its committed 4+ rain replacement. All eight equally likely first bounces leave the ball loose in unmarked squares. With two own-possession units at stake, the conditional contribution is (0 − 1/2) × 2 = −1. The first die, reroll spent, actual D8 bounce and turnover have their own receipts. The dice score stays in dice model 47. Five public Pickup ranges remain.
+
+## Schema 2.102 and dice model 48 — Traits through bombs and ejection
+
+The replay can preserve learned lists across a linked Throw Bomb declaration and step, a verified direct or resumed die, and a matching explosion. The supported paths include a retained fumble, an unsuccessful bomb catch and a caught bomb that explodes after the recorded star-skill choice. An interception choice must identify the opposing eligible players and match the recorded failed attempt. Each qualified blast check names its own adjacent cell and contains a fresh 4+ die consistent with the raw result. Damage, removal and effects still follow their own state rules.
+
+A separately verified failed referee argument can preserve other players' profiles when a repeated offer, no-contest decision, sent-off notification and removal agree. The ejected player loses their profile. A later KO return needs its own recovery and board evidence.
+
+Demo6 gains 25 dice scores under the existing Block, armor and injury models. The linked bomb and referee records retain their previous scoring policies. The two demo6 Pickup ranges still require evidence for their Sure Hands reaction policy. Context model 55 preserves the existing points and ranges.
+
+## Schema 2.103 and context model 56 — Same-board Sure Hands
+
+An immediate Sure Hands replacement can use continued skill evidence when its original and replacement rolls share the same verified pre-roll board. The same-action proof has no waiting checkpoint. The board carries the off-pitch receipt for verified reserves and ejections as well as the previously supported KO and removal states. An intervening board or incomplete roster evidence withholds settlement.
+
+At demo6 source 2151, all eight first bounces reach empty, unmarked squares. The failed 3+ replacement contributes (0 − 2/3) × 2 = −4/3 provisional possession units. The earlier roll and its observed turnover retain their existing evidence. Demo6 source 620 retains its possession range.

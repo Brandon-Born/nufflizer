@@ -1,5 +1,5 @@
 import type { ReplayEvent } from "./types";
-import type { ObservedBoard } from "./boardState";
+import type { ObservedBoard, ObservedPlayer } from "./boardState";
 import { observedActorRoster } from "./observedActorRoster";
 
 // Public BallStep/25 source observations identify all eight D8 offsets.
@@ -180,4 +180,19 @@ export function plainBounceSettlementKnown(board: ObservedBoard): boolean {
         p.plainBallPolicyKnown === true &&
         !p.mentalEffect
     );
+}
+
+export function offPitchPickupPlayer(player: ObservedPlayer) {
+  if (
+    player.id === null || player.pitchLocation !== "off_pitch" ||
+    player.cell.x !== -1 || player.cell.y !== -1 || !player.effectsKnownEmpty
+  ) return;
+  if (player.situationCode === 1 && (player.statusCode === 0 || player.statusCode === null))
+    return { playerId: player.id, situationCode: 1, statusCode: player.statusCode } as const;
+  if (player.situationCode === 2 && player.statusCode === 3)
+    return { playerId: player.id, situationCode: 2 as const, statusCode: 3 as const };
+  if (player.situationCode === 4 && (player.statusCode === 4 || player.statusCode === 5))
+    return { playerId: player.id, situationCode: 4, statusCode: player.statusCode } as const;
+  if (player.situationCode === 5 && player.statusCode === 6)
+    return { playerId: player.id, situationCode: 5, statusCode: 6 } as const;
 }

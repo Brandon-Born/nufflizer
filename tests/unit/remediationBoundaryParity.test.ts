@@ -24,37 +24,51 @@ const invalid = [
     "<ReplayVersion>9-0-0-0</ReplayVersion><MatchId>"
   )
 ];
-describe("NUF-003 invalid replay parity", () => {
-  it.each(invalid)("[cli-worker] rejects invalid data across HTTP and CLI", async (xml) => {
-    const form = new FormData();
-    form.append("replay", new File([xml], "invalid.xml"));
-    const response = await POST(
-      new Request("http://localhost/analyze", { method: "POST", body: form })
-    );
-    expect(response.status).toBe(400);
-    expect(await response.json()).toHaveProperty("code", "INVALID_REPLAY");
-    const dir = mkdtempSync(path.join(tmpdir(), "nuff-invalid-"));
-    try {
-      const file = path.join(dir, "invalid.xml");
-      writeFileSync(file, xml);
-      const cli = spawnSync(
-        process.execPath,
-        [
-          "--import",
-          "tsx",
-          "src/cli/nufflizier.ts",
-          "analyze",
-          file,
-          "--format",
-          "json"
-        ],
-        { encoding: "utf8", timeout: 10_000 }
-      );
-      expect(cli.status).toBe(1);
-      expect(cli.stdout).toBe("");
-      expect(cli.stderr).toMatch(/\[nufflizier\]/);
-    } finally {
-      rmSync(dir, { recursive: true });
+describe("Replay rejection parity", () => {
+  const cases = [
+    ...invalid.map((xml) => ({ xml, status: 400, code: "INVALID_REPLAY" })),
+    {
+      xml: valid.replace("1-4-0-0", "9-0-0-0"),
+      status: 422,
+      code: "UNSUPPORTED_REPLAY_VERSION"
     }
-  });
+  ];
+  it.each(cases)(
+    "[cli-worker] rejects $code consistently across HTTP and CLI",
+    async ({ xml, status, code }) => {
+      const form = new FormData();
+      form.append("replay", new File([xml], "invalid.xml"));
+      const response = await POST(
+        new Request("http://localhost/analyze", { method: "POST", body: form })
+      );
+      expect(response.status).toBe(status);
+      const body = await response.json();
+      expect(body).toHaveProperty("code", code);
+      if (status === 422)
+        expect(body.error).toContain("supports BB3 replay version 1-4-0-0");
+      const dir = mkdtempSync(path.join(tmpdir(), "nuff-invalid-"));
+      try {
+        const file = path.join(dir, "invalid.xml");
+        writeFileSync(file, xml);
+        const cli = spawnSync(
+          process.execPath,
+          [
+            "--import",
+            "tsx",
+            "src/cli/nufflizier.ts",
+            "analyze",
+            file,
+            "--format",
+            "json"
+          ],
+          { encoding: "utf8", timeout: 10_000 }
+        );
+        expect(cli.status).toBe(1);
+        expect(cli.stdout).toBe("");
+        expect(cli.stderr.trim()).toBe(`[nufflizier] [${code}] ${body.error}`);
+      } finally {
+        rmSync(dir, { recursive: true });
+      }
+    }
+  );
 });

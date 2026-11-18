@@ -5,6 +5,7 @@ import { describe, it, expect } from "vitest";
 import { parseReplayXml } from "@/domain/replay/parseXml";
 import { decodeReplayInput } from "@/domain/replay/decodeReplay";
 import { preservesTraitContinuity } from "@/domain/replay/traitTransitions";
+import { visitCurrentTraits } from "@/domain/replay/traitContinuity";
 import { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
 import { mentalNotificationXml } from "../helpers/mentalNotification";
 import { analyzeReplayLuck } from "@/domain/nufflizer/analyzeLuck";
@@ -28,6 +29,69 @@ function koContinuityXml(face = 2, target = 4) {
   );
 }
 describe("direct KO recovery preserves learned traits independently of physical return", () => {
+  it("restores demo5 players only after a recorded recovery and a matching on-pitch board", () => {
+    const replay = parseReplayXml(
+      decodeReplayInput(readFileSync("demo-replays/demo5.bbr", "utf8")).xml,
+      { omitRawReplaySteps: true }
+    );
+    const collect = () => {
+      const observations = new Map<number, string[]>();
+      visitCurrentTraits(replay, (event, _, ledger) => {
+        if (
+          [113, 405, 812, 1557, 1899, 1914, 2329, 2345, 2409].includes(
+            event.sourceIndex!
+          )
+        ) {
+          observations.set(
+            event.sourceIndex!,
+            ["6", "45", "46"].filter((id) => ledger.has(id))
+          );
+          if (event.sourceIndex === 2409 && ledger.has("46"))
+            expect(ledger.get("46")).toMatchObject({
+              teamId: "1",
+              observedCheckpointAfter: 0,
+              currentCheckpointAfter: 2406,
+              traits: { dataPlayerId: 46, innateSkills: [], acquiredSkills: [] }
+            });
+        }
+      });
+      return observations;
+    };
+    expect([...collect()]).toEqual([
+      [113, ["6", "45"]],
+      [405, ["45"]],
+      [812, ["6", "45"]],
+      [1557, ["6"]],
+      [1899, ["6"]],
+      [1914, ["6", "45"]],
+      [2329, ["6", "45"]],
+      [2345, ["6", "45", "46"]],
+      [2409, ["6", "45", "46"]]
+    ]);
+    const wake = replay.turns
+      .flatMap((turn) => turn.events)
+      .find((event) => event.sourceIndex === 805)!;
+    wake.payload!.Dice = { Die: { Value: "2" } };
+    delete wake.payload!.Outcome;
+    expect(collect().get(2409)).toEqual(["45", "46"]);
+    wake.payload!.Dice = { Die: { Value: "6" } };
+    wake.payload!.Outcome = "1";
+    const removed = replay.turns
+      .flatMap((turn) => turn.events)
+      .find((event) => event.sourceIndex === 1552)!;
+    removed.payload!.Reason = 2;
+    expect(collect().get(2409)).toEqual(["6", "46"]);
+    removed.payload!.Reason = 1;
+    const later = replay.boardCheckpoints!.find(
+      (cp) => cp.afterSourceIndex === 1898
+    )!;
+    const returned = later.board!.teams[1]!.players.find(
+      (player) => player.id === 45
+    )!;
+    returned.effectsKnownEmpty = false;
+    expect(collect().get(2409)).toEqual(["6", "46"]);
+  });
+
   it("reproduces all77 raw root records and the separate UI-040 witness", () => {
     const p = spawnSync(
       "python3",

@@ -199,7 +199,7 @@ describe("observed mental-trait effects and next activation", () => {
     );
     const check = r.events.find((e) => e.metadata.mentalTraitResolution)!;
     expect(check.actualSuccess).toBe(true);
-    expect(check.probabilitySuccess).toBeNull();
+    expect(check.probabilitySuccess).toBeCloseTo(5 / 6, 12);
     expect(check.metadata.preRoll?.actorTackleZone).toBeNull();
     const later = fragment("next_activation_pass").boardCheckpoints!.find((c) =>
       c.board?.teams[1]?.players.some(

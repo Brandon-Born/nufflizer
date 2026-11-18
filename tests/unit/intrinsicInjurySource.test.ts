@@ -43,10 +43,10 @@ describe("independent raw injury consequences of continued intrinsic knowledge",
       }
       const expected: Record<string, [number, number]> = {
         "demo1.bbr": [1, 0],
-        "demo5.bbr": [4, 4],
-        "demo6.bbr": [1, 1],
+        "demo5.bbr": [13, 10],
+        "demo6.bbr": [7, 5],
         "demo8.bbr": [7, 7],
-        "demo9.bbr": [13, 7],
+        "demo9.bbr": [14, 9],
         "demo10.bbr": [10, 8]
       };
       expect([tables, scored]).toEqual(expected[f.file] ?? [0, 0]);

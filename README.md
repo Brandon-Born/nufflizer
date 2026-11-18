@@ -1,25 +1,16 @@
 # Nufflizier
 
-Nufflizier is a Blood Bowl 3 replay analyzer under remediation. Its product goals are:
+Nufflizier analyzes one Blood Bowl 3 replay at a time. Upload a replay to inspect supported dice odds, category contributions and key moments, then download the evidence as JSON. Reports show partial analysis when evidence is missing and currently abstain from a whole-match verdict.
 
-1. Who had better dice overall.
-2. Category luck breakdowns (block, armor break, injury, dodge, ball handling, argue-call style rolls).
-3. Timeline of high-impact swings (both "blessed" and "shaftaroonie" moments).
-4. Transparent, plain-language reasoning so users without statistics training can understand why a verdict was produced.
-
-The app is one-shot and ephemeral: upload -> analyze -> read/download report.
-
-## Current Status and Agent Backlog
-
-The November 2026 remediation adds bounded ingestion, terminating workers, patched dependencies, versioned partial reports, and full-evidence filters. Reports currently abstain from whole-match comparisons. Supported dice contributions include numeric movement and ball handling, source-qualified categorical block and initial-injury tables, verified armor and scoped recovery from the affected team’s side. Raw block symbols, choices and observed consequences remain visible when their luck cannot be qualified. Some Dodge and Pickup events show separate partial context components or ranges. Broader effective-skill and damage policies, referee outcomes, valid tactical successors, calibration and whole-match comparisons still need evidence. Passing the suite does not establish unverified game-rule mappings.
-
-Start remediation with [PROJECT_PLAN.md](docs/PROJECT_PLAN.md) and [REMEDIATION_BACKLOG.md](docs/REMEDIATION_BACKLOG.md). The backlog preserves the 28 original permanent issue IDs and adds NUF-029–034 follow-ups, with source locations, reproduction evidence, dependencies, and acceptance criteria. The operating guide is [AGENTS.md](AGENTS.md).
+See [current capabilities](docs/CURRENT_CAPABILITIES.md) for the supported policies and their evidence. The [project plan](docs/PROJECT_PLAN.md), [remediation ledger](docs/REMEDIATION_BACKLOG.md) and [secondary backlog](docs/FOLLOW_UP_BACKLOG.md) track remaining work. The operating guide is [AGENTS.md](AGENTS.md).
 
 ## MVP Interfaces
 
 1. Web UI: `/nufflizier` (and `/upload` alias).
 2. API: `POST /api/nufflizier/analyze` (multipart `replay` file).
 3. CLI: `pnpm nufflizier analyze <replay_file> --format json|text`
+
+The primary API returns HTTP 422 with `UNSUPPORTED_REPLAY_VERSION` for an explicitly unsupported replay version. Malformed replay input returns HTTP 400 with `INVALID_REPLAY`. The CLI uses the same codes on stderr.
 
 ## Legacy API Status
 

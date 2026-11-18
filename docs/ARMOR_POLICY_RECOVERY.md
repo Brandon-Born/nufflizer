@@ -1,6 +1,6 @@
 # Bounded armor-policy correction (NUF-036)
 
-Local candidate, schema 2.73 / dice-only-37. This is not a deployment or whole-analyzer completion claim.
+Published correction, schema 2.73 / dice-only-37. Full CI passed at commit `4c1aa2a` on November 15.
 
 ## Admission and presentation
 - Ordinary Block, fixed-assist Foul and verified self-fall reuse the saved pre-roll policy finder. Optional armor choices are uniformly excluded, including both 36-face Mighty Blow policies in the runnable probe.
@@ -16,4 +16,4 @@ Local candidate, schema 2.73 / dice-only-37. This is not a deployment or whole-a
 The dice census test preserves the original frozen fingerprint hashes. It checks physical source/owner/dice identity for every prior armor event, unchanged values for still-qualified armor, null probabilities for excluded armor, and exact non-armor score conservation. Only the historical projection restores old armor membership and its derived damage subtotals. Two additional unknown-armor action links in demo6/demo7 are removed solely from that historical projection. Current admissions are independently checked by the policy grids.
 
 ## Remaining scope
-NUF-036 stays open pending publication and exact-head CI. Optional/missing-policy armor is intentionally unsupported; broader context, tactical value and original incomplete backlog items remain. No production or legacy deployment, merge, release, billing or provider change occurred.
+NUF-036 closed after [exact-head CI](https://github.com/Brandon-Born/nufflizer/actions/runs/43757599194) passed frozen install, production dependency audit, lint, typecheck, unit and worker tests, Redis integration, production build and browser smoke tests. Optional/missing-policy armor is intentionally unsupported; broader context, tactical value and original incomplete backlog items remain. No production or legacy deployment, merge, release, billing or provider change occurred.

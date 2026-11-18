@@ -1,12 +1,28 @@
 import type { FixedArmorPolicy } from "./armorPolicy";
 import type { ReplayEvent } from "@/domain/replay/types";
+import { ownerAt, type OwnershipTimeline } from "@/domain/replay/ownershipTimeline";
 
 // These modifiers are settled before rolling: ordinary attack/defence assists.
 // Post-roll choices (e.g. Mighty Blow) cannot be substituted into the odds.
-function fixedAssistTotal(raw: unknown): number | undefined {
+function fixedAssistTotal(
+  raw: unknown,
+  policy: FixedArmorPolicy,
+  subject: string,
+  owners: OwnershipTimeline
+): number | undefined {
   if (raw === undefined || raw === "") return 0;
-  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return;
-  const entries = (raw as { Modifier?: unknown }).Modifier;
+  const fouler = policy.foulActorTraits;
+  if (
+    policy.kind !== "foul" ||
+    !fouler ||
+    typeof raw !== "object" ||
+    raw === null ||
+    Object.keys(raw).join() !== "Modifier"
+  )
+    return;
+  const subjectTeam = ownerAt(owners, subject, policy.header);
+  if (subjectTeam === undefined || subjectTeam === fouler.teamId) return;
+  const entries = (raw as { Modifier: unknown }).Modifier;
   const modifiers = Array.isArray(entries) ? entries : [entries];
   if (modifiers.length === 0 || modifiers.length > 30) return;
   let sum = 0;
@@ -24,14 +40,27 @@ function fixedAssistTotal(raw: unknown): number | undefined {
       | undefined;
     if (
       !m ||
-      Object.keys(m).some(k => !["PlayerId","ModifierType","Value","Skill","Effect"].includes(k)) ||
-      typeof m.PlayerId !== "number" || !Number.isSafeInteger(m.PlayerId) || m.PlayerId < 0 || assistants.has(m.PlayerId) ||
+      Object.keys(m).some((key) =>
+        !["PlayerId", "ModifierType", "Value", "Skill", "Effect"].includes(key)
+      ) ||
+      typeof m.PlayerId !== "number" ||
+      !Number.isSafeInteger(m.PlayerId) ||
+      m.PlayerId < 0 ||
+      assistants.has(m.PlayerId) ||
       !(
         (m.ModifierType === 11 && m.Value === 1) ||
         (m.ModifierType === 12 && m.Value === -1)
       ) ||
       m.Skill !== -1 ||
       m.Effect !== -1
+    )
+      return;
+    const assistant = String(m.PlayerId);
+    const expectedTeam = m.ModifierType === 11 ? fouler.teamId : subjectTeam;
+    if (
+      assistant === subject ||
+      assistant === fouler.playerId ||
+      ownerAt(owners, assistant, policy.header) !== expectedTeam
     )
       return;
     assistants.add(m.PlayerId);
@@ -50,7 +79,8 @@ export function verifyArmorCheck(
   dice: readonly number[],
   dieTypes: readonly number[],
   countInStep: number | undefined,
-  policy: FixedArmorPolicy | undefined
+  policy: FixedArmorPolicy | undefined,
+  owners: OwnershipTimeline
 ): ArmorContract | undefined {
   if (event.sourceTag !== "ResultRoll" || event.rollType !== 10) return;
   if(event.executionExclusion)return {kind:"excluded",reason:event.executionExclusion};
@@ -92,13 +122,10 @@ export function verifyArmorCheck(
     return {kind:"excluded",reason:"armor execution header is not established before the dice"};
   if (policy.kind === "unknown")
     return {kind:"excluded",observedSubject:subject,reason:"armor modifier policy is not established before the dice; optional choices or missing current traits cannot certify its odds"};
-  const adjustment = fixedAssistTotal(p.Modifiers);
+  const adjustment = fixedAssistTotal(p.Modifiers, policy, subject, owners);
   const requirement = p.Requirement;
   const difficulty = p.Difficulty;
-  if (
-    adjustment === undefined ||
-    (adjustment !== 0 && event.damageSource !== 7)
-  )
+  if (adjustment === undefined)
     return {
       kind: "excluded",
       reason:

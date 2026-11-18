@@ -1,3 +1,4 @@
+import { expectedPublicImpactCounts } from "../helpers/corpus";
 import { assertIntrinsicInjury } from "../helpers/intrinsicInjuryFacts";
 import { assertTransactionInjury } from "../helpers/injuryTransactionFacts";
 import { describe, it, expect } from "vitest";
@@ -249,7 +250,12 @@ describe("source-qualified categorical injury scoring", () => {
       ["source-113", "source-128", "source-162", "source-439", "source-556", "source-1007", "source-1121", "source-1200"],
       [-0.625, 0.625, -0.625, -1.25, 0.875, -5/4, -13/12, -5/24]
     ],
-    ["demo5.bbr", ["source-110", "source-402", "source-454", "source-595"], [-0.625, -0.625, 0.625, 0.625]],
+    [
+      "demo5.bbr",
+      ["source-110", "source-402", "source-454", "source-595", "source-1344",
+       "source-1403", "source-1475", "source-1869", "source-3465", "source-3529"],
+      [-5 / 8, -5 / 8, 5 / 8, 5 / 8, 5 / 8, -5 / 4, 5 / 8, 5 / 8, 7 / 8, -13 / 12]
+    ],
     ["demo8.bbr", ["source-249", "source-427", "source-686", "source-1361", "source-1431", "source-1585", "source-1610"], [0.875, 0.625, 0.625, 0.625, 0.625, 0.625, 0.625]]
   ] as const)(
     "scores only qualified actual %s injuries with exact subject-perspective arithmetic",
@@ -264,7 +270,7 @@ describe("source-qualified categorical injury scoring", () => {
       );
       expect(injuries(r).map((e) => e.metadata.sourceId)).toEqual(ids);
       expect(injuries(r).map((e) => e.weightedDelta)).toEqual(values);
-      expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
+      expect(r.teams.map((t) => t.impactCount)).toEqual(expectedPublicImpactCounts(file));
       expect(r.verdict.luckierTeam).toBe("unknown");
     }
   );

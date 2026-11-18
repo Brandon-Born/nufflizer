@@ -6,11 +6,45 @@ export type MentalEffectEnd = MentalTraitEffect & {
   playerId: string;
 };
 
-// Only the observed unmodified Bone Head2+ and Really Stupid4+/assisted2+
-// initial tests. This is a consistency check, not a scored reroll policy.
+export type ActivationSkill = 31 | 51 | 84;
+export const ACTIVATION_ROLL_TYPE = { 31: 33, 51: 34, 84: 36 } as const;
+
+export function readAnimalSavageryOffer(
+  payload: Record<string, unknown> | undefined
+) {
+  if (
+    !payload ||
+    Object.keys(payload).length !== 2 ||
+    (payload.GamerId !== 0 && payload.GamerId !== 1)
+  )
+    return;
+  const victims = payload.VictimsIds;
+  if (
+    !victims ||
+    typeof victims !== "object" ||
+    Object.keys(victims).length !== 1 ||
+    !("VictimsIdsItem" in victims)
+  )
+    return;
+  const items = victims.VictimsIdsItem;
+  const offered = Array.isArray(items) ? items : [items];
+  if (
+    offered.length < 1 ||
+    offered.length > 8 ||
+    !offered.every(
+      (id) => typeof id === "number" && Number.isSafeInteger(id) && id >= 0
+    ) ||
+    new Set(offered).size !== offered.length
+  )
+    return;
+  return { teamId: String(payload.GamerId), victimIds: offered.map(String) };
+}
+
+// Check the observed die against its effective target. An Animal Savagery
+// modifier also needs its own verified Block or Blitz declaration.
 export function mentalTraitTest(
   payload: Record<string, unknown> | undefined,
-  provider: 31 | 51,
+  provider: ActivationSkill,
   status: number,
   fresh: number
 ): boolean | null {
@@ -18,7 +52,7 @@ export function mentalTraitTest(
   const face = die?.Value;
   if (
     !payload ||
-    payload.RollType !== (provider === 31 ? 33 : 34) ||
+    payload.RollType !== ACTIVATION_ROLL_TYPE[provider] ||
     payload.Status !== status ||
     payload.NewRoll !== fresh ||
     die?.DieType !== 0 ||
@@ -36,18 +70,20 @@ export function mentalTraitTest(
     !(payload.Requirement === 2 && payload.Difficulty === 2 && unmodified)
   )
     return null;
-  if (provider === 51) {
+  if (provider === 51 || provider === 84) {
     const mod = record(record(payload.Modifiers)?.Modifier);
     if (
       payload.Requirement !== 4 ||
       !(
         (payload.Difficulty === 4 && unmodified) ||
         (payload.Difficulty === 2 &&
-          mod?.ModifierType === 17 &&
+          mod?.ModifierType === (provider === 51 ? 17 : 18) &&
           mod.Value === 2 &&
           mod.Skill === -1 &&
           mod.Effect === -1 &&
-          typeof mod.PlayerId === "number")
+          (provider === 51
+            ? typeof mod.PlayerId === "number"
+            : mod.PlayerId === -1))
       )
     )
       return null;
@@ -67,7 +103,9 @@ function numeric(value: unknown): number | undefined {
     ? value
     : undefined;
 }
-export function recordedMentalEffect(value: unknown): MentalTraitEffect | null {
+// Provider 84 has source evidence for the notification's holder only.
+// Playable state still uses the separate 31/51 rule below.
+export function recordedConfusedProvider(value: unknown): 31 | 51 | 84 | null {
   const effect = record(value);
   const durations = record(effect?.Durations);
   const provider = numeric(effect?.ProviderId);
@@ -87,15 +125,33 @@ export function recordedMentalEffect(value: unknown): MentalTraitEffect | null {
     (effect.AdditionalSkills === undefined || effect.AdditionalSkills === "") &&
     numeric(effect.EffectId) === 44 &&
     numeric(effect.ProviderType) === 4 &&
-    (provider === 31 || provider === 51) &&
+    (provider === 31 ||
+      provider === 51 ||
+      (provider === 84 && effect.CharacModifiers === "")) &&
     durations &&
     Object.keys(durations).length === 1 &&
     Array.isArray(items) &&
     items.length === 2 &&
     numeric(items[0]) === 6 &&
     numeric(items[1]) === 1
+    ? provider
+    : null;
+}
+
+export function recordedMentalEffect(value: unknown): MentalTraitEffect | null {
+  const provider = recordedConfusedProvider(value);
+  return provider === 31 || provider === 51
     ? { providerSkillId: provider }
     : null;
+}
+
+export function observesOnlyAnimalSavageryEffect(value: unknown): boolean {
+  const effects = record(value);
+  return (
+    !!effects &&
+    Object.keys(effects).length === 1 &&
+    recordedConfusedProvider(effects.PlayerEffect) === 84
+  );
 }
 
 // Each checkpoint must supply its own positive observation. Absence/malformed

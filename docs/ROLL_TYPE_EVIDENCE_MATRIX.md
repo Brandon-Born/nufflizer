@@ -1,5 +1,7 @@
 # Roll Type Evidence Matrix (Demo Replay Baseline)
 
+For runtime scoring and current evidence, see [current capabilities](CURRENT_CAPABILITIES.md). The dated observations and coverage tables below describe earlier checkpoints.
+
 Current mapping acceptance is [SEMANTIC_CONTRACT_AUDIT.md](SEMANTIC_CONTRACT_AUDIT.md): all96 roll/39 step names,41 declared source contracts, eight scoped policies and all12 source inventories. Historical tables below retain their dated hypotheses. Compiled-only names and unsupported policies remain distinct from supported odds; the audit does not complete the analyzer.
 
 ## Embedded staff-question injury evidence
@@ -14,9 +16,9 @@ Independent 12-demo raw inventory: `EventRoll|13`. UI-040 verifies a scoped dire
 
 Model `dice-only-3` now uses UI-backed Rush (1), Dodge (2), Pick up (4), and Catch (7) contracts for replay `1-4-0-0`. The old table labels for 2/4/34/37/71 are superseded: 34/37/71 are Really Stupid/Foul Appearance/Loner and remain unscored. Exact admission, reroll, attribution and natural-roll limits are in [REPORT_CONTRACT.md](REPORT_CONTRACT.md#model-dice-only-3-numeric-scope); `tests/unit/verifiedNumericChecks.test.ts` exercises the exact sanitized playback extracts. Historical counts and unsupported rows below are retained as history, not accepted semantics. No backlog item is closed by this slice.
 
-## November runtime correction (NUF-008/009)
+## Historical November runtime correction (NUF-008/009)
 
-The current model scores verified movement and ball handling, raw linked block pools, armor from the affected team’s perspective, and explicitly linked post-casualty Regeneration. Injury and casualty dice remain random outcomes with unsupported distributions. Block choice and resolution are retained separately from raw symbol odds. See the [versioned report contract](REPORT_CONTRACT.md) for the exact supported scope. Whole-match comparisons abstain; the tables below preserve historical observations, not current acceptance evidence. The ordered inventory also retains `QuestionBlockDice|3`, `ResultRoll|15`, `ResultRoll|21`, `ResultRoll|36`, and `ResultRoll|46`; retention does not give unverified outcomes a score.
+At that checkpoint the model scored verified movement and ball handling, raw linked block pools, armor from the affected team’s perspective, and explicitly linked post-casualty Regeneration. Injury and casualty dice remain random outcomes with unsupported distributions. Block choice and resolution are retained separately from raw symbol odds. See the [versioned report contract](REPORT_CONTRACT.md) for the exact supported scope. Whole-match comparisons abstain; the tables below preserve historical observations, not current acceptance evidence. The ordered inventory also retains `QuestionBlockDice|3`, `ResultRoll|15`, `ResultRoll|21`, `ResultRoll|36`, and `ResultRoll|46`; retention does not give unverified outcomes a score.
 
 
 > 2026-11-09 review notice: this table preserves historical hypotheses and counts, not verified current semantics. The review found actual block/injury records excluded and movement checks labeled as blocks. Stable dice shapes and sequence proximity do not prove rule identity. Revalidate all promoted/provisional mappings under [NUF-009 through NUF-013](REMEDIATION_BACKLOG.md#work-packets); current work priority is defined by the new backlog, not the historical frequency ordering below.

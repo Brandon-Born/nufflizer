@@ -1,3 +1,4 @@
+import { expectedPublicImpactCounts } from "../helpers/corpus";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -153,13 +154,13 @@ describe("all-question independent block source inventory", () => {
       expect(e.probabilitySuccess).toBeNull();
       expect(e.actualSuccess).toBeNull();
     }
-    expect(report.teams.every((t) => t.impactCount === 0)).toBe(true);
+    expect(report.teams.map((t) => t.impactCount)).toEqual(expectedPublicImpactCounts(file.file));
     expect(report.verdict.luckierTeam).toBe("unknown");
   });
   it("retains every question before support and every qualified pool", () => {
     expect(raw.files.reduce((n, f) => n + f.questions.length, 0)).toBe(848);
     expect(pools).toBe(833);
-    expect(scored).toBe(117);
+    expect(scored).toBe(176);
   });
   it("regenerates the independent stdlib inventory without application imports", () => {
     const p = spawnSync(

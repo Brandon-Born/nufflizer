@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Locator } from "@playwright/test";
 import { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
+import { expectedPublicImpactCounts } from "../helpers/corpus";
 import { regenerationReturnXml } from "../helpers/regenerationReturn";
 
 // Browser plugin absent; use the repository production Playwright workflow.
@@ -34,10 +35,8 @@ for (const partial of [false, true])
     page.on("console", (m) => {
       if (["warning", "error"].includes(m.type())) errors.push(m.text());
     });
-    const input = readFileSync(
-        `demo-replays/${partial ? "demo1" : "demo3"}.bbr`,
-        "utf8"
-      ),
+    const file = partial ? "demo1.bbr" : "demo3.bbr";
+    const input = readFileSync(`demo-replays/${file}`, "utf8"),
       report = analyzeNufflizerInput(input);
     await page.route("**/api/nufflizier/analyze", (route) =>
       route.fulfill({
@@ -194,11 +193,10 @@ for (const partial of [false, true])
       readFileSync((await (await pending).path())!, "utf8")
     );
     expect(saved).toEqual(report);
-    expect(saved.schemaVersion).toBe("2.73");
+    expect(saved.schemaVersion).toBe("2.103");
     expect(saved.verdict.luckierTeam).toBe("unknown");
-    expect(
-      saved.teams.every((t: { impactCount: number }) => t.impactCount === 0)
-    ).toBe(true);
+    expect(saved.teams.map((team: { impactCount: number }) => team.impactCount))
+      .toEqual(expectedPublicImpactCounts(file));
     await page.getByRole("button", { name: "Reset filters" }).click();
     await expect(
       page.getByLabel("Player ID or initial roster name")
@@ -285,7 +283,7 @@ test("recovered player's Pass budget retains its recovery cause and zero value",
     readFileSync((await (await pending).path())!, "utf8")
   );
   expect(saved).toEqual(report);
-  expect(saved.schemaVersion).toBe("2.73");
+  expect(saved.schemaVersion).toBe("2.103");
   expect(saved.verdict.luckierTeam).toBe("unknown");
   expect(
     saved.teams.every((t: { impactCount: number }) => t.impactCount === 0)

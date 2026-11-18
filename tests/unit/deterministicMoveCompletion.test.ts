@@ -90,7 +90,7 @@ describe("deterministic ordinary Move completion across verified waits", () => {
     expect(
       first.metadata.preRoll?.ordinaryMoveAvailability?.unknownPlayerIds
     ).toEqual(["39", "40", "41", "42", "43", "47", "48"]);
-    expect(first.contextualBounds?.maximumMoves).toBe(7);
+    expect(first.contextualBounds).toMatchObject({ maximumMoves: 7 });
     expect(first.contextualBounds?.lower).toBeCloseTo(1 / 6, 12);
     expect(first.contextualBounds?.upper).toBeCloseTo(4 / 3, 12);
     expect(

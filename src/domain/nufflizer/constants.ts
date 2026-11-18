@@ -1,7 +1,7 @@
 import type { LuckEventType } from "@/domain/nufflizer/types";
 
-export const DICE_MODEL_VERSION = "dice-only-37";
-export const REPORT_SCHEMA_VERSION = "2.73";
+export const DICE_MODEL_VERSION = "dice-only-48";
+export const REPORT_SCHEMA_VERSION = "2.103";
 
 export const LUCK_CATEGORY_WEIGHTS: Record<LuckEventType, number> = {
   unknown: 0,
@@ -11,5 +11,6 @@ export const LUCK_CATEGORY_WEIGHTS: Record<LuckEventType, number> = {
   dodge: 1.1,
   ball_handling: 1.1,
   argue_call: 0.9,
-  movement_risk: 1.0
+  movement_risk: 1.0,
+  activation_check: 1.0
 };

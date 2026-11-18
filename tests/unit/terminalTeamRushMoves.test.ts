@@ -10,6 +10,7 @@ import { estimateTeamRushMoveBounds } from "@/domain/nufflizer/contextImpact";
 import { LuckReportSchema } from "@/domain/nufflizer/reportSchema";
 import { explainContextBounds } from "@/domain/nufflizer/presentation";
 import { lonerDriveXml } from "../helpers/lonerDrive";
+import { withExactOrdinaryMoves } from "../helpers/exactOrdinaryMoves";
 const evidence = "tests/fixtures/evidence/bb3-team-reroll-movement.json";
 const raw = JSON.parse(
   readFileSync("tests/fixtures/evidence/bb3-terminal-rush-moves.json", "utf8")
@@ -63,6 +64,26 @@ function source() {
   };
 }
 describe("conditional teammate moves at a committed ordinary Rush replacement", () => {
+  it("uses an exact teammate count for the replacement die only", () => {
+    const r = analyzeNufflizerInput(withExactOrdinaryMoves(
+      xml(), ["38", "40", "41", "42", "43", "45"], ["38", "40", "41"]
+    ));
+    const event = r.events.find(
+      (row) => row.contextualImpact?.policy === "team_reroll_rush_moves"
+    )!;
+    expect(event.contextualBounds).toBeUndefined();
+    expect(event.metadata.preRoll?.ordinaryMoveAvailability).toMatchObject({
+      knownAvailablePlayerIds: ["38", "40", "41"],
+      unknownPlayerIds: []
+    });
+    expect(event.contextualImpact?.difference).toBe(3);
+    expect(event.contextualImpact?.contribution).toBeCloseTo(1 / 2, 12);
+    expect(event.delta).toBeCloseTo(-2 / 3, 12);
+    const team = r.contextComponents.find((summary) => summary.teamId === event.teamId)!;
+    expect(team.pointCount).toBe(1);
+    expect(team.byAction.find((action) => action.actionId === event.metadata.actionId)?.eventIds).toEqual([event.id]);
+  });
+
   it.each(raw.cases)(
     "admits source-backed $id with terminal context separate from earlier dice, active continuation and the ball",
     (c) => {
@@ -95,7 +116,7 @@ describe("conditional teammate moves at a committed ordinary Rush replacement", 
         lower: 0
       });
       expect(b.upper).toBeCloseTo(possible.length / 6, 12);
-      expect(b.activeContinuation).toBeUndefined();
+      expect(b).not.toHaveProperty("activeContinuation");
       expect(e.probabilitySuccess).toBeCloseTo(35 / 36, 12);
       expect(e.delta).toBeCloseTo(-2 / 3, 12);
       expect(e.contextualImpact).toBeUndefined();
@@ -271,6 +292,8 @@ describe("conditional teammate moves at a committed ordinary Rush replacement", 
     const r = report(),
       e = terminal(r),
       b = e.contextualBounds!;
+    if (!("maximumMoves" in b) || b.policy !== "team_reroll_rush_moves")
+      throw new Error("Expected a team Rush range");
     if (kind === "policy") b.policy = "team_reroll_terminal_moves";
     if (kind === "family") e.metadata.rollType = 2;
     if (kind === "chance") b.successChance = 35 / 36;
@@ -328,7 +351,7 @@ describe("conditional teammate moves at a committed ordinary Rush replacement", 
     ])
       expect(terminal(report(id))).toBeUndefined();
   });
-  it("[cli-worker] prints the source-linked conditional Rush range through CLI", () => {
+  it("[cli-worker] prints the source-linked conditional Rush range and roll-family coverage", () => {
     const result = spawnSync(
       process.execPath,
       [
@@ -345,8 +368,15 @@ describe("conditional teammate moves at a committed ordinary Rush replacement", 
     expect(result.status, result.stderr).toBe(0);
     expect(result.stdout).toContain("replacement Rush die had 83.3% success");
     expect(result.stdout).toContain("0 to 5 other players");
+    expect(result.stdout).toContain("Roll-family coverage");
+    expect(result.stdout).toContain("Source source-3583: Bomb caught. Recorded explosion source-3588. Odds are unknown.");
+    expect(result.stdout).toContain("The pre-roll score was 0–1");
+    expect(result.stdout).toContain("-4.000 provisional context units on this die");
+    expect(result.stdout).toContain("The opposing team later picked up the loose ball (source-3685).");
+    expect(result.stdout).toContain("Malformed and unresolved identity can overlap other counts.");
+    expect(result.stdout).toMatch(/- Away \(.+\) \| ResultRoll \/ 2 \| 10 scored, 0 unscored, 0 unattributed, 0 malformed, 0 with unresolved identity/);
     expect(result.stdout).toContain(
-      "-7.50 to 1.83 provisional context units across 3 reported components"
+      "-11.50 to -2.17 provisional context units across 4 reported components"
     );
   });
 });

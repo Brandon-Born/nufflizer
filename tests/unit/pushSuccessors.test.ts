@@ -1,3 +1,4 @@
+import { expectedPublicImpactCounts } from "../helpers/corpus";
 import { playbackFragment } from "../helpers/playback";
 import { observeBoardCheckpoint } from "@/domain/replay/boardState";
 import { readFileSync } from "node:fs";
@@ -349,6 +350,10 @@ function sourceReport() {
 }
 const modeled = (r: LuckReport) =>
   r.events.filter((e) => e.metadata.blockPush?.status === "modeled");
+const demo5ModeledSources = [
+  98, 132, 338, 367, 386, 1011, 1184, 1235, 1435, 2081, 2275, 2295, 2441,
+  2527, 2682, 2774, 2839, 3098, 3325, 3513, 3919, 3956, 4084
+].map((index) => `source-${index}`);
 
 describe("source-specific pitch configuration corroboration", () => {
   it.each(["partial", "contradiction", "small", "malformed", "omitted"])(
@@ -505,19 +510,13 @@ describe("source-qualified ordinary push decision model", () => {
         expect(m.branches).toHaveLength(m.destinations.length * 2);
         expect(e.contextualImpact).toBeUndefined();
       }
-      expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
+      expect(r.teams.map((t) => t.impactCount)).toEqual(expectedPublicImpactCounts(f.file));
       expect(r.verdict.luckierTeam).toBe("unknown");
     },
     30000
   );
   it("retains the initial menus and admits continued-trait menus with source-selected push and optional follow branches", () => {
-    expect(modeled(sourceReport()).map((e) => e.metadata.sourceId)).toEqual([
-      "source-98",
-      "source-132",
-      "source-338",
-      "source-367",
-      "source-386"
-    ]);
+    expect(modeled(sourceReport()).map((e) => e.metadata.sourceId)).toEqual(demo5ModeledSources);
     const e = modeled(sourceReport())[0],
       m = e.metadata.blockPush!;
     if (m.status !== "modeled") throw new Error();
@@ -668,20 +667,20 @@ describe("source-qualified ordinary push decision model", () => {
     expect(Buffer.byteLength(json.stdout)).toBeLessThanOrEqual(4_000_001);
     expect(json.status, json.stderr).toBe(0);
     const report = LuckReportSchema.parse(JSON.parse(json.stdout));
-    expect(modeled(report).map((e) => e.metadata.sourceId)).toEqual([
-      "source-98",
-      "source-132",
-      "source-338",
-      "source-367",
-      "source-386"
-    ]);
+    expect(modeled(report).map((e) => e.metadata.sourceId)).toEqual(demo5ModeledSources);
     const text = run("text");
     expect(text.status, text.stderr).toBe(0);
     expect(text.stdout).toContain(explainBlockPush(modeled(report)[0])!);
     expect(text.stdout).toContain(
-      "68 source menus; 5 modeled ordinary position alternatives"
+      "68 source menus; 23 modeled ordinary position alternatives"
     );
-    expect(report.teams.every((t) => t.impactCount === 0)).toBe(true);
+    expect(text.stdout).toContain("source source-799: With the team reroll committed");
+    expect(text.stdout).toContain("The opening turn counters place this in the first half.");
+    expect(text.stdout).toContain("source source-3997: Before the attempt, the score from this team's perspective was 0–2.");
+    expect(report.teams.map((t) => t.impactCount)).toEqual([1, 1]);
+    expect(report.events.find((event) => event.metadata.sourceId === "source-2409")?.contextualImpact).toMatchObject({
+      policy: "exact_pickup_possession", contribution: -1, offPitchPlayerCount: 4
+    });
   }, 20000);
   const forgeries: [string, (e: LuckEvent, r: LuckReport) => void][] = [
     [

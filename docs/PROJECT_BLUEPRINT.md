@@ -1,20 +1,22 @@
 # Project Blueprint: Nufflizier (Web + API + CLI)
 
-## Current Planning Authority (2026-11-14)
+## Current Planning Authority
 
 [PROJECT_PLAN.md](PROJECT_PLAN.md) and [REMEDIATION_BACKLOG.md](REMEDIATION_BACKLOG.md) supersede the milestone ordering and readiness claims in the February implementation history below. The adversarial review found real block/injury exclusions, unreachable dodge scoring, reroll and damage-attribution errors, misleading coverage, parser failures, and upload-security gaps. Context-sensitive impact requires state reconstruction and a versioned consequence model (NUF-016–019); fixed category weights do not implement that capability. The authoritative ledger records scoped closures and the remaining semantic/state/context/deployment acceptance. Current reports abstain from whole-match comparisons; historical milestone labels do not establish completion. The historical sections below do not override those statuses.
 
-## Product Summary
+## Product Goals
 Nufflizier is a replay-driven luck analysis tool for Blood Bowl 3.
 
 Input:
 1. Replay XML or BB3 `.bbr` payload.
 
-Output:
+Target outputs:
 1. Team-level luck verdict and score gap.
 2. Category contribution breakdown.
 3. Key moment timeline for low-probability successes and high-probability failures.
 4. Human-readable “why” explanations that non-statistics users can follow.
+
+See [current capabilities](CURRENT_CAPABILITIES.md) for the scoped behavior available today.
 
 ## Canonical Planning and Handoff Docs
 1. `docs/PROJECT_PLAN.md` (current status and backlog)

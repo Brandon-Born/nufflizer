@@ -32,7 +32,7 @@ function execute() {
   } catch (error) {
     parentPort!.postMessage({
       ok: false,
-      validation: error instanceof ReplayValidationError,
+      validationCode: error instanceof ReplayValidationError ? error.code : undefined,
       message: error instanceof Error ? error.message : "Analysis failed."
     });
   }

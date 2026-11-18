@@ -1,5 +1,5 @@
 import type { ReplayEvent } from "./types";
-import { recordedMentalEffect } from "./mentalEffects";
+import { recordedConfusedProvider } from "./mentalEffects";
 import { isInertReplayControl } from "./inertControls";
 import { scopedMentalNotificationHolder } from "./mentalNotification";
 import { knownKoTraitTransition } from "./koTraitContinuity";
@@ -119,18 +119,46 @@ function listedPlayers(value: unknown) {
 }
 
 // A fully recognized Confused effect cannot rewrite anyone else's skills.
-// Its holder is still invalidated: an effect end alone does not prove restored
-// eligibility or recover an earlier seed. Other effect shapes remain barriers.
-export function scopedTraitEffectPlayer(e: ReplayEvent, header?:ReplayEvent): string | undefined {
-  if(e.sourceTag==="ResultAddPlayerEffect"||e.sourceTag==="ResultEndPlayerEffect")return scopedMentalNotificationHolder(e,header);
+// The holder still needs separate evidence of restored eligibility.
+export function scopedTraitEffectPlayer(
+  e: ReplayEvent,
+  header?: ReplayEvent
+): string | undefined {
+  if (
+    e.sourceTag === "ResultAddPlayerEffect" ||
+    e.sourceTag === "ResultEndPlayerEffect"
+  )
+    return scopedMentalNotificationHolder(e, header);
   const p = e.payload;
   if (
     e.attributionConflict ||
     !["EventAddPlayerEffect", "EventEndPlayerEffect"].includes(e.sourceTag) ||
     !p ||
     !Object.keys(p).every((key) => key === "PlayerId" || key === "Effect") ||
-    playerNumber(p.PlayerId) === undefined ||
-    !recordedMentalEffect(p.Effect)
+    playerNumber(p.PlayerId) === undefined
+  )
+    return;
+  const provider = recordedConfusedProvider(p.Effect);
+  if (provider === null) return;
+  const { locator, sourceIndex } = e;
+  if (
+    provider === 84 &&
+    (e.sourceTag !== "EventEndPlayerEffect" ||
+      typeof p.PlayerId !== "string" ||
+      e.playerId !== p.PlayerId ||
+      !e.actorTeamId ||
+      (e.actorTeamSource !== "explicit" && e.actorTeamSource !== "player_map") ||
+      !integer(sourceIndex) ||
+      sourceIndex < 1 ||
+      e.id !== `source-${sourceIndex}` ||
+      !locator ||
+      !integer(locator.replayStep) ||
+      locator.replayStep < 1 ||
+      !integer(locator.childIndex) ||
+      e.actionId !== undefined ||
+      locator.stepIndex !== undefined ||
+      locator.messageIndex !== undefined ||
+      (p.Effect as { AdditionalSkills?: unknown }).AdditionalSkills !== undefined)
   )
     return;
   return String(p.PlayerId);

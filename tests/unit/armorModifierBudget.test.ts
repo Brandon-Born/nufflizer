@@ -368,8 +368,8 @@ describe("independent Mighty Blow armor source evidence", () => {
           expect(injury.weightedDelta).toBe(rational(ref.weighted));
         } else {
           if (
-            file === "demo9.bbr" &&
-            injury.metadata.sourceId === "source-4222"
+            (file === "demo9.bbr" && injury.metadata.sourceId === "source-4222") ||
+            (file === "demo5.bbr" && injury.metadata.sourceId === "source-1757")
           )
             expect(assertIntrinsicInjury(file, injury, r)).toBe(true);
           else expect(injury.metadata.injuryTable).toBeUndefined();

@@ -43,7 +43,7 @@ test("upload selection, drop replacement, cancellation and retry work on mobile"
   await page.getByRole("button", { name: "Cancel analysis" }).click();
   await expect(page.getByText("Analysis cancelled. You can retry or choose another replay.", { exact: true })).toContainText("cancelled");
   await page.getByRole("button", { name: "Analyze Nuffle Luck" }).click();
-  await expect(page.getByRole("alert")).toBeVisible();
+  await expect(page.getByRole("alert").filter({ hasText: "Replay analysis failed (HTTP 503)" })).toBeVisible();
   await expect(page.getByText(/Ready: dropped.bbr/)).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Analyze Nuffle Luck" })

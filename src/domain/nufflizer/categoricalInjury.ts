@@ -18,6 +18,13 @@ import type { ObservedBlockConsequence } from "./blockConsequences";
 import { knockedDownSubjects } from "./blockConsequences";
 import { LUCK_CATEGORY_WEIGHTS } from "./constants";
 import { validReportedArmorModifierUse } from "./armorModifierBudget";
+import {
+  fixedArmorPolicyKey,
+  hasFixedFoulDamageTraits,
+  type FixedArmorPolicy
+} from "./armorPolicy";
+
+type InjuryCause = NonNullable<LuckEvent["metadata"]["injuryScoring"]>["cause"];
 
 // Ordinal dice deviation, not a price for losing the player. Badly Hurt and a
 // pending Casualty roll share one injury tier; no league damage is valued.
@@ -223,7 +230,8 @@ export function attachCategoricalInjuries(
   replay: ReplayModel,
   sources: ReadonlyMap<string, LuckEvent>,
   blocks: readonly ObservedBlockConsequence[],
-  owners: OwnershipTimeline
+  owners: OwnershipTimeline,
+  armorPolicies: ReadonlyMap<string, FixedArmorPolicy>
 ) {
   if (replay.replayVersion !== "1-4-0-0") return;
   const blockActions = new Map<string, ObservedBlockConsequence[]>();
@@ -259,6 +267,10 @@ export function attachCategoricalInjuries(
       const armor = rawArmor?.id ? sources.get(rawArmor.id) : undefined;
       const table = injury?.metadata.injuryTable,
         observation = injury?.metadata.injuryObservation;
+      const foul =
+        damage.damageSource === 7
+          ? armorPolicies.get(fixedArmorPolicyKey(damage))
+          : undefined;
       if (
         damage.sourceTag !== "DamageStep" ||
         ![1, 2, 3].includes(Number(damage.payload?.State)) ||
@@ -280,6 +292,7 @@ export function attachCategoricalInjuries(
         armor.metadata.actionId !== damage.actionId ||
         armor.metadata.sequenceId !== injury.metadata.sequenceId ||
         (!armorUse &&
+          foul?.kind !== "foul" &&
           (rawArmor?.payload?.Modifiers !== "" ||
             armor.metadata.modifiersSum !== 0 ||
             armor.metadata.modifiers?.length !== 0)) ||
@@ -297,9 +310,7 @@ export function attachCategoricalInjuries(
         rawArmor.sourceIndex !== damage.sourceIndex! + (armorUse ? 2 : 1)
       )
         continue;
-      let cause:
-        | NonNullable<LuckEvent["metadata"]["injuryScoring"]>["cause"]
-        | undefined;
+      let cause: InjuryCause | undefined;
       const candidates = blockActions.get(damage.actionId ?? "");
       if (candidates?.length === 1 && damage.damageSource === 1) {
         const pool = sources.get(candidates[0]!.poolSourceId),
@@ -358,6 +369,24 @@ export function attachCategoricalInjuries(
               }
             : {})
         };
+      } else if (
+        foul?.kind === "foul" &&
+        foul.header === damage &&
+        foul.causeSourceId &&
+        foul.foulActorTraits &&
+        !armorUse &&
+        observation.recordKind === "direct"
+      ) {
+        cause = {
+          kind: "foul",
+          foulResultSourceId: foul.causeSourceId,
+          foulerTraitEvidence: foul.foulActorTraits
+        };
+        if (
+          !isReportedFoulArmor(armor, injury) ||
+          !validFoulInjuryCause(injury, cause, sources)
+        )
+          continue;
       } else if (!candidates && !armorUse)
         cause = selfFallCause(turn.events, i, sources);
       if (!cause || (sppLink && cause.kind !== "block")) continue;
@@ -396,6 +425,71 @@ export function attachCategoricalInjuries(
         "weighted delta = (chance of a more severe tier - chance of a less severe tier) × injury weight";
       injury.explainability.inputsSummary = `Initial injury tier: ${observation.outcome}; less severe ${(100 * rank.lessSevereChance).toFixed(1)}%, same tier ${(100 * rank.sameSeverityChance).toFixed(1)}%, more severe ${(100 * rank.moreSevereChance).toFixed(1)}%. No binary success, treatment, final availability or contextual value is inferred.`;
     }
+}
+
+function validFoulInjuryCause(
+  injury: LuckEvent,
+  cause: Extract<InjuryCause, { kind: "foul" }>,
+  sources: ReadonlyMap<string, LuckEvent>
+) {
+  const result = sources.get(cause.foulResultSourceId);
+  const m = injury.metadata;
+  const observation = m.injuryObservation;
+  const subject = m.injuryTable?.traitEvidence;
+  const fouler = cause.foulerTraitEvidence;
+  return (
+    observation?.sourceCode === 7 &&
+    observation.recordKind === "direct" &&
+    !!subject &&
+    hasFixedFoulDamageTraits(fouler) &&
+    fouler.playerId !== injury.playerId &&
+    fouler.teamId !== injury.teamId &&
+    fouler.rosterIndex !== subject.rosterIndex &&
+    fouler.observedCheckpointAfter <= fouler.currentCheckpointAfter &&
+    fouler.prayersCheckpointAfter <= fouler.currentCheckpointAfter &&
+    fouler.currentCheckpointAfter === subject.currentCheckpointAfter &&
+    fouler.currentCheckpointAfter < observation.damageStepSourceIndex &&
+    result?.playerId === fouler.playerId &&
+    result.teamId === fouler.teamId &&
+    result.scoringStatus === "excluded" &&
+    result.metadata.isRollCandidate === false &&
+    !result.metadata.ownershipConflict &&
+    result.metadata.sourceTag === "ResultNoRollSuccess" &&
+    result.metadata.stepType === 8 &&
+    result.metadata.targetId === injury.playerId &&
+    result.metadata.sequenceId === m.sequenceId &&
+    !!result.metadata.actionId &&
+    result.metadata.actionId !== m.actionId &&
+    result.metadata.sourceIndex === observation.damageStepSourceIndex - 1 &&
+    result.metadata.locator?.messageIndex === 0 &&
+    result.metadata.locator?.replayStep === m.locator?.replayStep &&
+    result.metadata.locator?.childIndex === m.locator?.childIndex &&
+    result.metadata.locator?.stepIndex !== undefined &&
+    m.locator?.stepIndex === result.metadata.locator.stepIndex + 1
+  );
+}
+
+function isReportedFoulArmor(armor: LuckEvent, injury: LuckEvent) {
+  const m = armor.metadata;
+  const locator = injury.metadata.locator;
+  const assists = m.modifiers;
+  return (
+    m.rollType === 10 &&
+    m.sourceTag === "ResultRoll" &&
+    m.stepType === 2 &&
+    m.targetId === injury.playerId &&
+    m.locator?.stepIndex === locator?.stepIndex &&
+    m.locator?.childIndex === locator?.childIndex &&
+    m.locator?.replayStep === locator?.replayStep &&
+    m.locator?.messageIndex === 0 &&
+    locator?.messageIndex === 1 &&
+    assists !== undefined &&
+    assists.length <= 30 &&
+    assists.every((value) => value === -1 || value === 1) &&
+    m.modifiersSum === assists.reduce((total, value) => total + value, 0) &&
+    m.requirement !== undefined &&
+    m.difficulty === m.requirement - m.modifiersSum
+  );
 }
 
 // Structural validation of the exported source/probability/role join. As with
@@ -446,8 +540,9 @@ export function validReportedCategoricalInjury(
     (!budget &&
       (armor.scoringStatus !== "scored" ||
         armor.actualSuccess !== false ||
-        armor.metadata.modifiersSum !== 0 ||
-        armor.metadata.modifiers?.length !== 0 ||
+        (score.cause.kind !== "foul" &&
+          (armor.metadata.modifiersSum !== 0 ||
+            armor.metadata.modifiers?.length !== 0)) ||
         armor.metadata.damage?.sourceCode !== observation.sourceCode)) ||
     (budget &&
       (!use ||
@@ -475,6 +570,12 @@ export function validReportedCategoricalInjury(
   )
     return false;
   const cause = score.cause;
+  if (cause.kind === "foul")
+    return (
+      !score.sppSourceId &&
+      isReportedFoulArmor(armor, event) &&
+      validFoulInjuryCause(event, cause, sources)
+    );
   if (cause.kind === "self_fall") {
     if (score.sppSourceId) return false;
     const fall = sources.get(cause.rollSourceId),

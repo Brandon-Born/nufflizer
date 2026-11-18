@@ -377,23 +377,29 @@ export function scoringRushSuccessors(s: ScoringRushState) {
   if (!validScoringRushState(s)) return;
   const own = s.frame.teams[s.ownRoster],
     opponent = s.frame.teams[1 - s.ownRoster]!;
+  return immediateScoringSuccessors(s.actorId, s.destination, s.destination, own.score, opponent.score);
+}
+
+export function immediateScoringSuccessors(
+  actorId: number, destination: { x: number; y: number }, failureCell: { x: number; y: number }, ownScore: number, opponentScore: number
+) {
   return {
     success: {
       kind: "touchdown" as const,
-      actorCell: s.destination,
+      actorCell: destination,
       actorStatus: 0 as const,
-      ballCarrierId: s.actorId,
-      ownScore: own.score + 1,
-      opponentScore: opponent.score,
+      ballCarrierId: actorId,
+      ownScore: ownScore + 1,
+      opponentScore,
       phase: "drive_end" as const
     },
     failure: {
       kind: "fall_before_damage" as const,
-      actorCell: s.destination,
+      actorCell: failureCell,
       actorStatus: 1 as const,
       ballCarrierId: null,
-      ownScore: own.score,
-      opponentScore: opponent.score,
+      ownScore,
+      opponentScore,
       phase: "turnover_pending" as const,
       pending: ["armor", "ball_bounce"] as ["armor", "ball_bounce"]
     }

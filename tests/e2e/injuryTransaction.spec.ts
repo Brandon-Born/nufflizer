@@ -236,14 +236,21 @@ test("qualified Stunty injury and its SPP recipient stay separate on desktop, mo
   await expect(spp).toContainText("Recorded two SPP");
   await page.getByLabel("Scoring status").selectOption("scored");
   await expect(spp).toHaveCount(0);
+  await page.getByLabel("Player ID or initial roster name").fill("42");
+  await page.getByLabel("Category", { exact: true }).selectOption("injury");
+  const restored = page.locator("tbody tr").filter({ hasText: "Source: source-517;" });
+  await restored.locator("summary").click();
+  await expect(restored).toContainText("Stunned (recorded)");
+  await expect(restored).toContainText("0.875");
+  await expect(restored).toContainText("Conditional unmodified injury table for player 42: Stunty");
   const pending = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download JSON" }).click();
   const saved = JSON.parse(
     readFileSync((await (await pending).path())!, "utf8")
   );
-  expect(saved.schemaVersion).toBe("2.73");
-  expect(saved.modelVersion).toBe("dice-only-37");
-  for (const id of ["source-248", "source-247", "source-3956"]) {
+  expect(saved.schemaVersion).toBe("2.103");
+  expect(saved.modelVersion).toBe("dice-only-48");
+  for (const id of ["source-248", "source-247", "source-3956", "source-517"]) {
     expect(
       saved.events.find(
         (e: { metadata: { sourceId: string } }) => e.metadata.sourceId === id
@@ -251,9 +258,12 @@ test("qualified Stunty injury and its SPP recipient stay separate on desktop, mo
     ).toEqual(report.events.find((e) => e.metadata.sourceId === id));
   }
   expect(saved.verdict.luckierTeam).toBe("unknown");
-  expect(
-    saved.teams.every((t: { impactCount: number }) => t.impactCount === 0)
-  ).toBe(true);
+  expect(saved.teams.map((t: { impactCount: number }) => t.impactCount)).toEqual([1, 0]);
+  expect(saved.events.find((event: { metadata: { sourceId: string } }) =>
+    event.metadata.sourceId === "source-2151")?.contextualImpact).toMatchObject({
+    policy: "exact_pickup_possession", stage: "sure_hands_reroll",
+    contribution: -4 / 3, offPitchPlayerCount: 5
+  });
   expect(await page.locator("nextjs-portal").count()).toBe(0);
   await page.getByRole("button", { name: "Reset filters" }).click();
   await expect(page.getByLabel("Player ID or initial roster name")).toHaveValue(

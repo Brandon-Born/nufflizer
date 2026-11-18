@@ -73,7 +73,7 @@ test("reader overview leads to exact evidence, qualified armor, export and a fre
   ).toBeFocused();
   await row.locator("summary").click();
   await expect(row).toContainText("Source:");
-  await page.getByRole("button", { name: "Show all replay evidence" }).click();
+  await page.getByRole("button", { name: "Back to timeline" }).click();
   await overview.getByRole("button", { name: /^Armor/ }).click();
   const armor = page
     .locator("tbody tr")

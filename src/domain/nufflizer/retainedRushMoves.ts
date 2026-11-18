@@ -14,7 +14,10 @@ import {
 import { plainPickupMoveOutcome } from "@/domain/replay/pickupSuccessors";
 import { teamMovementContinuity } from "@/domain/replay/teamMovementContinuity";
 import { findMovementFall } from "./movementConsequences";
-import { estimateKeptRushMoveBounds } from "./contextImpact";
+import {
+  estimateExactTeamMoves,
+  estimateKeptRushMoveBounds
+} from "./contextImpact";
 import type { LuckEvent } from "./types";
 
 type Cell = { x: number; y: number };
@@ -466,9 +469,19 @@ export function attachRetainedRushMoves(
       5 / 6,
       proof.waitingCheckpointAfter
     );
-    if (!bounds) continue;
+    const exact = bounds
+      ? undefined
+      : estimateExactTeamMoves(
+          "kept_rush_terminal_moves",
+          m.preRoll,
+          false,
+          5 / 6,
+          proof.waitingCheckpointAfter
+        );
+    if (!bounds && !exact) continue;
     m.retainedRushContext = proof;
     e.contextualBounds = bounds;
+    e.contextualImpact = exact;
     const outcome = events.get(proof.moveOutcomeSourceId),
       move = events.get(proof.doMoveSourceId);
     if (outcome) {

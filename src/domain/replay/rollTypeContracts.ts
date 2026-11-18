@@ -175,7 +175,7 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
     confidence: "low",
     status: "ambiguous",
     notes:
-      "Compiled ThrowIn name only; dice roles, geometry and behavior remain unverified. Retained as an unscored random outcome."
+      "Observed perimeter-to-landing legs after end-zone carrier falls corroborate the compiled ThrowIn name. Dice roles and the throw-in distribution remain unverified. Retained as an unscored random outcome."
   },
   {
     sourceTag: "ResultRoll",
@@ -268,7 +268,7 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
     confidence: "high",
     status: "known",
     notes:
-      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+      "An owned fresh declaration die can score through the activation-check contract. Other emissions require their own policy."
   },
   {
     sourceTag: "ResultRoll",
@@ -278,7 +278,7 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
     confidence: "high",
     status: "known",
     notes:
-      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+      "An owned fresh declaration die at its recorded effective target can score through the activation-check contract. Other emissions require their own policy."
   },
   {
     sourceTag: "ResultRoll",
@@ -288,7 +288,7 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
     confidence: "high",
     status: "known",
     notes:
-      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+      "An owned declaration can establish a fresh Animal Savagery die at its effective target. A recorded declined retry can repeat the first die."
   },
   {
     sourceTag: "ResultRoll",
@@ -298,7 +298,7 @@ const OBSERVED_ROLL_TYPE_CONTRACTS: RollTypeContract[] = [
     confidence: "high",
     status: "known",
     notes:
-      "Raw identity is known; outcome, policy or attribution remains outside the scoring contract."
+      "A fresh owned Block, Blitz or qualified Frenzy gate can score for the attacker. Other emissions require their own policy."
   },
   {
     sourceTag: "ResultRoll",

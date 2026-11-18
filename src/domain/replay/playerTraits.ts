@@ -94,6 +94,41 @@ export function ordinaryMovePolicyKnown(
 // only complete current passive skill lists and explicitly empty effects.
 // Unknown/reactive skills/effects need their own ball-reaction contract.
 const PLAIN_BALL_SKILLS = new Set([7, 30, 57, 68, 63, 59, 61, 6]);
+// These apply to a separate action, check, or reroll decision. The learned
+// lists can establish an empty first bounce only with current empty effects.
+const OUTSIDE_EMPTY_PICKUP_BOUNCE = new Set([
+  13, // Mighty Blow modifies armor or injury after a knockdown.
+  31,
+  84, // Bone Head and Animal Savagery gate a declaration.
+  36, // Frenzy follows a Block outcome.
+  49, // Prehensile Tail modifies a Dodge.
+  64, // Throw Team-mate is a separate action.
+  18,
+  52, // Always Hungry and Right Stuff concern thrown players.
+  19,
+  27, // Regeneration and Dirty Player concern damage.
+  26, // Dauntless changes strength for a block.
+  33, // Disturbing Presence modifies a catch test if a catch is attempted.
+  51, // Really Stupid gates a declaration.
+  95, // Projectile Vomit is a separate special action.
+  1008, // Loner (3+) gates a team reroll.
+  44,
+  47,
+  86,
+  100,
+  101,
+  102
+]);
+
+export function supportsSettledPickupTraits(traits: ObservedPlayerTraits) {
+  return (
+    traits.innateSkills !== null &&
+    traits.acquiredSkills !== null &&
+    [...traits.innateSkills, ...traits.acquiredSkills].every(
+      (id) => PLAIN_BALL_SKILLS.has(id) || OUTSIDE_EMPTY_PICKUP_BOUNCE.has(id)
+    )
+  );
+}
 export function plainBallPolicyKnown(
   traits: ObservedPlayerTraits | null,
   playerId: number | null,

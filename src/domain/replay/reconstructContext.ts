@@ -82,6 +82,7 @@ export type PreRollEvidence = {
   actorDodgeMoveSourceId?: string;
   activeMoveContinuation?: ActiveMoveContinuation;
   ordinaryMoveAvailability?: OrdinaryMoveAvailability;
+  ordinaryMoveRosterComplete?: true;
   suppressedTackleZones?: {
     playerId: string;
     rosterIndex: number;
@@ -431,6 +432,16 @@ function summarize(
     movementCheckLinked && destination && actorId !== null
       ? ordinaryMovesAfterSuccess(board, actorId, destination)
       : undefined;
+  const ordinaryMoveRosterComplete =
+    ordinaryMoveAvailability?.unknownPlayerIds.length === 0 &&
+    !!failedMovementOffer(event) &&
+    scoringRosterIds?.length === 2 &&
+    board.teams.length === 2 &&
+    board.teams.every((team) => {
+      const known = scoringRosterIds[team.rosterIndex as 0 | 1];
+      const current = new Set(team.players.map((player) => player.id));
+      return current.size === known.length && known.every((id) => current.has(id));
+    });
   if (ordinaryMoveAvailability)
     otherUsefulActivations = ordinaryMoveAvailability.unknownPlayerIds.length
       ? null
@@ -587,6 +598,7 @@ function summarize(
         ? plainBounceSettlementKnown(board)
         : undefined,
     ordinaryMoveAvailability,
+    ...(ordinaryMoveRosterComplete ? { ordinaryMoveRosterComplete: true } : {}),
     suppressedTackleZones: suppressedTackleZones.length
       ? suppressedTackleZones
       : undefined,

@@ -1,3 +1,6 @@
+import { activationCheckFacts, activationCheckLocator, activationGateFacts } from "../helpers/activationCheckFacts";
+import { foulAppearanceFacts } from "../helpers/foulAppearanceFacts";
+import { expectedPublicImpactCounts } from "../helpers/corpus";
 import { assertIntrinsicInjury } from "../helpers/intrinsicInjuryFacts";
 import casualtyWitness from "../fixtures/evidence/bb3-casualty-observations.json";
 import { assertTransactionInjury } from "../helpers/injuryTransactionFacts";
@@ -169,6 +172,9 @@ describe("source-qualified time-local player ownership", () => {
         rawCases = new Map(
           f.cases.map((c) => [key(c.locator, c.sourceTag), c])
         );
+      const rawFoulAppearance = new Map(
+        foulAppearanceFacts().find((x) => x.file === f.sourceFile)!.rows.map((row) => [row.locator.join(), row])
+      );
       // Check each public proof against its actual raw snapshot, including
       // initial players renewed after an unknown transition. No future snapshot
       // or most-recent omission substitutes for that positive observation.
@@ -245,6 +251,12 @@ describe("source-qualified time-local player ownership", () => {
           expect(e.probabilitySuccess).toBeCloseTo(math.probability,12);expect(e.delta).toBeCloseTo(math.delta,12);expect(e.weightedDelta).toBeCloseTo(math.delta*1.1,12);
           continue;
         }
+        if (e.metadata.numericRetryAccess?.terminalSourceId) {
+          expect(p.role).toBe("actor");
+          expect(e.type).toBe("activation_check");
+          expect(e.metadata.probabilityPolicy).toBe("gated_retry_access");
+          continue;
+        }
         if(e.metadata.numericRetryAccess) {
           const math=rawAccessMath(f.sourceFile,e);expect(math.sha256).toBe(f.sha256);
           expect(p.role).toBe("actor");expect(e.type).toBe("dodge");expect(e.metadata.probabilityPolicy).toBe("gated_retry_access");
@@ -263,6 +275,22 @@ describe("source-qualified time-local player ownership", () => {
           expect(e.delta).toBeCloseTo(-probability,12);expect(e.weightedDelta).toBeCloseTo(-probability*1.1,12);
           // The separate question-evidence suite checks every physical die and
           // all 83 prefixes. The common roster-proof checks above still apply.
+          continue;
+        }
+        if (e.metadata.foulAppearance) {
+          const fact = rawFoulAppearance.get(activationCheckLocator(e.metadata.locator!))!;
+          expect(p.role).toBe("actor");
+          expect(p.playerId).toBe(fact.actor);
+          expect(p.teamId).toBe(fact.actorTeam);
+          expect(p.defender).toMatchObject({ playerId: fact.defender, teamId: fact.defenderTeam });
+          continue;
+        }
+        if (e.metadata.activationCheck) {
+          // activationChecks.test.ts joins every fresh check to the independent
+          // raw declaration, roster, die, effective target and contribution.
+          expect(p.role).toBe("actor");
+          expect(p.playerId).toBe(e.playerId);
+          expect(p.teamId).toBe(e.teamId);
           continue;
         }
         const c = rawCases.get(key(e.metadata.locator, e.metadata.sourceTag!));
@@ -319,6 +347,9 @@ describe("source-qualified time-local player ownership", () => {
       const oldIds = new Set(
         priorCohort.files.find((x) => x.file === f.sourceFile)!.sourceIds
       );
+      const activationFacts = activationCheckFacts().find((x) => x.file === f.sourceFile)!.rows;
+      const rawActivation = new Map(activationFacts.map((row) => [row.locator.join(), row]));
+      const rawActivationGates = activationGateFacts(activationFacts);
       for (const team of r.teams) {
         const scored = r.events.filter(
           (e) => e.scoringStatus === "scored" && e.teamId === team.teamId
@@ -336,7 +367,25 @@ describe("source-qualified time-local player ownership", () => {
               const [a,b="1"]=row.weighted.split("/");return sum+Number(a)/Number(b);
             }
             if(e.metadata.catchRerollResume)return sum+resumedCatchMath(f.sourceFile,e).delta*1.1;
+            if (e.metadata.numericRetryAccess?.terminalSourceId) {
+              const fact = rawActivationGates.get(activationCheckLocator(e.metadata.locator!))!;
+              const [n, d] = fact.accessDelta;
+              expect(fact.team).toBe(team.teamId);
+              expect(e.actualSuccess).toBe(fact.passed);
+              expect(e.weightedDelta).toBeCloseTo(n / d, 12);
+              return sum + n / d;
+            }
             if(e.metadata.numericRetryAccess)return sum+rawAccessMath(f.sourceFile,e).delta*1.1;
+            if (e.metadata.foulAppearance) {
+              const fact = rawFoulAppearance.get(activationCheckLocator(e.metadata.locator!))!;
+              expect(fact.actorTeam).toBe(team.teamId);
+              return sum + fact.delta[0] / fact.delta[1];
+            }
+            if (e.metadata.activationCheck) {
+              const fact = rawActivation.get(activationCheckLocator(e.metadata.locator!))!;
+              expect(fact.team).toBe(team.teamId);
+              return sum + fact.numerator / 6;
+            }
             if(e.metadata.numericOriginal){
               const raw=questionWitness.files.find(x=>x.file===f.sourceFile)!.cases.find(x=>key(x.locator,"QuestionTeamRerollUsage")===key(e.metadata.locator,e.metadata.sourceTag))!;
               return sum-(7-Number(raw.initialRoll.Difficulty[0]))/6*1.1;
@@ -379,7 +428,7 @@ describe("source-qualified time-local player ownership", () => {
         if (m.buyerIdKind !== "small_numeric")
           expect(found?.metadata.identityMutation?.gamerId).toBeUndefined();
       }
-      expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
+      expect(r.teams.map((t) => t.impactCount)).toEqual(expectedPublicImpactCounts(f.sourceFile));
       expect(r.verdict.luckierTeam).toBe("unknown");
     },
     30000

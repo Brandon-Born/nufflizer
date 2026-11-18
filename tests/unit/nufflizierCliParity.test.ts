@@ -114,6 +114,9 @@ describe("nufflizier CLI/API parity", () => {
 
     expect(cliReport.verdict.luckierTeam).toBe(apiReport.verdict.luckierTeam);
     expect(cliReport.verdict.scoreGap).toBe(apiReport.verdict.scoreGap);
+    expect(cliReport.verdict.scoreGap).toBeNull();
+    expect(cliReport.verdict.evidence).toEqual(apiReport.verdict.evidence);
+    expect(cliReport.verdict.evidence.missingScoredTeamIds).toEqual(["home", "away"]);
     expect(cliReport.coverage.allEvents.scoredCount).toBe(
       apiReport.coverage.allEvents.scoredCount
     );
@@ -166,6 +169,7 @@ describe("nufflizier CLI/API parity", () => {
     }
     expect(cliRun.stdout).toContain("Roll-candidate coverage:");
     expect(cliRun.stdout).toContain("All-event coverage:");
+    expect(cliRun.stdout).toContain("dice contribution gap Not scored");
 
     if (Object.keys(apiReport.coverage.excludedByReason).length > 0) {
       expect(cliRun.stdout).toContain("Top exclusion reasons:");

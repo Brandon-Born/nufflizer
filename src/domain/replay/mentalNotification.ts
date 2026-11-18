@@ -1,4 +1,4 @@
-import { recordedMentalEffect } from "./mentalEffects";
+import { recordedConfusedProvider } from "./mentalEffects";
 import type { ReplayEvent } from "./types";
 
 const integer = (v: unknown, min = 0): v is number =>
@@ -28,6 +28,7 @@ export function scopedMentalNotificationHolder(
     h = header?.payload,
     at = e.locator,
     from = header?.locator;
+  const provider = recordedConfusedProvider(p?.Effect);
   if (
     !["ResultAddPlayerEffect", "ResultEndPlayerEffect"].includes(e.sourceTag) ||
     !p ||
@@ -35,7 +36,14 @@ export function scopedMentalNotificationHolder(
     !header ||
     !fields(p, ["PlayerId", "Effect"]) ||
     !integer(p.PlayerId) ||
-    !recordedMentalEffect(p.Effect) ||
+    provider === null ||
+    (provider === 84 &&
+      ((p.Effect as { AdditionalSkills?: unknown }).AdditionalSkills !== "" ||
+        h.TargetId !== -1 ||
+        !e.actorTeamId ||
+        e.actorTeamId !== header.actorTeamId ||
+        (e.actorTeamSource !== "explicit" &&
+          e.actorTeamSource !== "player_map"))) ||
     !fields(h, [
       "Probability",
       "PlayerId",

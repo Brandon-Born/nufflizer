@@ -100,8 +100,8 @@ for (const c of [
     );
     const exported = saved.events.find((v: { id: string }) => v.id === e.id);
     expect(exported).toEqual(e);
-    expect(saved.schemaVersion).toBe("2.73");
-    expect(saved.modelVersion).toBe("dice-only-37");
+    expect(saved.schemaVersion).toBe("2.103");
+    expect(saved.modelVersion).toBe("dice-only-48");
     expect(saved.verdict.luckierTeam).toBe("unknown");
     await page
       .getByLabel("Player ID or initial roster name")

@@ -1,3 +1,4 @@
+import { expectedPublicImpactCounts } from "../helpers/corpus";
 import { describe, expect, it } from "vitest";
 import { readFileSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
@@ -348,14 +349,14 @@ describe("actual movement after a direct committed team-rerolled Rush", () => {
         (e) =>
           e.contextualBounds || e.possessionBounds || e.catchPossessionBounds
       ).length;
-      expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
+      expect(r.teams.map((t) => t.impactCount)).toEqual(expectedPublicImpactCounts(file));
       expect(r.verdict.luckierTeam).toBe("unknown");
     }
     expect({ used, kept, moves, ranges }).toEqual({
       used: 37,
       kept: 12,
       moves: 15,
-      ranges: 27
+      ranges: 31
     });
   }, 60000);
   it.each([

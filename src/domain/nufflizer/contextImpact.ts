@@ -1,6 +1,6 @@
 import type { PreRollEvidence } from "@/domain/replay/reconstructContext";
 
-export const CONTEXT_MODEL_VERSION = "mobility-possession-42";
+export const CONTEXT_MODEL_VERSION = "mobility-possession-56";
 export type ContextPolicy =
   | "declined_team_reroll"
   | "full_team_reroll"
@@ -12,6 +12,12 @@ export type ContextPolicy =
 // changes in touchdown or win probability.
 const POSSESSION_VALUE = 2;
 const MARKED_LANDING_VALUE = 1;
+export const PICKUP_POSSESSION_STAGES = [
+  "sure_hands_reroll",
+  "kept_pickup_possession",
+  "team_pickup_possession"
+] as const;
+type PickupPossessionStage = (typeof PICKUP_POSSESSION_STAGES)[number];
 
 export function estimateNumericImpact(
   preRoll: PreRollEvidence | undefined,
@@ -30,7 +36,9 @@ export function estimateNumericImpact(
     return;
   if (
     rollType === 2 &&
-    (preRoll.actorCarriesBall !== false || !preRoll.movementCheckLinked)
+    (policy === "full_team_reroll" ||
+      preRoll.actorCarriesBall !== false ||
+      !preRoll.movementCheckLinked)
   )
     return;
   if (
@@ -129,11 +137,11 @@ export function estimateDodgeImpactBounds(
 // Pending catches/throw-ins remain [0,3]; their future dice are not scored now.
 export function estimatePickupPossessionBounds(
   preRoll: PreRollEvidence | undefined,
-  policy: ContextPolicy | undefined,
+  policy: ContextPolicy | PickupPossessionStage | undefined,
   deviation: number,
   successChance: number
 ) {
-  if (policy !== "sure_hands_reroll" || !preRoll?.pickupSuccessors) return;
+  if ((policy !== "sure_hands_reroll" && policy !== "kept_pickup_possession" && policy !== "team_pickup_possession") || !preRoll?.pickupSuccessors) return;
   let minimum = 0,
     maximum = 0;
   for (const branch of preRoll.pickupSuccessors.branches) {
@@ -159,6 +167,31 @@ export function estimatePickupPossessionBounds(
     maximumDifference: maximum,
     lower: Math.min(...endpoints) || 0,
     upper: Math.max(...endpoints) || 0
+  };
+}
+
+// Equal differences establish the component before the die, for either
+// outcome. A pending reaction, return or unknown zone keeps it a range.
+export function exactPickupPossession(
+  bounds: NonNullable<ReturnType<typeof estimatePickupPossessionBounds>>,
+  actualSuccess: boolean,
+  waitingCheckpointAfter?: number
+) {
+  if (bounds.minimumDifference !== bounds.maximumDifference) return;
+  const difference = bounds.minimumDifference;
+  const deviation = Number(actualSuccess) - bounds.successChance;
+  return {
+    policy: "exact_pickup_possession" as const,
+    stage: bounds.policy,
+    waitingCheckpointAfter,
+    successChance: bounds.successChance,
+    components: {
+      possession: POSSESSION_VALUE,
+      markedBounce: difference - POSSESSION_VALUE
+    } as const,
+    difference,
+    deviation,
+    contribution: deviation * difference
   };
 }
 
@@ -189,15 +222,15 @@ export function estimateKeptCatchPossession(successChance: number) {
   } as const;
 }
 
-// Only the teammate-move component at a committed direct team replacement.
-// The caller requires a verified actual move or terminal self-fall/turnover;
-// the earlier failed die, reroll cost, actor continuation and ball value are
-// separate stages. Unknown teammate eligibility remains a possible-value set.
+// Teammate moves at a qualified original or replacement die. The caller
+// verifies the recorded policy and the actual move or terminal self-fall.
+// Reroll costs, actor continuation and possession have separate accounting.
 function terminalTeamMoveBounds(
   preRoll: PreRollEvidence | undefined,
   actualSuccess: boolean,
   successChance: number,
-  terminalCheckpointAfter: number
+  terminalCheckpointAfter: number,
+  exact = false
 ) {
   const availability = preRoll?.ordinaryMoveAvailability;
   if (
@@ -205,7 +238,8 @@ function terminalTeamMoveBounds(
     preRoll.teamTurn === null ||
     preRoll.actorCarriesBall !== false ||
     !preRoll.movementCheckLinked ||
-    !availability?.unknownPlayerIds.length
+    !availability ||
+    (availability.unknownPlayerIds.length === 0) !== exact
   )
     return;
   const minimumMoves = availability.knownAvailablePlayerIds.length;
@@ -219,6 +253,33 @@ function terminalTeamMoveBounds(
     maximumMoves,
     lower: Math.min(...endpoints) || 0,
     upper: Math.max(...endpoints) || 0
+  };
+}
+
+export function estimateExactTeamMoves(
+  policy:
+    | "team_reroll_terminal_moves"
+    | "team_reroll_rush_moves"
+    | "kept_dodge_terminal_moves"
+    | "kept_rush_terminal_moves",
+  preRoll: PreRollEvidence | undefined,
+  actualSuccess: boolean,
+  successChance: number,
+  terminalCheckpointAfter: number
+) {
+  if (preRoll?.ordinaryMoveRosterComplete !== true) return;
+  const exact = terminalTeamMoveBounds(
+    preRoll, actualSuccess, successChance, terminalCheckpointAfter, true
+  );
+  if (!exact) return;
+  return {
+    policy,
+    terminalCheckpointAfter,
+    successChance,
+    components: { availableMoves: exact.minimumMoves },
+    difference: exact.minimumMoves,
+    deviation: Number(actualSuccess) - successChance,
+    contribution: exact.lower
   };
 }
 

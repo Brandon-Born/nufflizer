@@ -1,10 +1,36 @@
 import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
 import { analyzeReplayLuck } from "@/domain/nufflizer/analyzeLuck";
 import { LuckReportSchema } from "@/domain/nufflizer/reportSchema";
 import { decodeReplayInput } from "@/domain/replay/decodeReplay";
 import { parseReplayXml } from "@/domain/replay/parseXml";
 import { explainPickupBallChain } from "@/domain/nufflizer/presentation";
+import { activationCheckLocator } from "../helpers/activationCheckFacts";
+
+type RawTurnEnd = {
+  pickup: number[];
+  bounce: number[];
+  end: number[];
+  gamer: 0 | 1 | null;
+  snapshot: {
+    locator: number[];
+    isHeld: false | null;
+    gamer: 0 | 1 | null;
+  } | null;
+  landing: { x: number; y: number };
+};
+
+const turnEndFacts = execFileSync(
+  "python3",
+  ["scripts/extract-pickup-turn-ends.py"],
+  {
+    encoding: "utf8"
+  }
+)
+  .trim()
+  .split("\n")
+  .map((line) => JSON.parse(line) as { file: string; rows: RawTurnEnd[] });
 
 function replay(name: string) {
   return parseReplayXml(
@@ -25,6 +51,81 @@ function at(
 }
 
 describe("observed pickup/bounce/catch branches (NUF-016/018/022)", () => {
+  it.each(turnEndFacts)(
+    "joins every direct pickup turnover in $file to independent XML",
+    ({ file, rows }) => {
+      const r = LuckReportSchema.parse(analyzeReplayLuck(replay(file)));
+      const events = new Map(
+        r.events.flatMap((e) =>
+          e.metadata.locator
+            ? [[activationCheckLocator(e.metadata.locator), e] as const]
+            : []
+        )
+      );
+      expect(
+        r.events.filter((e) => e.metadata.pickupTurnEnd?.kind === "bounce")
+      ).toHaveLength(rows.length);
+      for (const fact of rows) {
+        const pickup = events.get(fact.pickup.join())!;
+        const bounce = events.get(fact.bounce.join())!;
+        const end = events.get(`${fact.end.join()},,`)!;
+        expect(pickup.metadata.pickupTurnEnd).toMatchObject({
+          kind: "bounce",
+          bounceSourceId: bounce.metadata.sourceId,
+          endSourceId: end.metadata.sourceId,
+          nextGamerId: fact.gamer
+        });
+        expect(pickup.metadata.pickupBallChain).toMatchObject({
+          endingCell: fact.landing,
+          catchEventIds: [],
+          diceByTeam: { [pickup.teamId]: pickup.weightedDelta }
+        });
+        expect(end).toMatchObject({
+          scoringStatus: "excluded",
+          weightedDelta: 0,
+          metadata: { isRollCandidate: false, turnEndReason: 2 }
+        });
+        const after = pickup.metadata.pickupTurnEnd;
+        if (after?.kind !== "bounce")
+          throw new Error("Expected a bounce turnover");
+        if (fact.snapshot) {
+          const [frame, child] = fact.snapshot.locator;
+          const cp = r.rerollResources.flow.clockSnapshots.find(
+            (snapshot) =>
+              snapshot.source.replayStep === frame &&
+              snapshot.source.childIndex === child
+          )!;
+          expect(after.snapshot).toEqual({
+            checkpointAfter: cp.source.checkpointAfter,
+            observedIsHeld: fact.snapshot.isHeld,
+            observedActiveGamerId: fact.snapshot.gamer
+          });
+        } else expect(after.snapshot).toBeUndefined();
+      }
+    },
+    15000
+  );
+
+  it("keeps the rain pickup estimate when the later board disagrees with the bounce", () => {
+    const model = replay("demo5.bbr");
+    const board = model.boardCheckpoints!.find(
+      (cp) => cp.afterSourceIndex === 2416
+    )!.board!;
+    board.ball.cell.x = 18;
+    const r = LuckReportSchema.parse(analyzeReplayLuck(model));
+    const pickup = r.events.find((e) => e.metadata.sourceIndex === 2409)!;
+    const end = pickup.metadata.pickupTurnEnd;
+    expect(end).toMatchObject({ kind: "bounce", endSourceId: "source-2412" });
+    if (end?.kind !== "bounce") throw new Error("Expected a bounce turnover");
+    expect(end.snapshot).toBeUndefined();
+    expect(pickup.contextualImpact).toMatchObject({ policy: "exact_pickup_possession", contribution: -1 });
+    expect(explainPickupBallChain(pickup)).toContain(
+      "team turn ended immediately after the bounce"
+    );
+    end.endSourceId = end.bounceSourceId;
+    expect(LuckReportSchema.safeParse(r).success).toBe(false);
+  });
+
   it.each([
     ["demo11.bbr", 186, "6", "9", [20, 8], -1.1 / 6],
     ["demo3.bbr", 415, "42", "45", [15, 10], (1.1 * 2) / 3]

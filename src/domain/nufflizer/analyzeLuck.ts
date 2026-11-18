@@ -1,4 +1,15 @@
 import { findFixedArmorPolicies, fixedArmorPolicyKey, type FixedArmorPolicy } from "./armorPolicy";
+import { findDeclaredActivationChecks } from "@/domain/replay/activationChecks";
+import {
+  observeAnimalSavageryContinuation,
+  observeAnimalSavageryOutcome,
+  type AnimalSavageryContinuation,
+  type AnimalSavageryOutcome
+} from "@/domain/replay/animalSavageryOutcome";
+import { ACTIVATION_SKILL_NAME, linkActivationRerolls, scoreActivationCheck } from "./activationCheckScore";
+import { scoreActivationRetryAccess } from "./activationRetryAccess";
+import { findFoulAppearanceChecks } from "@/domain/replay/foulAppearance";
+import { scoreFoulAppearance } from "./foulAppearanceScore";
 import { ARMOR_REVIEW_NOTICE, hasArmorUnderReview } from "./readerSummary";
 import { returnDeclarationName } from "@/domain/replay/activationBudget";
 import { findRerollResources, recordedRerollChoice, recordedRerollOffer } from "./rerollResources";
@@ -28,6 +39,9 @@ import {
 import { enumerateSkillBlock } from "./blockSkillModel";
 import { applyCategoricalBlockScore } from "./categoricalBlock";
 import { estimateScoringRushImpact } from "./scoringRushImpact";
+import { observeCommittedScoringRush } from "./committedScoringRush";
+import { observeFinalTurnScoringRush } from "./finalTurnScoringRush";
+import { scoreThrough } from "@/domain/replay/scoreContinuity";
 import { unmodifiedD6Check } from "@/domain/replay/numericCheck";
 import { findKeptDodgeContexts, attachKeptDodgeMoves } from "./keptDodgeMoves";
 import {
@@ -41,6 +55,7 @@ import { findStaffInjuryOriginals } from "./staffInjuryOriginal";
 import { findTreatmentEvidence } from "./treatmentAftermath";
 import {canonicalizeThrowTeamMateParticipants} from "@/domain/replay/throwTeamMateParticipants";
 import {qualifyExecutionSources} from "@/domain/replay/executionSources";
+import { BOMB_CATCH_EXCLUSION, findBombCatches, type BombCatch } from "@/domain/replay/bombCatch";
 import { attachCasualtyObservations } from "./casualtyObservation";
 import { attachCasualtyTables } from "./casualtyTable";
 import { attachCategoricalInjuries } from "./categoricalInjury";
@@ -65,6 +80,7 @@ import {
   findBounceCatchReactions,
   attachBounceCatchReactions
 } from "./catchPossession";
+import { attachPickupDecisionPossession, committedPickupCheckpoint, findContinuedPickupTraits, supportsPickupDecisionModifiers } from "./pickupDecisionPossession";
 import { findPickupTurnEnds, attachPickupTurnEnds } from "./pickupTurnEnd";
 import {
   findRerollCounterEvidence,
@@ -77,7 +93,7 @@ import {
 } from "./blockConsequences";
 import { findDriveEffectExpiries } from "@/domain/replay/driveEffects";
 import { checkpointClockEpochs } from "@/domain/replay/boardState";
-import { VERDICT_SUMMARIES } from "./explainabilityCopy";
+import { summarizeVerdictEvidence, VERDICT_SUMMARIES } from "./explainabilityCopy";
 import { formatDiceContribution, scoredEvidenceForTeam } from "./presentation";
 import {
   linkLonerGates,
@@ -92,7 +108,9 @@ import {
   estimateDodgeImpactBounds,
   estimateTeamDodgeMoveBounds,
   estimateTeamRushMoveBounds,
-  estimatePickupPossessionBounds
+  estimateExactTeamMoves,
+  estimatePickupPossessionBounds,
+  exactPickupPossession
 } from "./contextImpact";
 import {
   reconstructReplayContext,
@@ -105,6 +123,8 @@ import {
   findMovementTouchdown,
   summarizeMovementFall
 } from "./movementConsequences";
+import { observeRushFallAftermath } from "./rushFallAftermath";
+import { observeRushFallRecovery } from "./rushFallRecovery";
 import { linkRegeneration, type RegenerationEvidence } from "./regeneration";
 import { countKoRecoveryChecks, verifyKoRecovery } from "./koRecovery";
 import { linkApothecary, type ApothecaryRecord } from "./apothecary";
@@ -216,6 +236,9 @@ function eventTypeLabel(type: LuckEventType): string {
 
   if (type === "movement_risk") {
     return "Movement risk";
+  }
+  if (type === "activation_check") {
+    return "Activation check";
   }
 
   return type[0].toUpperCase() + type.slice(1);
@@ -422,7 +445,8 @@ function buildNormalizedEvent(
   armorCountInStep: number | undefined,
   questionOriginal?: NumericQuestionOriginal,
   verifiedGatedReplacement=false,
-  fixedArmorPolicy?: FixedArmorPolicy
+  fixedArmorPolicy?: FixedArmorPolicy,
+  bombCatch?: BombCatch
 ): LuckEvent | null {
   const payload =
     questionOriginal?.roll ??
@@ -638,7 +662,8 @@ function buildNormalizedEvent(
     dice,
     dieTypes,
     armorCountInStep,
-    fixedArmorPolicy
+    fixedArmorPolicy,
+    ownership
   );
   const armorAccepted = armor?.kind === "verified" ? armor : undefined;
   const armorOwner =
@@ -749,6 +774,7 @@ function buildNormalizedEvent(
         : targetLabel(requirement, difficulty);
   const contractExclusion =
     event.executionExclusion ??
+    (bombCatch ? BOMB_CATCH_EXCLUSION : undefined) ??
     (!chooserMatches
       ? "block chooser slot conflicts with the participant roster"
       : undefined) ??
@@ -866,7 +892,7 @@ function buildNormalizedEvent(
           : null),
       delta: 0,
       weightedDelta: 0,
-      label: embeddedInjury
+      label: bombCatch ? (bombCatch.caught ? "Bomb caught" : "Bomb catch missed") : embeddedInjury
         ? embeddedInjury.observed
           ? "Observed injury dice"
           : "Unverified staff-choice evidence"
@@ -898,6 +924,7 @@ function buildNormalizedEvent(
       },
       metadata: {
         sourceTag: event.sourceTag,
+        bombCatch,
         ...(observedArmorSubject ? {damage, ...(playerOwnership?.status === "confirmed" ? {ownership: {...playerOwnership.proof, role: "subject" as const}} : {})} : {}),
         recordedRerollChoice: recordedRerollChoice(event),
         recordedRerollOffer: recordedRerollOffer(event),
@@ -1064,7 +1091,7 @@ function buildNormalizedEvent(
         )
       : undefined;
 
-  const possessionBounds =
+  const possession =
     preRoll?.pickupSuccessors && rollType === 4
       ? estimatePickupPossessionBounds(
           preRoll,
@@ -1073,6 +1100,7 @@ function buildNormalizedEvent(
           probability.baseOdds
         )
       : undefined;
+  const pickupImpact = possession && exactPickupPossession(possession, actualSuccess);
   const tags: LuckEvent["tags"] = [];
   if (actualSuccess && probabilitySuccess <= 0.3) {
     tags.push("blessed");
@@ -1096,9 +1124,9 @@ function buildNormalizedEvent(
     actualSuccess,
     delta,
     weightedDelta,
-    contextualImpact,
+    contextualImpact: pickupImpact ?? contextualImpact,
     contextualBounds,
-    possessionBounds,
+    possessionBounds: pickupImpact ? undefined : possession,
     label: armorScored
       ? actualSuccess
         ? "Armor held"
@@ -1215,7 +1243,8 @@ function initialAggregate(teamId: string, teamName: string): LuckTeamAggregate {
       dodge: 0,
       ballHandling: 0,
       argueCall: 0,
-      movementRisk: 0
+      movementRisk: 0,
+      activationCheck: 0
     },
     eventCount: 0,
     impactCount: 0,
@@ -1233,7 +1262,8 @@ function initialCoverageByType(): Record<LuckEventType, number> {
     dodge: 0,
     ball_handling: 0,
     argue_call: 0,
-    movement_risk: 0
+    movement_risk: 0,
+    activation_check: 0
   };
 }
 
@@ -1282,6 +1312,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   // Inventory and bound all observed fields before probability admission.
   const diceInventory = inventoryDiceRecords(replay);
   const rawById=new Map(diceInventory.orderedSources.map(e=>[e.id,e]));
+  const bombCatches = findBombCatches(replay.turns.flatMap((turn) => turn.events), replay.replayVersion);
   const questionScan=findNumericQuestionOriginals(diceInventory.orderedSources,replay.replayVersion,ownership);
   const catchResumes=findCatchRerollResumes(replay,diceInventory.orderedSources,questionScan.originals,ownership);
   const originalByRaw=new Map([...questionScan.originals].map(([i,p])=>[diceInventory.orderedSources[i]!,p] as const));
@@ -1331,6 +1362,13 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   // State/context keeps its independent controller, eligibility and continuity
   // gates on source annotations; the private role view serves dice policies.
   const activationLosses = findConfirmedActivationLosses(inputReplay);
+  const activationChecks = findDeclaredActivationChecks(replay, ownership);
+  const foulAppearanceChecks = findFoulAppearanceChecks(replay, ownership);
+  const activationRerolls = linkActivationRerolls(
+    teamDiceIdentityByQuestion.values(), activationChecks, rawById, ownership
+  );
+  const checkpoints = replay.boardCheckpoints ?? [];
+  const epochs = checkpointClockEpochs(checkpoints);
   const driveExpiries = findDriveEffectExpiries(inputReplay);
   const activationEvidenceSources = new Set(
     activationLosses.flatMap((loss) => [
@@ -1339,6 +1377,52 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       loss.followingActivationSourceId
     ])
   );
+  const animalOutcomes = new Map<string, AnimalSavageryOutcome>();
+  const animalContinuations = new Map<string, AnimalSavageryContinuation>();
+  const animalEvidenceLabels = new Map<string, string>();
+  for (const question of activationRerolls) {
+    const proof = teamDiceIdentityByQuestion.get(question);
+    if (!proof?.final.id || proof.final.rollType !== 36 || proof.used) continue;
+    const outcome = observeAnimalSavageryOutcome(proof.final, rawById, ownership);
+    if (!outcome) continue;
+    animalOutcomes.set(proof.final.id, outcome);
+    const continuation = observeAnimalSavageryContinuation(
+      proof.question, proof.final, outcome, rawById, ownership, checkpoints, epochs
+    );
+    if (continuation) {
+      animalContinuations.set(proof.final.id, continuation);
+      activationEvidenceSources.add(continuation.standBySourceId);
+      activationEvidenceSources.add(continuation.followingActivationSourceId);
+    }
+    if (outcome.kind === "actor_effect") {
+      animalEvidenceLabels.set(outcome.effectSourceId, "Recorded Animal Savagery effect");
+    } else {
+      animalEvidenceLabels.set(outcome.offerSourceId, "Recorded Animal Savagery victim offer");
+      animalEvidenceLabels.set(outcome.selectionSourceId, "Recorded Animal Savagery victim choice");
+    }
+  }
+  for (const id of animalEvidenceLabels.keys()) activationEvidenceSources.add(id);
+  for (const catchEvidence of bombCatches.values()) {
+    activationEvidenceSources.add(catchEvidence.explosionSourceId);
+    if (catchEvidence.starQuestionSourceId)
+      activationEvidenceSources.add(catchEvidence.starQuestionSourceId);
+  }
+  const activationCheckSkills = new Map<string, keyof typeof ACTIVATION_SKILL_NAME>();
+  for (const { evidence } of activationChecks.values()) {
+    activationEvidenceSources.add(evidence.declarationSourceId);
+    activationEvidenceSources.add(evidence.skillSourceId);
+    activationCheckSkills.set(evidence.skillSourceId, evidence.skillId);
+  }
+  const foulAppearanceSkills = new Map<string, 10 | 36>();
+  for (const check of foulAppearanceChecks.values()) {
+    activationEvidenceSources.add(check.skillSourceId);
+    activationEvidenceSources.add(check.triggerSourceId);
+    foulAppearanceSkills.set(check.skillSourceId, 10);
+    if (check.previousBlockSourceId) {
+      activationEvidenceSources.add(check.previousBlockSourceId);
+      foulAppearanceSkills.set(check.triggerSourceId, 36);
+    }
+  }
   for(const turn of inputReplay.turns)for(const raw of turn.events)if(raw.throwTeamMate&&raw.id)activationEvidenceSources.add(raw.id);
   const rerollCounters = findRerollCounterEvidence(inputReplay);
   for (const d of rerollResources.decisions) if (d.decisionWait) {
@@ -1556,8 +1640,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       );
   }
   const koRecoveryChecks = countKoRecoveryChecks(replay.turns);
-  const checkpoints = replay.boardCheckpoints ?? [];
-  const epochs = checkpointClockEpochs(checkpoints);
+  const committedPickupCheckpoints = new Map<string, number>();
   const eventEpochs = new Map<number, number>();
   let checkpointCursor = 0,
     epoch = 0;
@@ -1588,7 +1671,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     }
     const fall =
       replay.replayVersion === "1-4-0-0"
-        ? findMovementFall(replayTurn)
+        ? findMovementFall(replayTurn, replay.boardCheckpoints)
         : undefined;
     if (fall) movementFalls.push(fall);
     const touchdown =
@@ -1629,20 +1712,35 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
         exclusionReason:"an earlier unanswered original makes this new initial emission's identity ambiguous"});
     for(const [i,raw] of replayTurn.events.entries())if(questionScan.ambiguousInitials.has(raw))rerollLinks.set(i,{twoAttemptPolicy:false,rerollUsed:false,
       exclusionReason:"an earlier unanswered original makes this new initial emission's identity ambiguous"});
-    for (const link of rerollLinks.values())
+    for (const [index, link] of rerollLinks)
       if (
-        (link.skill === "Dodge" || link.skill === "Sure Hands") &&
+        (link.skill === "Dodge" || link.skill === "Sure Hands" || link.retainedOriginal || link.resource === "team") &&
         link.decisionId
       ) {
-        activationEvidenceSources.add(link.decisionId);
+        if (link.skill === "Dodge" || link.skill === "Sure Hands")
+          activationEvidenceSources.add(link.decisionId);
         const continuation = link.originalId
           ? contextBySource.get(link.originalId)?.activeMoveContinuation
           : undefined;
         if (continuation)
           activationEvidenceSources.add(continuation.declarationSourceId);
-        const pickup = link.originalId
-          ? contextBySource.get(link.originalId)?.pickupSuccessors
-          : undefined;
+        const context = contextBySource.get(link.originalId ?? link.questionId ?? "");
+        const pickup = context?.pickupSuccessors;
+        if (pickup && link.resource === "team") {
+          const roll = replayTurn.events[index];
+          const p = roll?.payload;
+          if (!roll?.id || roll.sourceIndex === undefined || !roll.playerId ||
+            roll.rollType !== 4 || !p ||
+            numericCheckExclusion(replay.replayVersion, roll, true) ||
+            !supportsPickupDecisionModifiers(p.Requirement, p.Difficulty, fixedNumericModifierEvidence(roll), true) ||
+            link.originalId || !link.rerollUsed)
+            continue;
+          const waiting = committedPickupCheckpoint(
+            context, roll.sourceIndex, roll.playerId, checkpoints, epochs
+          );
+          if (waiting === undefined) continue;
+          committedPickupCheckpoints.set(roll.id, waiting);
+        }
         if (pickup) {
           activationEvidenceSources.add(pickup.declarationSourceId);
           activationEvidenceSources.add(pickup.moveOutcomeSourceId);
@@ -1733,8 +1831,11 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
             (l) =>
               JSON.stringify(l.path) === JSON.stringify(["RollInfos", "Dice"])
           )
-      )
+      ) {
+        if (activationRerolls.has(proof.question.id!))
+          newTeamDiceIdentities.push(proof);
         continue;
+      }
       activationEvidenceSources.add(proof.question.id!);
       activationEvidenceSources.add(proof.choice.id!);
       if (proof.directOriginal)
@@ -1885,10 +1986,30 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
         event.actionId ? armorCounts.get(event.actionId) : undefined,
         undefined,
         false,
-        fixedArmorPolicies.get(fixedArmorPolicyKey(event))
+        fixedArmorPolicies.get(fixedArmorPolicyKey(event)),
+        event.id ? bombCatches.get(event.id) : undefined
       );
       if (!normalized) {
         continue;
+      }
+      scoreActivationCheck(normalized, activationChecks);
+      scoreFoulAppearance(normalized, foulAppearanceChecks);
+      const animalEvidenceLabel = animalEvidenceLabels.get(event.id ?? "");
+      if (animalEvidenceLabel) {
+        normalized.label = animalEvidenceLabel;
+        normalized.statusReason = "Recorded follow-up to a failed Animal Savagery check.";
+      }
+      const foulAppearanceSkill = foulAppearanceSkills.get(event.id ?? "");
+      if (foulAppearanceSkill !== undefined) {
+        normalized.metadata.skillUsage = { skillId: foulAppearanceSkill, used: true };
+        normalized.label = foulAppearanceSkill === 10 ? "Recorded Foul Appearance use" : "Recorded Frenzy use";
+        normalized.statusReason = "Recorded skill use before the Foul Appearance die.";
+      }
+      const activationSkill = activationCheckSkills.get(event.id ?? "");
+      if (activationSkill !== undefined) {
+        normalized.metadata.skillUsage = { skillId: activationSkill, used: true };
+        normalized.label = `Recorded ${ACTIVATION_SKILL_NAME[activationSkill]} use`;
+        normalized.statusReason = "Recorded skill use before the activation die.";
       }
       if (normalized.type === "armor_break" && normalized.scoringStatus === "scored") {
         const p = fixedArmorPolicies.get(fixedArmorPolicyKey(event))!;
@@ -2120,11 +2241,22 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
   attachCasualtyTables(replay, ballSources);
   attachDamageSppLinks(ballSources);
   attachInjuryTables(replay, ballSources, ownership);
-  attachCategoricalInjuries(replay, ballSources, blockConsequences, ownership);
+  attachCategoricalInjuries(
+    replay,
+    ballSources,
+    blockConsequences,
+    ownership,
+    fixedArmorPolicies
+  );
   attachBlockCrowd(replay, ballSources, blockConsequences);
   attachBlockPush(replay, ballSources, blockConsequences, ownership);
   const damageSteps = summarizeDamageSteps(events);
   if (movementFalls.length > 0) {
+    const rawByIndex = movementFalls.some((fall) => fall.evidence.ballPath)
+      ? new Map(replay.turns.flatMap((turn) => turn.events.flatMap((event) =>
+          event.sourceIndex === undefined ? [] : [[event.sourceIndex, event] as const]
+        )))
+      : undefined;
     const damageByAction = new Map(
       damageSteps.map((step) => [step.actionId, step])
     );
@@ -2164,10 +2296,21 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
             combinedRush.playerId !== roll.playerId))
       )
         continue;
-      roll.metadata.movementFall = {
+      const fall: NonNullable<LuckEvent["metadata"]["movementFall"]> = {
         ...evidence,
         ...summarizeMovementFall(roll, damage, eventsById, combinedRush)
       };
+      if (fall.ballPath && rawByIndex) {
+        const aftermath = observeRushFallAftermath(fall, replay.boardCheckpoints ?? [], rawByIndex);
+        if (aftermath) {
+          fall.ballPath = { ...fall.ballPath, aftermath };
+          if (aftermath.status === "loose") {
+            const recovery = observeRushFallRecovery(fall, roll.teamId, replay.boardCheckpoints ?? [], rawByIndex, eventsBySource, [homeTeam.id, awayTeam.id]);
+            if (recovery) aftermath.recovery = recovery;
+          }
+        }
+      }
+      roll.metadata.movementFall = fall;
     }
   }
 
@@ -2175,6 +2318,11 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     linkPickupBallConsequences(turn, ballSources);
   attachBounceCatchReactions(bounceCatchReactions, ballSources);
   attachRetainedCatchPossession(replay, ballSources);
+  attachPickupDecisionPossession(
+    ballSources, contextBySource, committedPickupCheckpoints,
+    findContinuedPickupTraits(replay, committedPickupCheckpoints, ownership, ballSources),
+    rerollResources.flow.clockSnapshots
+  );
   attachPickupTurnEnds(pickupTurnEnds, ballSources);
   attachRerollCounterEvidence(rerollCounters, ballSources);
   for (const [source, proof] of combinedMovements) {
@@ -2329,7 +2477,8 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
               completedMoves
             )
           : undefined;
-      if (terminalCheckpointAfter !== undefined)
+      if (terminalCheckpointAfter !== undefined) {
+        const successChance = (7 - m.difficulty) / 6;
         event.contextualBounds = (
           m.rollType === 1
             ? estimateTeamRushMoveBounds
@@ -2337,9 +2486,18 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
         )(
           m.preRoll,
           event.actualSuccess,
-          (7 - m.difficulty) / 6,
+          successChance,
           terminalCheckpointAfter
         );
+        if (!event.contextualBounds)
+          event.contextualImpact = estimateExactTeamMoves(
+            m.rollType === 1 ? "team_reroll_rush_moves" : "team_reroll_terminal_moves",
+            m.preRoll,
+            event.actualSuccess,
+            successChance,
+            terminalCheckpointAfter
+          );
+      }
     }
   }
   attachRetainedRushMoves(retainedRushContexts, ballSources);
@@ -2518,6 +2676,11 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     }
   }
 
+  for (const question of activationRerolls) {
+    const identity = teamDiceIdentityByQuestion.get(question);
+    if (identity?.used)
+      scoreActivationRetryAccess(identity, normalizedByRaw, ownership);
+  }
   const diceRecords = reconcileDiceEvidence(
     replay,
     events,
@@ -2534,7 +2697,8 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       original = diceByParentPath.get(
         JSON.stringify([proof.question.id, ["RollInfos", "Dice"]])
       );
-    if (!final || !choice || !original || final.scoringStatus !== "excluded")
+    if (!final || !choice || !original || (final.scoringStatus !== "excluded" &&
+      final.metadata.activationCheck?.draw !== "replacement"))
       continue;
     choice.metadata.teamDiceChoice = {
       questionSourceId: proof.question.id!,
@@ -2553,6 +2717,14 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       gatePassed: proof.gatePassed,
       gateSkillId: proof.gateSkill?.payload?.Skill as 44 | 1008 | 50 | undefined
     };
+    if (proof.final.rollType === 36 && activationRerolls.has(proof.question.id!)) {
+      final.label = "Animal Savagery kept die";
+      final.statusReason = "The kept result repeats the scored first die.";
+    }
+    const outcome = animalOutcomes.get(proof.final.id ?? "");
+    if (outcome) final.metadata.animalSavageryOutcome = outcome;
+    const continuation = animalContinuations.get(proof.final.id ?? "");
+    if (continuation) final.metadata.animalSavageryContinuation = continuation;
   }
   for(const {identity:p,receipt} of failedNumericRetries) {
     const kept=normalizedByRaw.get(p.final), first=normalizedByRaw.get(p.question),
@@ -2620,6 +2792,35 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     }
   }
 
+  const scoringAttempts = events.filter((event) =>
+    (event.metadata.preRoll?.scoringAttempt || event.metadata.movementFall?.ballPath?.aftermath?.status === "turn_transition") && event.metadata.rollType === 1 &&
+    event.scoringStatus === "scored" &&
+    (event.metadata.movementTouchdown || event.metadata.movementFall)
+  );
+  if (scoringAttempts.length) {
+    const raw = new Map(replay.turns.flatMap((turn) => turn.events.flatMap((row) =>
+      row.sourceIndex === undefined ? [] : [[row.sourceIndex, row] as const]
+    )));
+    const teamIds = [homeTeam.id, awayTeam.id];
+    for (const event of scoringAttempts) {
+      if (event.metadata.rerollResource === "team") {
+        const observed = observeCommittedScoringRush(event, checkpoints, raw, teamIds);
+        if (observed) {
+          event.contextualImpact = observed.impact;
+          if (observed.recoveredPreRoll) event.metadata.preRoll = observed.recoveredPreRoll;
+        }
+      }
+      if (!event.metadata.preRoll?.scoringAttempt) continue;
+      const checkpointAfter = event.metadata.preRoll!.checkpointAfter;
+      const ownRoster = teamIds.indexOf(event.teamId);
+      if (ownRoster !== 0 && ownRoster !== 1) continue;
+      const score = scoreThrough(checkpoints, raw, checkpointAfter, teamIds);
+      if (score) event.metadata.scoringAttemptScore = { ...score, checkpointAfter, ownRoster };
+      const envelope = observeFinalTurnScoringRush(event, checkpoints, raw, teamIds);
+      if (envelope) event.contextualBounds = envelope;
+    }
+  }
+
   const homeAggregate = initialAggregate(homeTeam.id, homeTeam.name);
   const awayAggregate = initialAggregate(awayTeam.id, awayTeam.name);
   const aggregateById = new Map<string, LuckTeamAggregate>([
@@ -2630,6 +2831,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     [homeAggregate.teamId, 0],
     [awayAggregate.teamId, 0]
   ]);
+  const scoredTeamIds = new Set<string>();
   let allScoredCount = 0;
   let allExcludedCount = 0;
   let rollCandidateScoredCount = 0;
@@ -2665,6 +2867,7 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       aggregate.impactByType[event.type] += event.contextualImpact.contribution;
     }
     allScoredCount += 1;
+    scoredTeamIds.add(event.teamId);
     if (event.metadata.isRollCandidate) {
       rollCandidateScoredCount += 1;
     }
@@ -2684,6 +2887,8 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       aggregate.categoryScores.argueCall += event.weightedDelta;
     } else if (event.type === "movement_risk") {
       aggregate.categoryScores.movementRisk += event.weightedDelta;
+    } else if (event.type === "activation_check") {
+      aggregate.categoryScores.activationCheck += event.weightedDelta;
     }
 
     weightedTotals.set(
@@ -2701,15 +2906,6 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
     .filter((event) => event.scoringStatus === "scored")
     .sort((a, b) => Math.abs(b.weightedDelta) - Math.abs(a.weightedDelta));
 
-  const verdict: LuckReport["verdict"] = {
-    luckierTeam: "unknown",
-    status: allScoredCount === 0 ? "insufficient_evidence" : "partial_analysis",
-    scoreGap: Math.abs(homeAggregate.luckScore - awayAggregate.luckScore),
-    summary:
-      VERDICT_SUMMARIES[
-        allScoredCount === 0 ? "insufficient_evidence" : "partial_analysis"
-      ]
-  };
   const allEventsTotalCount = allScoredCount + allExcludedCount;
   const rollCandidateTotalCount =
     rollCandidateScoredCount + rollCandidateExcludedCount;
@@ -2751,6 +2947,16 @@ export function analyzeReplayLuck(inputReplay: ReplayModel): LuckReport {
       Array.from(excludedByReason.entries()).sort((a, b) => b[1] - a[1])
     )
   } satisfies LuckReport["coverage"];
+  const status = allScoredCount === 0 ? "insufficient_evidence" : "partial_analysis";
+  const verdict: LuckReport["verdict"] = {
+    luckierTeam: "unknown",
+    status,
+    scoreGap: scoredTeamIds.size === 2
+      ? Math.abs(homeAggregate.luckScore - awayAggregate.luckScore)
+      : null,
+    evidence: summarizeVerdictEvidence([homeTeam.id, awayTeam.id], scoredTeamIds, coverage),
+    summary: VERDICT_SUMMARIES[status]
+  };
   const recruitments = observeRecruitmentPurchases(replay);
   const rawChoices = replay.turns.flatMap(t => t.events).filter(e => recordedRerollChoice(e));
   for (const [i, raw] of rawChoices.entries())

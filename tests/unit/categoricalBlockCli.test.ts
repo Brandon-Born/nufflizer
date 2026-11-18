@@ -32,9 +32,9 @@ it("[cli-worker] shares original-source categorical scores, unknown pools and pa
     // Run the direct corpus only after the real deadline worker has exited.
     const direct = analyzeNufflizerInput(bytes.toString());
     expect(report.events).toEqual(direct.events);
-    expect(report.schemaVersion).toBe("2.73");
+    expect(report.schemaVersion).toBe("2.103");
     expect(report.events.filter((e) => e.metadata.blockScoring)).toHaveLength(
-      11
+      57
     );
     expect(
       report.events.find((e) => e.metadata.sourceId === "source-98")!
@@ -45,13 +45,13 @@ it("[cli-worker] shares original-source categorical scores, unknown pools and pa
         .weightedDelta
     ).toBeCloseTo(-19 / 48, 12);
     expect(
-      report.events.find((e) => e.metadata.sourceId === "source-1324")!.metadata
+      report.events.find((e) => e.metadata.sourceId === "source-1203")!.metadata
         .blockResolution!.unscoredPool
     ).toBe(true);
     const text = run("text");
     expect(text.status, text.stderr).toBe(0);
     expect(text.stdout).toContain(
-      "82 observed; 11 have qualified categorical luck; 71 have no qualified luck value"
+      "82 observed; 57 have qualified categorical luck; 25 have no qualified luck value"
     );
     expect(text.stdout).toContain(
       "source source-98: Offered balance +1; fair conditional mean 0.527778; dice contribution 0.354167"
@@ -60,9 +60,17 @@ it("[cli-worker] shares original-source categorical scores, unknown pools and pa
       "source source-132: Offered balance 0; fair conditional mean 0.527778; dice contribution -0.395833"
     );
     expect(text.stdout).toContain(
+      "source source-987: Offered balance +1; fair conditional mean 0.527778; dice contribution 0.354167"
+    );
+    expect(text.stdout).toContain(
       "The subtotal includes only other supported linked dice; it is not an even-luck result"
     );
     expect(text.stdout).toContain("included once in dice totals");
+    expect(text.stdout).toContain("Source source-314: Bone Head passed. Player 38 rolled 3 and needed 2+.");
+    expect(report.coverage.scoredByType.activation_check).toBe(23);
+    expect(text.stdout).toContain("The replay records teammate 38 selected from the offered players at source-1133. The armor check is recorded separately at source-1135.");
+    expect(text.stdout).toContain("Teammate 46 is off the pitch in that snapshot. Teammate 47 declared the next action in the same turn.");
+    expect(text.stdout).toContain("team turn ended immediately after the bounce. The next stable board still shows the ball there. The board omits the possession flag.");
     expect(report.verdict.luckierTeam).toBe("unknown");
     // Exercise the newly qualified original-source block and injury policies,
     // preserving the demo5 case above and keeping each actual worker serial.
@@ -85,7 +93,7 @@ it("[cli-worker] shares original-source categorical scores, unknown pools and pa
       newer.events.find((e) => e.metadata.sourceId === "source-4183")!
         .weightedDelta
     ).toBe(5 / 8);
-    expect(newer.modelVersion).toBe("dice-only-37");
+    expect(newer.modelVersion).toBe("dice-only-48");
     expect(newer.verdict.luckierTeam).toBe("unknown");
     const nextText = run("text");
     expect(nextText.status, nextText.stderr).toBe(0);

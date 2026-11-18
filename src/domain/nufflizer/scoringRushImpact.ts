@@ -11,6 +11,15 @@ import type { DiceRecord } from "./diceEvidence";
 // not calibrated win probabilities or an assertion about overtime/results.
 export const SCORE_PRESSURE_WEIGHTS = { touchdown: 4, lead: 8 } as const;
 
+export function immediateTouchdownComponents(ownScore: number, opponentScore: number, totalRemaining: number) {
+  const before = Math.sign(ownScore - opponentScore);
+  const after = Math.sign(ownScore + 1 - opponentScore);
+  return {
+    touchdown: SCORE_PRESSURE_WEIGHTS.touchdown,
+    scorePressure: SCORE_PRESSURE_WEIGHTS.lead * (after - before) / (1 + totalRemaining)
+  };
+}
+
 export function estimateScoringRushImpact(
   state: ScoringRushState,
   successChance: number,
@@ -26,18 +35,7 @@ export function estimateScoringRushImpact(
   const successors = scoringRushSuccessors(state)!,
     f = state.frame;
   const remaining = f.teams.map((t) => 2 * f.turnsPerPeriod - t.turn);
-  const lead = (own: number, opponent: number) => Math.sign(own - opponent);
-  const components = {
-    touchdown: SCORE_PRESSURE_WEIGHTS.touchdown,
-    scorePressure:
-      (SCORE_PRESSURE_WEIGHTS.lead *
-        (lead(successors.success.ownScore, successors.success.opponentScore) -
-          lead(
-            successors.failure.ownScore,
-            successors.failure.opponentScore
-          ))) /
-      (1 + remaining[0]! + remaining[1]!)
-  };
+  const components = immediateTouchdownComponents(successors.failure.ownScore, successors.failure.opponentScore, remaining[0]! + remaining[1]!);
   const difference = components.touchdown + components.scorePressure;
   const deviation = Number(actualSuccess) - successChance;
   return {

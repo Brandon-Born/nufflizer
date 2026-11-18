@@ -1,5 +1,7 @@
 # Roll Type Code Coverage Crosswalk
 
+For runtime scoring and current evidence, see [current capabilities](CURRENT_CAPABILITIES.md). The dated observations and coverage tables below describe earlier checkpoints.
+
 Current mapping acceptance is [SEMANTIC_CONTRACT_AUDIT.md](SEMANTIC_CONTRACT_AUDIT.md): all96 roll/39 step names,41 declared source contracts, eight scoped policies and all12 source inventories. Historical tables below retain their dated hypotheses. Compiled-only names and unsupported policies remain distinct from supported odds; the audit does not complete the analyzer.
 
 ## Embedded staff-question injury evidence
@@ -14,14 +16,14 @@ Independent 12-demo raw inventory: `EventRoll|13`. UI-040 verifies a scoped dire
 
 Model `dice-only-3` now uses UI-backed Rush (1), Dodge (2), Pick up (4), and Catch (7) contracts for replay `1-4-0-0`. The old table labels for 2/4/34/37/71 are superseded: 34/37/71 are Really Stupid/Foul Appearance/Loner and remain unscored. Exact admission, reroll, attribution and natural-roll limits are in [REPORT_CONTRACT.md](REPORT_CONTRACT.md#model-dice-only-3-numeric-scope); `tests/unit/verifiedNumericChecks.test.ts` exercises the exact sanitized playback extracts. Historical counts and unsupported rows below are retained as history, not accepted semantics. No backlog item is closed by this slice.
 
-## November runtime correction (NUF-008/009)
+## Historical November runtime correction (NUF-008/009)
 
-The current model scores verified movement and ball handling, raw linked block pools, armor from the affected team’s perspective, and explicitly linked post-casualty Regeneration. Injury and casualty dice remain random outcomes with unsupported distributions. Block choice and resolution are retained separately from raw symbol odds. See the [versioned report contract](REPORT_CONTRACT.md) for the exact supported scope. Whole-match comparisons abstain; the tables below preserve historical observations, not current acceptance evidence. The ordered inventory also retains `QuestionBlockDice|3`, `ResultRoll|15`, `ResultRoll|21`, `ResultRoll|36`, and `ResultRoll|46`; retention does not give unverified outcomes a score.
+At that checkpoint the model scored verified movement and ball handling, raw linked block pools, armor from the affected team’s perspective, and explicitly linked post-casualty Regeneration. Injury and casualty dice remain random outcomes with unsupported distributions. Block choice and resolution are retained separately from raw symbol odds. See the [versioned report contract](REPORT_CONTRACT.md) for the exact supported scope. Whole-match comparisons abstain; the tables below preserve historical observations, not current acceptance evidence. The ordered inventory also retains `QuestionBlockDice|3`, `ResultRoll|15`, `ResultRoll|21`, `ResultRoll|36`, and `ResultRoll|46`; retention does not give unverified outcomes a score.
 
 
 > 2026-11-09 review notice: this crosswalk describes historical implementation behavior, not proof that its labels or probabilities are correct. In particular, real block/injury outcomes are excluded and dodge scoring is unreachable at the reviewed baseline. Follow [REMEDIATION_BACKLOG.md](REMEDIATION_BACKLOG.md), especially NUF-009–015 and NUF-027, before promoting additional families or treating known-family coverage as whole-match confidence.
 
-This document maps each observed `sourceTag|rollType` pair to current code behavior so future agents can target specific gaps quickly.
+The table records earlier handling for each observed `sourceTag|rollType` pair.
 
 Primary implementation files:
 1. `/Users/bborn/projects/bb-nuffilizer/src/domain/replay/mappings.ts`
@@ -38,7 +40,7 @@ Coverage status meanings:
 4. `mapped-summary-excluded`: source summary chain event (not a roll candidate).
 
 ## Coverage Table
-| Pair | Coverage Status | Contract Kind | Scoring Category | Roll Candidate | Current Handling |
+| Pair | Coverage Status | Contract Kind | Scoring Category | Roll Candidate | Handling at the checkpoint |
 | --- | --- | --- | --- | --- | --- |
 | `ResultBlockRoll|3` | mapped-summary-excluded | summary | block | no | block summary event only; never luck-scored |
 | `ResultInjuryRoll|11` | mapped-summary-excluded | summary | injury | no | injury summary chain event |

@@ -1,3 +1,4 @@
+import { expectedPublicImpactCounts } from "../helpers/corpus";
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -524,9 +525,20 @@ describe("source-qualified completed ordinary Block availability", () => {
         }
         current.endedActivationSourceIds =
           previous.preRoll.endedActivationSourceIds;
+        const addedPickup = {
+          "demo11.bbr": "source-3198",
+          "demo4.bbr": "source-4192",
+          "demo5.bbr": "source-2409",
+          "demo8.bbr": "source-217"
+        }[f.file as "demo11.bbr" | "demo4.bbr" | "demo5.bbr" | "demo8.bbr"];
+        if (previous.sourceId === addedPickup)
+          delete current.pickupSuccessors;
+        if (previous.sourceId === addedPickup &&
+          (previous.sourceId === "source-217" || previous.sourceId === "source-2409"))
+          current.pickupSettlementKnown = previous.preRoll.pickupSettlementKnown;
         expect(current).toEqual(previous.preRoll);
       }
-      expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
+      expect(r.teams.map((t) => t.impactCount)).toEqual(expectedPublicImpactCounts(f.file));
       expect(r.verdict.luckierTeam).toBe("unknown");
     },
     30000

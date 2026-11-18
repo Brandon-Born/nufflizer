@@ -264,6 +264,13 @@ export function assertIntrinsicInjury(
     expect(step.header.Source).toBe(
       failure.message.payload.RollType === 1 ? 9 : 0
     );
+  } else if (cause.kind === "foul") {
+    const foul = rawSource(cause.foulResultSourceId);
+    expect(foul.step.header.StepType).toBe(8);
+    expect(foul.step.header.PlayerId).toBe(Number(cause.foulerTraitEvidence.playerId));
+    expect(foul.step.header.TargetId).toBe(Number(e.playerId));
+    expect(foul.message.tag).toBe("ResultNoRollSuccess");
+    expect(step.header.Source).toBe(7);
   } else {
     const final = rawSource(cause.appliedOutcomeSourceId),
       pool = rawSource(cause.poolSourceId);

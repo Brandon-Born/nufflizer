@@ -24,9 +24,7 @@ export type ObservedTeamRerollMovement = {
     markers: { playerId: string; cell: Cell }[];
   };
 };
-export function failedMovementOffer(
-  event: ReplayEvent
-): ({ family: 1 | 2 } & RecordedZoneCheck) | undefined {
+export function offeredTeamRerollDie(event: ReplayEvent) {
   const p = event.payload,
     info = p?.RollInfos;
   if (
@@ -48,14 +46,22 @@ export function failedMovementOffer(
     )
   )
     return;
-  const family = (info as Record<string, unknown>).RollType;
-  if (family !== 1 && family !== 2) return;
-  const dieEvent = {
+  const payload = info as Record<string, unknown>;
+  return {
     ...event,
     sourceTag: "ResultRoll",
-    rollType: family,
-    payload: info as Record<string, unknown>
+    rollType:
+      typeof payload.RollType === "number" ? payload.RollType : undefined,
+    payload
   };
+}
+
+export function failedMovementOffer(
+  event: ReplayEvent
+): ({ family: 1 | 2 } & RecordedZoneCheck) | undefined {
+  const dieEvent = offeredTeamRerollDie(event);
+  const family = dieEvent?.rollType;
+  if (!dieEvent || (family !== 1 && family !== 2)) return;
   if (family === 2) {
     const check = recordedZoneD6Check(dieEvent, 2, 1, false);
     return check ? { family, ...check } : undefined;

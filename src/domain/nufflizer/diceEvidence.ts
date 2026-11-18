@@ -518,7 +518,7 @@ export function reconcileDiceEvidence(
       const explicit = links
         .get(raw.id ?? "")
         ?.find((l) => pathKey(l.path) === p);
-      if(parent?.metadata.numericOriginal && p===pathKey(["RollInfos","Dice"])) {
+      if((parent?.metadata.numericOriginal || parent?.metadata.activationCheck?.draw === "original") && p===pathKey(["RollInfos","Dice"])) {
         r.eventId=parent.id;
       } else if (explicit) {
         const target = targetRecord(

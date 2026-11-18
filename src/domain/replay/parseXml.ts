@@ -558,7 +558,8 @@ function resolveMatchId(rootNode: unknown): string {
 
 function resolveReplayVersion(rootNode: unknown): string | undefined {
   const version = valueAtPath(rootNode, ["ReplayVersion"]);
-  return version === undefined ? undefined : String(version);
+  if (version === undefined || typeof version === "string") return version;
+  throw new ReplayValidationError("ReplayVersion must be a single text value.");
 }
 
 function validateReplayVersion(version: string | undefined): void {
@@ -567,7 +568,10 @@ function validateReplayVersion(version: string | undefined): void {
   }
 
   if (version !== "1-4-0-0") {
-    throw new ReplayValidationError(`Unsupported replay version: ${version}`);
+    throw new ReplayValidationError(
+      "Unsupported replay version. This analyzer supports BB3 replay version 1-4-0-0.",
+      "UNSUPPORTED_REPLAY_VERSION"
+    );
   }
 }
 

@@ -1,3 +1,4 @@
+import { expectedPublicImpactCounts } from "../helpers/corpus";
 import {
   ordinaryMovePolicyKnown,
   observePlayerTraits
@@ -400,7 +401,7 @@ describe("valid Dodge successor geometry and bounded ordinary-move context", () 
         readFileSync(`demo-replays/${file}`, "utf8")
       );
       count += r.events.filter((e) => e.contextualBounds?.policy === "dodge_skill_reroll").length;
-      expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
+      expect(r.teams.map((t) => t.impactCount)).toEqual(expectedPublicImpactCounts(file));
       expect(r.verdict.luckierTeam).toBe("unknown");
     }
     expect(count).toBe(10);

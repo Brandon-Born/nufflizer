@@ -4,6 +4,8 @@ import type { LuckEvent } from "./types";
 import { unmodifiedD6Check } from "@/domain/replay/numericCheck";
 import { sameMovementActor } from "@/domain/replay/teamRerollMovement";
 import { recordedZoneD6Check } from "@/domain/replay/zoneD6Check";
+import type { ReplayBoardCheckpoint } from "@/domain/replay/boardState";
+import { isFallBallRoll, MAX_FALL_BALL_LEGS, observedRushFallBallPath } from "./rushFallBallPath";
 
 function pitchCell(value: unknown): { X: number; Y: number } | undefined {
   const cell = value as { X?: unknown; Y?: unknown } | undefined;
@@ -35,9 +37,12 @@ const damageMessages = new Set([
   "QuestionApothecaryCasualtyUsage"
 ]);
 
-// These sequences end with the movement check and self-damage. A later ball
-// action, different sequence, or unverified damage response breaks the link.
-export function findMovementFall(turn: ReplayTurn) {
+// The move and self-damage must lead directly to the turnover, with an
+// explicitly verified carrier-ball path allowed between damage and turn end.
+export function findMovementFall(
+  turn: ReplayTurn,
+  checkpoints: readonly ReplayBoardCheckpoint[] = []
+) {
   const events = turn.events;
   const turnover = events.at(-1);
   if (
@@ -48,9 +53,17 @@ export function findMovementFall(turn: ReplayTurn) {
     turnover.sourceIndex === undefined
   )
     return;
-  const damageActionId = events.at(-2)?.actionId;
+  let ballStart = events.length - 1;
+  if (checkpoints.length)
+    while (ballStart >= 2 && isFallBallRoll(events[ballStart - 1])) {
+      if (events[ballStart - 2]?.sourceTag !== "BallStep" ||
+          events.length - 1 - ballStart >= MAX_FALL_BALL_LEGS * 2)
+        return;
+      ballStart -= 2;
+    }
+  const damageActionId = events[ballStart - 1]?.actionId;
   if (!damageActionId) return;
-  let i = events.length - 2;
+  let i = ballStart - 1;
   while (i >= 0 && events[i]?.actionId === damageActionId) {
     const message = events[i]!;
     if (message.sourceTag === "DamageStep") break;
@@ -199,6 +212,11 @@ export function findMovementFall(turn: ReplayTurn) {
       return;
   } else if (summary?.RollType !== roll.rollType || summary.Outcome !== 0)
     return;
+  const hasBallTail = ballStart < events.length - 1;
+  const ballPath = hasBallTail
+    ? observedRushFallBallPath(events, i, ballStart, checkpoints)
+    : undefined;
+  if (hasBallTail && !ballPath) return;
   return {
     rollSourceId: roll.id,
     decisionSourceId: decision?.id ?? skill?.id,
@@ -206,6 +224,7 @@ export function findMovementFall(turn: ReplayTurn) {
     evidence: {
       damageActionId,
       ...(combinedRush ? { combinedRushSourceId: combinedRush.id! } : {}),
+      ...(ballPath ? { ballPath } : {}),
       moveOutcomeSourceIndex: outcome.sourceIndex,
       turnoverSourceIndex: turnover.sourceIndex,
       turnoverChildIndex: turnover.locator.childIndex

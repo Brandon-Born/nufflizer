@@ -11,10 +11,13 @@ import {
   findConfirmedActivationLosses,
   applyKnownActivationLosses
 } from "@/domain/replay/activationLosses";
-import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, writeFileSync, rmSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { decodeReplayInput } from "@/domain/replay/decodeReplay";
+import { foulAppearanceFacts } from "../helpers/foulAppearanceFacts";
+import { activationCheckLocator } from "../helpers/activationCheckFacts";
 
 const gate = (r: ReturnType<typeof analyzeReplayLuck>) =>
   r.events.find((e) => e.metadata.rollType === 37)!;
@@ -22,6 +25,109 @@ const dodge = (r: ReturnType<typeof analyzeReplayLuck>) =>
   r.events.find((e) => e.type === "dodge" && e.scoringStatus === "scored")!;
 
 describe("confirmed player activation losses (NUF-016/017/018/022)", () => {
+  it("joins all public Block, Blitz and Frenzy checks to independent dice and roster evidence", () => {
+    const files = foulAppearanceFacts();
+    expect(files).toHaveLength(12);
+    const scope = { block: 0, blitz: 0, frenzy: 0 };
+    for (const { file, rows } of files) {
+      if (!rows.length) continue;
+      const report = analyzeNufflizerInput(
+        readFileSync(`demo-replays/${file}`, "utf8")
+      );
+      const checks = report.events.filter((e) => e.metadata.foulAppearance);
+      expect(checks).toHaveLength(rows.length);
+      const bySource = new Map(
+        report.events.map((e) => [e.metadata.sourceId, e])
+      );
+      for (const raw of rows) {
+        const row = checks.find(
+          (e) =>
+            activationCheckLocator(e.metadata.locator!) === raw.locator.join()
+        )!;
+        const proof = row.metadata.foulAppearance!;
+        expect(row).toMatchObject({
+          type: "activation_check",
+          scoringStatus: "scored",
+          playerId: raw.actor,
+          teamId: raw.actorTeam,
+          actualSuccess: raw.passed,
+          probabilitySuccess: 5 / 6,
+          metadata: {
+            difficulty: raw.target,
+            dice: [raw.face],
+            ownership: {
+              role: "actor",
+              defender: { playerId: raw.defender, teamId: raw.defenderTeam }
+            }
+          }
+        });
+        expect(row.weightedDelta).toBeCloseTo(raw.delta[0] / raw.delta[1], 12);
+        expect(row.contextualImpact).toBeUndefined();
+        expect(bySource.get(proof.skillSourceId)).toMatchObject({
+          playerId: raw.defender,
+          teamId: raw.defenderTeam,
+          metadata: { skillUsage: { skillId: 10, used: true } }
+        });
+        const d = report.diceRecords.find(
+          (record) => record.parentSourceId === row.metadata.sourceId
+        );
+        expect(d).toMatchObject({
+          eventId: row.id,
+          status: 1,
+          newRoll: 1,
+          disposition: "covered_roll",
+          dice: [{ value: raw.face, dieType: 0 }]
+        });
+        if (raw.previous) {
+          scope.frenzy++;
+          expect(
+            activationCheckLocator(
+              bySource.get(proof.previousBlockSourceId)!.metadata.locator!
+            )
+          ).toBe(raw.previous.join());
+          expect(
+            bySource.get(proof.triggerSourceId)?.metadata.skillUsage?.skillId
+          ).toBe(36);
+        } else {
+          scope[raw.action === 2 ? "block" : "blitz"]++;
+          expect(proof.previousBlockSourceId).toBeUndefined();
+          expect(bySource.get(proof.triggerSourceId)?.metadata.actionCode).toBe(
+            raw.action
+          );
+        }
+      }
+    }
+    expect(scope).toEqual({ block: 4, blitz: 4, frenzy: 2 });
+  }, 45000);
+
+  it.each(["skill_holder", "copied_die", "broken_follow"] as const)(
+    "withholds the Frenzy gate for a forged %s",
+    (variant) => {
+      const xml = decodeReplayInput(
+        readFileSync("demo-replays/demo1.bbr", "utf8")
+      ).xml;
+      const replay = parseReplayXml(xml, { omitRawReplaySteps: true });
+      const raw = new Map(
+        replay.turns.flatMap((t) => t.events).map((e) => [e.id, e])
+      );
+      if (variant === "skill_holder")
+        raw.get("source-2558")!.payload!.PlayerId = 11;
+      if (variant === "copied_die")
+        raw.get("source-2559")!.payload!.NewRoll = 0;
+      if (variant === "broken_follow")
+        raw.get("source-2553")!.payload!.Follow = 0;
+      const report = LuckReportSchema.parse(analyzeReplayLuck(replay));
+      const gate = report.events.find(
+        (e) => e.metadata.sourceId === "source-2559"
+      )!;
+      expect(gate).toMatchObject({
+        scoringStatus: "excluded",
+        probabilitySuccess: null
+      });
+    },
+    10000
+  );
+
   it("preserves the spent player's position and tackle zone without changing the snapshot", () => {
     const replay = parseReplayXml(foulAppearancePlaybackXml());
     const loss = findConfirmedActivationLosses(replay)[0]!;
@@ -56,7 +162,7 @@ describe("confirmed player activation losses (NUF-016/017/018/022)", () => {
       result.board.teams[1]!.players.find((p) => p.id === 42)!.canAct
     ).toBeNull();
   });
-  it("[cli-worker] prints observed activation losses in CLI text despite having no scored swings", () => {
+  it("[cli-worker] prints the Foul Appearance die and the separately observed activation loss", () => {
     const directory = mkdtempSync(
       path.join(tmpdir(), "nufflizier-activation-")
     );
@@ -79,6 +185,9 @@ describe("confirmed player activation losses (NUF-016/017/018/022)", () => {
       expect(result.status, result.stderr).toBe(0);
       expect(result.stdout).toContain("Observed player activation endings: 2");
       expect(result.stdout).toContain(
+        "Player 42 rolled 1 and needed 2+ to get past player 10's Foul Appearance"
+      );
+      expect(result.stdout).toContain(
         "Player 44 then acted in the same recorded team turn 8"
       );
     } finally {
@@ -98,11 +207,13 @@ describe("confirmed player activation losses (NUF-016/017/018/022)", () => {
         (e) =>
           e.teamId === "1" &&
           e.actualSuccess === false &&
-          e.probabilitySuccess === null &&
-          e.scoringStatus === "excluded" &&
+          e.probabilitySuccess === 5 / 6 &&
+          e.scoringStatus === "scored" &&
           e.metadata.activationLoss!.teamTurn === 8
       )
     ).toBe(true);
+    for (const loss of losses)
+      expect(loss.weightedDelta).toBeCloseTo(-5 / 6, 12);
     expect(
       losses[0]!.metadata.preRoll?.endedActivationSourceIds
     ).toBeUndefined();
@@ -121,6 +232,12 @@ describe("confirmed player activation losses (NUF-016/017/018/022)", () => {
     )!;
     expect(subjectSkill.playerId).toBe("10");
     expect(subjectSkill.teamId).toBe("0");
+    const forged = structuredClone(r);
+    forged.events.find(
+      (e) => e.metadata.foulAppearance
+    )!.metadata.foulAppearance!.skillSourceId =
+      losses[1]!.metadata.activationLoss!.skillSourceId;
+    expect(LuckReportSchema.safeParse(forged).success).toBe(false);
     losses[1]!.metadata.activationLoss!.followingActivationSourceId =
       "missing-following";
     expect(LuckReportSchema.safeParse(r).success).toBe(false);

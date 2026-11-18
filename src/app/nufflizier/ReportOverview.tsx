@@ -9,6 +9,7 @@ import {
   summarizeForReader
 } from "@/domain/nufflizer/readerSummary";
 import {
+  explainVerdictEvidence,
   formatPlayerObservation,
   formatPreRollPosition
 } from "@/domain/nufflizer/presentation";
@@ -24,6 +25,7 @@ export function ReportOverview({
   onMoment: (event: LuckEvent) => void;
   onCategory: (type: LuckEventType) => void;
 }) {
+  const limitations = explainVerdictEvidence(report);
   return (
     <section aria-label="Report overview" className="space-y-5">
       <div className="rounded-xl border border-amber-300/30 bg-amber-950/30 p-5">
@@ -41,6 +43,11 @@ export function ReportOverview({
         <p className="mt-2 text-sm text-amber-100/85">
           {report.verdict.summary}
         </p>
+        {limitations.length ? (
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-100/85">
+            {limitations.map((line) => <li key={line}>{line}</li>)}
+          </ul>
+        ) : null}
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <div>
             <strong className="text-2xl text-amber-50">{summary.scored}</strong>
@@ -77,6 +84,45 @@ export function ReportOverview({
             original dice below.
           </p>
         </aside>
+      ) : null}
+      {summary.contextMoments.length ? (
+        <section aria-labelledby="context-moments" className="space-y-3">
+          <h3 id="context-moments" className="text-xl font-bold text-amber-100">
+            What was at stake
+          </h3>
+          <p className="text-sm text-amber-100/80">
+            These estimates cover specific consequences supported by the replay.
+          </p>
+          <div className="grid gap-3 md:grid-cols-3">
+            {summary.contextMoments.map(({ event, text, bounds, point }) => (
+              <article
+                key={event.id}
+                className="flex flex-col items-start rounded-xl border border-amber-300/20 bg-black/20 p-4"
+              >
+                <p className="text-xs text-amber-100/75">
+                  {event.teamName} · {formatPlayerObservation(event)}
+                </p>
+                <h4 className="mt-1 font-semibold text-amber-50">
+                  {readerMomentTitle(event)}
+                </h4>
+                <p className="mt-2 text-sm">{text}</p>
+                <p className="mt-2 text-xs text-amber-100/80">
+                  {point
+                    ? bounds.lower.toFixed(2)
+                    : `${bounds.lower.toFixed(2)} to ${bounds.upper.toFixed(2)}`}{" "}
+                  provisional context units
+                </p>
+                <button
+                  type="button"
+                  onClick={() => onMoment(event)}
+                  className="mt-3 rounded-md border border-amber-300/40 px-3 py-2 text-sm font-medium text-amber-100 hover:bg-amber-100/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-200"
+                >
+                  Inspect context
+                </button>
+              </article>
+            ))}
+          </div>
+        </section>
       ) : null}
       <section aria-labelledby="key-dice-moments" className="space-y-3">
         <h3 id="key-dice-moments" className="text-xl font-bold text-amber-100">

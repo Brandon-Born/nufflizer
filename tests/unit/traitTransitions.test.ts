@@ -1,3 +1,4 @@
+import { expectedPublicImpactCounts } from "../helpers/corpus";
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -6,7 +7,10 @@ import {
   preservesTraitContinuity,
   scopedTraitEffectPlayer
 } from "@/domain/replay/traitTransitions";
-import { findBlockTraitEvidence } from "@/domain/replay/traitContinuity";
+import {
+  findBlockTraitEvidence,
+  visitCurrentTraits
+} from "@/domain/replay/traitContinuity";
 import { observeBoardCheckpoint } from "@/domain/replay/boardState";
 import { parseReplayXml } from "@/domain/replay/parseXml";
 import { decodeReplayInput } from "@/domain/replay/decodeReplay";
@@ -404,6 +408,29 @@ describe("intrinsic traits across source-qualified non-transforming transitions"
     );
     expect(p.status, p.stdout + p.stderr).toBe(0);
   });
+  it("carries unrelated learned lists through a verified savagery choice and invalidates its victim", () => {
+    const bytes = readFileSync("demo-replays/demo5.bbr", "utf8");
+    const replay = parseReplayXml(decodeReplayInput(bytes).xml, {
+      omitRawReplaySteps: true
+    });
+    const at = (source: number) => {
+      let players: string[] = [];
+      visitCurrentTraits(replay, (event, _, ledger) => {
+        if (event.sourceIndex === source) players = [...ledger.keys()];
+      });
+      return players;
+    };
+    expect(at(1133)).toEqual(expect.arrayContaining(["1", "38", "39", "40"]));
+    expect(at(1134)).toEqual(expect.arrayContaining(["1", "39", "40"]));
+    expect(at(1134)).not.toContain("38");
+    expect(at(2409)).toHaveLength(18);
+
+    const selection = replay.turns
+      .flatMap((turn) => turn.events)
+      .find((event) => event.sourceIndex === 1133)!;
+    selection.payload!.VictimId = 1;
+    expect(at(1134)).toHaveLength(0);
+  });
   it.each(facts.files)(
     "joins every $file source transition and continued block participant to raw facts",
     (f) => {
@@ -443,7 +470,7 @@ describe("intrinsic traits across source-qualified non-transforming transitions"
         else if (
           t.payload.Effect &&
           (t.payload.Effect as { EffectId?: number }).EffectId === 44 &&
-          [31, 51].includes(
+          (t.tag === "EventEndPlayerEffect" ? [31, 51, 84] : [31, 51]).includes(
             (t.payload.Effect as { ProviderId: number }).ProviderId
           )
         )
@@ -540,13 +567,15 @@ describe("intrinsic traits across source-qualified non-transforming transitions"
       const expected: Record<string, number> = {
         "demo1.bbr": 14,
         "demo10.bbr": 36,
-        "demo5.bbr": 14,
-        "demo6.bbr": 4,
+        "demo5.bbr": 74,
+        "demo6.bbr": 39,
         "demo8.bbr": 29,
-        "demo9.bbr": 54
+        "demo9.bbr": 56
       };
       expect(count).toBe(expected[f.file] ?? 0);
-      expect(report.teams.every((t) => t.impactCount === 0)).toBe(true);
+      expect(report.teams.map((t) => t.impactCount)).toEqual(
+        expectedPublicImpactCounts(f.file)
+      );
       expect(report.verdict.luckierTeam).toBe("unknown");
     },
     30000

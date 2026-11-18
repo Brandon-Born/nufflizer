@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { analyzeReplayLuck } from "@/domain/nufflizer/analyzeLuck";
 import { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
@@ -103,8 +104,25 @@ describe("reader summary and honest key dice moments", () => {
     expect(summarizeForReader({ events: [] })).toMatchObject({
       observed: 0,
       scored: 0,
-      moments: []
+      moments: [],
+      contextMoments: []
     });
+  });
+  it("leads with source-linked scoring, possession and turn consequences where available", () => {
+    const report = analyzeNufflizerInput(readFileSync("demo-replays/demo2.bbr", "utf8"));
+    const summary = summarizeForReader(report);
+    expect(summary.contextMoments.map((moment) => moment.event.metadata.sourceId))
+      .toEqual(["source-3528", "source-255", "source-3775"]);
+    expect(summary.contextMoments[0]).toMatchObject({
+      point: true, bounds: { lower: -4, upper: -4 }
+    });
+    expect(summary.contextMoments[0]!.text).toContain("making it 1–1");
+    expect(summary.contextMoments[1]!.point).toBe(false);
+    expect(summary.contextMoments[1]!.text).toContain("1 occupied");
+    expect(summary.contextMoments[2]!.text).toContain("0 to 8 other teammates");
+    expect(summary.contextMoments[2]!.text).toContain("Failure ended the turn");
+    expect(summarizeForReader({ ...report, events: [...report.events].reverse() }).contextMoments)
+      .toEqual(summary.contextMoments);
   });
   it("exposes qualified current armor while protecting older reports", () => {
     const r = LuckReportSchema.parse(

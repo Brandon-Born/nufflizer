@@ -251,8 +251,11 @@ describe("active ordinary Move continuation after a committed Dodge", () => {
       )!.teamId = "0";
     if (change === "budget_math") continuation.movementAfterSuccess = 6;
     if (change === "marking_math") continuation.opponentMarking = "marked";
-    if (change === "bounds")
-      event.contextualBounds!.activeContinuation!.minimum = 0;
+    if (change === "bounds") {
+      const bound = event.contextualBounds;
+      if (bound?.policy !== "dodge_skill_reroll") throw new Error("Expected a Dodge range");
+      bound.activeContinuation!.minimum = 0;
+    }
     if (change === "point_overlap")
       event.contextualImpact = {
         policy: "dodge_skill_reroll",
@@ -298,7 +301,7 @@ describe("active ordinary Move continuation after a committed Dodge", () => {
     declaration.payload!.Action = 3;
     const event = terminal(LuckReportSchema.parse(analyzeReplayLuck(replay)));
     expect(event.metadata.preRoll!.activeMoveContinuation).toBeUndefined();
-    expect(event.contextualBounds!.activeContinuation).toBeUndefined();
+    expect(event.contextualBounds).not.toHaveProperty("activeContinuation");
     expect(event.contextualBounds!.lower).toBe(0);
   });
 });

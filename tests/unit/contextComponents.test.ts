@@ -66,6 +66,7 @@ const fixture = JSON.parse(
     type: string;
     lower: string;
     upper: string;
+    point?: boolean;
   }[];
   files: {
     file: string;
@@ -257,10 +258,10 @@ describe("additive partial component accounting (NUF-019)", () => {
       r.contextComponents.map((t) => [t.teamId, t.componentCount])
     ).toEqual([
       ["0", 1],
-      ["1", 4]
+      ["1", 5]
     ]);
     expect(r.contextComponents[0].bounds).toEqual({ lower: 0, upper: 1 });
-    expect(r.contextComponents[1].bounds!.lower).toBeCloseTo(-14 / 3, 12);
+    expect(r.contextComponents[1].bounds!.lower).toBeCloseTo(-25 / 4, 12);
     expect(r.contextComponents[1].bounds!.upper).toBe(4);
     expect(
       r.teams.every((t) => t.impactCount === 0 && t.impactScore === 0)
@@ -356,7 +357,7 @@ describe("additive partial component accounting (NUF-019)", () => {
   });
 });
 
-describe("independent exact arithmetic over 27-component specification", () => {
+describe("independent exact arithmetic for bounded public components", () => {
   it("regenerates with Fraction without importing the application", () => {
     const result = spawnSync(
       "python3",
@@ -382,6 +383,7 @@ describe("independent exact arithmetic over 27-component specification", () => {
           type: row.type,
           metadata: { sourceId: row.sourceId, actionId: row.actionId }
         });
+        expect(e.contextualImpact !== undefined).toBe(row.point ?? false);
         expect(contextComponent(e)!.bounds.lower).toBeCloseTo(
           rational(row.lower),
           12
@@ -394,7 +396,7 @@ describe("independent exact arithmetic over 27-component specification", () => {
       for (const t of teams) {
         const actual = r.contextComponents.find((a) => a.teamId === t.teamId)!;
         expect(actual.componentCount).toBe(t.componentCount);
-        expect(actual.pointCount).toBe(0);
+        expect(actual.pointCount).toBe(t.pointCount);
         expect(actual.boundedCount).toBe(t.boundedCount);
         if (t.bounds) {
           expect(actual.bounds!.lower).toBeCloseTo(
@@ -456,7 +458,7 @@ describe("independent exact arithmetic over 27-component specification", () => {
     );
     expect(result.status, result.stderr).toBe(0);
     expect(result.stdout).toContain(
-      "-4.67 to 4.00 provisional context units across 4 reported components"
+      "-6.25 to 4.00 provisional context units across 5 reported components"
     );
     expect(result.stdout).toContain("not a whole-match luck range");
     expect(result.stdout).toContain("Source action sequence-137-step-2");
@@ -476,7 +478,7 @@ describe("independent exact arithmetic over 27-component specification", () => {
     expect(json.status, json.stderr).toBe(0);
     const r = JSON.parse(json.stdout) as LuckReport;
     expect(LuckReportSchema.safeParse(r).success).toBe(true);
-    expect(r.contextComponents[1].componentCount).toBe(4);
+    expect(r.contextComponents[1].componentCount).toBe(5);
     expect(r.teams[1].impactCount).toBe(0);
   });
 });

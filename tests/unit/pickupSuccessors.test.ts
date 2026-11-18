@@ -1,3 +1,4 @@
+import { expectedPublicImpactCounts } from "../helpers/corpus";
 import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -12,12 +13,14 @@ import {
 } from "@/domain/replay/playerTraits";
 import { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
 import { analyzeReplayLuck } from "@/domain/nufflizer/analyzeLuck";
+import { decodeReplayInput } from "@/domain/replay/decodeReplay";
 import { parseReplayXml } from "@/domain/replay/parseXml";
 import { LuckReportSchema } from "@/domain/nufflizer/reportSchema";
 import { estimatePickupPossessionBounds } from "@/domain/nufflizer/contextImpact";
-import { explainContextBounds } from "@/domain/nufflizer/presentation";
+import { explainContextBounds, explainContextImpact } from "@/domain/nufflizer/presentation";
 import { contextReplayXml } from "../helpers/contextReplay";
 import { lonerDriveXml } from "../helpers/lonerDrive";
+import { demo8PickupWithNeighbor, settledPickupXml } from "../helpers/pickupPossession";
 const sourceXml = (id = "pickup_terminal_success") =>
   lonerDriveXml(id, "tests/fixtures/evidence/bb3-pickup-successors.json");
 const sourceReport = (id = "pickup_terminal_success") =>
@@ -64,6 +67,77 @@ function board(complete = true) {
 const successors = (b = board()) =>
   pickupBounceSuccessors(b, 10, "declaration", "move", "0", ["0", "1"])!;
 describe("valid pickup failure successors and conditional possession bounds", () => {
+  it.each([false, true])("values all six replacement faces with known landings (exposed = %s)", (exposed) => {
+    // At (5,7), a marker on (3,7) covers precisely three of eight
+    // destinations. The other variant keeps that same opponent far away.
+    const difference = exposed ? 19 / 8 : 2;
+    let total = 0;
+    for (const face of [1, 2, 3, 4, 5, 6]) {
+      const report = analyzeNufflizerInput(settledPickupXml(exposed, face));
+      const roll = report.events.find((event) => event.metadata.sourceId === "source-15")!;
+      const success = face >= 3;
+      const value = difference * (success ? 1 / 3 : -2 / 3);
+      expect(roll.contextualImpact).toMatchObject({
+        policy: "exact_pickup_possession",
+        stage: "sure_hands_reroll",
+        components: { possession: 2, markedBounce: exposed ? 3 / 8 : 0 },
+        successChance: 2 / 3,
+        difference
+      });
+      expect(roll.contextualImpact!.contribution).toBeCloseTo(value, 12);
+      expect(roll.possessionBounds).toBeUndefined();
+      expect(roll.delta).toBeCloseTo(Number(success) - 4 / 3, 12);
+      expect(roll.metadata.teamRerollsSpent).toBe(0);
+      expect(Boolean(roll.metadata.pickupResolution)).toBe(success);
+      expect(report.teams[0].impactCount).toBe(1);
+      expect(report.teams[0].impactScore).toBeCloseTo(value, 12);
+      expect(report.contextComponents[0]).toMatchObject({ pointCount: 1, boundedCount: 0 });
+      total += roll.contextualImpact!.contribution;
+    }
+    expect(total).toBeCloseTo(0, 12);
+  });
+  it("keeps an exposure range when current effects are missing and rejects forged exactness", () => {
+    const report = analyzeNufflizerInput(settledPickupXml(true, 1, true));
+    expect(check(report)).toMatchObject({
+      possessionBounds: { minimumDifference: 0, maximumDifference: 19 / 8 }
+    });
+    expect(check(report).contextualImpact).toBeUndefined();
+    const complete = analyzeNufflizerInput(settledPickupXml(true));
+    const roll = complete.events.find((event) => event.contextualImpact?.policy === "exact_pickup_possession")!;
+    expect(explainContextImpact(roll)).toContain("with 3 under an opponent's tackle zone");
+    const branch = roll.metadata.preRoll!.pickupSuccessors!.branches[0]!;
+    if (branch.kind !== "empty") throw new Error("Expected a settled empty branch");
+    branch.marking = "unknown";
+    expect(LuckReportSchema.safeParse(complete).success).toBe(false);
+  });
+  it.each([
+    { file: "demo2.bbr", source: 255, before: 234, waiting: undefined, moved: 8, stage: "kept_pickup_possession", spend: 0 },
+    { file: "demo4.bbr", source: 4192, before: 4174, waiting: 4189, moved: undefined, stage: "team_pickup_possession", spend: 1 }
+  ])("qualifies a controlled complete $stage while preserving the draw and choice", (example) => {
+    const replay = parseReplayXml(decodeReplayInput(readFileSync(`demo-replays/${example.file}`, "utf8")).xml);
+    const published = analyzeReplayLuck(replay).events.find((event) => event.metadata.sourceIndex === example.source)!;
+    expect(published.possessionBounds).toBeDefined();
+    // Synthetic completion of the observed reaction profiles. Move the
+    // known occupied alternative outside the bounce area in the kept case.
+    for (const checkpoint of replay.boardCheckpoints!.filter((row) =>
+      row.afterSourceIndex === example.before || row.afterSourceIndex === example.waiting
+    )) {
+      for (const player of checkpoint.board!.teams.flatMap((team) => team.players)) {
+        if (player.pitchLocation === "on_pitch") player.plainBallPolicyKnown = true;
+        if (player.id === example.moved) player.cell = { x: 23, y: 13 };
+      }
+    }
+    const report = analyzeReplayLuck(replay);
+    const roll = report.events.find((event) => event.metadata.sourceIndex === example.source)!;
+    expect(roll.contextualImpact).toMatchObject({
+      policy: "exact_pickup_possession", stage: example.stage,
+      waitingCheckpointAfter: example.waiting, contribution: -4 / 3
+    });
+    expect(roll.possessionBounds).toBeUndefined();
+    expect(roll.metadata.teamRerollsSpent).toBe(example.spend);
+    expect(roll.delta).toBe(published.delta);
+    expect(LuckReportSchema.safeParse(report).success).toBe(true);
+  });
   it("constructs all eight independent D8 destinations without mutating the board", () => {
     const b = board(),
       copy = structuredClone(b),
@@ -244,11 +318,40 @@ describe("valid pickup failure successors and conditional possession bounds", ()
       expect(raw.Ball[0].IsHeld).toBeUndefined();
     }
   );
-  it("[cli-worker] prints component bounds in CLI text without point totals or a midpoint", () => {
+  it.each([
+    {
+      kind: "a possession range",
+      xml: () => sourceXml(),
+      expected: [
+        "3 empty, 5 occupied and 0 off-pitch",
+        "0.00 to 0.88 context units",
+        "No midpoint or range endpoint enters point totals",
+        "Context for Home: Not scored"
+      ]
+    },
+    {
+      kind: "an exact possession point",
+      xml: () => settledPickupXml(true),
+      expected: [
+        "source source-15: The committed Sure Hands replacement die had 66.7%",
+        "with 3 under an opponent's tackle zone",
+        "-1.583 provisional context units"
+      ]
+    },
+    {
+      kind: "the original demo8 pickup point",
+      xml: () => readFileSync("demo-replays/demo8.bbr", "utf8"),
+      expected: [
+        "source source-217: The committed team replacement die had 66.7%",
+        "all 22 rostered players remained verified through the reroll wait",
+        "0.667 provisional context units"
+      ]
+    }
+  ])("[cli-worker] prints $kind with the source and draw scope", ({ xml, expected }) => {
     const dir = mkdtempSync(join(tmpdir(), "nufflizier-pickup-"));
     try {
       const path = join(dir, "source.xml");
-      writeFileSync(path, sourceXml());
+      writeFileSync(path, xml());
       const run = spawnSync(
         process.execPath,
         [
@@ -262,13 +365,8 @@ describe("valid pickup failure successors and conditional possession bounds", ()
         ],
         { encoding: "utf8", timeout: 20000 }
       );
-      expect(run.status).toBe(0);
-      expect(run.stdout).toContain("3 empty, 5 occupied and 0 off-pitch");
-      expect(run.stdout).toContain("0.00 to 0.88 context units");
-      expect(run.stdout).toContain(
-        "No midpoint or range endpoint enters point totals"
-      );
-      expect(run.stdout).toContain("Context for Home: Not scored");
+      expect(run.status, run.stderr).toBe(0);
+      for (const line of expected) expect(run.stdout).toContain(line);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -464,7 +562,226 @@ describe("valid pickup failure successors and conditional possession bounds", ()
     expect(e.metadata.preRoll?.pickupBounceExposure).toBeNull();
     expect(e.contextualImpact).toBeUndefined();
   });
-  it("reconciles all public demos without converting component ranges into point estimates", () => {
+  it.each([
+    { file: "demo2.bbr", source: 255, occupied: [5], marked: [], upperDifference: 17 / 8, lower: -17 / 12 },
+    { file: "demo11.bbr", source: 3198, occupied: [4, 7], marked: [1], upperDifference: 19 / 8, lower: -19 / 12 }
+  ])("bounds the recorded decline in $file without charging another die", (c) => {
+    const input = readFileSync(`demo-replays/${c.file}`, "utf8");
+    const report = analyzeNufflizerInput(input);
+    const roll = report.events.find((e) => e.metadata.sourceIndex === c.source)!;
+    const branches = roll.metadata.preRoll!.pickupSuccessors!.branches;
+    expect(branches.filter((b) => b.kind === "occupied").map((b) => b.direction)).toEqual(c.occupied);
+    expect(branches.filter((b) => b.kind === "empty" && b.marking === "marked").map((b) => b.direction)).toEqual(c.marked);
+    expect(roll.possessionBounds).toMatchObject({
+      policy: "kept_pickup_possession",
+      successChance: 2 / 3,
+      minimumDifference: 0,
+      maximumDifference: c.upperDifference,
+      upper: 0
+    });
+    expect(roll.possessionBounds!.lower).toBeCloseTo(c.lower, 12);
+    expect(roll.metadata.teamRerollsSpent).toBe(0);
+    expect(roll.delta).toBe(-2 / 3);
+    expect(roll.contextualImpact).toBeUndefined();
+    expect(explainContextBounds(roll)).toContain("Under the recorded decline policy, the original die");
+    const choice = report.events.find((e) => e.metadata.sourceId === roll.metadata.rerollDecisionId)!;
+    choice.metadata.recordedRerollChoice!.used = true;
+    expect(LuckReportSchema.safeParse(report).success).toBe(false);
+  });
+  it.each([
+    { file: "demo4.bbr", source: 4192, waiting: 4189, success: false }
+  ])("values the committed replacement only in $file", (c) => {
+    const input = readFileSync(`demo-replays/${c.file}`, "utf8");
+    const report = analyzeNufflizerInput(input);
+    const roll = report.events.find((event) => event.metadata.sourceIndex === c.source)!;
+    expect(roll.actualSuccess).toBe(c.success);
+    expect(roll.possessionBounds).toMatchObject({
+      policy: "team_pickup_possession",
+      waitingCheckpointAfter: c.waiting,
+      successChance: 2 / 3,
+      minimumDifference: 0,
+      maximumDifference: 2
+    });
+    expect(roll.possessionBounds!.lower).toBeCloseTo(c.success ? 0 : -4 / 3, 12);
+    expect(roll.possessionBounds!.upper).toBeCloseTo(c.success ? 2 / 3 : 0, 12);
+    expect(roll.probabilitySuccess).toBeCloseTo(8 / 9, 12);
+    expect(roll.delta).toBeCloseTo(Number(c.success) - 4 / 3, 12);
+    expect(roll.metadata.teamRerollsSpent).toBe(1);
+    expect(roll.contextualImpact).toBeUndefined();
+    const parsed = parseReplayXml(decodeReplayInput(input).xml);
+    const waiting = parsed.boardCheckpoints!.find((frame) => frame.afterSourceIndex === c.waiting)!;
+    waiting.board!.ball.cell.x = 0;
+    const changed = analyzeReplayLuck(parsed).events.find((e) => e.metadata.sourceIndex === c.source)!;
+    expect(changed.metadata.rerollDraws).toEqual(roll.metadata.rerollDraws);
+    expect(changed.possessionBounds).toBeUndefined();
+    roll.possessionBounds!.waitingCheckpointAfter!++;
+    expect(LuckReportSchema.safeParse(report).success).toBe(false);
+  });
+  it("settles all eight unmarked bounces using demo8's verified roster through the reroll wait", () => {
+    const xml = decodeReplayInput(readFileSync("demo-replays/demo8.bbr", "utf8")).xml;
+    const replay = parseReplayXml(xml);
+    const report = LuckReportSchema.parse(analyzeReplayLuck(replay));
+    const roll = report.events.find((e) => e.metadata.sourceId === "source-217")!;
+    const point = roll.contextualImpact;
+    expect(point?.policy).toBe("exact_pickup_possession");
+    if (point?.policy !== "exact_pickup_possession") throw new Error("Expected a pickup point");
+    expect(point).toMatchObject({
+      stage: "team_pickup_possession", waitingCheckpointAfter: 214,
+      successChance: 2 / 3, components: { possession: 2, markedBounce: 0 }
+    });
+    expect(point.continuedTraits).toHaveLength(22);
+    expect(point.continuedTraits!.filter((p) => p.observedCheckpointAfter === 12).map((p) => p.playerId)).toEqual(["10", "11"]);
+    expect(point.continuedTraits!.every((p) => p.currentCheckpointAfter === 208)).toBe(true);
+    expect(point.contribution).toBeCloseTo(2 / 3, 12);
+    expect(roll.possessionBounds).toBeUndefined();
+    expect(roll.metadata.preRoll?.pickupSuccessors?.origin).toEqual({ x: 6, y: 3 });
+    expect(roll.metadata.preRoll?.pickupSuccessors?.branches).toHaveLength(8);
+    expect(roll.metadata.preRoll?.pickupSuccessors?.branches.every((b) =>
+      b.kind === "empty" && b.marking === "unmarked" && b.settlement === "loose"
+    )).toBe(true);
+    expect(report.teams[0].impactCount).toBe(1);
+    expect(report.teams[0].impactScore).toBeCloseTo(2 / 3, 12);
+    expect(roll.delta).toBeCloseTo(-1 / 3, 12);
+    expect(roll.metadata.teamRerollsSpent).toBe(1);
+
+    point.continuedTraits!.pop();
+    expect(LuckReportSchema.safeParse(report).success).toBe(false);
+    const seed = replay.boardCheckpoints![0]!.board!.teams[0]!.players.find((p) => p.id === 9)!;
+    seed.effectsKnownEmpty = false;
+    const fallback = LuckReportSchema.parse(analyzeReplayLuck(replay)).events.find((e) => e.metadata.sourceId === "source-217")!;
+    expect(fallback.contextualImpact).toBeUndefined();
+    expect(fallback.possessionBounds).toMatchObject({ minimumDifference: 0, maximumDifference: 2 });
+    expect(fallback.delta).toBe(roll.delta);
+  });
+  it.each([
+    { neighbor: "occupied" as const, empty: 7, unknown: 0, lower: 7 / 12, upper: 17 / 24 },
+    { neighbor: "unknown_marking" as const, empty: 8, unknown: 3, lower: 2 / 3, upper: 19 / 24 }
+  ])("settles the verified empty landings while retaining $neighbor uncertainty", (example) => {
+    const xml = decodeReplayInput(readFileSync("demo-replays/demo8.bbr", "utf8")).xml;
+    const replay = demo8PickupWithNeighbor(xml, example.neighbor);
+    const report = LuckReportSchema.parse(analyzeReplayLuck(replay));
+    const roll = report.events.find((event) => event.metadata.sourceId === "source-217")!;
+    const bound = roll.possessionBounds!;
+    const empty = roll.metadata.preRoll!.pickupSuccessors!.branches.filter((b) => b.kind === "empty");
+    expect(empty).toHaveLength(example.empty);
+    expect(empty.every((b) => b.settlement === "loose")).toBe(true);
+    expect(empty.filter((b) => b.marking === "unknown")).toHaveLength(example.unknown);
+    expect(bound.continuedTraits).toHaveLength(22);
+    expect(bound.waitingCheckpointAfter).toBe(214);
+    expect(bound.lower).toBeCloseTo(example.lower, 12);
+    expect(bound.upper).toBeCloseTo(example.upper, 12);
+    expect(roll.contextualImpact).toBeUndefined();
+    expect(roll.delta).toBeCloseTo(-1 / 3, 12);
+    bound.continuedTraits!.pop();
+    expect(LuckReportSchema.safeParse(report).success).toBe(false);
+  });
+  it("settles demo5's rain pickup with eighteen skill profiles and four recorded removals", () => {
+    const input = readFileSync("demo-replays/demo5.bbr", "utf8");
+    const report = analyzeNufflizerInput(input);
+    const roll = report.events.find((event) => event.metadata.sourceId === "source-2409")!;
+    const point = roll.contextualImpact;
+    expect(point).toMatchObject({
+      policy: "exact_pickup_possession",
+      stage: "team_pickup_possession",
+      waitingCheckpointAfter: 2406,
+      successChance: 1 / 2,
+      difference: 2,
+      deviation: -1 / 2,
+      contribution: -1,
+      offPitchPlayerCount: 4
+    });
+    if (point?.policy !== "exact_pickup_possession") throw new Error("Expected a pickup point");
+    expect(point.continuedTraits?.map((p) => p.playerId)).toEqual([
+      "1", "3", "4", "5", "6", "8", "9", "10", "11", "37", "38", "40", "41",
+      "43", "44", "45", "46", "47"
+    ]);
+    const removals = [[
+      { playerId: 2, situationCode: 4, statusCode: 4 },
+      { playerId: 7, situationCode: 4, statusCode: 4 }
+    ], [
+      { playerId: 39, situationCode: 2, statusCode: 3 },
+      { playerId: 42, situationCode: 4, statusCode: 5 }
+    ]];
+    const frames = report.rerollResources.flow.clockSnapshots;
+    for (const after of [2385, 2406])
+      expect(frames.find((f) => f.source.checkpointAfter === after)?.pickupOffPitch).toEqual(removals);
+    expect(roll.possessionBounds).toBeUndefined();
+    expect(roll.metadata.preRoll?.pickupSuccessors?.branches).toHaveLength(8);
+    expect(roll.metadata.preRoll?.pickupSuccessors?.branches.every((b) =>
+      b.kind === "empty" && b.settlement === "loose" && b.marking === "unmarked"
+    )).toBe(true);
+    expect(roll.probabilitySuccess).toBe(3 / 4);
+    expect(roll.delta).toBe(-1);
+    expect(roll.metadata.teamRerollsSpent).toBe(1);
+    expect(roll.metadata.fixedNumericModifiers).toEqual([
+      { playerId: -1, modifierType: 15, skillId: -1, effectId: -1, value: -1 }
+    ]);
+    const changed = parseReplayXml(decodeReplayInput(input).xml);
+    for (const event of changed.turns.flatMap((turn) => turn.events)) {
+      const payload = event.sourceIndex === 2406 ? event.payload?.RollInfos
+        : event.sourceIndex === 2409 ? event.payload : undefined;
+      if (payload)
+        (payload as { Modifiers: { Modifier: { PlayerId: number } } }).Modifiers.Modifier.PlayerId = 40;
+    }
+    const revised = analyzeReplayLuck(changed).events.find((event) => event.metadata.sourceId === "source-2409")!;
+    expect(revised.metadata.rerollDraws).toEqual(roll.metadata.rerollDraws);
+    expect(revised.possessionBounds).toBeUndefined();
+    expect(revised.contextualImpact).toBeUndefined();
+
+    const waiting = frames.find((f) => f.source.checkpointAfter === 2406)!;
+    delete waiting.pickupOffPitch;
+    expect(LuckReportSchema.safeParse(report).success).toBe(false);
+    waiting.pickupOffPitch = frames.find((f) => f.source.checkpointAfter === 2385)!.pickupOffPitch;
+    point.offPitchPlayerCount = 3;
+    expect(LuckReportSchema.safeParse(report).success).toBe(false);
+  });
+  it.each(["unconfirmed_removal", "diving_catch"])("keeps a rain pickup range with %s", (variant) => {
+    const input = readFileSync("demo-replays/demo5.bbr", "utf8");
+    const replay = parseReplayXml(decodeReplayInput(input).xml);
+    if (variant === "unconfirmed_removal") {
+      for (const index of [2385, 2406]) {
+        const board = replay.boardCheckpoints!.find((cp) => cp.afterSourceIndex === index)!.board!;
+        board.teams[1]!.players.find((p) => p.id === 42)!.statusCode = null;
+      }
+    } else {
+      const seed = replay.boardCheckpoints![0]!.board!.teams[0]!.players.find((p) => p.id === 4)!;
+      seed.traits!.acquiredSkills!.push(28);
+    }
+    const report = LuckReportSchema.parse(analyzeReplayLuck(replay));
+    const roll = report.events.find((e) => e.metadata.sourceId === "source-2409")!;
+    expect(roll.contextualImpact).toBeUndefined();
+    expect(roll.possessionBounds).toMatchObject({ lower: -1, upper: 0, successChance: 1 / 2 });
+    expect(roll.delta).toBe(-1);
+  });
+  it("requires the off-pitch roster receipt for the demo6 Sure Hands point", () => {
+    const input = readFileSync("demo-replays/demo6.bbr", "utf8");
+    const report = analyzeNufflizerInput(input);
+    const roll = report.events.find((e) => e.metadata.sourceId === "source-2151")!;
+    const point = roll.contextualImpact;
+    expect(point).toMatchObject({
+      policy: "exact_pickup_possession",
+      stage: "sure_hands_reroll",
+      contribution: -4 / 3,
+      offPitchPlayerCount: 5
+    });
+    if (point?.policy !== "exact_pickup_possession") throw new Error("Expected pickup point");
+    expect(point.continuedTraits).toHaveLength(21);
+    expect(point.waitingCheckpointAfter).toBeUndefined();
+    const frame = report.rerollResources.flow.clockSnapshots.find(
+      (f) => f.source.checkpointAfter === 2143
+    )!;
+    delete frame.pickupOffPitch;
+    expect(LuckReportSchema.safeParse(report).success).toBe(false);
+
+    const replay = parseReplayXml(decodeReplayInput(input).xml);
+    const board = replay.boardCheckpoints!.find((cp) => cp.afterSourceIndex === 2143)!.board!;
+    board.teams[1]!.players.find((p) => p.id === 51)!.statusCode = null;
+    const uncertain = analyzeReplayLuck(replay).events.find((e) => e.metadata.sourceId === "source-2151")!;
+    expect(uncertain.contextualImpact).toBeUndefined();
+    expect(uncertain.possessionBounds).toMatchObject({ lower: -4 / 3, upper: 0 });
+    expect(uncertain.weightedDelta).toBe(roll.weightedDelta);
+  });
+  it("reconciles all public demo context ranges and point estimates", () => {
     let possession = 0,
       moves = 0;
     for (const file of readdirSync("demo-replays").filter((f) =>
@@ -478,10 +795,10 @@ describe("valid pickup failure successors and conditional possession bounds", ()
       expect(r.coverage.contextEvidence.boundedCount).toBe(
         r.events.filter((e) => e.contextualBounds || e.possessionBounds || e.catchPossessionBounds).length
       );
-      expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
+      expect(r.teams.map((t) => t.impactCount)).toEqual(expectedPublicImpactCounts(file));
       expect(r.verdict.luckierTeam).toBe("unknown");
     }
-    expect(possession).toBe(2);
+    expect(possession).toBe(4);
     expect(moves).toBe(10);
   });
 });

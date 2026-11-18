@@ -1,3 +1,4 @@
+import { expectedPublicImpactCounts } from "../helpers/corpus";
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -6,9 +7,10 @@ import { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
 import { analyzeReplayLuck } from "@/domain/nufflizer/analyzeLuck";
 import { parseReplayXml } from "@/domain/replay/parseXml";
 import { LuckReportSchema } from "@/domain/nufflizer/reportSchema";
-import { explainContextBounds } from "@/domain/nufflizer/presentation";
+import { explainContextBounds, explainContextImpact } from "@/domain/nufflizer/presentation";
 import { estimateKeptDodgeMoveBounds } from "@/domain/nufflizer/contextImpact";
 import { lonerDriveXml } from "../helpers/lonerDrive";
+import { withExactOrdinaryMoves } from "../helpers/exactOrdinaryMoves";
 const evidence = "tests/fixtures/evidence/bb3-kept-dodge-moves.json";
 const facts = JSON.parse(readFileSync(evidence, "utf8")).cases as {
   id: string;
@@ -35,11 +37,13 @@ function source() {
     choice = at(e.metadata.rerollDecisionId!),
     final = at(e.metadata.sourceId!),
     decl = at(e.metadata.preRoll!.activationId!);
+  const bound = e.contextualBounds;
+  if (bound?.policy !== "kept_dodge_terminal_moves") throw new Error("Expected a kept Dodge range");
   const before = replay.boardCheckpoints!.find(
       (c) => c.afterSourceIndex === e.metadata.preRoll!.checkpointAfter
     )!,
     wait = replay.boardCheckpoints!.find(
-      (c) => c.afterSourceIndex === e.contextualBounds!.terminalCheckpointAfter
+      (c) => c.afterSourceIndex === bound.terminalCheckpointAfter
     )!;
   return {
     replay,
@@ -56,6 +60,26 @@ function source() {
   };
 }
 describe("retained original Dodge terminal teammate component", () => {
+  it("prices the original failure once when both other available moves are verified", () => {
+    const r = analyzeNufflizerInput(withExactOrdinaryMoves(
+      xml(), facts[0]!.possiblePlayerIds, ["38", "39"]
+    ));
+    const e = r.events.find((row) => row.metadata.rerollUsed === false && row.metadata.rollType === 2)!;
+    expect(e.contextualImpact).toMatchObject({
+      policy: "kept_dodge_terminal_moves", successChance: 2 / 3,
+      difference: 2, deviation: -2 / 3, contribution: -4 / 3
+    });
+    expect(e.metadata.preRoll?.ordinaryMoveAvailability?.knownAvailablePlayerIds).toEqual(["38", "39"]);
+    expect(e.contextualBounds).toBeUndefined();
+    expect(e.metadata.teamRerollsSpent).toBe(0);
+    expect(e.metadata.rerollDraws).toBeUndefined();
+    expect(r.teams[1]).toMatchObject({ impactCount: 1, impactScore: -4 / 3 });
+    expect(r.verdict.luckierTeam).toBe("unknown");
+    expect(explainContextImpact(e)).toContain("original Dodge die had 66.7%");
+    const choice = r.events.find((row) => row.metadata.sourceId === e.metadata.rerollDecisionId)!;
+    choice.metadata.teamRerollDecision!.used = true;
+    expect(LuckReportSchema.safeParse(r).success).toBe(false);
+  });
   it.each(facts)(
     "joins $sourceFile to independent source/geometry/completion facts",
     (f) => {
@@ -101,7 +125,7 @@ describe("retained original Dodge terminal teammate component", () => {
       expect(e.contextualImpact).toBeUndefined();
       expect(e.metadata.rerollResource).toBeUndefined();
       expect(e.metadata.teamRerollMovement).toBeUndefined();
-      expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
+      expect(r.teams.map((t) => t.impactCount)).toEqual(expectedPublicImpactCounts(f.sourceFile));
       expect(r.verdict.luckierTeam).toBe("unknown");
       expect(LuckReportSchema.safeParse(r).success).toBe(true);
     }
@@ -119,9 +143,9 @@ describe("retained original Dodge terminal teammate component", () => {
     (f) => {
       const r = analyzeNufflizerInput(lonerDriveXml(f.id, evidence)),
         e = kept(r)!;
-      expect(e.contextualBounds!.maximumMoves).toBe(
-        f.sourceFile === "demo3.bbr" ? 10 : f.maximumMoves
-      );
+      expect(e.contextualBounds).toMatchObject({
+        maximumMoves: f.sourceFile === "demo3.bbr" ? 10 : f.maximumMoves
+      });
       expect(e.metadata.preRoll!.otherUsefulActivations).toBeNull();
       expect(e.contextualImpact).toBeUndefined();
       expect(LuckReportSchema.safeParse(r).success).toBe(true);
@@ -272,7 +296,10 @@ describe("retained original Dodge terminal teammate component", () => {
       r.events.find(
         (x) => x.metadata.sourceId === m.rerollDecisionId
       )!.metadata.teamRerollDecision!.gamerId = 0;
-    if (kind === "checkpoint") b.terminalCheckpointAfter!--;
+    if (kind === "checkpoint") {
+      if (b.policy !== "kept_dodge_terminal_moves") throw new Error("Expected a kept Dodge range");
+      b.terminalCheckpointAfter!--;
+    }
     if (kind === "spend") m.teamRerollsSpent = 1;
     if (kind === "overlap")
       e.catchPossessionBounds = {

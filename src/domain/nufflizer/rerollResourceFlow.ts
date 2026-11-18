@@ -85,6 +85,12 @@ const pool = z.strictObject({
   after: observation.nullable(),
   ...accounting
 });
+const offPitchPickupPlayer = z.discriminatedUnion("situationCode", [
+  z.strictObject({ playerId: observed, situationCode: z.literal(1), statusCode: z.literal(0).nullable() }),
+  z.strictObject({ playerId: observed, situationCode: z.literal(2), statusCode: z.literal(3) }),
+  z.strictObject({ playerId: observed, situationCode: z.literal(4), statusCode: z.union([z.literal(4), z.literal(5)]) }),
+  z.strictObject({ playerId: observed, situationCode: z.literal(5), statusCode: z.literal(6) })
+]);
 const clockSnapshot = z.strictObject({
   id: snapshotIndex,
   source,
@@ -98,6 +104,10 @@ const clockSnapshot = z.strictObject({
     z.array(observed.nullable()).max(64),
     z.array(observed.nullable()).max(64)
   ]),
+  pickupOffPitch: z.tuple([
+    z.array(offPitchPickupPlayer).max(64),
+    z.array(offPitchPickupPlayer).max(64)
+  ]).optional(),
   poolNamespaces: z.tuple([poolNamespace.nullable(), poolNamespace.nullable()])
 });
 const endNotification = z.strictObject({

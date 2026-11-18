@@ -7,6 +7,7 @@ import {
 } from "./attribution";
 import { observeRecruitmentPurchases } from "./recruitment";
 import { preservesTraitContinuity } from "./traitTransitions";
+import { readAnimalSavageryOffer } from "./mentalEffects";
 
 export type OwnershipProof = {
   playerId: string;
@@ -135,6 +136,13 @@ export function preservesRosterOwnership(event: ReplayEvent) {
     );
   }
   const p = event.payload;
+  if (event.sourceTag === "QuestionAnimalSavagery") {
+    return (
+      event.stepTag === "PlayerStep" &&
+      event.stepType === 0 &&
+      !!readAnimalSavageryOffer(p)
+    );
+  }
   if (event.sourceTag === "ThrowTeamMateStep")
     return (
       event.stepType === 13 &&

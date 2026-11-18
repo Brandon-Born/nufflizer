@@ -1,5 +1,9 @@
 import type { ReplayEvent } from "./types";
-import { observeMentalEffect, type MentalTraitEffect } from "./mentalEffects";
+import {
+  observeMentalEffect,
+  observesOnlyAnimalSavageryEffect,
+  type MentalTraitEffect
+} from "./mentalEffects";
 // Observed checkpoints, not a simulator. Each snapshot replaces the previous
 // observation: omitted fields are unknown, never defaults or carry-forwards.
 import {
@@ -17,6 +21,7 @@ export type ObservedPlayer = {
   traitsDataPlayerId?: number | null;
   traitsPlayerTypeId?: number | null;
   effectsKnownEmpty?: boolean;
+  animalSavageryEffect?: boolean;
   ordinaryMovePolicyKnown?: boolean;
   plainBallPolicyKnown?: boolean;
   mentalEffect: MentalTraitEffect | null;
@@ -186,6 +191,7 @@ export function observeBoardCheckpoint(
                     traitsDataPlayerId: nonnegative(record(p.Data).Id),
                     traitsPlayerTypeId: nonnegative(record(p.Data).IdPlayerTypes),
                     effectsKnownEmpty: p.Effects === "",
+                    animalSavageryEffect: observesOnlyAnimalSavageryEffect(p.Effects),
                     mentalEffect,
                     traits,
                     plainBallPolicyKnown:plainBallPolicyKnown(traits,nonnegative(p.Id),p.Effects),

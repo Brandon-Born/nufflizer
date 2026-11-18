@@ -5,8 +5,9 @@ import { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
 import { analyzeReplayLuck } from "@/domain/nufflizer/analyzeLuck";
 import { parseReplayXml } from "@/domain/replay/parseXml";
 import { LuckReportSchema } from "@/domain/nufflizer/reportSchema";
-import { explainContextBounds } from "@/domain/nufflizer/presentation";
+import { explainContextBounds, explainContextImpact } from "@/domain/nufflizer/presentation";
 import { lonerDriveXml } from "../helpers/lonerDrive";
+import { withExactOrdinaryMoves } from "../helpers/exactOrdinaryMoves";
 
 const fragment = (id: string) =>
   lonerDriveXml(id, "tests/fixtures/evidence/bb3-terminal-team-dodge.json");
@@ -18,6 +19,53 @@ const terminal = (r: ReturnType<typeof report>) =>
   )!;
 
 describe("conditional teammate-move cost of a committed team Dodge", () => {
+  it("adds a single point contribution for complete pre-roll eligibility", () => {
+    const xml = withExactOrdinaryMoves(
+      fragment("direct_team_dodge_failure"),
+      ["38", "42", "46", "47"],
+      ["38", "42"]
+    );
+    const report = analyzeNufflizerInput(xml);
+    const event = report.events.find(
+      (row) => row.metadata.rollType === 2 && row.metadata.rerollResource === "team"
+    )!;
+    expect(event.metadata.preRoll?.ordinaryMoveAvailability).toMatchObject({
+      knownAvailablePlayerIds: ["38", "42"],
+      unknownPlayerIds: []
+    });
+    expect(event.contextualBounds).toBeUndefined();
+    expect(event.contextualImpact).toMatchObject({
+      successChance: 2 / 3,
+      difference: 2,
+      deviation: -2 / 3,
+      contribution: -4 / 3
+    });
+    expect(event.delta).toBeCloseTo(-4 / 3, 12);
+    const team = report.teams.find((t) => t.teamId === event.teamId)!;
+    expect(team.impactCount).toBe(1);
+    expect(team.impactScore).toBeCloseTo(-4 / 3, 12);
+    expect(explainContextImpact(event)).toContain("replacement Dodge die had 66.7%");
+    expect(report.verdict.luckierTeam).toBe("unknown");
+    const missing = parseReplayXml(xml);
+    for (const checkpoint of missing.boardCheckpoints ?? []) {
+      if (checkpoint.kind === "initial") continue;
+      for (const roster of checkpoint.board?.teams ?? [])
+        roster.players = roster.players.filter((player) => player.id !== 46);
+    }
+    expect(analyzeReplayLuck(missing).events.every(
+      (row) => row.contextualImpact?.policy !== "team_reroll_terminal_moves"
+    )).toBe(true);
+    const contradicted = parseReplayXml(xml);
+    const finish = contradicted.turns.flatMap((turn) => turn.events)
+      .find((row) => row.sourceTag === "EventEndTurn")!;
+    finish.reasonCode = 1;
+    expect(analyzeReplayLuck(contradicted).events.every(
+      (row) => row.contextualImpact?.policy !== "team_reroll_terminal_moves"
+    )).toBe(true);
+    if (event.contextualImpact) event.contextualImpact.contribution *= 2;
+    expect(LuckReportSchema.safeParse(report).success).toBe(false);
+  });
+
   it.each(["direct_team_dodge_failure", "late_team_dodge_failure"])(
     "bounds the source-linked terminal failure %s without scoring its damage again",
     (id) => {
@@ -44,7 +92,7 @@ describe("conditional teammate-move cost of a committed team Dodge", () => {
         lower: -8 / 3,
         upper: 0
       });
-      expect(e.contextualBounds?.activeContinuation).toBeUndefined();
+      expect(e.contextualBounds).not.toHaveProperty("activeContinuation");
       expect(e.probabilitySuccess).toBeCloseTo(8 / 9, 12);
       expect(e.delta).toBeCloseTo(-4 / 3, 12);
       expect(e.metadata.movementFall).toBeDefined();
@@ -138,8 +186,10 @@ describe("conditional teammate-move cost of a committed team Dodge", () => {
       b = e.contextualBounds!;
     if (change === "chance") b.successChance = 8 / 9;
     if (change === "endpoint") b.lower = -32 / 9;
-    if (change === "continuation")
+    if (change === "continuation") {
+      if (b.policy !== "team_reroll_terminal_moves") throw new Error("Expected a team Dodge range");
       b.activeContinuation = { minimum: 1, maximum: 1 };
+    }
     if (change === "original")
       e.metadata.originalDice = { Die: { DieType: 0, Value: 6 } };
     if (change === "eligibility")

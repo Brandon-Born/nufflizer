@@ -7,10 +7,12 @@ import {
   HOW_TO_READ_LINES
 } from "@/domain/nufflizer/explainabilityCopy";
 
-import type { LuckEventType, LuckReport } from "@/domain/nufflizer/types";
+import type { LuckEvent, LuckEventType, LuckReport } from "@/domain/nufflizer/types";
+import { contextComponent } from "@/domain/nufflizer/contextComponents";
 import {
   scoredEvidenceForTeam,
   formatDiceContribution,
+  formatSupportedDiceGap,
   formatPreRollPosition,
   formatPlayerObservation,
   explainPreRollEvidence,
@@ -52,6 +54,7 @@ import {
   explainBlockPush
 } from "@/domain/nufflizer/presentation";
 import { ResourceFlowPanel } from "./ResourceFlowPanel";
+import { RollCoveragePanel } from "./RollCoveragePanel";
 import { ReportOverview } from "./ReportOverview";
 import { ReplayUploadPanel } from "./ReplayUploadPanel";
 import { ARMOR_REVIEW_NOTICE, hasArmorUnderReview, isArmorUnderReview, summarizeForReader } from "@/domain/nufflizer/readerSummary";
@@ -68,7 +71,8 @@ const EVENT_TYPE_OPTIONS: Array<{
   { value: "dodge", label: "Dodge" },
   { value: "ball_handling", label: "Ball handling" },
   { value: "argue_call", label: "Argue call" },
-  { value: "movement_risk", label: "Movement risk" }
+  { value: "movement_risk", label: "Movement risk" },
+  { value: "activation_check", label: "Activation check" }
 ];
 
 const TAG_OPTIONS = [
@@ -77,8 +81,31 @@ const TAG_OPTIONS = [
   { value: "shaftaroonie", label: "Shaftaroonie moments" }
 ] as const;
 
+const EVIDENCE_PAGE_SIZE = 50;
+
+function compareTimelineOrder(a: LuckEvent, b: LuckEvent) {
+  return a.turn - b.turn ||
+    (a.metadata.sourceIndex ?? Number.MAX_SAFE_INTEGER) -
+      (b.metadata.sourceIndex ?? Number.MAX_SAFE_INTEGER);
+}
+
+function timelineMagnitude(event: LuckEvent, sortOrder: string, modelVersion: string) {
+  if (sortOrder === "context_range") {
+    const bounds = contextComponent(event)?.bounds;
+    return bounds ? Math.max(Math.abs(bounds.lower), Math.abs(bounds.upper)) : -1;
+  }
+  if (sortOrder === "context") {
+    const impact = event.contextualImpact;
+    return impact ? Math.abs(impact.contribution) : -1;
+  }
+  return event.scoringStatus === "scored" && !isArmorUnderReview(event, modelVersion)
+    ? Math.abs(event.weightedDelta)
+    : -1;
+}
+
 export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
   const timelineRef = useRef<HTMLHeadingElement | null>(null);
+  const selectedDetailsRef = useRef<HTMLDetailsElement | null>(null);
   const focusReportHeading = useCallback((heading: HTMLHeadingElement | null) => {
     if (heading) {
       heading.focus();
@@ -133,7 +160,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
     }
     const query = playerQuery.trim().toLocaleLowerCase();
 
-    return report.events
+    const filtered = report.events
       .filter((event) => {
         if (selectedMomentId && event.id !== selectedMomentId) return false;
         if (scoringFilter === "scored" && isArmorUnderReview(event, report.modelVersion)) return false;
@@ -158,7 +185,8 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
             Number(teamTurnFilter)
         )
           return false;
-        if (activationFilter && context?.activationId !== activationFilter)
+        if (activationFilter && context?.activationId !== activationFilter &&
+          event.metadata.sourceId !== activationFilter)
           return false;
         if (teamFilter !== "all" && event.teamId !== teamFilter) return false;
         if (
@@ -178,17 +206,14 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
         }
 
         return true;
-      })
-      .sort((a, b) =>
-        sortOrder === "impact"
-          ? Math.abs(b.weightedDelta) - Math.abs(a.weightedDelta)
-          : sortOrder === "context"
-            ? Number(!!b.contextualImpact) - Number(!!a.contextualImpact) ||
-              Math.abs(b.contextualImpact?.contribution ?? 0) -
-                Math.abs(a.contextualImpact?.contribution ?? 0)
-            : a.turn - b.turn ||
-              (a.metadata.sourceIndex ?? 0) - (b.metadata.sourceIndex ?? 0)
-      );
+      });
+    if (sortOrder === "chronological") return filtered.sort(compareTimelineOrder);
+    const magnitudes = new Map(filtered.map((event) => [
+      event.id, timelineMagnitude(event, sortOrder, report.modelVersion)
+    ]));
+    return filtered.sort(
+      (a, b) => magnitudes.get(b.id)! - magnitudes.get(a.id)! || compareTimelineOrder(a, b)
+    );
   }, [
     report,
     selectedMomentId,
@@ -220,6 +245,24 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
     setActivationFilter(null);
     setPage(0);
   }
+
+  function showActivation(activationId: string) {
+    resetFilters();
+    setScoringFilter("all");
+    setActivationFilter(activationId);
+    requestAnimationFrame(() => {
+      timelineRef.current?.focus();
+      timelineRef.current?.scrollIntoView({ block: "start" });
+    });
+  }
+
+  const emptyTimelineHint = selectedMomentId
+    ? "Use Back to timeline to clear the selected moment."
+    : activationFilter
+      ? "Use Show all activations to search outside this activation."
+      : resourceOnly
+        ? "Use Reset filters to search outside the recorded reroll choices."
+        : "Try all evidence or another category.";
 
   function scoreColor(score: number): string {
     if (score > 0) {
@@ -291,7 +334,11 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
               resetFilters();
               setScoringFilter("all");
               setSelectedMomentId(event.id);
-              requestAnimationFrame(() => { timelineRef.current?.focus(); timelineRef.current?.scrollIntoView({ block: "start" }); });
+              requestAnimationFrame(() => {
+                if (selectedDetailsRef.current) selectedDetailsRef.current.open = true;
+                timelineRef.current?.focus();
+                timelineRef.current?.scrollIntoView({ block: "start" });
+              });
             }}
             onCategory={(type) => {
               resetFilters(); setTypeFilter(type); setScoringFilter("all");
@@ -303,7 +350,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
           <div className="mt-4 space-y-6">
           <div className="rounded-lg border border-amber-300/20 bg-amber-950/20 p-4">
             <p className="mt-1 text-sm text-amber-50/90">
-              {armorUnderReview ? "Combined dice comparison withheld while armor scoring is under review." : <>Supported dice contribution gap:{" "}{formatDiceContribution(report.verdict.scoreGap, report.coverage.allEvents.scoredCount, 1)}</>}
+              {armorUnderReview ? "Combined dice comparison withheld while armor scoring is under review." : <>Supported dice contribution gap:{" "}{formatSupportedDiceGap(report.verdict.scoreGap)}</>}
             </p>
             <p className="mt-1 text-sm text-amber-50/90">
               Roll-candidate coverage:{" "}
@@ -342,6 +389,11 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
             <p className="mt-2 text-sm text-amber-100/80">
               {explainDiceCensus(report.coverage.diceRecords)}
             </p>
+            <RollCoveragePanel
+              key={report.generatedAt}
+              families={report.coverage.rollFamilies}
+              teams={report.teams}
+            />
             {Object.keys(report.coverage.excludedByReason).length > 0 ? (
               <p className="mt-2 text-sm text-amber-100">
                 Some events were excluded when replay context was
@@ -384,7 +436,8 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
               {report.weightTable.injury}, dodge {report.weightTable.dodge},
               ball handling {report.weightTable.ball_handling}, argue{" "}
               {report.weightTable.argue_call}, movement{" "}
-              {report.weightTable.movement_risk}.
+              {report.weightTable.movement_risk}, activation checks{" "}
+              {report.weightTable.activation_check}.
             </p>
             <div className="mt-3 overflow-x-auto">
               <table className="min-w-full border-collapse text-xs text-amber-50/90">
@@ -562,6 +615,13 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                         evidence.byType.movement_risk
                       )}
                     </div>
+                    <div>
+                      Activation checks{" "}
+                      {formatDiceContribution(
+                        team.categoryScores.activationCheck,
+                        evidence.byType.activation_check
+                      )}
+                    </div>
                   </dl>
                 </article>
               );
@@ -569,7 +629,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
           </div>
 
           <div className="space-y-3">
-            {selectedMomentId ? <p className="rounded-lg border border-amber-300/30 p-3 text-sm">Showing the selected key moment. <button type="button" className="underline" onClick={resetFilters}>Show all replay evidence</button></p> : null}
+            {selectedMomentId ? <p className="rounded-lg border border-amber-300/30 p-3 text-sm">Showing the selected moment. <button type="button" className="underline" onClick={resetFilters}>Back to timeline</button></p> : null}
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h4 ref={timelineRef} tabIndex={-1} className="text-sm font-semibold text-amber-100">
                 Replay evidence
@@ -654,6 +714,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                 </select>
                 <select
                   aria-label="Sort order"
+                  aria-describedby={sortOrder === "context_range" ? "context-sort-help" : undefined}
                   value={sortOrder}
                   onChange={(e) => {
                     setSortOrder(e.target.value);
@@ -663,7 +724,10 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                   <option value="chronological">Chronological</option>
                   <option value="impact">Largest dice contribution</option>
                   <option value="context">
-                    Largest supported context estimate
+                    Largest context point estimate
+                  </option>
+                  <option value="context_range">
+                    Largest possible context contribution
                   </option>
                 </select>
                 <select
@@ -705,9 +769,16 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
               </div>
             </div>
 
+            {sortOrder === "context_range" ? (
+              <p id="context-sort-help" className="text-xs text-amber-100/85">
+                Ordered by the endpoint farthest from zero. Rows without a
+                context contribution come last.
+              </p>
+            ) : null}
+
             {activationFilter && (
               <div className="text-xs text-amber-100/80">
-                Activation {activationFilter}
+                Showing evidence linked to activation {activationFilter}
                 <button
                   type="button"
                   className="ml-2 underline"
@@ -723,8 +794,8 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
 
             <p className="text-sm" role="status">
               {filteredMoments.length
-                ? `${filteredMoments.length} matching events; page ${page + 1} of ${Math.ceil(filteredMoments.length / 50)}`
-                : "No events match these filters. Try all evidence or another category."}
+                ? `${filteredMoments.length} matching events; page ${page + 1} of ${Math.ceil(filteredMoments.length / EVIDENCE_PAGE_SIZE)}`
+                : `No events match these filters. ${emptyTimelineHint}`}
             </p>
             <div className="flex gap-3">
               <button
@@ -736,7 +807,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
               </button>
               <button
                 type="button"
-                disabled={(page + 1) * 50 >= filteredMoments.length}
+                disabled={(page + 1) * EVIDENCE_PAGE_SIZE >= filteredMoments.length}
                 onClick={() => setPage((p) => p + 1)}
               >
                 Next page
@@ -758,7 +829,7 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                 </thead>
                 <tbody>
                   {filteredMoments
-                    .slice(page * 50, page * 50 + 50)
+                    .slice(page * EVIDENCE_PAGE_SIZE, (page + 1) * EVIDENCE_PAGE_SIZE)
                     .map((moment) => (
                       <tr
                         key={moment.id}
@@ -780,17 +851,15 @@ export function NufflizierAnalyzer({ routeLabel }: { routeLabel: string }) {
                             <button
                               type="button"
                               className="text-xs underline"
-                              onClick={() => {
-                                setActivationFilter(
-                                  moment.metadata.preRoll!.activationId
-                                );
-                                setPage(0);
-                              }}
+                              onClick={() => showActivation(moment.metadata.preRoll!.activationId!)}
                             >
                               Show this activation
                             </button>
                           )}
-                          <details className="mt-1">
+                          <details
+                            className="mt-1"
+                            ref={selectedMomentId === moment.id ? selectedDetailsRef : undefined}
+                          >
                             <summary className="cursor-pointer text-xs text-amber-100/80">
                               Why
                             </summary>

@@ -1,3 +1,4 @@
+import { validPickupDecisionStage, validReportedContinuedPickupTraits } from "./pickupDecisionPossession";
 import { validReportedFailedNumericRetry } from "./failedNumericRetry";
 import {validReportedThrowTeamMate} from "./throwTeamMateEvidence";
 import { RerollResourcesSchema, RecordedRerollChoiceSchema, RecordedRerollOfferSchema, validReportedRerollResources } from "./rerollResources";
@@ -10,6 +11,8 @@ import { enumerateSkillBlock } from "./blockSkillModel";
 import { validReportedCategoricalBlock } from "./categoricalBlock";
 import { ScoringRushStateSchema } from "@/domain/replay/scoringRushState";
 import { validReportedScoringRushImpact } from "./scoringRushImpact";
+import { validReportedCommittedScoringRush, validReportedScoreEvidence } from "./committedScoringRush";
+import { validReportedFinalTurnScoringRush } from "./finalTurnScoringRush";
 import {
   contextComponent,
   summarizeContextComponents,
@@ -24,19 +27,19 @@ import { validReportedCasualtyObservation } from "./casualtyObservation";
 import { validReportedCasualtyTable } from "./casualtyTable";
 import { validReportedDamageSpp } from "./damageSpp";
 import { validReportedCategoricalInjury } from "./categoricalInjury";
-import { injuryTableForTraits } from "./injuryTable";
+import { injuryTableForTraits, supportsUnmodifiedInjuryTable } from "./injuryTable";
 import { validReportedBlockCrowd } from "./blockCrowd";
 import { validReportedBlockBallRelease } from "./blockBallRelease";
 import { validReportedBlockPush } from "./blockPush";
 import { validReportedOwnership, indexIdentityMutations } from "./ownershipEvidence";
 import { bounceDestination } from "@/domain/replay/pickupSuccessors";
 import { continuationOptionBounds } from "@/domain/replay/activeMoveContinuation";
-import { estimateDodgeImpactBounds, estimateTeamDodgeMoveBounds, estimateTeamRushMoveBounds, estimateKeptRushMoveBounds, estimateKeptDodgeMoveBounds, estimateNumericImpact, estimatePickupPossessionBounds, estimateFreshCatchPossession, estimateKeptCatchPossession } from "./contextImpact";
+import { estimateExactTeamMoves, estimateDodgeImpactBounds, estimateTeamDodgeMoveBounds, estimateTeamRushMoveBounds, estimateKeptRushMoveBounds, estimateKeptDodgeMoveBounds, estimateNumericImpact, estimatePickupPossessionBounds, estimateFreshCatchPossession, estimateKeptCatchPossession } from "./contextImpact";
 import { blockOutcomeName, consistentBlockResolution, knockedDownSubjects, summarizeBlockConsequence } from "./blockConsequences";
 import { enumerateBlockPool } from "./blockPools";
 import { z } from "zod";
-import { VERDICT_SUMMARIES } from "./explainabilityCopy";
-import { CONTEXT_MODEL_VERSION } from "./contextImpact";
+import { summarizeVerdictEvidence, VERDICT_SUMMARIES } from "./explainabilityCopy";
+import { CONTEXT_MODEL_VERSION, PICKUP_POSSESSION_STAGES, exactPickupPossession } from "./contextImpact";
 import { DICE_MODEL_VERSION, LUCK_CATEGORY_WEIGHTS, REPORT_SCHEMA_VERSION } from "./constants";
 import { REPLAY_LIMITS } from "@/domain/replay/limits";
 import { summarizeRollFamilies } from "./rollCoverage";
@@ -49,6 +52,12 @@ import { validReportedNumericRerollScore } from "./numericRerollScore";
 import { summarizeContextEvidence } from "./contextCoverage";
 import { observedBounceDirection } from "./ballConsequences";
 import { summarizeMovementFall } from "./movementConsequences";
+import { MAX_FALL_BALL_LEGS, validReportedMovementFallTail } from "./rushFallBallPath";
+import { validReportedRushFallAftermath } from "./rushFallAftermath";
+import { validReportedRushRecovery } from "./rushFallRecovery";
+import { validReportedActivationCheck } from "./activationCheckScore";
+import { validReportedActivationRetryAccess } from "./activationRetryAccess";
+import { validReportedFoulAppearance } from "./foulAppearanceScore";
 
 export const LuckEventTypeSchema = z.enum([
   "block",
@@ -58,6 +67,7 @@ export const LuckEventTypeSchema = z.enum([
   "ball_handling",
   "argue_call",
   "movement_risk",
+  "activation_check",
   "unknown"
 ]);
 export const LuckMomentTagSchema = z.enum(["blessed", "shaftaroonie"]);
@@ -86,6 +96,26 @@ const activeMoveContinuation = z.strictObject({
   declarationSourceId:text,movementBefore:z.number().int().min(0).max(16).nullable(),movementAfterSuccess:z.number().int().min(0).max(15).nullable(),
   opponentMarking:z.enum(["unmarked","marked","unknown"]),candidateDestination:pitchCell,minimum:z.union([z.literal(0),z.literal(1)]),maximum:z.union([z.literal(0),z.literal(1)])
 });
+const pickupMoveCandidates = z.strictObject({
+  knownAvailablePlayerIds: z.array(text).max(64),
+  unknownPlayerIds: z.array(text).max(64)
+});
+const pickupTurnEndBase = {
+  endSourceId: text,
+  ordinaryMoves: pickupMoveCandidates.optional()
+};
+const pickupTurnEnd = z.discriminatedUnion("kind", [
+  z.strictObject({ kind: z.literal("catch"), catchSourceId: text, ...pickupTurnEndBase }),
+  z.strictObject({
+    ...pickupTurnEndBase, kind: z.literal("bounce"), bounceSourceId: text,
+    nextGamerId: z.union([z.literal(0), z.literal(1)]).nullable(),
+    snapshot: z.strictObject({
+      checkpointAfter: count,
+      observedIsHeld: z.literal(false).nullable(),
+      observedActiveGamerId: z.union([z.literal(0), z.literal(1)]).nullable()
+    }).optional()
+  })
+]);
 const dicePath = z
   .array(
     z.union([
@@ -229,7 +259,31 @@ const catchResumeSnapshot = z.strictObject({
   actorCell: pitchCell, actorCanAct: z.boolean().nullable(), actorTackleZone: z.boolean().nullable(),
   actorStatus: count.nullable(), actorSituation: count.nullable()
 });
+const scoreEvidence = z.strictObject({
+  scores: z.tuple([count, count]),
+  touchdowns: z.array(z.strictObject({
+    sourceIndex: count,
+    scorerId: count,
+    roster: z.union([z.literal(0), z.literal(1)]),
+    confirmedCheckpointAfter: count,
+    observedScore: count
+  })).max(32)
+});
+
 export const LuckEventMetadataSchema = z.strictObject({
+  foulAppearance: z.strictObject({
+    defenderId: text,
+    skillSourceId: text,
+    triggerSourceId: text,
+    previousBlockSourceId: text.optional()
+  }).optional(),
+  activationCheck: z.strictObject({
+    skillId: z.union([z.literal(31), z.literal(51), z.literal(84)]),
+    declarationSourceId: text,
+    skillSourceId: text,
+    assistantId: text.optional(),
+    draw: z.enum(["original", "replacement"]).optional()
+  }).optional(),
   combinedMovement:z.strictObject({stepSourceId:text,policy:z.enum(["fresh_rush_then_dodge","team_rush_then_dodge"]),questionSourceId:text.optional(),decisionSourceId:text.optional(),gamerId:z.union([z.literal(0),z.literal(1)]).optional(),
     rushSourceId:text,dodgeSourceId:text,doMoveSourceId:text,outcomeSourceId:text,originalCheckpointAfter:count,checkpointAfter:count,from:pitchCell,to:pitchCell,
     movementBefore:z.literal(0).nullable(),movementAfter:z.literal(0).nullable(),carriedBallBefore:z.boolean().nullable(),dodgeSucceeded:z.boolean(),
@@ -245,7 +299,7 @@ export const LuckEventMetadataSchema = z.strictObject({
   rerollOffer:z.strictObject({gamerId:z.union([z.literal(0),z.literal(1)]),canUseTeamReroll:z.boolean(),decisionSourceId:text}).optional(),
   teamRerollCounter:z.strictObject({questionSourceId:text,spent:z.union([z.literal(0),z.literal(1)]),before:rerollCounterObservation,decisionBefore:rerollCounterObservation.optional(),after:rerollCounterObservation.optional(),reconciliation:z.enum(["matched","mismatch","after_unavailable"])}).optional(),
   turnEndReason: z.literal(2).optional(),
-  pickupTurnEnd:z.strictObject({catchSourceId:text,endSourceId:text,ordinaryMoves:z.strictObject({knownAvailablePlayerIds:z.array(text).max(64),unknownPlayerIds:z.array(text).max(64)}).optional()}).optional(),
+  pickupTurnEnd: pickupTurnEnd.optional(),
   retainedRushContext:z.strictObject({declarationSourceId:text,declarationCheckpointAfter:count,resumeCheckpointAfter:count,
     successRushSourceId:text,doMoveSourceId:text,moveOutcomeSourceId:text,questionSourceId:text,decisionSourceId:text,waitingCheckpointAfter:count,
     from:pitchCell,via:pitchCell,destination:pitchCell}).optional(),
@@ -262,7 +316,8 @@ export const LuckEventMetadataSchema = z.strictObject({
     cause: z.discriminatedUnion("kind", [
       z.strictObject({kind:z.literal("block"),poolSourceId:text,appliedOutcomeSourceId:text,damageStepSourceIndex:count,attackerTraitEvidence:currentTraitEvidence.optional(),attackerOtherActionSkills:injuryOtherActionSkills.optional(),
         armorModifierBudget:z.strictObject({useSourceId:text,available:z.literal(1),spent:z.literal(1),remaining:z.literal(0)}).optional()}),
-      z.strictObject({kind:z.literal("self_fall"),rollSourceId:text,moveOutcomeSourceIndex:count,movementStepSourceIndex:count})
+      z.strictObject({kind:z.literal("self_fall"),rollSourceId:text,moveOutcomeSourceIndex:count,movementStepSourceIndex:count}),
+      z.strictObject({kind:z.literal("foul"),foulResultSourceId:text,foulerTraitEvidence:currentTraitEvidence})
     ]),
     lessSevereChance:probability, sameSeverityChance:probability, moreSevereChance:probability
   }).optional(),
@@ -387,7 +442,8 @@ export const LuckEventMetadataSchema = z.strictObject({
     skillSourceId:text, gateSourceId:text, baseSuccessChance:probability, gateSuccessChance:probability,
     fixedPolicySuccessChance:probability}).optional(),
   numericRetryAccess: z.strictObject({kind:z.enum(["loner","pro"]),originalSourceId:text,choiceSourceId:text,skillSourceId:text,
-    baseSuccessChance:probability,gateSuccessChance:probability,fixedPolicySuccessChance:probability}).optional(),
+    baseSuccessChance:probability,gateSuccessChance:probability,fixedPolicySuccessChance:probability,
+    terminalSourceId:text.optional()}).optional(),
   numericGatedReplacement:z.strictObject({gateSourceId:text}).optional(),
   rerollOriginalId: text.optional(),
   rerollDraws: z.strictObject({initialSourceId:text,initialFace:z.number().int().min(1).max(6),baseSuccessChance:probability,initialDelta:finite,replacementDelta:finite}).optional(),
@@ -437,6 +493,33 @@ export const LuckEventMetadataSchema = z.strictObject({
         .optional()
     })
     .optional(),
+  animalSavageryOutcome: z.discriminatedUnion("kind", [
+    z.strictObject({ kind: z.literal("actor_effect"), effectSourceId: text }),
+    z.strictObject({
+      kind: z.literal("teammate_selected"),
+      offerSourceId: text,
+      selectionSourceId: text,
+      offeredVictimIds: z.array(text.regex(/^\d+$/)).min(1).max(8),
+      victimId: text.regex(/^\d+$/),
+      armorSourceId: text.optional()
+    })
+  ]).optional(),
+  animalSavageryContinuation: z.strictObject({
+    beforeCheckpointAfter: count,
+    afterCheckpointAfter: count,
+    standBySourceId: text,
+    followingActivationSourceId: text,
+    followingPlayerId: text,
+    teamTurn: z.number().int().positive(),
+    actorRecordedCanAct: z.boolean().nullable(),
+    victim: z.strictObject({
+      beforeRecordedCanAct: z.boolean().nullable(),
+      afterRecordedCanAct: z.boolean().nullable(),
+      afterPitchLocation: z.enum(["on_pitch", "off_pitch"]),
+      afterStatusCode: z.number().int().nullable(),
+      afterSituationCode: z.number().int().nullable()
+    }).optional()
+  }).optional(),
   observedRerollOffer: z
     .strictObject({
       kind: observedRerollKind,
@@ -488,6 +571,7 @@ export const LuckEventMetadataSchema = z.strictObject({
       actorDodgeMoveSourceId:text.optional(),
       pickupSuccessors:pickupSuccessors.optional(),
       pickupSettlementKnown:z.boolean().optional(),
+      ordinaryMoveRosterComplete: z.literal(true).optional(),
       ordinaryMoveAvailability:z.strictObject({successDestination:pitchCell,knownAvailablePlayerIds:z.array(text).max(64),unknownPlayerIds:z.array(text).max(64)}).optional(),
       suppressedTackleZones: z.array(z.strictObject({ playerId: text, rosterIndex: z.number().int().min(0).max(1), teamId: text.nullable(), providerSkillId: z.union([z.literal(31),z.literal(51)]) })).max(128).optional(),
       actorMentalEffectEnd: z.strictObject({ sourceId: text, providerSkillId: z.union([z.literal(31),z.literal(51)]) }).optional(),
@@ -582,6 +666,31 @@ export const LuckEventMetadataSchema = z.strictObject({
     .optional(),
   movementFall: z.strictObject({
     combinedRushSourceId:text.optional(),
+    ballPath: z.strictObject({
+      waitingCheckpointAfter: count,
+      legs: z.array(z.strictObject({
+        sourceId: text,
+        from: bounceCell,
+        to: bounceCell
+      })).min(3).max(MAX_FALL_BALL_LEGS),
+      aftermath: z.discriminatedUnion("status", [
+        z.strictObject({ status: z.literal("turn_transition"), checkpointAfter: count }),
+        z.strictObject({
+          status: z.literal("loose"), checkpointAfter: count,
+          exclusions: z.array(z.strictObject({
+            playerId: z.number().int().nonnegative(), axis: z.enum(["x", "y"]), coordinate: z.number().int()
+          })).min(1).max(128),
+          recovery: z.strictObject({
+            pickupSourceId: text,
+            waitingCheckpointAfter: count,
+            confirmedCheckpointAfter: count,
+            confirmedCell: pitchCell,
+            boardCount: z.number().int().min(2).max(64),
+            bombCatchSourceIds: z.array(text).max(64)
+          }).optional()
+        })
+      ]).optional()
+    }).optional(),
     damageActionId: text,
     moveOutcomeSourceIndex: count,
     turnoverSourceIndex: count,
@@ -599,6 +708,15 @@ export const LuckEventMetadataSchema = z.strictObject({
       x: z.number().int().min(0).max(25).nullable(),
       y: z.number().int().min(0).max(14).nullable()
     })
+  }).optional(),
+  scoringAttemptScore: scoreEvidence.extend({
+    checkpointAfter: count,
+    ownRoster: z.union([z.literal(0), z.literal(1)])
+  }).optional(),
+  bombCatch: z.strictObject({
+    explosionSourceId: text,
+    starQuestionSourceId: text.optional(),
+    caught: z.boolean()
   }).optional(),
   apothecary: z
     .strictObject({
@@ -636,6 +754,24 @@ export const LuckEventMetadataSchema = z.strictObject({
   normalizationFlags: z.array(text).max(REPLAY_LIMITS.events).optional(),
   normalizationNotes: z.array(text).max(REPLAY_LIMITS.events).optional()
 });
+const scoringRushCalculation = {
+  components: z.strictObject({ touchdown: z.literal(4), scorePressure: finite.min(0).max(8) }),
+  difference: finite.min(4).max(12),
+  deviation: finite.min(-1).max(1),
+  contribution: finite,
+  successors: z.strictObject({
+    success: z.strictObject({
+      kind: z.literal("touchdown"), actorCell: pitchCell, actorStatus: z.literal(0),
+      ballCarrierId: count, ownScore: count, opponentScore: count, phase: z.literal("drive_end")
+    }),
+    failure: z.strictObject({
+      kind: z.literal("fall_before_damage"), actorCell: pitchCell, actorStatus: z.literal(1),
+      ballCarrierId: z.null(), ownScore: count, opponentScore: count, phase: z.literal("turnover_pending"),
+      pending: z.tuple([z.literal("armor"), z.literal("ball_bounce")])
+    })
+  })
+};
+
 export const LuckEventSchema = z.strictObject({
   id: text.min(1),
   turn: z.number().int().min(1),
@@ -651,8 +787,21 @@ export const LuckEventSchema = z.strictObject({
     z.strictObject({policy:z.literal("fresh_catch_failure_envelope"),successChance:probability,minimumDifference:z.literal(0),maximumDifference:z.literal(2),lower:z.literal(0),upper:finite}),
     z.strictObject({policy:z.literal("kept_catch_failure_envelope"),successChance:probability,minimumDifference:z.literal(0),maximumDifference:z.literal(2),lower:finite,upper:z.literal(0)})
   ]).optional(),
-  possessionBounds:z.strictObject({policy:z.literal("sure_hands_reroll"),successChance:probability,minimumDifference:finite.min(0).max(3),maximumDifference:finite.min(0).max(3),lower:finite,upper:finite}).optional(),
-  contextualBounds:z.strictObject({policy:z.enum(["dodge_skill_reroll","team_reroll_terminal_moves","team_reroll_rush_moves","kept_rush_terminal_moves","kept_dodge_terminal_moves"]),terminalCheckpointAfter:count.optional(),minimumMoves:count,maximumMoves:count,successChance:probability,activeContinuation:z.strictObject({minimum:z.union([z.literal(0),z.literal(1)]),maximum:z.union([z.literal(0),z.literal(1)])}).optional(),lower:finite,upper:finite}).optional(),
+  possessionBounds:z.strictObject({policy:z.enum(PICKUP_POSSESSION_STAGES),waitingCheckpointAfter:count.optional(),successChance:probability,minimumDifference:finite.min(0).max(3),maximumDifference:finite.min(0).max(3),lower:finite,upper:finite,
+    continuedTraits: z.array(currentTraitEvidence).min(1).max(128).optional(),
+    offPitchPlayerCount: count.min(1).max(127).optional()
+  }).optional(),
+  contextualBounds:z.union([
+    z.strictObject({policy:z.enum(["dodge_skill_reroll","team_reroll_terminal_moves","team_reroll_rush_moves","kept_rush_terminal_moves","kept_dodge_terminal_moves"]),terminalCheckpointAfter:count.optional(),minimumMoves:count,maximumMoves:count,successChance:probability,activeContinuation:z.strictObject({minimum:z.union([z.literal(0),z.literal(1)]),maximum:z.union([z.literal(0),z.literal(1)])}).optional(),lower:finite,upper:finite}),
+    z.strictObject({
+      policy: z.literal("final_turn_scoring_rush_envelope"),
+      successChance: z.literal(5 / 6),
+      observedTeamRerolls: count.min(1),
+      confirmedGoal: scoreEvidence.shape.touchdowns.element,
+      lower: z.literal(0),
+      upper: finite.positive()
+    })
+  ]).optional(),
   contextualImpact: z
     .union([
       z.strictObject({
@@ -668,35 +817,44 @@ export const LuckEventSchema = z.strictObject({
       contribution: finite
     }),
       z.strictObject({
-        policy: z.literal("ordinary_no_retry_scoring_rush"),
-        components: z.strictObject({
-          touchdown: z.literal(4),
-          scorePressure: finite.min(0).max(8),
-        }),
-        difference: finite.min(4).max(12),
+        policy: z.enum([
+          "team_reroll_terminal_moves", "team_reroll_rush_moves",
+          "kept_dodge_terminal_moves", "kept_rush_terminal_moves"
+        ]),
+        terminalCheckpointAfter: count,
+        successChance: probability,
+        components: z.strictObject({ availableMoves: count }),
+        difference: count,
         deviation: finite.min(-1).max(1),
-        contribution: finite,
-        successors: z.strictObject({
-          success: z.strictObject({
-            kind: z.literal("touchdown"),
-            actorCell: pitchCell,
-            actorStatus: z.literal(0),
-            ballCarrierId: count,
-            ownScore: count,
-            opponentScore: count,
-            phase: z.literal("drive_end"),
-          }),
-          failure: z.strictObject({
-            kind: z.literal("fall_before_damage"),
-            actorCell: pitchCell,
-            actorStatus: z.literal(1),
-            ballCarrierId: z.null(),
-            ownScore: count,
-            opponentScore: count,
-            phase: z.literal("turnover_pending"),
-            pending: z.tuple([z.literal("armor"), z.literal("ball_bounce")]),
-          }),
+        contribution: finite
+      }),
+      z.strictObject({
+        policy: z.literal("ordinary_no_retry_scoring_rush"),
+        ...scoringRushCalculation
+      }),
+      z.strictObject({
+        policy: z.literal("exact_pickup_possession"),
+        stage: z.enum(PICKUP_POSSESSION_STAGES),
+        waitingCheckpointAfter: count.optional(),
+        successChance: probability,
+        components: z.strictObject({ possession: z.literal(2), markedBounce: probability }),
+        continuedTraits: z.array(currentTraitEvidence).min(1).max(128).optional(),
+        offPitchPlayerCount: count.min(1).max(127).optional(),
+        difference: finite.min(2).max(3),
+        deviation: finite.min(-1).max(1),
+        contribution: finite
+      }),
+      z.strictObject({
+        policy: z.literal("committed_team_scoring_rush"),
+        evidence: scoreEvidence.extend({
+          origin: pitchCell, destination: pitchCell,
+          period: z.union([z.literal(0), z.literal(1)]), turnsPerPeriod: z.number().int().min(1).max(16),
+          ownRoster: z.union([z.literal(0), z.literal(1)]), waitingCheckpointAfter: count,
+          teamTurns: z.tuple([count, count]),
+          periodBasis: z.enum(["opening_turn_counters", "half_boundary_counters"]).optional(),
+          carryCheckpointAfter: count.optional()
         }),
+        ...scoringRushCalculation
       }),
     ])
     .optional(),
@@ -725,7 +883,8 @@ export const LuckTeamAggregateSchema = z.strictObject({
     dodge: finite,
     ballHandling: finite,
     argueCall: finite,
-    movementRisk: finite
+    movementRisk: finite,
+    activationCheck: finite
   }),
   eventCount: count,
   impactCount: count,
@@ -764,7 +923,13 @@ const contextComponentSummary = z.strictObject({
 export const LuckVerdictSchema = z.strictObject({
   luckierTeam: z.literal("unknown"),
   status: z.enum(["insufficient_evidence", "partial_analysis"]),
-  scoreGap: finite.min(0),
+  scoreGap: finite.min(0).nullable(),
+  evidence: z.strictObject({
+    missingScoredTeamIds: z.array(text.min(1)).max(2),
+    unscoredRollCandidates: count,
+    unscoredDiceFields: count,
+    unresolvedDiceFields: count
+  }),
   summary: text
 });
 const coverageBucket = z.strictObject({
@@ -780,7 +945,8 @@ const categoryKey = {
   dodge: "dodge",
   ball_handling: "ballHandling",
   argue_call: "argueCall",
-  movement_risk: "movementRisk"
+  movement_risk: "movementRisk",
+  activation_check: "activationCheck"
 } as const;
 function near(a: number, b: number): boolean {
   return Math.abs(a - b) <= 1e-10 * Math.max(1, Math.abs(a), Math.abs(b));
@@ -1375,8 +1541,8 @@ export const LuckReportSchema = z
           original = rawDiceById.get(team.originalRecordId),
           gate = team.gateSourceId ? sources.get(team.gateSourceId) : undefined;
         const finalDice = rootDiceBySource.get(e.metadata.sourceId);
-        require(e.scoringStatus === "excluded" &&
-          e.probabilitySuccess === null &&
+        require(((e.scoringStatus === "excluded" && e.probabilitySuccess === null) ||
+            e.metadata.activationCheck?.draw === "replacement") &&
           e.metadata.sourceTag === "ResultRoll" &&
           q?.metadata.sourceTag === "QuestionTeamRerollUsage" &&
           choice?.metadata.sourceTag === "ResultTeamRerollUsage" &&
@@ -1399,7 +1565,7 @@ export const LuckReportSchema = z
             (choice?.metadata.sourceIndex ?? -1) &&
           (choice?.metadata.sourceIndex ?? Infinity) <
             (e.metadata.sourceIndex ??
-              -1), "Observed team dice identities need an ordered matching original, explicit decision and terminal flags; they cannot promote odds or ownership.");
+              -1), "Team dice identities need an ordered matching original, explicit decision and terminal flags.");
         require(gate
           ? team.gatePassed !== undefined &&
               team.gateSkillId !== undefined &&
@@ -1426,6 +1592,87 @@ export const LuckReportSchema = z
               team.gateSkillId === undefined &&
               team.replacementRolled ===
                 team.teamUsed, "An observed reroll gate must be a separately ordered supported numeric test, never an inferred reroll price or eligibility claim.");
+      }
+      const animal = e.metadata.animalSavageryOutcome;
+      if (animal) {
+        const first = team && sources.get(team.questionSourceId);
+        const here = e.metadata.locator;
+        const next = sources.get(animal.kind === "actor_effect" ? animal.effectSourceId : animal.offerSourceId);
+        const following = next?.metadata.locator;
+        require(!!team && !team.teamUsed && !team.replacementRolled &&
+          e.metadata.rollType === 36 && e.scoringStatus === "excluded" &&
+          !!first && first.metadata.activationCheck?.skillId === 84 &&
+          first.metadata.activationCheck.draw === "original" && first.actualSuccess === false &&
+          first.playerId === e.playerId && first.teamId === e.teamId &&
+          !!e.metadata.actionId && next?.metadata.actionId === e.metadata.actionId &&
+          next.playerId === e.playerId && next.teamId === e.teamId &&
+          next.metadata.isRollCandidate === false && next.scoringStatus === "excluded" &&
+          next.metadata.sourceIndex === (e.metadata.sourceIndex ?? -2) + 1 &&
+          !!here && !!following && following.replayStep === here.replayStep &&
+          following.childIndex === here.childIndex && following.stepIndex === 0 &&
+          here.messageIndex === 1 && following.messageIndex === 2,
+          "Animal Savagery aftermath requires the recorded follow-up to a kept failed activation die.");
+        if (animal.kind === "actor_effect") {
+          require(next?.metadata.sourceTag === "ResultAddPlayerEffect",
+            "Animal Savagery actor effects require the matching effect notification.");
+        } else {
+          const selection = sources.get(animal.selectionSourceId);
+          const chosen = selection?.metadata.locator;
+          const distance = (selection?.metadata.sourceIndex ?? -1) - (next?.metadata.sourceIndex ?? 0);
+          require(next?.metadata.sourceTag === "QuestionAnimalSavagery" &&
+            selection?.metadata.sourceTag === "ResultAnimalSavagery" &&
+            selection.playerId === e.playerId && selection.teamId === e.teamId &&
+            selection.scoringStatus === "excluded" && selection.metadata.isRollCandidate === false &&
+            here?.replayStep !== undefined && !!chosen && chosen.replayStep === here.replayStep + 1 &&
+            chosen.childIndex === here.childIndex && chosen.stepIndex === 0 && chosen.messageIndex === 0 &&
+            (distance === 2 || distance === 3) &&
+            new Set(animal.offeredVictimIds).size === animal.offeredVictimIds.length &&
+            !animal.offeredVictimIds.includes(e.playerId ?? "") &&
+            animal.offeredVictimIds.includes(animal.victimId),
+            "Animal Savagery victim choices require the next frame and an offered teammate.");
+          if (animal.armorSourceId) {
+            const armor = sources.get(animal.armorSourceId);
+            const damage = armor?.metadata.damage, at = armor?.metadata.locator;
+            require(armor?.type === "armor_break" && armor.metadata.rollType === 10 &&
+              damage?.sourceCode === 16 && damage.subjectId === animal.victimId &&
+              damage.subjectTeamId === e.teamId &&
+              armor.metadata.sourceIndex === (selection?.metadata.sourceIndex ?? -3) + 2 &&
+              !!chosen && !!at && at.replayStep === chosen.replayStep &&
+              at.childIndex === (chosen.childIndex ?? -2) + 1 &&
+              at.stepIndex === 0 && at.messageIndex === 0,
+              "Linked Animal Savagery armor requires the immediately following victim damage step.");
+          }
+        }
+      }
+      const continuation = e.metadata.animalSavageryContinuation;
+      if (continuation) {
+        const standBy = sources.get(continuation.standBySourceId);
+        const following = sources.get(continuation.followingActivationSourceId);
+        const effect = animal?.kind === "actor_effect" ? sources.get(animal.effectSourceId) : undefined;
+        const armor = animal?.kind === "teammate_selected" && animal.armorSourceId ?
+          sources.get(animal.armorSourceId) : undefined;
+        const anchor = effect ?? armor;
+        const before = animal?.kind === "teammate_selected" ? sources.get(animal.offerSourceId) :
+          team && sources.get(team.questionSourceId);
+        const anchorAt = anchor?.metadata.locator, waitAt = standBy?.metadata.locator;
+        const nextAt = following?.metadata.locator;
+        require(!!anchor && !!anchorAt && !!waitAt &&
+          !!before && before.metadata.sourceIndex === continuation.beforeCheckpointAfter &&
+          standBy?.metadata.sourceTag === "EventRulesEngineStandBy" &&
+          standBy.scoringStatus === "excluded" && !standBy.metadata.isRollCandidate &&
+          standBy.metadata.sourceIndex === continuation.afterCheckpointAfter &&
+          waitAt.replayStep === anchorAt.replayStep &&
+          waitAt.childIndex === (anchorAt.childIndex ?? -2) + 1 &&
+          continuation.afterCheckpointAfter > (anchor.metadata.sourceIndex ?? Infinity) &&
+          following?.metadata.sourceTag === "ResultUseAction" &&
+          following.scoringStatus === "excluded" && !following.metadata.isRollCandidate &&
+          following.metadata.stepType === 0 && following.teamId === e.teamId &&
+          following.playerId === continuation.followingPlayerId && following.playerId !== e.playerId &&
+          (following.metadata.sourceIndex ?? -1) > continuation.afterCheckpointAfter &&
+          !!nextAt && nextAt.replayStep === (waitAt.replayStep ?? -2) + 1 &&
+          nextAt.stepIndex === 0 && nextAt.messageIndex === 0 &&
+          (continuation.victim !== undefined) === (armor !== undefined),
+          "Animal Savagery continuation needs matching snapshots and the immediately following teammate declaration.");
       }
       const proof = e.metadata.observedReroll;
       if (proof) {
@@ -1550,7 +1797,14 @@ export const LuckReportSchema = z
       if(event.metadata.pushResult)require(pushResults.has(event.metadata.sourceId??"") && event.metadata.sourceTag==="ResultPushBack" && event.scoringStatus==="excluded" && !event.metadata.isRollCandidate,"A push displacement must link to its one modeled block.");
       if(event.metadata.pushAppliedFollow!==undefined)require(pushFinals.has(event.metadata.sourceId??"") && event.metadata.sourceTag==="ResultBlockOutcome","Recorded follow-up must belong to the modeled applied block.");
       const policy = event.metadata.probabilityPolicy;
-      require(validReportedNumericRetryAccess(event,sources,rootDiceBySource),"Numeric retry access must be a uniquely owned raw gate with prefix-qualified first/choice/skill evidence and its derived rescue-chance innovation.");
+      require(validReportedActivationCheck(event, sources, initialRerollDiceBySource.get(event.metadata.sourceId)),
+        "An activation check needs its same-step declaration and skill use, one owned fresh D6, and exact target and outcome arithmetic.");
+      require(validReportedFoulAppearance(event, sources, rootDiceBySource.get(event.metadata.sourceId)),
+        "A Foul Appearance score requires an owned fresh 2+ die, the opposing skill use, and a matching declaration or Frenzy continuation.");
+      require(event.metadata.numericRetryAccess?.terminalSourceId !== undefined
+        ? validReportedActivationRetryAccess(event, sources, rootDiceBySource.get(event.metadata.sourceId))
+        : validReportedNumericRetryAccess(event,sources,rootDiceBySource),
+        "Numeric retry access must be a uniquely owned raw gate with linked first die, choice, skill, and exact change in rescue chance.");
       require(validReportedNumericGatedReplacement(event,sources,rootDiceBySource),"A gated replacement must be one independently scored fresh die immediately after its passed access gate, without recounting the original or spending another resource.");
       require(validReportedFailedNumericRetry(event,sources,rootDiceBySource),
         "A failed numeric retry must retain its exclusive ordered first/choice/skill/gate/kept evidence, exact conditional arithmetic and resource spend, without an applied policy score.");
@@ -1717,12 +1971,13 @@ export const LuckReportSchema = z
           event.metadata.outcomeCode === Number(event.actualSuccess), "A resolved mental test requires one consistent D6, effective target, modifiers and observed outcome.");
         require(event.metadata.sourceTag === "ResultRoll" && event.metadata.rollType === (resolution.providerSkillId === 51 ? 34 : 33) &&
           typeof event.actualSuccess === "boolean" && event.actualSuccess === Boolean(event.metadata.outcomeCode) &&
-          event.scoringStatus === "excluded" && event.probabilitySuccess === null &&
+          ((event.scoringStatus === "excluded" && event.probabilitySuccess === null) ||
+            event.metadata.activationCheck?.skillId === resolution.providerSkillId) &&
           context?.actorMentalEffectEnd?.sourceId === resolution.effectEndSourceId && end?.metadata.mentalEffectEnd?.providerSkillId === resolution.providerSkillId &&
           skill?.metadata.sourceTag === "ResultSkillUsage" && skill.metadata.skillUsage?.skillId === resolution.providerSkillId && skill.metadata.skillUsage.used &&
           skill.playerId === event.playerId && skill.metadata.actionId === event.metadata.actionId &&
           (end?.metadata.sourceIndex ?? Infinity) < (skill.metadata.sourceIndex ?? -1) && (skill.metadata.sourceIndex ?? Infinity) < (event.metadata.sourceIndex ?? -1),
-          "A resolved mental test requires its ended prior effect and same-actor applied skill, with unknown odds.");
+          "A resolved mental test requires its ended prior effect and same-actor applied skill. Odds require a separately verified fresh die.");
       }
       const effectEnd = event.metadata.mentalEffectEnd;
       if (effectEnd) {
@@ -1843,7 +2098,10 @@ export const LuckReportSchema = z
             skill.metadata.skillUsage.used &&
             roll?.metadata.rollType === (skillId === 31 ? 33 : 34) &&
             roll.actualSuccess === false &&
-            roll.scoringStatus === "excluded" &&
+            (roll.scoringStatus === "excluded" ||
+              (roll.metadata.activationCheck?.skillId === skillId &&
+                (end.policy === "fresh_final" && roll.metadata.activationCheck.draw === undefined ||
+                  end.policy === "team_loner_replacement" && roll.metadata.activationCheck.draw === "replacement"))) &&
             effect?.metadata.recordedEffect?.providerId === skillId &&
             (skill?.metadata.sourceIndex ?? Infinity) <
               (roll?.metadata.sourceIndex ?? -1) &&
@@ -1905,7 +2163,9 @@ export const LuckReportSchema = z
           event.metadata.difficulty === 2 && event.metadata.outcomeCode === 0 &&
           event.teamId === activationLoss.teamId && event.playerId === activationLoss.actorId &&
           event.metadata.targetId === activationLoss.subjectId && event.actualSuccess === false &&
-          event.scoringStatus === "excluded" && event.probabilitySuccess === null &&
+          ((event.scoringStatus === "excluded" && event.probabilitySuccess === null) ||
+            event.metadata.foulAppearance?.skillSourceId === activationLoss.skillSourceId &&
+            event.metadata.foulAppearance.triggerSourceId === activationLoss.declarationSourceId) &&
           declaration?.metadata.sourceTag === "ResultUseAction" && declaration.metadata.actionCode === 2 &&
           declaration.playerId === activationLoss.actorId && declaration.metadata.actionId === event.metadata.actionId &&
           (declaration.metadata.sourceIndex ?? Infinity) < activationLoss.rollSourceIndex &&
@@ -1977,7 +2237,8 @@ export const LuckReportSchema = z
       if(event.metadata.rerollOffer)
         require(((event.metadata.sourceTag === "QuestionTeamRerollUsage" &&
           ((event.scoringStatus === "excluded" && event.metadata.isRollCandidate === false) ||
-            (event.scoringStatus === "scored" && event.metadata.isRollCandidate === true && !!event.metadata.numericOriginal))) ||
+            (event.scoringStatus === "scored" && event.metadata.isRollCandidate === true &&
+              (!!event.metadata.numericOriginal || event.metadata.activationCheck?.draw === "original")))) ||
           (event.metadata.sourceTag === "QuestionBlockDice" && event.metadata.isRollCandidate === true && event.metadata.rollType === 3 &&
             event.metadata.block?.pool.attackerChooses === true && event.metadata.block.attackerId === event.playerId && event.metadata.block.chooserTeamId === event.teamId && event.metadata.block.chooserGamerId === event.metadata.rerollOffer.gamerId)) &&
           ((sources.get(event.metadata.rerollOffer.decisionSourceId)?.metadata.teamRerollCounter?.questionSourceId === event.metadata.sourceId && counterQuestions.has(event.metadata.sourceId ?? "")) ||
@@ -1985,17 +2246,45 @@ export const LuckReportSchema = z
           "A counter offer must reference one observed decision, preserving an existing attacker-selected pool or excluded non-random offer.");
       const pickupEnd = event.metadata.pickupTurnEnd;
       if(pickupEnd) {
-        const caught=sources.get(pickupEnd.catchSourceId),end=sources.get(pickupEnd.endSourceId);
+        const last = sources.get(pickupEnd.kind === "catch" ? pickupEnd.catchSourceId : pickupEnd.bounceSourceId);
+        const end = sources.get(pickupEnd.endSourceId);
         const moves=pickupEnd.ordinaryMoves, known=moves?.knownAvailablePlayerIds ?? [],unknown=moves?.unknownPlayerIds ?? [];
         require(event.scoringStatus === "scored" && event.actualSuccess === false && event.metadata.rollType === 4 &&
-          !!caught && caught.metadata.bounceCatchReaction?.pickupSourceId === event.metadata.sourceId && caught.actualSuccess === true &&
           end?.metadata.sourceTag === "EventEndTurn" && end.metadata.turnEndReason === 2 && end.scoringStatus === "excluded" && end.metadata.isRollCandidate === false &&
-          caught.metadata.sourceIndex !== undefined && end.metadata.sourceIndex === caught.metadata.sourceIndex+1 &&
-          caught.metadata.locator?.replayStep !== undefined && end.metadata.locator?.replayStep === caught.metadata.locator.replayStep &&
-          end.metadata.locator?.childIndex === (caught.metadata.locator.childIndex ?? -2)+1 &&
+          last?.metadata.sourceIndex !== undefined && end.metadata.sourceIndex === last.metadata.sourceIndex + 1 &&
+          last.metadata.locator?.replayStep !== undefined && end.metadata.locator?.replayStep === last.metadata.locator.replayStep &&
+          end.metadata.locator?.childIndex === (last.metadata.locator.childIndex ?? -2) + 1 &&
           (!moves || (context?.phaseCode === 5 && context.activeTeamId === event.teamId && context.actorCell !== null)) &&
           new Set([...known,...unknown]).size === known.length+unknown.length && ![...known,...unknown].includes(event.playerId ?? ""),
-          "Pickup turn-end evidence needs the adjacent verified catch, deterministic reason-2 source and qualified, disjoint ordinary-move candidates.");
+          "Pickup turn-end evidence needs the adjacent terminal ball event and disjoint ordinary-move candidates.");
+        if (pickupEnd.kind === "catch") {
+          require(last?.metadata.bounceCatchReaction?.pickupSourceId === event.metadata.sourceId &&
+            last?.actualSuccess === true,
+            "Pickup catch turnover requires the linked successful catch.");
+        } else {
+          const chain = event.metadata.pickupBallChain;
+          require(chain?.bounceSourceIds.length === 1 && chain?.bounceSourceIds[0] === pickupEnd.bounceSourceId &&
+            chain.catchEventIds.length === 0 &&
+            last?.metadata.rollType === 25 && last.scoringStatus === "excluded" &&
+            !!last.metadata.ballTravel && last.metadata.sourceIndex === (event.metadata.sourceIndex ?? -3) + 2 &&
+            last.metadata.locator?.replayStep === event.metadata.locator?.replayStep &&
+            last.metadata.locator?.childIndex === event.metadata.locator?.childIndex &&
+            last.metadata.locator?.messageIndex === 0,
+            "Pickup bounce turnover requires a single linked bounce immediately after the pickup.");
+          if (pickupEnd.snapshot) {
+            const snapshot = pickupEnd.snapshot;
+            const cp = report.rerollResources.flow.clockSnapshots.find((frame) =>
+              frame.source.checkpointAfter === snapshot.checkpointAfter &&
+              frame.source.replayStep === end?.metadata.locator?.replayStep &&
+              frame.source.childIndex === (end?.metadata.locator?.childIndex ?? -6) + 5
+            );
+            require(snapshot.checkpointAfter === (end?.metadata.sourceIndex ?? -5) + 4 &&
+              cp?.clock?.phaseCode === 5 && cp.clock.activeGamerId === snapshot.observedActiveGamerId &&
+              (pickupEnd.nextGamerId === null || snapshot.observedActiveGamerId === null ||
+                pickupEnd.nextGamerId === snapshot.observedActiveGamerId),
+              "A post-pickup snapshot must follow the same turnover and preserve the recorded controller.");
+          }
+        }
       }
       if(event.metadata.turnEndReason !== undefined)
         require(event.metadata.sourceTag === "EventEndTurn" && event.scoringStatus === "excluded" && event.metadata.isRollCandidate === false &&
@@ -2056,15 +2345,36 @@ export const LuckReportSchema = z
       }
       const successors = context?.pickupSuccessors;
       const possession = event.possessionBounds;
-      if (successors || possession) {
+      const exactPickup = event.contextualImpact?.policy === "exact_pickup_possession" ? event.contextualImpact : undefined;
+      if (successors || possession || exactPickup) {
+        const stage = exactPickup?.stage ?? possession?.policy;
+        const chance = exactPickup?.successChance ?? possession?.successChance;
+        const checkpointAfter = exactPickup?.waitingCheckpointAfter ?? possession?.waitingCheckpointAfter;
         const original=sources.get(event.metadata.rerollOriginalId ?? ""),use=sources.get(event.metadata.rerollDecisionId ?? "");
         const declaration=sources.get(successors?.declarationSourceId ?? ""),move=sources.get(successors?.moveOutcomeSourceId ?? "");
         const target = event.metadata.difficulty;
         const owns=(e:typeof event|undefined)=>e?.playerId === event.playerId && e?.teamId === event.teamId;
         const sameStep=(e:typeof event|undefined)=>owns(e) && e?.metadata.actionId === event.metadata.actionId && e?.metadata.sequenceId === event.metadata.sequenceId;
-        require(!!successors && !!possession && event.scoringStatus === "scored" && event.metadata.rollType === 4 && event.metadata.stepType === 1 &&
+        if (stage === "kept_pickup_possession" || stage === "team_pickup_possession") {
+          const committed = stage === "team_pickup_possession";
+          require(validPickupDecisionStage(event, context, sources, committed), "A pickup decision component needs a source-linked move, original die and recorded choice with its matching result.");
+          if (committed) {
+            const frames = report.rerollResources.flow.clockSnapshots;
+            const before = frames.find((frame) => frame.source.checkpointAfter === context?.checkpointAfter);
+            const waiting = frames.find((frame) => frame.source.checkpointAfter === checkpointAfter);
+            require(checkpointAfter === (event.metadata.sourceIndex ?? 0) - 3 &&
+              !!before && !!waiting && waiting.source.kind === "board" &&
+              waiting.clock?.phaseCode === 5 && before.clockSegment === waiting.clockSegment &&
+              JSON.stringify(before.clock) === JSON.stringify(waiting.clock) &&
+              before.playerIds.every((ids, roster) => {
+                const next = waiting.playerIds[roster]!;
+                return ids.length === next.length && ids.every((id) => next.includes(id));
+              }),
+              "A team pickup replacement needs the observed waiting checkpoint in the same clock and roster frame.");
+          }
+        } else require(!!successors && stage === "sure_hands_reroll" && event.scoringStatus === "scored" && event.metadata.rollType === 4 && event.metadata.stepType === 1 &&
           event.metadata.rerollSkill === "Sure Hands" && event.metadata.rerollResource === "skill" && event.metadata.teamRerollsSpent === 0 &&
-          !event.contextualImpact && !event.contextualBounds && context?.phaseCode === 5 && (context.actorRosterTeamId === undefined || context.actorRosterTeamId === event.teamId) && context.actorCarriesBall !== true &&
+          (!event.contextualImpact || !!exactPickup) && !event.contextualBounds && context?.phaseCode === 5 && (context.actorRosterTeamId === undefined || context.actorRosterTeamId === event.teamId) && context.actorCarriesBall !== true &&
           context.activationId === successors.declarationSourceId && context.actorCell?.x === successors.origin.x && context.actorCell.y === successors.origin.y &&
           declaration?.metadata.sourceTag === "ResultUseAction" && declaration.metadata.actionCode === 1 && declaration.metadata.stepType === 0 && owns(declaration) &&
           move?.metadata.sourceTag === "ResultMoveOutcome" && sameStep(move) &&
@@ -2085,7 +2395,7 @@ export const LuckReportSchema = z
           near(
             event.probabilitySuccess,
             1 - ((target - 1) / 6) ** 2
-          ), "Pickup possession bounds require an owned ordinary Move and committed original/Sure-Hands/replacement chain; missing checkpoint possession stays unknown.");
+          ), "Pickup possession requires an owned ordinary Move and committed original/Sure-Hands/replacement chain; missing checkpoint possession stays unknown.");
         if (successors) {
           require(new Set(successors.branches.map(b=>b.direction)).size === 8 &&
             successors.branches.every((b) => {
@@ -2098,11 +2408,25 @@ export const LuckReportSchema = z
               );
             }), "Pickup successors require all eight unique valid D8 directions, retaining occupied catch and off-pitch return uncertainty.");
         }
-        const expected=possession ? estimatePickupPossessionBounds(context,possession.policy,Number(event.actualSuccess)-possession.successChance,possession.successChance) : undefined;
-        require(!!possession && !!expected && near(possession.successChance,(7-(target ?? 0))/6) &&
-          near(possession.minimumDifference,expected.minimumDifference) && near(possession.maximumDifference,expected.maximumDifference) &&
-          near(possession.lower,expected.lower) && near(possession.upper,expected.upper),
-          "Pickup possession endpoints must use the conditional terminal die and all eight successor bounds, outside point totals.");
+        const expected = chance === undefined ? undefined :
+          estimatePickupPossessionBounds(context, stage, Number(event.actualSuccess) - chance, chance);
+        const point = expected && exactPickupPossession(expected, event.actualSuccess === true, checkpointAfter);
+        require(chance !== undefined && near(chance, (7 - (target ?? 0)) / 6) &&
+          (stage === "team_pickup_possession" || checkpointAfter === undefined), "Pickup possession requires the stated single-die chance and stage checkpoint.");
+        if (exactPickup) {
+          require(!possession && !!point && context?.pickupSettlementKnown === true &&
+            near(exactPickup.components.markedBounce, point.components.markedBounce) &&
+            near(exactPickup.difference, point.difference) && near(exactPickup.deviation, point.deviation) &&
+            near(exactPickup.contribution, point.contribution),
+            "A pickup point requires eight settled and completely marked or unmarked landings and the conditional draw contribution.");
+        } else {
+          require(!!possession && !!expected && !point &&
+            near(possession.minimumDifference, expected.minimumDifference) && near(possession.maximumDifference, expected.maximumDifference) &&
+            near(possession.lower, expected.lower) && near(possession.upper, expected.upper),
+            "Pickup possession endpoints must use the conditional terminal die and all eight successor bounds, outside point totals.");
+        }
+        require(validReportedContinuedPickupTraits(event, report),
+          "Pickup settlement needs recorded skill seeds or verified off-pitch evidence for every roster member at the required replay board or reroll wait.");
       }
       if(context?.carriedBallCell) require(context.actorCarriesBall === true && context.actorCell?.x === context.carriedBallCell.x && context.actorCell.y === context.carriedBallCell.y,
         "A known carried-ball cell must match its observed carrier's current position.");
@@ -2163,7 +2487,7 @@ export const LuckReportSchema = z
           "Observed pickup after movement needs the adjacent owned Sure Hands chain, verified reached square, same fixed markers and unchanged post-move budget; no failed-alternative value is implied.");
       }
       const pickupResolution=event.metadata.pickupResolution;
-      if(pickupResolution) require(!!successors && !!possession && event.actualSuccess === true &&
+      if(pickupResolution) require(!!successors && (possession?.policy === "sure_hands_reroll" || exactPickup?.stage === "sure_hands_reroll") && event.actualSuccess === true &&
         pickupResolution.declarationSourceId === successors.declarationSourceId && pickupResolution.moveOutcomeSourceId === successors.moveOutcomeSourceId &&
         pickupResolution.cell.x === successors.origin.x && pickupResolution.cell.y === successors.origin.y &&
         pickupResolution.checkpointAfter === context?.checkpointAfter && pickupResolution.movementRemaining === (context?.actorMovementRemaining ?? null),
@@ -2327,13 +2651,41 @@ export const LuckReportSchema = z
           continuation.minimum === expected.minimum && continuation.maximum === expected.maximum,
           "An active continuation requires the owned ordinary Move declaration, verified successor, recorded budget and marking bounds.");
       }
-      const bound = event.contextualBounds;
+      const impact = event.contextualImpact;
+      const exactTeamMove = impact && "terminalCheckpointAfter" in impact ? impact : undefined;
+      const eventBounds = event.contextualBounds;
+      const bound = (eventBounds?.policy === "final_turn_scoring_rush_envelope" ? undefined : eventBounds) ?? (exactTeamMove ? {
+        policy: exactTeamMove.policy,
+        terminalCheckpointAfter: exactTeamMove.terminalCheckpointAfter,
+        successChance: exactTeamMove.successChance,
+        minimumMoves: exactTeamMove.components.availableMoves,
+        maximumMoves: exactTeamMove.components.availableMoves,
+        activeContinuation: undefined,
+        lower: exactTeamMove.contribution,
+        upper: exactTeamMove.contribution
+      } : undefined);
       if (bound) {
         const keptDodge=bound.policy === "kept_dodge_terminal_moves";
         const keptRush=bound.policy === "kept_rush_terminal_moves";
         const rushStage=keptRush || bound.policy === "team_reroll_rush_moves";
         const teamStage=bound.policy === "team_reroll_rush_moves" || bound.policy === "team_reroll_terminal_moves";
-        const expected=keptDodge ? estimateKeptDodgeMoveBounds(context,bound.successChance,bound.terminalCheckpointAfter ?? -1) : keptRush ? estimateKeptRushMoveBounds(context,bound.successChance,bound.terminalCheckpointAfter ?? -1) : teamStage ? (rushStage ? estimateTeamRushMoveBounds : estimateTeamDodgeMoveBounds)(context,event.actualSuccess === true,bound.successChance,bound.terminalCheckpointAfter ?? -1) :
+        const expectedPoint = exactTeamMove && estimateExactTeamMoves(
+          exactTeamMove.policy, context, event.actualSuccess === true,
+          exactTeamMove.successChance, exactTeamMove.terminalCheckpointAfter
+        );
+        if (exactTeamMove)
+          require(event.actualSuccess !== null && !!expectedPoint &&
+            near(exactTeamMove.deviation, expectedPoint.deviation) &&
+            exactTeamMove.difference === expectedPoint.difference,
+            "A point contribution needs an exact, fully known teammate count and the terminal draw deviation.");
+        const expected = exactTeamMove
+          ? expectedPoint && {
+              minimumMoves: expectedPoint.difference,
+              maximumMoves: expectedPoint.difference,
+              lower: expectedPoint.contribution,
+              upper: expectedPoint.contribution
+            }
+          : keptDodge ? estimateKeptDodgeMoveBounds(context,bound.successChance,bound.terminalCheckpointAfter ?? -1) : keptRush ? estimateKeptRushMoveBounds(context,bound.successChance,bound.terminalCheckpointAfter ?? -1) : teamStage ? (rushStage ? estimateTeamRushMoveBounds : estimateTeamDodgeMoveBounds)(context,event.actualSuccess === true,bound.successChance,bound.terminalCheckpointAfter ?? -1) :
           estimateDodgeImpactBounds(context,"dodge_skill_reroll",Number(event.actualSuccess)-bound.successChance,bound.successChance);
         if(teamStage) {
           const m=event.metadata,question=sources.get(m.rerollQuestionId ?? ""),choice=sources.get(m.rerollDecisionId ?? "");
@@ -2358,10 +2710,10 @@ export const LuckReportSchema = z
             "A conditional team movement component needs its committed direct replacement and confirmed move or self-fall/turnover, outside earlier dice, resources and ball value.");
         }
         require((teamStage || keptRush || keptDodge || bound.terminalCheckpointAfter === undefined) && event.scoringStatus === "scored" && event.metadata.rollType === (rushStage ? 1 : 2) && context?.activeTeamId === event.teamId &&
-          event.contextualImpact === undefined && !!expected && bound.minimumMoves === expected.minimumMoves && bound.maximumMoves === expected.maximumMoves &&
+          (!impact || !!exactTeamMove) && !!expected && bound.minimumMoves === expected.minimumMoves && bound.maximumMoves === expected.maximumMoves &&
           bound.activeContinuation?.minimum === ("activeContinuation" in expected ? expected.activeContinuation?.minimum : undefined) && bound.activeContinuation?.maximum === ("activeContinuation" in expected ? expected.activeContinuation?.maximum : undefined) &&
           near(bound.successChance,(7-(event.metadata.difficulty ?? 0))/6) && near(bound.lower,expected.lower) && near(bound.upper,expected.upper),
-          "Partial ordinary-move bounds must reconcile with missing availability, the fixed policy and dice deviation, without a point estimate.");
+          "Ordinary-move components must reconcile with verified availability, the fixed policy and dice deviation.");
       }
       if(bound?.policy === "kept_dodge_terminal_moves") {
         const m=event.metadata,question=sources.get(m.rerollQuestionId ?? ""),choice=sources.get(m.rerollDecisionId ?? ""),declaration=sources.get(context?.activationId ?? "");
@@ -2378,7 +2730,7 @@ export const LuckReportSchema = z
           choice?.metadata.sourceTag==="ResultTeamRerollUsage" && choice.metadata.stepType===1 && choice.metadata.targetId==="-1" && choice.playerId===event.playerId && choice.teamId===event.teamId &&
           choice.metadata.teamRerollDecision?.used===false && choice.metadata.teamRerollDecision.gamerId===question.metadata.rerollOffer.gamerId &&
           bound.terminalCheckpointAfter===question.metadata.sourceIndex && choice.metadata.sourceIndex===bound.terminalCheckpointAfter!+3 && m.sourceIndex===bound.terminalCheckpointAfter!+4,
-          "A retained original Dodge component needs an owned ordinary Move, fixed decline, identical original/kept die and unmodified terminal self-fall/turnover; it adds no replacement draw or point value.");
+          "A retained original Dodge component needs an owned ordinary Move, fixed decline, identical original/kept die and unmodified terminal self-fall/turnover.");
       }
       const keptRushProof=event.metadata.retainedRushContext;
       if(keptRushProof || bound?.policy === "kept_rush_terminal_moves") {
@@ -2413,7 +2765,7 @@ export const LuckReportSchema = z
           question.metadata.sourceIndex===p.resumeCheckpointAfter+7 && p.waitingCheckpointAfter===question.metadata.sourceIndex &&
           choice.metadata.sourceIndex===p.waitingCheckpointAfter+3 && m.sourceIndex===p.waitingCheckpointAfter+4 &&
           bound.terminalCheckpointAfter===p.waitingCheckpointAfter,
-          "A retained original Rush component needs its ordinary declaration, deterministic checkpoint prefix, adjacent fresh Rush movement, fixed decline, identical kept die and verified self-fall/turnover; it adds no replacement draw, resource cost or point value.");
+          "A retained original Rush component needs its ordinary declaration, deterministic checkpoint prefix, adjacent fresh Rush movement, fixed decline, identical kept die and verified self-fall/turnover.");
       }
       if (
         bound?.policy === "dodge_skill_reroll" || continuation || dodgeMove || event.contextualImpact?.policy === "dodge_skill_reroll"
@@ -2451,14 +2803,17 @@ export const LuckReportSchema = z
             1 - ((target - 1) / 6) ** 2
           ), "A Dodge-skill context policy requires the owned committed reroll, original failed die and two-attempt odds.");
       }
-      const impact = event.contextualImpact;
       require(validReportedScoringRushImpact(
         event,
         report,
         sources,
         rootDiceBySource,
       ), "A scoring Rush component requires a complete pre-roll ordinary/no-retry state, current score and both clocks, ordered declaration/checkpoint/draw receipts and legal branch states without a hidden second check or later scorer.");
-      if (impact && impact.policy !== "ordinary_no_retry_scoring_rush") {
+      require(validReportedCommittedScoringRush(event, report),
+        "A committed scoring Rush needs a verified replacement, scoring square and prior scoreboard evidence.");
+      require(validReportedFinalTurnScoringRush(event, report, rootDiceBySource.get(event.metadata.sourceId)),
+        "A final-turn scoring range needs a fresh first die, observed reroll counter, final-turn clock and confirmed goal.");
+      if (impact && !("terminalCheckpointAfter" in impact) && impact.policy !== "ordinary_no_retry_scoring_rush" && impact.policy !== "committed_team_scoring_rush" && impact.policy !== "exact_pickup_possession") {
         require(event.scoringStatus === "scored" &&
           !!context &&
           context.activeTeamId === event.teamId &&
@@ -2481,6 +2836,23 @@ export const LuckReportSchema = z
       const block = event.metadata.block;
       const damage = event.metadata.damage;
       const touchdown = event.metadata.movementTouchdown;
+      const score = event.metadata.scoringAttemptScore;
+      if (score) {
+        const checkpoint = report.rerollResources.flow.clockSnapshots.find(
+          (frame) => frame.source.checkpointAfter === score.checkpointAfter
+        );
+        require(
+          event.scoringStatus === "scored" && event.metadata.rollType === 1 &&
+          !!context?.scoringAttempt && !!(touchdown || event.metadata.movementFall) &&
+          score.checkpointAfter === context.checkpointAfter &&
+          score.checkpointAfter < (event.metadata.sourceIndex ?? 0) &&
+          report.teams[score.ownRoster].teamId === event.teamId &&
+          checkpoint?.clock?.phaseCode === 5 &&
+          checkpoint.playerIds[score.ownRoster].includes(Number(event.playerId)) &&
+          validReportedScoreEvidence(report, score, score.checkpointAfter),
+          "A scoring attempt's prior score requires its verified prefix, confirmed goal receipts, and current roster."
+        );
+      }
       if (touchdown) {
         const { locator, sourceIndex, rollType } = event.metadata;
         const from = context?.actorCell;
@@ -2550,7 +2922,7 @@ export const LuckReportSchema = z
         const expected=injuryTableForTraits(proof,event.metadata.dice??[],injuryObservation?.outcome??"");
         require(!!injuryObservation &&
           isInitialInjuryObservation(event) &&
-          [0,1,9].includes(injuryObservation.sourceCode) &&
+          supportsUnmodifiedInjuryTable(injuryObservation) &&
           event.metadata.modifiers?.length === 0 &&
           event.metadata.modifiersSum === 0 &&
           proof.playerId===event.playerId &&
@@ -2668,6 +3040,12 @@ export const LuckReportSchema = z
         );
         linkedDamageActions.add(fall.damageActionId);
         if (step) {
+          require(validReportedMovementFallTail(event, report, sources, step.eventIds.map((id) => ids.get(id)!)),
+            "A movement fall must reach turnover directly after damage or through a source-linked carrier Rush ball path.");
+          require(validReportedRushFallAftermath(fall, report),
+            "Carrier Rush aftermath must match the first board after the recorded turnover and its observed player occupancy.");
+          require(validReportedRushRecovery(event, report, sources),
+            "A Rush recovery link needs a later successful opponent Pickup, a compatible board interval and a matching confirmation checkpoint.");
           const rush=fall.combinedRushSourceId?sources.get(fall.combinedRushSourceId):undefined;
           if(fall.combinedRushSourceId)require(rollType===2&&rush?.scoringStatus==="scored"&&rush.actualSuccess===true&&rush.metadata.rollType===1&&rush.playerId===event.playerId&&rush.teamId===event.teamId&&
             rush.metadata.actionId===event.metadata.actionId&&rush.metadata.sequenceId===event.metadata.sequenceId&&rush.metadata.sourceIndex===(sourceIndex??-1)-1&&
@@ -2842,6 +3220,24 @@ export const LuckReportSchema = z
         }
       }
       const apothecary = event.metadata.apothecary;
+      const bombCatch = event.metadata.bombCatch;
+      if (bombCatch) {
+        const m = event.metadata;
+        const explosion = sources.get(bombCatch.explosionSourceId);
+        const question = bombCatch.starQuestionSourceId ? sources.get(bombCatch.starQuestionSourceId) : undefined;
+        const sourceIndex = m.sourceIndex ?? -10;
+        require(m.sourceTag === "ResultRoll" && m.rollType === 7 && m.stepType === 4 &&
+          m.outcomeCode === Number(bombCatch.caught) && m.isRollCandidate === true &&
+          event.scoringStatus === "excluded" && event.actualSuccess === null && event.probabilitySuccess === null &&
+          explosion?.metadata.sourceTag === "ResultBombExplosion" && !explosion.metadata.isRollCandidate &&
+          explosion.playerId === event.playerId && explosion.metadata.stepType === 4 &&
+          (bombCatch.starQuestionSourceId ? bombCatch.caught &&
+            question?.metadata.sourceTag === "QuestionStarSpecialRuleUsage" && question.metadata.actionId === m.actionId &&
+            question.metadata.sourceIndex === sourceIndex + 1 && explosion.metadata.sourceIndex === sourceIndex + 5 &&
+            explosion.metadata.sequenceId !== m.sequenceId :
+            explosion.metadata.actionId === m.actionId && explosion.metadata.sourceIndex === sourceIndex + 1),
+          "A bomb Catch must retain its explosion-linked observation without an ordinary ball-handling score.");
+      }
       if (event.metadata.ballTravel) {
         const { from, to } = event.metadata.ballTravel;
         require(event.metadata.sourceTag === "ResultRoll" &&
@@ -3051,10 +3447,16 @@ export const LuckReportSchema = z
           ), "Key moments must reference unique, unchanged scored evidence.");
       momentIds.add(moment.id);
     }
-    require(near(
-      report.verdict.scoreGap,
-      Math.abs(report.teams[0].luckScore - report.teams[1].luckScore)
-    ), "Reported gap must use the same additive team units.");
+    const scoredTeamIds = new Set(scored.map((event) => event.teamId));
+    const hasBothTotals = report.teams.every((team) => scoredTeamIds.has(team.teamId));
+    const gap = report.verdict.scoreGap;
+    require(hasBothTotals
+      ? gap === Math.abs(report.teams[0].luckScore - report.teams[1].luckScore)
+      : gap === null,
+      "A supported dice gap needs scored evidence for both teams and the same additive units.");
+    require(JSON.stringify(report.verdict.evidence) === JSON.stringify(summarizeVerdictEvidence(
+      report.teams.map((team) => team.teamId), scoredTeamIds, report.coverage
+    )), "Verdict evidence must match the scored teams, roll candidates and dice field census.");
     require(report.verdict.status ===
       (scored.length
         ? "partial_analysis"

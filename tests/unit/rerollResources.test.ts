@@ -650,6 +650,13 @@ it.each(["demo1.bbr", "demo11.bbr", "demo6.bbr", "demo7.bbr"])(
     );
     if (["demo6.bbr", "demo7.bbr"].includes(file))
       expect(text.stdout).toContain("controller remains unknown");
+    if (file === "demo7.bbr") {
+      const gate = r.events.find((e) => e.metadata.sourceId === "source-719")!;
+      expect(gate.metadata.numericRetryAccess?.terminalSourceId).toBe("source-720");
+      expect(gate.weightedDelta).toBeCloseTo(5 / 18, 12);
+      expect(text.stdout).toContain("Loner granted one activation retry.");
+      expect(text.stdout).toContain("rescuing the activation by +0.278");
+    }
   },
   30000
 );

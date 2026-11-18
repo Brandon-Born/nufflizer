@@ -215,3 +215,91 @@ describe("armor execution evidence is distinct from policy support", () => {
     expect(e.metadata.dice).toEqual([3, 5]);
   });
 });
+
+describe("fixed armor assist roles", () => {
+  it.each([6, 44, 99])(
+    "rejects a foul assist credited to player %s",
+    (playerId) => {
+      const replay = parseReplayXml(fixedFoulArmorXml(3, 5));
+      const armor = replay.turns
+        .flatMap((turn) => turn.events)
+        .find((e) => e.rollType === 10)!;
+      const modifiers = armor.payload!.Modifiers as {
+        Modifier: { PlayerId: number }[];
+      };
+      modifiers.Modifier[0]!.PlayerId = playerId;
+      const report = LuckReportSchema.parse(analyzeReplayLuck(replay));
+      const rolls = report.events.filter(
+        (e) => e.metadata.rollType === 10 || e.metadata.rollType === 11
+      );
+      expect(rolls).toHaveLength(2);
+      for (const event of rolls) {
+        expect(event.scoringStatus).toBe("excluded");
+        expect(event.probabilitySuccess).toBeNull();
+      }
+      expect(rolls[1]!.metadata.injuryObservation?.outcome).toBe("stunned");
+    }
+  );
+
+  it("rejects a defense assist credited to the fouler's team", () => {
+    const replay = parseReplayXml(fixedFoulArmorXml(3, 5));
+    const armor = replay.turns
+      .flatMap((turn) => turn.events)
+      .find((e) => e.rollType === 10)!;
+    const modifiers = armor.payload!.Modifiers as {
+      Modifier: Record<string, number>[];
+    };
+    Object.assign(modifiers.Modifier[0]!, { ModifierType: 12, Value: -1 });
+    armor.payload!.Difficulty = 7;
+    const report = LuckReportSchema.parse(analyzeReplayLuck(replay));
+    expect(
+      report.events.find((e) => e.metadata.rollType === 10)?.scoringStatus
+    ).toBe("excluded");
+  });
+
+  it("scores offsetting assists when their owners are on the proper foul sides", () => {
+    const xml = fixedFoulArmorXml(3, 5).replace(
+      "<ListPitchPlayers><PlayerState><Id>44</Id>",
+      "<ListPitchPlayers><PlayerState><Id>45</Id></PlayerState><PlayerState><Id>44</Id>"
+    );
+    const replay = parseReplayXml(xml);
+    const armor = replay.turns
+      .flatMap((turn) => turn.events)
+      .find((e) => e.rollType === 10)!;
+    armor.payload!.Modifiers = {
+      Modifier: [
+        { PlayerId: 10, ModifierType: 11, Value: 1, Skill: -1, Effect: -1 },
+        { PlayerId: 45, ModifierType: 12, Value: -1, Skill: -1, Effect: -1 }
+      ]
+    };
+    armor.payload!.Difficulty = 8;
+    const report = LuckReportSchema.parse(analyzeReplayLuck(replay));
+    expect(report.events.find((e) => e.metadata.rollType === 10)).toMatchObject(
+      {
+        scoringStatus: "scored",
+        probabilitySuccess: 21 / 36
+      }
+    );
+    expect(
+      report.events.find((e) => e.metadata.rollType === 11)?.metadata
+        .injuryScoring?.cause.kind
+    ).toBe("foul");
+  });
+
+  it("rejects offsetting foul modifiers in ordinary Block armor", () => {
+    const replay = parseReplayXml(categoricalInjuryXml());
+    const armor = replay.turns
+      .flatMap((turn) => turn.events)
+      .find((e) => e.rollType === 10)!;
+    armor.payload!.Modifiers = {
+      Modifier: [
+        { PlayerId: 7, ModifierType: 11, Value: 1, Skill: -1, Effect: -1 },
+        { PlayerId: 42, ModifierType: 12, Value: -1, Skill: -1, Effect: -1 }
+      ]
+    };
+    const report = LuckReportSchema.parse(analyzeReplayLuck(replay));
+    expect(
+      report.events.find((e) => e.metadata.rollType === 10)?.scoringStatus
+    ).toBe("excluded");
+  });
+});

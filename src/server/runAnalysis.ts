@@ -129,8 +129,9 @@ export async function runAnalysis(
           );
         else
           reject(
-            message.validation
-              ? new ReplayValidationError(message.message)
+            message.validationCode === "INVALID_REPLAY" ||
+              message.validationCode === "UNSUPPORTED_REPLAY_VERSION"
+              ? new ReplayValidationError(message.message, message.validationCode)
               : new Error("Analysis failed.")
           );
       });

@@ -41,6 +41,8 @@ export function explainRerollResource(
 export function explainNumericRetryAccess(event:LuckReport["events"][number]):string|null {
   const signed=(n:number)=>`${n>=0?"+":""}${n.toFixed(3)}`;
   const r=event.metadata.numericRetryAccess;
+  if(r?.terminalSourceId)
+    return `Loner ${event.actualSuccess ? "granted" : "blocked"} one activation retry. The gate had a ${(100 * r.gateSuccessChance).toFixed(1)}% pass chance. A replacement had a ${(100 * r.baseSuccessChance).toFixed(1)}% chance to pass its own check. The gate changes the chance of rescuing the activation by ${signed(event.delta)} before the category weight. The first die (${r.originalSourceId}) and any fresh replacement carry their own scores. One team reroll was spent.`;
   if(r)return `${r.kind==="loner"?"Loner":"Pro"} ${event.actualSuccess?"granted":"did not grant"} access to one Dodge retry. The gate's own chance is ${(100*r.gateSuccessChance).toFixed(1)}%; if the retried Dodge keeps the same fixed conditions, its one-die chance is ${(100*r.baseSuccessChance).toFixed(1)}%. Under that fixed model, the gate changes the chance of rescuing the failed Dodge by ${signed(event.delta)} before the category weight: single-Dodge chance times (gate result minus gate chance). The original die (${r.originalSourceId}) keeps its separate contribution. Any verified fresh replacement contributes separately; a kept summary adds no draw. ${r.kind==="loner"?"One team reroll was spent, even if this gate failed.":"Pro was used; no team reroll was spent."} Coach choice, general eligibility and tactical resource cost add no dice score. The ${(100*r.fixedPolicySuccessChance).toFixed(1)}% whole-check chance describes only a fixed policy of taking this one gated retry after a first failure.`;
   const replacement=event.metadata.numericGatedReplacement;
   return replacement?`This is one fresh Dodge die after passed gate ${replacement.gateSourceId}. Its single-die chance is ${((event.probabilitySuccess??0)*100).toFixed(1)}% and its contribution is ${signed(event.delta)} before the category weight. The original and gate keep their own contributions. This replacement does not spend another resource or recount the original.`:null;
@@ -173,6 +175,29 @@ export function explainDiceCensus(
 ): string {
   return `Dice-field coverage: ${evidence.coveredCount} covered, ${evidence.unscoredCount} unscored, ${evidence.unresolvedCount} with unresolved identity, ${evidence.summaryCount} linked copies and ${evidence.nonrandomCount} no-roll placeholders (${evidence.eventRecordCount} event fields + ${evidence.snapshotRecordCount} snapshot fields; ${evidence.recordCount} total; ${evidence.malformedCount} malformed). This counts recorded dice groups, not individual dice, independent opportunities or confidence in the match verdict.`;
 }
+
+export const ROLL_FAMILY_SCOPE =
+  "Rows group reported roll candidates by team, recorded source and roll code. Each candidate is scored, unscored with a known team, or unattributed. Malformed and unresolved identity can overlap other counts.";
+
+export function rollFamilyLabels(
+  row: LuckReport["coverage"]["rollFamilies"][number],
+  teams: LuckReport["teams"]
+) {
+  const [home, away] = teams;
+  return {
+    team:
+      row.teamId === home.teamId
+        ? `Home (${home.teamName})`
+        : row.teamId === away.teamId
+          ? `Away (${away.teamName})`
+          : "Unattributed",
+    source:
+      row.rollType === undefined
+        ? row.sourceTag
+        : `${row.sourceTag} / ${row.rollType}`
+  };
+}
+
 export function explainObservedDice(
   event: LuckReport["events"][number],
   records: ReadonlyMap<string, LuckReport["diceRecords"][number]> = new Map()
@@ -184,6 +209,32 @@ export function explainObservedDice(
     team = event.metadata.teamDiceIdentity;
   if (r)
     return `Recorded ${r.kind === "star" ? "star" : "Pass skill"} reroll: original die ${r.originalDie}, ${r.used ? `used; replacement die ${r.finalDie} is a new draw even if its face matches` : `declined; die ${r.finalDie} repeats the original`}. This identifies the observed dice and choice, not reroll eligibility, success odds or tactical value. No luck score is added.`;
+  if (team && [33, 34, 36].includes(event.metadata.rollType ?? -1) &&
+    records.get(team.originalRecordId)?.disposition === "covered_roll") {
+    const decision = team.teamUsed
+      ? `One team reroll was spent.${team.gateSourceId ? ` Loner ${team.gatePassed ? "passed" : "failed"}.` : ""}`
+      : "The team reroll was declined.";
+    const first = `The first die of ${team.originalDie} is scored at ${team.questionSourceId}.`;
+    const final = team.replacementRolled
+      ? `The replacement die of ${team.finalDie} ${event.metadata.activationCheck?.draw === "replacement" ? "is scored separately" : "has unverified odds"}.`
+      : "The kept result repeats the first die and adds no score.";
+    const outcome = event.metadata.animalSavageryOutcome;
+    const aftermath = outcome?.kind === "actor_effect"
+      ? ` The replay records an effect on player ${event.playerId} at ${outcome.effectSourceId}.`
+      : outcome?.kind === "teammate_selected"
+        ? ` The replay records teammate ${outcome.victimId} selected from the offered players at ${outcome.selectionSourceId}.${outcome.armorSourceId ? ` The armor check is recorded separately at ${outcome.armorSourceId}.` : ""}`
+        : "";
+    const continuation = event.metadata.animalSavageryContinuation;
+    if (!continuation) return `${decision} ${first} ${final}${aftermath}`;
+    const actor = continuation.actorRecordedCanAct === null
+      ? `The settled board omits player ${event.playerId}'s action flag.`
+      : `The settled board records player ${event.playerId}'s action flag as ${continuation.actorRecordedCanAct ? "set" : "unset"}.`;
+    const victim = continuation.victim;
+    const victimPosition = victim && outcome?.kind === "teammate_selected"
+      ? ` Teammate ${outcome.victimId} is ${victim.afterPitchLocation === "off_pitch" ? "off the pitch" : "still on the pitch"} in that snapshot.`
+      : "";
+    return `${decision} ${first} ${final}${aftermath} ${actor}${victimPosition} Teammate ${continuation.followingPlayerId} declared the next action in the same turn.`;
+  }
   if (team)
     return `${event.metadata.failedNumericRetry?.kind === "pro" ? "Recorded team reroll not used" : `Recorded team-reroll decision ${team.teamUsed ? "used" : "declined"}`}: original die ${team.originalDie}, final die ${team.finalDie}; ${team.replacementRolled ? "a replacement was rolled" : "the original was retained"}.${team.gateSourceId ? ` A separate ${team.gateSkillId === 50 ? "Pro" : "Loner"} gate ${team.gatePassed ? "passed" : "failed"}.` : ""} ${event.metadata.failedNumericRetry ? "This receipt establishes dice identity; conditional policy arithmetic is explained separately. General resource eligibility and tactical value remain unverified." : "This is dice identity evidence; resource eligibility and probability/value remain unverified."} No luck score is added.`;
   return null;
@@ -236,8 +287,14 @@ export function explainInjuryObservation(
     : observation.recordKind === "embedded_ko" && event.metadata.injuryTable
       ? "These original injury dice are stored in a recovery question. This initial injury contribution is separate from later recovery or treatment. "
       : "";
-  if (scored)
-    return `${origin}The recorded injury result for player ${observation.subjectId} is ${recordedInjuryName(observation.outcome)}. The replay establishes an unmodified initial injury roll after ${scored.cause.kind === "block" ? "the applied block" : "the failed movement check"}.${scored.cause.kind === "block" && scored.cause.armorModifierBudget ? ` Mighty Blow's +1 was already spent on this damage action's armor roll (recorded use ${scored.cause.armorModifierBudget.useSourceId}); none remains for this injury. The earlier post-roll armor choice has no scored probability. This does not consume the skill for a different Block.` : ""} Compared with the same fair injury table, ${(scored.moreSevereChance*100).toFixed(1)}% of results are more severe, ${(scored.lessSevereChance*100).toFixed(1)}% less severe, and ${(scored.sameSeverityChance*100).toFixed(1)}% in the same tier. Raw injury luck is the more-severe chance minus the less-severe chance, weighted by ${event.explainability.weight}. Positive favors the injured player's team. Badly Hurt and a pending Casualty roll share one tier; later league damage is not priced. Treatment, recovery and match impact remain separate.${scored.sppSourceId?` Recorded SPP notification ${scored.sppSourceId} sits between this armor and injury roll; it adds no random draw, modifier or injury value.`:""}${scored.cause.kind==="block" && scored.cause.attackerTraitEvidence?explainInjuryOtherActions(scored.cause.attackerTraitEvidence,"Blocker"):""} ${table ?? ""}`;
+  if (scored) {
+    const causeLabels = {
+      block: "the applied block",
+      self_fall: "the failed movement check",
+      foul: "the applied foul. The recorded assists change the armor odds only"
+    };
+    return `${origin}The recorded injury result for player ${observation.subjectId} is ${recordedInjuryName(observation.outcome)}. The replay establishes an unmodified initial injury roll after ${causeLabels[scored.cause.kind]}.${scored.cause.kind === "block" && scored.cause.armorModifierBudget ? ` Mighty Blow's +1 was already spent on this damage action's armor roll (recorded use ${scored.cause.armorModifierBudget.useSourceId}); none remains for this injury. The earlier post-roll armor choice has no scored probability. This does not consume the skill for a different Block.` : ""} Compared with the same fair injury table, ${(scored.moreSevereChance*100).toFixed(1)}% of results are more severe, ${(scored.lessSevereChance*100).toFixed(1)}% less severe, and ${(scored.sameSeverityChance*100).toFixed(1)}% in the same tier. Raw injury luck is the more-severe chance minus the less-severe chance, weighted by ${event.explainability.weight}. Positive favors the injured player's team. Badly Hurt and a pending Casualty roll share one tier; later league damage is not priced. Treatment, recovery and match impact remain separate.${scored.sppSourceId?` Recorded SPP notification ${scored.sppSourceId} sits between this armor and injury roll; it adds no random draw, modifier or injury value.`:""}${scored.cause.kind==="block" && scored.cause.attackerTraitEvidence?explainInjuryOtherActions(scored.cause.attackerTraitEvidence,"Blocker"):""} ${table ?? ""}`;
+  }
   return `${origin}The recorded injury result for player ${observation.subjectId} is ${recordedInjuryName(observation.outcome)}. This is a categorical observation, not a success or failure check. ${table ? "The separate table describes the original injury roll with no modifier. Modifier choice and treatment can change the applied result; their full policy and luck value are not established, so no luck contribution is assigned." : "Its odds depend on the applicable injury table, current traits and modifiers; those are not verified here, so no luck contribution is assigned."} This result does not establish final posture, removal, recovery or availability after treatment. Later mitigation and state observations remain separate evidence.${table ? ` ${table}` : ""}`;
 }
 
@@ -267,11 +324,41 @@ export function scoredEvidenceForTeam(
 }
 // An empty sum is mathematically zero, but it is not measured even luck.
 export function formatDiceContribution(
-  value: number,
+  value: number | null,
   scoredCount: number,
   digits = 2
 ): string {
-  return scoredCount ? value.toFixed(digits) : "Not scored";
+  return scoredCount && value !== null ? value.toFixed(digits) : "Not scored";
+}
+
+export function formatSupportedDiceGap(gap: number | null): string {
+  if (gap === null) return "Not scored";
+  if (gap === 0) return "0.0 (supported totals match)";
+  const display = gap.toFixed(1);
+  return display === "0.0" ? "less than 0.1" : display;
+}
+
+export function explainVerdictEvidence(
+  report: Pick<LuckReport, "verdict" | "teams">
+): string[] {
+  const { missingScoredTeamIds, unscoredDiceFields, unresolvedDiceFields } =
+    report.verdict.evidence;
+  const explanations: string[] = [];
+  if (missingScoredTeamIds.length === 2) {
+    explanations.push("Neither team has a scored dice check.");
+  } else if (missingScoredTeamIds.length === 1) {
+    const team = report.teams.find((row) => row.teamId === missingScoredTeamIds[0]);
+    if (team) explanations.push(`${team.teamName} has no scored dice checks.`);
+  }
+  if (unscoredDiceFields || unresolvedDiceFields) {
+    const unscored = `${unscoredDiceFields} unscored dice ${unscoredDiceFields === 1 ? "field" : "fields"}`;
+    const unresolved = `${unresolvedDiceFields} dice ${unresolvedDiceFields === 1 ? "field" : "fields"} with unresolved identity`;
+    const counts = unscoredDiceFields && unresolvedDiceFields
+      ? `${unscored} and ${unresolved}`
+      : unscoredDiceFields ? unscored : unresolved;
+    explanations.push(`The replay contains ${counts}.`);
+  }
+  return explanations;
 }
 
 export function explainContextCoverage(
@@ -495,10 +582,51 @@ export function explainContextImpact(
 ): string | null {
   const impact = event.contextualImpact;
   if (!impact) return null;
+  if (impact.policy === "exact_pickup_possession") {
+    const stage = impact.stage === "kept_pickup_possession"
+      ? "The original die under the recorded decline policy"
+      : impact.stage === "team_pickup_possession"
+        ? "The committed team replacement die"
+        : "The committed Sure Hands replacement die";
+    const profiles = impact.continuedTraits
+      ? impact.stage === "sure_hands_reroll"
+        ? ` Both dice use the same replay board. It verifies ${impact.continuedTraits.length} skill profiles${impact.offPitchPlayerCount ? ` and shows ${impact.offPitchPlayerCount} players off the pitch` : ""}.`
+        : impact.offPitchPlayerCount
+          ? ` Through the reroll wait, the replay verifies ${impact.continuedTraits.length} skill profiles and confirms that ${impact.offPitchPlayerCount} stayed off the pitch.`
+          : ` The skill lists of all ${impact.continuedTraits.length} rostered players remained verified through the reroll wait.`
+      : "";
+    return `${stage} had ${(impact.successChance * 100).toFixed(1)}% success. Success secures the ball. After failure all eight first bounces would settle on empty squares, with ${8 * impact.components.markedBounce} under an opponent's tackle zone.${profiles} The estimate adds ${impact.components.possession} possession units and ${impact.components.markedBounce.toFixed(3)} exposure units, giving ${impact.contribution.toFixed(3)} provisional context units for this draw. Later possession, available moves and scoring remain outside this estimate.`;
+  }
+  if (impact.policy === "committed_team_scoring_rush") {
+    const { scores, ownRoster, teamTurns, turnsPerPeriod } = impact.evidence;
+    const { success } = impact.successors;
+    const ownRemaining = 2 * turnsPerPeriod - teamTurns[ownRoster];
+    const opponentRemaining = 2 * turnsPerPeriod - teamTurns[1 - ownRoster]!;
+    const period = impact.evidence.periodBasis === "opening_turn_counters"
+      ? " The opening turn counters place this in the first half."
+      : impact.evidence.periodBasis === "half_boundary_counters"
+        ? " Both teams were on turn eight. The next board confirms the transition to the second half."
+        : "";
+    return `With the team reroll committed, the replacement Rush had an 83.3% chance to reach the clear end zone and score immediately. The pre-roll score was ${scores[ownRoster]}–${scores[1 - ownRoster]}. A touchdown would make it ${success.ownScore}–${success.opponentScore}.${period} This team had ${ownRemaining} scheduled turns left and the opponent had ${opponentRemaining}. ${impact.components.touchdown} touchdown units and ${impact.components.scorePressure.toFixed(3)} score-pressure units give a contribution of ${impact.contribution.toFixed(3)} provisional context units on this die. Earlier dice, damage, and later possession have separate accounting.`;
+  }
   if (impact.policy === "ordinary_no_retry_scoring_rush") {
     const state = event.metadata.preRoll?.scoringRushState;
     const position = state ? ` Before the die, the score from this team's perspective was ${state.frame.teams[state.ownRoster].score}-${state.frame.teams[1-state.ownRoster]!.score}; the teams had ${state.frame.teams.map(t=>2*state.frame.turnsPerPeriod-t.turn).join(" and ")} scheduled regulation turns remaining.` : "";
     return `A successful Rush carries the standing ball holder into the end zone and adds one touchdown. Failure puts the carrier prone there, with armor and ball movement still pending. Under the stated current ordinary profiles, no other player can score during those pending stages. The pre-roll state records zero team rerolls and no applicable skill retry or extra Dodge check.${position} This partial scoring component compares those two legal successors: ${impact.components.touchdown} touchdown units plus ${impact.components.scorePressure.toFixed(3)} score-pressure units, multiplied by actual result minus ${(100 * (event.probabilitySuccess ?? 0)).toFixed(1)}%: ${impact.contribution.toFixed(3)} provisional context units. Score pressure uses the current score and both teams' remaining scheduled regulation turns. It is a heuristic, not a win probability or final-match prediction; overtime, future decisions, player damage and the later ball result are outside this component.`;
+  }
+  if ("terminalCheckpointAfter" in impact) {
+    const moves = impact.components.availableMoves;
+    const action =
+      impact.policy === "team_reroll_rush_moves" ||
+      impact.policy === "kept_rush_terminal_moves"
+        ? "Rush"
+        : "Dodge";
+    if (
+      impact.policy === "kept_rush_terminal_moves" ||
+      impact.policy === "kept_dodge_terminal_moves"
+    )
+      return `The original ${action} die had ${(100 * impact.successChance).toFixed(1)}% success odds. With the recorded decline held fixed, the failure ended the turn before ${moves} other teammates could make their available ordinary moves. The original die contributes ${impact.contribution.toFixed(3)} provisional context units for those lost moves. The kept result records the same die, and no team reroll was spent. Possession and later damage remain separate.`;
+    return `The replacement ${action} die had ${(100 * impact.successChance).toFixed(1)}% success odds. Failure ends the turn before ${moves} other teammates' available ordinary moves. The replacement result contributes ${impact.contribution.toFixed(3)} provisional context units. This component covers those teammates' moves. The original die, reroll use, possession and later damage remain separate.`;
   }
   const { availableMoves, possession, markedBounce } = impact.components;
   return (
@@ -536,10 +664,24 @@ export function explainContextBounds(
     const empty=successors.branches.filter(b=>b.kind === "empty").length;
     const occupied=successors.branches.filter(b=>b.kind === "occupied").length;
     const outside=8-empty-occupied;
-    return `With Sure Hands already committed, the terminal die had ${(possession.successChance*100).toFixed(1)}% success. A successful pickup holds the ball here. The eight equally likely initial bounce alternatives after failure include ${empty} empty, ${occupied} occupied and ${outside} off-pitch squares. Occupied squares need a catch; off-pitch results need a return. Neither is treated as lost or recovered possession. Empty-square settlement also stays uncertain when current reaction skills or effects are incomplete. Unknown tackle zones stay uncertain. This component values only retaining own possession (2 provisional units) and marked loose-ball exposure (up to 1); its difference is ${possession.minimumDifference.toFixed(2)} to ${possession.maximumDifference.toFixed(2)} and its contribution is ${possession.lower.toFixed(2)} to ${possession.upper.toFixed(2)} context units. It excludes remaining activations, opponent possession gain, scoring value, the earlier failed die and later catch/return dice. No midpoint or range endpoint enters point totals; this is not calibrated match impact.`;
+    const stage = possession.policy === "kept_pickup_possession"
+      ? "Under the recorded decline policy, the original die"
+      : possession.policy === "team_pickup_possession"
+        ? "With the team reroll committed and the waiting board checked, the replacement die"
+        : "With Sure Hands already committed, the terminal die";
+    const prior = possession.policy === "kept_pickup_possession"
+      ? "the reroll decision"
+      : "the earlier failed die";
+    const emptySettlement = possession.continuedTraits
+      ? "The verified roster establishes that the ball stays loose on the empty squares."
+      : "Empty-square settlement also stays uncertain when current reaction skills or effects are incomplete.";
+    return `${stage} had ${(possession.successChance*100).toFixed(1)}% success. A successful pickup holds the ball here. The eight equally likely initial bounce alternatives after failure include ${empty} empty, ${occupied} occupied and ${outside} off-pitch squares. Occupied squares need a catch; off-pitch results need a return. Neither is treated as lost or recovered possession. ${emptySettlement} Unknown tackle zones stay uncertain. This component values only retaining own possession (2 provisional units) and marked loose-ball exposure (up to 1); its difference is ${possession.minimumDifference.toFixed(2)} to ${possession.maximumDifference.toFixed(2)} and its contribution is ${possession.lower.toFixed(2)} to ${possession.upper.toFixed(2)} context units. It excludes remaining activations, opponent possession gain, scoring value, ${prior} and later catch/return dice. No midpoint or range endpoint enters point totals; this is not calibrated match impact.`;
   }
   const bound = event.contextualBounds;
   if (!bound) return null;
+  if (bound.policy === "final_turn_scoring_rush_envelope") {
+    return `The original 2+ Rush had an 83.3% chance to score immediately in this team's final regulation turn. The first die succeeded. The preceding board records ${bound.observedTeamRerolls} team reroll${bound.observedTeamRerolls === 1 ? "" : "s"}. The first die contributes up to ${bound.upper.toFixed(2)} if a miss would end the attempt. A chance to score after a miss can shrink that contribution toward zero. The immediate scoring range is 0 to ${bound.upper.toFixed(2)} provisional context units.`;
+  }
   if (bound.policy === "kept_dodge_terminal_moves") return `Before the original Dodge die, hold the recorded decline-on-failure policy fixed. Its ${(bound.successChance*100).toFixed(1)}% success chance and terminal failure leave ${bound.minimumMoves} to ${bound.maximumMoves} possible other ordinary moves at stake. This teammate-move component is ${bound.lower.toFixed(2)} to ${bound.upper.toFixed(2)} provisional context units. Current eligibility is incomplete. The kept failure repeats the original die, not a replacement draw; no team reroll was spent. The active player's continuation, ball/scoring, resource decision and later damage values are outside this component. The observed fall and known-damage dice subtotal remain separate evidence. No midpoint or endpoint enters point totals; this is not calibrated whole-match impact.`;
   if (bound.policy === "kept_rush_terminal_moves") {
     const p = event.metadata.retainedRushContext;
@@ -555,18 +697,21 @@ export function explainContextBounds(
 export function explainMovementOutcome(
   metadata: Pick<
     LuckReport["events"][number]["metadata"],
-    "movementFall" | "movementTouchdown" | "dodgeMovement" | "pickupResolution" | "teamRerollMovement" | "pickupAfterMovement" | "combinedMovement"
+    "movementFall" | "movementTouchdown" | "dodgeMovement" | "pickupResolution" | "teamRerollMovement" | "pickupAfterMovement" | "combinedMovement" | "scoringAttemptScore"
   >
 ): string | null {
-  const { movementFall: fall, movementTouchdown } = metadata;
+  const { movementFall: fall, movementTouchdown, scoringAttemptScore } = metadata;
+  const priorScore = scoringAttemptScore
+    ? `Before the attempt, the score from this team's perspective was ${scoringAttemptScore.scores[scoringAttemptScore.ownRoster]}–${scoringAttemptScore.scores[1 - scoringAttemptScore.ownRoster]}.`
+    : "";
   if(metadata.combinedMovement) {
     const p=metadata.combinedMovement;
     return `The Rush succeeded, then the following Dodge ${p.dodgeSucceeded?"succeeded":"failed"}. ${p.dodgeSucceeded?`The confirmed combined step moved the player from [${p.from.x}, ${p.from.y}] to [${p.to.x}, ${p.to.y}].`:"A failed combined step does not establish a usable continued board or a final player position."} ${p.dodgeSucceeded&&p.carriedBallBefore===true?"The explicitly held ball followed the player. ":p.carriedBallBefore===null?"Earlier ball possession remains unknown. ":""}${p.movementAfter===null?"Remaining ordinary movement stays unknown.":"The observed ordinary movement budget stays at zero; remaining Rush attempts are not inferred."} ${p.partialOccupancy.length?"Distant players' omitted coordinates remain unknown; their known axes rule out the two relevant squares. ":""}No ordinary activation, useful-action count or failed alternative is inferred. The Rush and Dodge keep their separate existing dice contributions; this combined-step receipt adds no luck score.`;
   }
   const teamMove=metadata.teamRerollMovement;
-  if(teamMove) return `${movementTouchdown?"The replay records a touchdown immediately after this move. ":""}The successful team-rerolled ${teamMove.rollType===1?"Rush":"Dodge"} and its confirmed move advanced the player from [${teamMove.from.x}, ${teamMove.from.y}] to [${teamMove.to.x}, ${teamMove.to.y}]. ${teamMove.carriesBall===null?"Ball possession in the waiting snapshot remains unknown. ":teamMove.carriesBall?"The explicitly held ball followed the player. ":""}${teamMove.movementAfter===null?"The waiting snapshot omitted remaining movement; it stays unknown.":teamMove.rollType===1?"The observed ordinary movement budget stays at zero; remaining Rush attempts are not inferred.":`${teamMove.movementAfter} movement points remained after this step; the confirmed Dodge move used one point.`} ${teamMove.zonePenalty?`The recorded base ${teamMove.zonePenalty.baseTarget}+ check had ${teamMove.zonePenalty.markers.length} opposing tackle-zone penalty point${teamMove.zonePenalty.markers.length===1?"":"s"}; each recorded marker was observed beside the destination. `:""}Current player availability and omitted skills remain unknown. This actual movement adds no luck score; the existing two-attempt dice odds remain separate.`;
+  if(teamMove) return `${priorScore ? priorScore + " " : ""}${movementTouchdown?"The replay records a touchdown immediately after this move. ":""}The successful team-rerolled ${teamMove.rollType===1?"Rush":"Dodge"} and its confirmed move advanced the player from [${teamMove.from.x}, ${teamMove.from.y}] to [${teamMove.to.x}, ${teamMove.to.y}]. ${teamMove.carriesBall===null?"Ball possession in the waiting snapshot remains unknown. ":teamMove.carriesBall?"The explicitly held ball followed the player. ":""}${teamMove.movementAfter===null?"The waiting snapshot omitted remaining movement; it stays unknown.":teamMove.rollType===1?"The observed ordinary movement budget stays at zero; remaining Rush attempts are not inferred.":`${teamMove.movementAfter} movement points remained after this step; the confirmed Dodge move used one point.`} ${teamMove.zonePenalty?`The recorded base ${teamMove.zonePenalty.baseTarget}+ check had ${teamMove.zonePenalty.markers.length} opposing tackle-zone penalty point${teamMove.zonePenalty.markers.length===1?"":"s"}; each recorded marker was observed beside the destination. `:""}Current player availability and omitted skills remain unknown. This actual movement adds no luck score; the existing two-attempt dice odds remain separate.`;
   if (movementTouchdown)
-    return "The replay records a touchdown immediately after this move.";
+    return [priorScore, "The replay records a touchdown immediately after this move."].filter(Boolean).join(" ");
   if(metadata.pickupAfterMovement) {
     const p=metadata.pickupAfterMovement;
     return `After the confirmed team-rerolled move reached [${p.cell.x}, ${p.cell.y}], the successful Sure Hands replacement secured the ball there. ${p.movementRemaining===null?"Remaining movement stays unknown.":`The post-move budget stays at ${p.movementRemaining}; the pickup consumes no second movement point.`} Earlier unknown possession is not changed. This observed possession adds no luck score or tactical value; failed-pickup alternatives remain unquantified.`;
@@ -581,21 +726,37 @@ export function explainMovementOutcome(
     return `The replay confirms this move after the successful Dodge skill reroll. ${budget}${move.carriesBall===null ? " Ball possession remains unknown." : move.carriesBall ? " The carried ball followed the player." : ""} This observed movement adds no luck score.`;
   }
   if (!fall) return null;
+  const ballPath = fall.ballPath;
+  const lastLanding = ballPath?.legs.at(-1)?.to;
+  const afterTurnover = ballPath?.aftermath;
+  const recovery = afterTurnover?.status === "loose" ? afterTurnover.recovery : undefined;
   const aftermath = [
+    priorScore,
     "The player fell and the turn ended.",
     fall.armorHeld === true
       ? "Armor held."
       : fall.armorHeld === false
         ? "Armor broke."
         : null,
-    fall.playerRemoved ? "The player was removed from the pitch." : null
+    fall.playerRemoved ? "The player was removed from the pitch." : null,
+    lastLanding
+      ? `The ball bounced out from the end zone and was thrown back in. The last recorded landing was [${lastLanding.x}, ${lastLanding.y}].`
+      : null,
+    afterTurnover?.status === "loose"
+      ? "The first board after the turnover shows the ball loose on that square."
+      : afterTurnover?.status === "turn_transition"
+        ? "The first board after the turnover shows the ball off the pitch during a turn transition."
+        : null,
+    recovery
+      ? `The opposing team later picked up the loose ball (${recovery.pickupSourceId}). The next confirmed carrier position was [${recovery.confirmedCell.x}, ${recovery.confirmedCell.y}]. The Pickup keeps its own dice score.`
+      : null
   ]
     .filter(Boolean)
     .join(" ");
   const unknown = fall.unscoredDamageRolls
     ? ` Damage rolls without verified odds: ${fall.unscoredDamageRolls}.`
     : "";
-  return `${fall.combinedRushSourceId?"The Rush succeeded before the following Dodge failed. ":""}${aftermath} Dice subtotal for ${fall.combinedRushSourceId?"both movement checks":"the movement check"} and scored damage: ${fall.diceContribution.toFixed(2)}.${unknown}${fall.combinedRushSourceId?" This references the existing contributions once. The turnover and availability cost remain unquantified; no final player position or extra luck score is inferred.":""}`;
+  return `${fall.combinedRushSourceId?"The Rush succeeded before the following Dodge failed. ":""}${aftermath} Dice subtotal for ${fall.combinedRushSourceId?"both movement checks":"the movement check"} and scored damage: ${fall.diceContribution.toFixed(2)}.${unknown}${ballPath ? " The ball rolls have their own entries. The later ball path and possession carry no additional context estimate here." : ""}${fall.combinedRushSourceId?" This references the existing contributions once. The turnover and availability cost remain unquantified; no final player position or extra luck score is inferred.":""}`;
 }
 
 export function explainBlockResolution(
@@ -674,7 +835,7 @@ export function explainLonerGate(
   gate: LuckReport["events"][number]["metadata"]["lonerGate"], scoredAccess=false
 ): string | null {
   return gate
-    ? `Loner ${gate.threshold}+ ${gate.passed ? "passed" : "failed"}. One team reroll was spent. ${gate.passed ? "Replacement dice need their own recorded evidence." : "The original result was kept; the gate granted no replacement dice."} ${scoredAccess?"Its source-qualified retry-access contribution is explained with the original Dodge.":"The gate itself is unscored."}`
+    ? `Loner ${gate.threshold}+ ${gate.passed ? "passed" : "failed"}. One team reroll was spent. ${gate.passed ? "Replacement dice need their own recorded evidence." : "The original result was kept; the gate granted no replacement dice."} ${scoredAccess?"The gate's contribution reflects the chance of a successful replacement.":"The gate itself is unscored."}`
     : null;
 }
 
@@ -727,7 +888,13 @@ export function explainPickupBallChain(
   const opportunities=moves
     ? ` Before the pickup, ${moves.knownAvailablePlayerIds.length} to ${moves.knownAvailablePlayerIds.length+moves.unknownPlayerIds.length} other players had a possible ordinary move attempt; ${moves.unknownPlayerIds.length} have unresolved current eligibility. These are attempt opportunities, not guaranteed successes or a luck-value estimate.`
     : " Current-side movement opportunities remain unknown.";
-  const aftermath=end ? ` The recorded team turn ended immediately after the successful catch.${opportunities} This observed ending does not establish a hypothetical failed-roll reroll policy.` : "";
+  const snapshot = end?.kind === "bounce" ? end.snapshot : undefined;
+  const board = snapshot
+    ? ` The next stable board still shows the ball there. ${snapshot.observedIsHeld === false ? "The board records no possession." : "The board omits the possession flag."}`
+    : "";
+  const aftermath = end
+    ? ` The recorded team turn ended immediately after the ${end.kind === "catch" ? "successful catch" : "bounce"}.${board}${opportunities} The pre-roll reroll policy requires separate evidence.`
+    : "";
   return `The failed pickup led to ${chain.bounceSourceIds.length} recorded bounce${chain.bounceSourceIds.length === 1 ? "" : "s"} and ${chain.catchEventIds.length} linked catch check${chain.catchEventIds.length === 1 ? "" : "s"}. ${catches ? catches + " " : ""}The last recorded landing was [${chain.endingCell.x}, ${chain.endingCell.y}]. Existing dice subtotals by team: ${totals}. These dice contributions are already included in the team totals.${aftermath} The full tactical cost of possession or the turn remains unquantified.`;
 }
 

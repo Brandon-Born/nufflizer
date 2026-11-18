@@ -1287,3 +1287,173 @@ The Nufflizier upload form is isolated into an accessible file-selection/drop pa
 ## 2026-11-15 — fixed-policy armor candidate
 
 Recovered the saved NUF-036 work in an isolated branch over the validated upload checkpoint. Dice-only-37 distinguishes qualified unknown armor execution from missing execution and exposes only fixed pre-roll armor policies through API/CLI/reader; optional policies remain visibly unscored. Historical source/non-armor conservation and original fingerprints are preserved. Local3,955 unit/CLI/HTTP cases, lint/types/build, Redis, optional-policy grids and four affected browser flows pass. This is not deployment, remote-CI closure or completion of the broader analyzer. See ARMOR_POLICY_RECOVERY.md and the execution log.
+
+## 2026-11-17 — Verified foul injury contribution
+
+Schema 2.74 and dice-only-38 add a categorical initial injury contribution for a qualified ordinary foul under NUF-011. The replay links the foul result, armor break and original injury draw in source order. Current fouler and victim traits establish a fixed policy. The three recorded assists in UI-015 affect armor only. The injury uses the victim's own table and contributes once to the damage subtotal.
+
+The original UI-015 fragment retains its observed unscored injury because the paired playback omits current participant traits. Unsupported foul policies and explicit injury modifiers remain visible. NUF-036 closes on the independently verified CI receipt for the published armor correction. NUF-011 stays in progress.
+
+## 2026-11-17 — Armor assist ownership
+
+NUF-011 now checks the owner of each armor assist at the damage header. The assist must name a distinct player from the correct side of the foul. An ordinary Block or self-fall cannot use foul assists, even when their modifiers add to zero. Unsupported assists leave the armor dice visible and withhold the dependent foul injury score. The local schema 2.74 and dice-only-38 continuation uses the existing report fields for those outcomes.
+
+## 2026-11-17 — Explicit capability and follow-up handoff
+
+The README and landing page describe supported dice evidence and traceable replay moments. The capability map ties each current claim to evidence and routes readers away from superseded matrix entries. The secondary backlog captures bounded revisits with links to their primary acceptance criteria.
+
+## 2026-11-17 — Exact teammate moves after team reroll commitment
+
+Context model 43 adds a point for verified direct team Dodge and successful Rush replacements with a complete roster and fully known teammate eligibility. The report counts only the replacement draw in this component and retains the original die in the dice subtotal. Ranges and unknowns remain available for partial evidence.
+
+## 2026-11-17 — Possession after a declined Pickup reroll
+
+Context model 44 applies the existing eight-way possession valuation to the original failed pickup in two public replay chains. The report retains its moved-to-ball receipt, declined offer and repeated die, and reconciles the range in the action, category and team summaries. It retains later bounce and catch outcomes as separate evidence.
+
+## 2026-11-17 — Possession bounds for a committed team Pickup reroll
+
+Context model 45 values the replacement Pickup die after a verified waiting-state bridge. The report preserves the original die, one reroll spend and subsequent ball outcomes separately. Public demo4 and demo8 exercise the failed and successful replacement branches.
+
+## 2026-11-17 — Recorded rain in a committed Pickup reroll
+
+Context model 46 extends the verified team Pickup replacement stage to a matched global Pouring Rain modifier. Demo5's failed 4+ replacement now has a possession range while retaining the original failure and team resource use separately.
+
+## 2026-11-17 — Supported dice gap requires two teams
+
+Schema 2.75 makes the supported dice gap null until both teams have scored evidence. API and JSON retain the null. CLI and UI display “Not scored.” Equality of two supported totals remains numeric zero, with no whole-match claim.
+
+## 2026-11-17 — Explicit unsupported-version rejection
+
+The parser and analysis worker now carry a distinct unsupported-version error. The primary API returns HTTP 422 and the CLI prints the same error code. Malformed replay data remains HTTP 400. The successful report schema is unchanged.
+
+## 2026-11-17 — Timeline sorting for context ranges
+
+The timeline now ranks all filtered rows by the farthest context endpoint from zero before paging them. Point estimates retain their own sort. Each row keeps its range and explanation. The API and export contract stay the same.
+
+## 2026-11-17 — Roll-family coverage in the browser and CLI
+
+The browser report and text CLI now display the validated roll-family breakdown from the JSON contract. Readers can see which team and recorded family each candidate belongs to, where the team is unknown, and which flags can overlap. The physical dice-field census has its own explanation.
+
+## 2026-11-17 — Exact teammate moves after a declined reroll
+
+Schema 2.76 and context model 47 can report an exact teammate-move contribution on a verified retained Dodge or Rush. The report uses the original die and its success chance. Complete eligibility and a verified terminal transition qualify the point. The CLI and browser explain which die contributed and how many teammate moves were lost.
+
+## 2026-11-18 — Failed end-zone Rush aftermath
+
+Schema 2.77 adds an optional source-linked ball path to verified carrier Rush falls. The report can describe the recorded ball movement through the turnover and show the subtotal of the already-scored Rush and damage dice. A ball path adds no score.
+
+## 2026-11-18 — Possession after a failed end-zone Rush
+
+Schema 2.78 exports the first observed board after a linked carrier Rush turnover when it supports a loose ball or an off-pitch ball during the next turn transition. The same evidence is explained in the browser and text CLI.
+
+## 2026-11-18 — Bomb catches outside ordinary ball handling
+
+Schema 2.79 and dice model 39 recognize the source-linked bomb catch and explosion sequence. The five qualified rows retain their dice and observed outcomes with unknown odds. The existing scoring contract continues for ordinary catches before and after bomb actions.
+
+## 2026-11-18 — Confirmed Pickup after a carrier Rush failure
+
+Schema 2.80 records demo2's later opponent Pickup and first confirmed held-ball board as aftermath of the loose ball. The browser and CLI explain the link. Both original action subtotals retain their own dice.
+
+## 2026-11-18 — Committed replacement touchdown context
+
+Schema 2.81 and context model 48 add a source-linked immediate scoring estimate to demo2's failed end-zone Rush. The reroll's evidence includes the score and clocks before the replacement, the legal touchdown alternative and the observed fall at the origin. The dice model stays at 39. The shared API, CLI and browser surface the −4 provisional units on the exact replacement without assigning a whole-match verdict.
+
+## 2026-11-18 — Context consequences in the report overview
+
+The report overview uses existing scored and bounded components to explain a scoring opportunity, a possession change and a turn consequence when supported. Each example opens its exact replay evidence. Rendering uses the existing shared schema and model versions.
+
+## 2026-11-18 — Settled pickup possession context
+
+Schema 2.82 and context model 49 publish an exact provisional possession point when all eight pickup failure landings settle with known marking. The same source chain and conditional die drive the JSON, browser and text CLI. An unresolved landing keeps the existing range.
+
+## 2026-11-18 — Continued pickup settlement
+
+Schema 2.83 and context model 50 use verified current skill continuity through a committed team Pickup wait to qualify demo8’s exact first-bounce possession point. The original and replacement dice, reroll cost, and recorded later possession retain their source evidence.
+
+## 2026-11-18 — Opening turn scoring Rush
+
+Schema 2.84 and context model 51 retain the source basis for inferring the first half from the opening cumulative clocks. Demo5’s early successful committed replacement contributes +5/7 provisional scoring units. Its raw period and active-team omissions remain visible.
+
+## 2026-11-18 — Score continuity through confirmed carries
+
+Schema 2.85 extends confirmed scores across recorded carry sequences and exposes the verified pre-roll score on applicable Rushes. Demo5’s final-turn Rush starts at 2–0 from the home side. The dice and context model versions remain 39 and 51.
+
+## 2026-11-18 — Touchdowns after a possession transfer
+
+The score reducer now verifies the source-linked handoff catch in demo6 and the committed pickup in the end zone in demo10. The 12 public replays reconcile all 23 recorded touchdowns. Both paths use the existing schema 2.85 score receipt.
+
+## 2026-11-18 — Scoring Rush before halftime
+
+Schema 2.86 and context model 52 add the halftime clock and carry receipts for demo1’s committed scoring Rush. The timeline, CLI and JSON show the 0–0 pre-roll score and −190/51 provisional scoring contribution on the replacement die.
+
+## 2026-11-18 — Final-turn scoring Rush ranges
+
+Schema 2.87 and context model 53 add two source-linked scoring ranges for successful original Rush dice on the actor’s last regulation turn. Report exports link the original die, pre-roll score, recorded reroll counter and first scoreboard after the observed touchdown.
+
+## 2026-11-18 — Verdict evidence and supported dice gaps
+
+Schema 2.88 adds the missing-team and coverage counts to the shared verdict contract. The browser and CLI distinguish matching supported totals, a small positive gap and a missing comparison.
+
+## 2026-11-18 — Mixed pickup landings
+
+Schema 2.89 and context model 54 carry a verified current roster into Pickup ranges. The proof settles empty branches while catch, throw-in and marking uncertainty remain in the range.
+
+## 2026-11-18 — Timeline activation navigation
+
+The evidence table opens an activation from a focused moment or a filtered row and displays the known declaration and linked rows. Sorts rank measured results before rows without the selected value. Replay replacement clears timeline controls.
+
+## 2026-11-18 — Animal Savagery notification scope
+
+Schema 2.90 and dice model 40 scope six verified Animal Savagery notifications in demo5 to the effect holder’s learned-trait history. Three categorical block pools and the armor check linked to one of them now contribute dice scores. The context model remains 54.
+
+## 2026-11-18 — Fresh Bone Head and Really Stupid checks
+
+Schema 2.91 and dice model 41 add activation-check dice totals and source receipts to the shared report. The browser filters the category and explains the recorded target, team and die. JSON and text CLI carry the same supported evidence. The context model remains 54.
+
+## 2026-11-18 — Bone Head and Really Stupid reroll draws
+
+Schema 2.92 and dice model 42 distinguish first dice embedded in questions, separately scored replacements and kept copies. Browser and CLI expose the source-linked reroll decisions and gate outcomes. Context model 54 remains in use.
+
+## 2026-11-18 — Loner access to an activation retry
+
+Schema 2.93 and dice model 43 include the verified Loner access contribution in the activation-check category. The report shares the gate pass chance, first die, terminal source and fixed retry arithmetic with both display clients. Context model 54 remains in use.
+
+## 2026-11-18 — Foul Appearance
+
+Schema 2.94 and dice model 44 add source-linked Foul Appearance checks to the activation-check category. Reports distinguish the attacker who rolls and the opposing defender who supplies the skill. The context model stays at 54.
+
+## 2026-11-18 — Animal Savagery
+
+Schema 2.95 and dice model 45 score qualified Animal Savagery dice in the activation-check category. The shared report links kept copies to the first die and shows supported actor effects or teammate choices, with the victim's armor source where observed. The context model stays at 54.
+
+## 2026-11-18 — Animal Savagery continuation
+
+Schema 2.96 adds linked settled boards and actual next teammate actions to the five public Animal Savagery failures. The report preserves omitted action flags and separates observed victim posture or removal from later activation eligibility. The dice model remains 45 and the context model remains 54.
+
+## 2026-11-18 — Trait continuity through Animal Savagery choices
+
+Schema 2.97 and dice model 46 carry unrelated learned skills across a verified Animal Savagery menu and selection. Existing Block, armor and injury contracts use the recovered current profiles for 64 additional scores in demo5. Its ball-reaction evidence is still incomplete and the context model remains 54.
+
+## 2026-11-18 — Pickup bounce turnovers
+
+Schema 2.98 adds 20 observed direct pickup-bounce turnovers and 13 matching post-turn boards. Both forms of pickup turnover share the browser, API and CLI report contract. The dice and context models remain 46 and 54 respectively.
+
+## 2026-11-18 — Skill profiles after KO recovery
+
+Schema 2.99 and dice model 47 restore learned profiles after a verified KO, successful wake-up roll and same-roster return to the pitch. Fifteen more Block, armor and injury records qualify under the existing rules. The context model remains 54.
+
+## 2026-11-18 — Skill profiles after Animal Savagery
+
+Schema 2.100 restores the verified effect holder and struck teammate's profiles on settled on-pitch boards. Eleven demo5 Block pools gain current skill evidence. The rain Pickup has current profiles for all 18 on-pitch players. Dice and context contributions retain their previous values.
+
+## 2026-11-18 — Settled rain Pickup
+
+Schema 2.101 and context model 55 replace the demo5 rain Pickup range with a −1 provisional possession point. The linked original and waiting frames verify four off-pitch players and current skill evidence for the other 18. All eight potential first landings are loose and unmarked. The dice model remains 47.
+
+## 2026-11-18 — Traits through bombs and ejection
+
+Schema 2.102 and dice model 48 carry verified intrinsic skill evidence across six bomb sequences and the resolved demo6 referee chain. Twenty-five later Block, armor and injury scores qualify in demo6. Context model 55 retains its existing estimates.
+
+## 2026-11-18 — Same-board Sure Hands
+
+Schema 2.103 and context model 56 give demo6 source 2151 a −4/3 provisional possession contribution. The original and replacement use the same board with 21 current profiles and five recorded off-pitch players. The dice model remains 48.

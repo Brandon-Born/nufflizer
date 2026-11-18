@@ -36,8 +36,8 @@ export default function HomePage() {
         <div className="rounded-xl border border-amber-300/20 bg-black/30 p-5 shadow-sm">
           <h2 className="text-lg font-semibold text-amber-100">How it works</h2>
           <p className="mt-2 text-sm text-amber-50/90">
-            Upload one replay, get a luck scorecard, and review the top Nuffle
-            swings.
+            Upload one replay to see supported dice results and trace key moments
+            back to the replay evidence.
           </p>
         </div>
         <div className="rounded-xl border border-amber-300/20 bg-black/30 p-5 shadow-sm">

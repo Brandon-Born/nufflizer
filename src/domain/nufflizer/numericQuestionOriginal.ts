@@ -543,7 +543,8 @@ export function validReportedNumericQuestionOriginal(
     receipt = m.numericOriginal;
   if (!receipt)
     return !(
-      m.sourceTag === "QuestionTeamRerollUsage" && e.scoringStatus === "scored"
+      m.sourceTag === "QuestionTeamRerollUsage" && e.scoringStatus === "scored" &&
+      m.activationCheck?.draw !== "original"
     );
   const r = originals.get(m.sourceId),
     type = m.rollType,

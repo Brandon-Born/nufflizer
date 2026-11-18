@@ -3,6 +3,7 @@ import { hasArmorUnderReview } from "@/domain/nufflizer/readerSummary";
 import { openSync, fstatSync, closeSync, readSync } from "node:fs";
 import path from "node:path";
 import { REPLAY_LIMITS } from "@/domain/replay/limits";
+import { ReplayValidationError } from "@/lib/errors";
 
 import {
   CATEGORY_EXAMPLE_LINES,
@@ -13,6 +14,8 @@ import type { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
 import {
   scoredEvidenceForTeam,
   formatDiceContribution,
+  formatSupportedDiceGap,
+  explainVerdictEvidence,
   formatPreRollPosition,
   formatPlayerObservation,
   explainPreRollEvidence,
@@ -49,6 +52,8 @@ import {
   explainDriveEffectExpiry,
   explainContextCoverage,
   explainDiceCensus,
+  ROLL_FAMILY_SCOPE,
+  rollFamilyLabels,
   explainObservedDice,
   explainRecruitmentEvidence,
   explainOwnership,
@@ -93,6 +98,7 @@ function formatTeamSummary(
     (event) => event.metadata.activationLoss || event.metadata.activationEnd
   );
   const eventsById = new Map(report.events.map((event) => [event.id, event]));
+  const diceById = new Map(report.diceRecords.map((record) => [record.id, record]));
   const sourcesById = new Map(
     report.events.flatMap((event) =>
       event.metadata.sourceId ? [[event.metadata.sourceId, event] as const] : []
@@ -120,14 +126,34 @@ function formatTeamSummary(
     `Match: ${report.match.id}`,
     `Home: ${home?.teamName ?? "Home"} (${armorUnderReview ? "total under review" : formatDiceContribution(home.luckScore, scoredEvidenceForTeam(report, home.teamId).total, 1)})`,
     `Away: ${away?.teamName ?? "Away"} (${armorUnderReview ? "total under review" : formatDiceContribution(away.luckScore, scoredEvidenceForTeam(report, away.teamId).total, 1)})`,
-    `Verdict: ${report.verdict.summary}${armorUnderReview ? " (combined dice comparison withheld: armor under review)" : ` (dice contribution gap ${formatDiceContribution(report.verdict.scoreGap, report.coverage.allEvents.scoredCount, 1)})`}`,
+    `Verdict: ${report.verdict.summary}${armorUnderReview ? " (combined dice comparison withheld: armor under review)" : ` (dice contribution gap ${formatSupportedDiceGap(report.verdict.scoreGap)})`}`,
+    ...explainVerdictEvidence(report),
     `Roll-candidate coverage: ${(report.coverage.rollCandidates.scoredRate * 100).toFixed(1)}% scored (${report.coverage.rollCandidates.scoredCount} scored, ${report.coverage.rollCandidates.excludedCount} excluded)`,
     `All-event coverage: ${(report.coverage.allEvents.scoredRate * 100).toFixed(1)}% scored (${report.coverage.allEvents.scoredCount} scored, ${report.coverage.allEvents.excludedCount} excluded)`,
     explainContextCoverage(report.coverage.contextEvidence),
     explainDiceCensus(report.coverage.diceRecords),
+    ...(report.coverage.rollFamilies.length
+      ? [
+          "Roll-family coverage",
+          ROLL_FAMILY_SCOPE,
+          ...report.coverage.rollFamilies.map((row) => {
+            const { team, source } = rollFamilyLabels(row, report.teams);
+            return `- ${team} | ${source} | ${row.scoredCount} scored, ${row.unscoredCount} unscored, ${row.unattributedCount} unattributed, ${row.malformedCount} malformed, ${row.unresolvedIdentityCount} with unresolved identity`;
+          })
+        ]
+      : []),
     ...report.events
       .filter((e) => e.metadata.observedReroll || e.metadata.teamDiceIdentity)
-      .map((e) => `Source ${e.metadata.sourceId}: ${explainObservedDice(e)}`),
+      .map((e) => `Source ${e.metadata.sourceId}: ${explainObservedDice(e, diceById)}`),
+    ...report.events.filter((e) => e.metadata.activationCheck || e.metadata.foulAppearance).slice(0, 20).map(
+      (e) => `Source ${e.metadata.sourceId}: ${e.label}. ${e.explainability.inputsSummary} Dice contribution ${e.weightedDelta.toFixed(6)}.`
+    ),
+    ...report.events.flatMap((event) => {
+      const bombCatch = event.metadata.bombCatch;
+      return bombCatch ? [
+        `Source ${event.metadata.sourceId}: ${event.label}. Recorded explosion ${bombCatch.explosionSourceId}. Odds are unknown.`
+      ] : [];
+    }),
     "Partial context component sums:",
     PARTIAL_CONTEXT_SCOPE,
     ...report.contextComponents.flatMap((summary) => [
@@ -252,6 +278,16 @@ function formatTeamSummary(
           `Player ${event.playerId ?? "unknown"}; source ${event.metadata.sourceId ?? event.id}: ${explainContextBounds(event)}`
       ),
     ...report.events
+      .filter((event) =>
+        event.contextualImpact?.policy === "committed_team_scoring_rush" ||
+        event.contextualImpact?.policy === "exact_pickup_possession"
+      )
+      .slice(0, 20)
+      .map(
+        (event) =>
+          `Player ${event.playerId ?? "unknown"}; source ${event.metadata.sourceId ?? event.id}: ${explainContextImpact(event)}`
+      ),
+    ...report.events
       .filter(
         (event) =>
           event.metadata.dodgeMovement ||
@@ -259,13 +295,20 @@ function formatTeamSummary(
           event.metadata.teamRerollMovement ||
           event.metadata.pickupAfterMovement ||
           event.metadata.combinedMovement ||
-          event.metadata.movementFall?.combinedRushSourceId
+          event.metadata.scoringAttemptScore ||
+          event.metadata.movementFall?.combinedRushSourceId ||
+          event.metadata.movementFall?.ballPath
       )
       .slice(0, 20)
       .map(
         (event) =>
           `Player ${event.playerId ?? "unknown"}; source ${event.metadata.sourceId ?? event.id}: ${explainMovementOutcome(event.metadata)}`
       ),
+    ...report.events
+      .filter((event) => event.metadata.pickupTurnEnd?.kind === "bounce")
+      .slice(0, 20)
+      .map((event) =>
+        `Source ${event.metadata.sourceId}: ${explainPickupBallChain(event, report.teams, eventsById)}`),
     ...report.events
       .filter((event) => event.metadata.lonerGate)
       .slice(0, 20)
@@ -405,6 +448,7 @@ async function run() {
 
 run().catch((error) => {
   const message = error instanceof Error ? error.message : "Unknown CLI error";
-  console.error(`[nufflizier] ${message}`);
+  const code = error instanceof ReplayValidationError ? `[${error.code}] ` : "";
+  console.error(`[nufflizier] ${code}${message}`);
   process.exitCode = 1;
 });

@@ -28,8 +28,8 @@ it("[cli-worker] exports real retained initial injury and first reserves states 
   };
   try {
     const r = LuckReportSchema.parse(JSON.parse(run("demo3", "json")));
-    expect(r.schemaVersion).toBe("2.73");
-    expect(r.modelVersion).toBe("dice-only-37");
+    expect(r.schemaVersion).toBe("2.103");
+    expect(r.modelVersion).toBe("dice-only-48");
     expect(r.events.filter((e) => e.metadata.recordedTreatment)).toHaveLength(
       5
     );
@@ -190,4 +190,7 @@ it("[cli-worker] retains the treated player's Pass budget before Throw Team-mate
   expect(text).toContain("No new roll");
   expect(text).toContain("are declaration parameters");
   expect(text).toContain("No extra luck or contextual value is added");
+  expect(text).toContain("Source source-616: Really Stupid first die failed.");
+  expect(text).toContain("This is the first die recorded in the reroll question.");
+  expect(text).toContain("The team reroll was declined. The first die of 1 is scored at source-616.");
 }, 20000);

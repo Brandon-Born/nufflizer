@@ -25,7 +25,7 @@ const invalid: [string, (e: ReplayEvent, h: ReplayEvent) => void][] = [
   [
     "unknown provider",
     (e) => {
-      (e.payload!.Effect as Record<string, unknown>).ProviderId = 84;
+      (e.payload!.Effect as Record<string, unknown>).ProviderId = 85;
     }
   ],
   [

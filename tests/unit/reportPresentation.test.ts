@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   formatDiceContribution,
   formatPlayerObservation,
+  formatSupportedDiceGap,
   scoredEvidenceForTeam
 } from "@/domain/nufflizer/presentation";
 import { analyzeReplayLuck } from "@/domain/nufflizer/analyzeLuck";
@@ -41,5 +42,11 @@ describe("NUF-021 evidence-qualified presentation", () => {
     });
     expect(scoredEvidenceForTeam(report, "1").total).toBe(1);
     expect(scoredEvidenceForTeam(report, "missing").total).toBe(0);
+  });
+  it("keeps a missing or small dice gap distinct from matching totals", () => {
+    expect(formatSupportedDiceGap(null)).toBe("Not scored");
+    expect(formatSupportedDiceGap(0)).toBe("0.0 (supported totals match)");
+    expect(formatSupportedDiceGap(0.004)).toBe("less than 0.1");
+    expect(formatSupportedDiceGap(0.16)).toBe("0.2");
   });
 });

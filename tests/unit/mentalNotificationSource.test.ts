@@ -5,6 +5,8 @@ import { describe, expect, it } from "vitest";
 import { parseReplayXml } from "@/domain/replay/parseXml";
 import { decodeReplayInput } from "@/domain/replay/decodeReplay";
 import { scopedTraitEffectPlayer } from "@/domain/replay/traitTransitions";
+import { recordedMentalEffect } from "@/domain/replay/mentalEffects";
+import { visitCurrentTraits } from "@/domain/replay/traitContinuity";
 import { analyzeNufflizerInput } from "@/server/services/analyzeNufflizer";
 import { mentalNotificationXml } from "../helpers/mentalNotification";
 
@@ -76,9 +78,9 @@ describe("independent inner mental-notification continuity evidence", () => {
       }
     });
   });
-  it("joins every known result holder/header and leaves provider84 outside the scoped policy", () => {
-    let admitted = 0,
-      other = 0;
+  it("joins 69 result headers and scopes the six Animal Savagery notifications to player 37", () => {
+    let inner = 0;
+    const savagery: string[] = [];
     for (const f of facts.files) {
       const p = parseReplayXml(
         decodeReplayInput(readFileSync("demo-replays/" + f.file, "utf8")).xml,
@@ -90,18 +92,204 @@ describe("independent inner mental-notification continuity evidence", () => {
         const e = by.get(key(n.locator))!;
         expect(e?.sourceTag).toBe(n.tag);
         expect(canonical(e.payload)).toEqual(n.payload);
-        if (!n.tag.startsWith("Result")) continue;
-        const h = by.get(key({ ...n.locator, messageIndex: null }))!;
-        expect(h.sourceTag).toBe(n.headerTag);
-        expect(canonical(h.payload)).toEqual(n.header);
-        const valid = [31, 51].includes(n.payload.Effect.ProviderId);
-        expect(scopedTraitEffectPlayer(e, h)).toBe(
-          valid ? String(n.payload.PlayerId) : undefined
-        );
-        valid ? admitted++ : other++;
+        const isInner = n.tag.startsWith("Result");
+        const h = isInner
+          ? by.get(key({ ...n.locator, messageIndex: null }))
+          : undefined;
+        if (isInner) {
+          expect(h?.sourceTag).toBe(n.headerTag);
+          expect(canonical(h?.payload)).toEqual(n.header);
+          expect(scopedTraitEffectPlayer(e, h)).toBe(
+            String(n.payload.PlayerId)
+          );
+          inner++;
+        }
+        if (n.payload.Effect.ProviderId !== 84) continue;
+        expect(scopedTraitEffectPlayer(e, h)).toBe("37");
+        expect(recordedMentalEffect(e.payload?.Effect)).toBeNull();
+        expect(f.file).toBe("demo5.bbr");
+        savagery.push(key(n.locator));
+
+        const extraSkill = structuredClone(e);
+        (
+          extraSkill.payload!.Effect as Record<string, unknown>
+        ).AdditionalSkills = "57";
+        expect(scopedTraitEffectPlayer(extraSkill, h)).toBeUndefined();
+        expect(
+          scopedTraitEffectPlayer({ ...e, attributionConflict: true }, h)
+        ).toBeUndefined();
+        if (h) {
+          expect(
+            scopedTraitEffectPlayer(e, { ...h, actorTeamId: "0" })
+          ).toBeUndefined();
+        } else {
+          expect(
+            scopedTraitEffectPlayer({ ...e, locator: undefined })
+          ).toBeUndefined();
+        }
       }
     }
-    expect({ admitted, other }).toEqual({ admitted: 64, other: 5 });
+    expect(inner).toBe(69);
+    expect(savagery).toEqual([
+      "100:1:0:2",
+      "118:6::",
+      "209:1:0:2",
+      "252:1:0:1",
+      "379:1:0:2",
+      "400:1:0:1"
+    ]);
+  });
+  it("restores the holder and struck teammate only on their clean settled return boards", () => {
+    const replay = parseReplayXml(
+      decodeReplayInput(readFileSync("demo-replays/demo5.bbr", "utf8")).xml,
+      { omitRawReplaySteps: true }
+    );
+    const trackedSources = [
+      665, 812, 824, 1134, 1139, 1721, 1729, 1741, 1762, 2409
+    ];
+    const collect = () => {
+      const observations = new Map<number, string[]>();
+      visitCurrentTraits(replay, (event, current, ledger) => {
+        const index = event.sourceIndex!;
+        if (!trackedSources.includes(index)) return;
+        const ids = ["37", "38"].filter((id) => ledger.has(id));
+        observations.set(index, ids);
+        for (const id of ids)
+          expect(ledger.get(id)).toMatchObject({
+            teamId: "1",
+            observedCheckpointAfter: 0,
+            currentCheckpointAfter: current!.afterSourceIndex,
+            traits: { dataPlayerId: Number(id), acquiredSkills: [] }
+          });
+      });
+      return observations;
+    };
+    expect([...collect()]).toEqual([
+      [665, ["38"]],
+      [812, ["38"]],
+      [824, ["37", "38"]],
+      [1134, []],
+      [1139, []],
+      [1721, []],
+      [1729, ["37"]],
+      [1741, ["37"]],
+      [1762, ["37", "38"]],
+      [2409, ["37", "38"]]
+    ]);
+
+    const checkpoints = replay.boardCheckpoints!;
+    const firstEffect = checkpoints
+      .find((cp) => cp.afterSourceIndex === 664)!
+      .board!.teams[1]!.players.find((player) => player.id === 37)!;
+    firstEffect.animalSavageryEffect = false;
+    expect(collect().get(824)).toEqual(["38"]);
+    firstEffect.animalSavageryEffect = true;
+
+    const events = replay.turns.flatMap((turn) => turn.events);
+    const armor = events.find((event) => event.sourceIndex === 1135)!;
+    armor.payload!.NewRoll = 0;
+    expect(collect().get(2409)).toEqual([]);
+    armor.payload!.NewRoll = 1;
+
+    const stoodUp = checkpoints.find(
+      (cp) => cp.afterSourceIndex === 1761
+    )!.board!;
+    stoodUp.stable = false;
+    expect(collect().get(1762)).toEqual(["37"]);
+  });
+  it("scores the three recovered demo5 block pools and links the subsequent armor check", () => {
+    const report = analyzeNufflizerInput(
+      readFileSync("demo-replays/demo5.bbr", "utf8")
+    );
+    const bySource = new Map(
+      report.events.map((event) => [event.metadata.sourceId, event])
+    );
+    const pools = [
+      {
+        source: 682,
+        team: "1",
+        attacker: "39",
+        defender: "5",
+        faces: [2, 2],
+        offered: 0,
+        mean: 19 / 36,
+        delta: -19 / 48
+      },
+      {
+        source: 703,
+        team: "1",
+        attacker: "42",
+        defender: "9",
+        faces: [3, 0],
+        offered: 0,
+        mean: 5 / 18,
+        delta: -5 / 24
+      },
+      {
+        source: 987,
+        team: "0",
+        attacker: "2",
+        defender: "41",
+        faces: [3, 0],
+        offered: 1,
+        mean: 19 / 36,
+        delta: 17 / 48
+      }
+    ];
+    for (const {
+      source,
+      team,
+      attacker,
+      defender,
+      faces,
+      offered,
+      mean,
+      delta
+    } of pools) {
+      const pool = bySource.get(`source-${source}`)!;
+      expect(pool).toMatchObject({
+        teamId: team,
+        playerId: attacker,
+        scoringStatus: "scored",
+        actualSuccess: null,
+        probabilitySuccess: null,
+        metadata: {
+          block: {
+            attackerId: attacker,
+            defenderId: defender,
+            pool: { faces, rolledIndexes: [0, 1], attackerChooses: true }
+          },
+          blockScoring: {
+            policy: "fixed_pool_knockdown_balance",
+            observedValue: offered,
+            expectedValue: mean
+          }
+        }
+      });
+      expect(pool.weightedDelta).toBeCloseTo(delta, 12);
+    }
+    expect(
+      bySource.get("source-703")!.metadata.block!.selectedFace
+    ).toBeUndefined();
+    const armor = bySource.get("source-1002")!;
+    expect(armor).toMatchObject({
+      type: "armor_break",
+      teamId: "1",
+      playerId: "41",
+      scoringStatus: "scored",
+      actualSuccess: true,
+      probabilitySuccess: 30 / 36,
+      explainability: { target: "Armor holds below 10" },
+      metadata: {
+        dice: [5, 2],
+        damage: { chainActionId: "sequence-101-step-1" }
+      }
+    });
+    expect(
+      bySource.get("source-987")!.metadata.blockResolution?.damageActionIds
+    ).toEqual([armor.metadata.damage!.chainActionId]);
+    expect(armor.weightedDelta).toBeCloseTo(1 / 6, 12);
+    expect(report.verdict.luckierTeam).toBe("unknown");
   });
   it.each(["ResultAddPlayerEffect", "ResultEndPlayerEffect"] as const)(
     "retains unrelated learned lists after %s without new snapshot Data",

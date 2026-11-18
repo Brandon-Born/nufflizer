@@ -106,9 +106,9 @@ for (const c of [
     const saved = JSON.parse(
       readFileSync((await (await pending).path())!, "utf8")
     );
-    expect(saved.schemaVersion).toBe("2.73");
-    expect(saved.modelVersion).toBe("dice-only-37");
-    expect(saved.contextModelVersion).toBe("mobility-possession-42");
+    expect(saved.schemaVersion).toBe("2.103");
+    expect(saved.modelVersion).toBe("dice-only-48");
+    expect(saved.contextModelVersion).toBe("mobility-possession-56");
     const gate = saved.events.find(
         (e: { metadata: { sourceId: string } }) =>
           e.metadata.sourceId === c.gate

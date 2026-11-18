@@ -9,7 +9,10 @@ import {
 import { unmodifiedD6Check } from "@/domain/replay/numericCheck";
 import { teamMovementContinuity } from "@/domain/replay/teamMovementContinuity";
 import { findMovementFall } from "./movementConsequences";
-import { estimateKeptDodgeMoveBounds } from "./contextImpact";
+import {
+  estimateExactTeamMoves,
+  estimateKeptDodgeMoveBounds
+} from "./contextImpact";
 import type { LuckEvent } from "./types";
 export type KeptDodgeContext = {
   declarationSourceId: string;
@@ -89,7 +92,9 @@ export function findKeptDodgeContexts(
       !threshold ||
       !question?.id ||
       !choice?.id ||
-      !context?.ordinaryMoveAvailability?.unknownPlayerIds.length ||
+      !context?.ordinaryMoveAvailability ||
+      (!context.ordinaryMoveAvailability.unknownPlayerIds.length &&
+        context.ordinaryMoveRosterComplete !== true) ||
       context.ordinaryMoveAvailability.unknownPlayerIds.length +
         context.ordinaryMoveAvailability.knownAvailablePlayerIds.length >=
         64 ||
@@ -229,16 +234,27 @@ export function attachKeptDodgeMoves(
       m.difficulty !== p.threshold ||
       (m.modifiers?.length ?? 0) !== 0 ||
       e.probabilitySuccess !== (7 - p.threshold) / 6 ||
-      e.contextualImpact ||
+      (e.contextualImpact &&
+        e.contextualImpact.policy !== "declined_team_reroll") ||
       e.contextualBounds ||
       e.possessionBounds ||
       e.catchPossessionBounds
     )
       continue;
-    e.contextualBounds = estimateKeptDodgeMoveBounds(
+    const successChance = (7 - p.threshold) / 6;
+    const exact = estimateExactTeamMoves(
+      "kept_dodge_terminal_moves",
       m.preRoll,
-      (7 - p.threshold) / 6,
+      false,
+      successChance,
       p.waitingCheckpointAfter
     );
+    if (exact) e.contextualImpact = exact;
+    else if (!e.contextualImpact)
+      e.contextualBounds = estimateKeptDodgeMoveBounds(
+        m.preRoll,
+        successChance,
+        p.waitingCheckpointAfter
+      );
   }
 }

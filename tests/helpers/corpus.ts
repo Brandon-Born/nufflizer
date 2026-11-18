@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { decodeReplayInput } from "@/domain/replay/decodeReplay";
 import { parseReplayXml } from "@/domain/replay/parseXml";
 import { analyzeReplayLuck } from "@/domain/nufflizer/analyzeLuck";
+import contextArithmetic from "../fixtures/evidence/context-component-arithmetic.json";
 let corpus: ReturnType<typeof load> | undefined;
 function load() {
   return readdirSync("demo-replays")
@@ -16,4 +17,10 @@ function load() {
 }
 export function demoCorpus() {
   return (corpus ??= load());
+}
+
+export function expectedPublicImpactCounts(file: string) {
+  const expected = contextArithmetic.files.find((entry) => entry.file === file);
+  if (!expected) throw new Error(`Missing public context fixture for ${file}`);
+  return expected.teams.map((team) => team.pointCount);
 }

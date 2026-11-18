@@ -1,3 +1,4 @@
+import { summarizeContextComponents } from "@/domain/nufflizer/contextComponents";
 import { summarizeDamageSteps } from "@/domain/nufflizer/damageSteps";
 import { summarizeBlockConsequence } from "@/domain/nufflizer/blockConsequences";
 import {BLOCK_FACES,explainBlockEvidence} from "@/domain/nufflizer/blockPools";
@@ -113,13 +114,35 @@ const priorArmor = JSON.parse(readFileSync("tests/fixtures/evidence/armor-policy
   baseCommit: string;
   files: {file: string; sourceSha256: string; events: LuckReport["events"]; nonArmorScores: unknown[][]}[];
 };
+const priorBomb = JSON.parse(readFileSync("tests/fixtures/evidence/bomb-catch-prior-receipts.json", "utf8")) as {
+  files: { file: string; sourceSha256: string; events: { explosionSourceId: string; event: LuckReport["events"][number] }[] }[];
+};
 const oldProjection = (r: LuckReport, file: string) => {
   const armorReceipt = priorArmor.files.find(f => f.file === file)!;
   expect(priorArmor.baseCommit).toBe("63d66d8c31b032f5b92d25dc54c5d6aae5e67f08");
   expect(armorReceipt.sourceSha256).toBe(census.files.find(f => f.file === file)!.sourceSha256);
-  expect(r.events.filter(e => e.type !== "armor_break" && e.scoringStatus === "scored").map(e =>
+  const bombReceipt = priorBomb.files.find(f => f.file === file);
+  const oldBomb = new Map((bombReceipt?.events ?? []).map(({ event }) => [event.metadata.sourceId, event]));
+  if (bombReceipt) expect(bombReceipt.sourceSha256).toBe(armorReceipt.sourceSha256);
+  // Historical coverage stays frozen. The current ownership, block and injury
+  // suites verify each admitted score against its separate raw/math witness.
+  const archived = armorReceipt.nonArmorScores.filter(row => !oldBomb.has(row[0] as string));
+  const archivedIds = new Set(archived.map(row => row[0]));
+  const current = r.events.filter(e => e.type !== "armor_break" && e.type !== "activation_check" && e.scoringStatus === "scored");
+  const added = current.filter(e => !archivedIds.has(e.metadata.sourceId));
+  const [blocks, injuries] = file === "demo5.bbr" ? [46, 6] : file === "demo6.bbr" ? [12, 4] : file === "demo9.bbr" ? [1, 2] : [0, 0];
+  expect(added.filter(e => e.type === "block" && e.metadata.blockScoring)).toHaveLength(blocks);
+  expect(added.filter(e => e.type === "injury" && e.metadata.injuryScoring)).toHaveLength(injuries);
+  expect(added).toHaveLength(blocks + injuries);
+  expect(current.filter(e => archivedIds.has(e.metadata.sourceId)).map(e =>
     [e.metadata.sourceId,e.type,e.teamId,e.playerId,e.probabilitySuccess,e.actualSuccess,e.delta,e.weightedDelta]
-  )).toEqual(armorReceipt.nonArmorScores);
+  )).toEqual(archived);
+  for (const { event, explosionSourceId } of bombReceipt?.events ?? []) {
+    const current = r.events.find(e => e.metadata.sourceId === event.metadata.sourceId);
+    expect(current).toMatchObject({ scoringStatus: "excluded", weightedDelta: 0,
+      metadata: { dice: event.metadata.dice, bombCatch: { explosionSourceId, caught: event.actualSuccess } }
+    });
+  }
   const oldArmor = new Map(armorReceipt.events.map(e => [e.metadata.sourceId,e]));
   for (const old of armorReceipt.events) {
     const current = r.events.find(e => e.metadata.sourceId === old.metadata.sourceId)!;
@@ -149,8 +172,59 @@ const oldProjection = (r: LuckReport, file: string) => {
   // that historical receipt without treating its biased reroll values as a
   // correctness oracle. Independent full-pipeline zero-mean enumeration and
   // 110 XML-prefix arithmetic joins require the current actual-draw scores.
-  const legacyEvents=r.events.map(e=>{
-    const copy=structuredClone(oldArmor.get(e.metadata.sourceId) ?? e);
+  // The original fingerprint predates the Pickup decision ranges
+  // and their newly displayed deterministic receipts.
+  const addedPickupSources = file === "demo2.bbr" ? ["source-236", "source-251"]
+    : file === "demo11.bbr" ? ["source-3194"]
+    : file === "demo4.bbr" ? ["source-4188"]
+    : file === "demo5.bbr" ? ["source-2387", "source-2405"]
+    : file === "demo8.bbr" ? ["source-210", "source-213"] : [];
+  const earlierContext = r.events.filter((e) => !addedPickupSources.includes(e.metadata.sourceId ?? ""))
+    .map((e) => {
+      if (e.contextualBounds?.policy === "final_turn_scoring_rush_envelope") {
+        const copy = structuredClone(e);
+        delete copy.contextualBounds;
+        return copy;
+      }
+      if (e.contextualImpact?.policy === "committed_team_scoring_rush") {
+        const copy = structuredClone(e);
+        if (e.contextualImpact.evidence.periodBasis === "half_boundary_counters")
+          delete copy.metadata.preRoll;
+        delete copy.contextualImpact;
+        return copy;
+      }
+      if (e.contextualImpact?.policy === "exact_pickup_possession" && e.contextualImpact.continuedTraits) {
+        const copy = structuredClone(e);
+        if (e.contextualImpact.stage === "sure_hands_reroll") {
+          const preRoll = copy.metadata.preRoll!;
+          preRoll.pickupSettlementKnown = false;
+          preRoll.pickupSuccessors!.branches = preRoll.pickupSuccessors!.branches.map(
+            (branch) => branch.kind === "empty" ? { ...branch, settlement: "reaction_unknown" } : branch
+          );
+          return Object.fromEntries(Object.entries(copy).map(([key, value]) =>
+            key === "contextualImpact"
+              ? ["possessionBounds", {
+                  policy: "sure_hands_reroll", successChance: 2 / 3,
+                  minimumDifference: 0, maximumDifference: 2, lower: -4 / 3, upper: 0
+                }]
+              : [key, value]
+          )) as LuckReport["events"][number];
+        }
+        delete copy.contextualImpact;
+        delete copy.metadata.preRoll!.pickupSuccessors;
+        copy.metadata.preRoll!.pickupSettlementKnown = false;
+        return copy;
+      }
+      if (e.possessionBounds?.policy !== "kept_pickup_possession" &&
+          e.possessionBounds?.policy !== "team_pickup_possession") return e;
+      const copy = structuredClone(e);
+      delete copy.possessionBounds;
+      delete copy.metadata.preRoll?.pickupSuccessors;
+      return copy;
+    });
+  const legacyEvents=earlierContext.map(e=>{
+    // Reconstruct historical normal-Catch admission only for the archived rows.
+    const copy=structuredClone(oldArmor.get(e.metadata.sourceId) ?? oldBomb.get(e.metadata.sourceId) ?? e);
     // Earlier unknown armor did not anchor a source-qualified damage stage.
     if(copy.type === "armor_break" && !oldArmor.has(copy.metadata.sourceId)) delete copy.metadata.damage;
     // This frozen receipt used the former raw-symbol metric. Reconstruct only
@@ -198,6 +272,14 @@ const oldProjection = (r: LuckReport, file: string) => {
     contexts = new Map(priorContext.files.find(f=>f.file===file)!.rows.map(r=>[r.sourceId,r.preRoll])),
     events = legacyEvents.filter((e) => ids.has(e.metadata.sourceId!)).map(e=>{
       const copy=structuredClone(e);
+      const pickupEnd = copy.metadata.pickupTurnEnd;
+      if (pickupEnd?.kind === "bounce") delete copy.metadata.pickupTurnEnd;
+      if (pickupEnd?.kind === "catch")
+        delete (pickupEnd as { kind?: string }).kind;
+      // The frozen receipts precede the end-zone carrier fall/ball witnesses.
+      if ((file === "demo1.bbr" && copy.metadata.sourceId === "source-2901") ||
+          (file === "demo2.bbr" && copy.metadata.sourceId === "source-3528"))
+        delete copy.metadata.movementFall;
       // Newly qualified unknown armor can link an unscored action. Remove only
       // that new membership when reconstructing the pre-policy receipt.
       if(copy.metadata.blockResolution) copy.metadata.blockResolution.damageActionIds =
@@ -240,7 +322,8 @@ const oldProjection = (r: LuckReport, file: string) => {
     dodge: "dodge",
     ball_handling: "ballHandling",
     argue_call: "argueCall",
-    movement_risk: "movementRisk"
+    movement_risk: "movementRisk",
+    activation_check: "activationCheck"
   } as const;
   for (const e of events) {
     const t = teams.find((t) => t.teamId === e.teamId)!;
@@ -274,6 +357,7 @@ const oldProjection = (r: LuckReport, file: string) => {
               // cohort. Its source/roster/flags have independent golden joins.
               "regenerationAftermath",
               "regenerationReturn",
+              "scoringAttemptScore",
               "rerollDraws",
               // New source-only resource facts are independently joined to
               // XML. They add no value to this frozen historical dice cohort.
@@ -283,18 +367,25 @@ const oldProjection = (r: LuckReport, file: string) => {
         )
       )
     })),
-    contextComponents: r.contextComponents,
+    contextComponents: addedPickupSources.length || file === "demo1.bbr" || file === "demo6.bbr"
+      ? LuckReportSchema.shape.contextComponents.parse(
+          summarizeContextComponents(earlierContext, r.teams.map((t) => t.teamId))
+        )
+      : r.contextComponents,
     verdict: {
-      ...r.verdict,
-      scoreGap: Math.abs(teams[0].luckScore - teams[1].luckScore)
+      luckierTeam: r.verdict.luckierTeam,
+      status: r.verdict.status,
+      scoreGap: Math.abs(teams[0].luckScore - teams[1].luckScore),
+      summary: r.verdict.summary
     },
-    teams: teams.map((t) =>
-      Object.fromEntries(
-        Object.entries(t).filter(
+    teams: teams.map((t) => {
+      const { activationCheck: _laterCategory, ...categoryScores } = t.categoryScores;
+      return Object.fromEntries(
+        Object.entries({ ...t, categoryScores }).filter(
           ([k]) => !["eventCount", "excludedCount", "coverage"].includes(k)
         )
-      )
-    )
+      );
+    })
   };
 };
 describe("independent source dice census", () => {
@@ -395,7 +486,7 @@ describe("independent source dice census", () => {
           (e) =>
             e.contextualBounds || e.possessionBounds || e.catchPossessionBounds
         )
-    ).toHaveLength(27);
+    ).toHaveLength(31);
   });
 });
 describe("untrusted dice field boundaries and honest denominator", () => {
@@ -422,6 +513,13 @@ describe("untrusted dice field boundaries and honest denominator", () => {
       unresolvedCount: 100
     });
     expect(r.coverage.rollCandidates.scoredRate).toBe(1 / 101);
+    expect(r.verdict).toMatchObject({
+      status: "partial_analysis",
+      luckierTeam: "unknown",
+      scoreGap: null
+    });
+    r.verdict.scoreGap = 0;
+    expect(LuckReportSchema.safeParse(r).success).toBe(false);
     expect(
       r.coverage.rollFamilies.some(
         (f) => f.teamId === "unresolved" && f.unattributedCount === 100
@@ -633,7 +731,7 @@ describe("source-linked reroll dice identity without new odds", () => {
   });
   it("keeps unsupported family/gate identities unscored and missing roles unresolved", () => {
     const r = reports.get("demo11.bbr")!,
-      e = r.events.find((e) => e.metadata.teamDiceIdentity)!;
+      e = r.events.find((e) => e.metadata.teamDiceIdentity?.gateSkillId === 50)!;
     expect(e.metadata.teamDiceIdentity).toMatchObject({
       teamUsed: false,
       replacementRolled: false,

@@ -21,6 +21,13 @@ describe("POST /api/nufflizier/analyze", () => {
     const measuredZero=report.events.find(e=>e.metadata.sourceId==="source-272")!;
     expect(measuredZero).toMatchObject({scoringStatus:"scored",delta:0,weightedDelta:0,probabilitySuccess:null,actualSuccess:null});
     expect(measuredZero.metadata.block!.skillModel!.nonKnockdownSkills).toEqual({policy:"outside_current_pool_knockdowns",attacker:[102],defender:[]});
+    const frenzy = report.events.find((event) => event.metadata.sourceId === "source-2559")!;
+    expect(frenzy).toMatchObject({
+      type: "activation_check", scoringStatus: "scored", probabilitySuccess: 5 / 6,
+      playerId: "11", teamId: "0",
+      metadata: { foulAppearance: { defenderId: "41", previousBlockSourceId: "source-2554" } }
+    });
+    expect(frenzy.weightedDelta).toBeCloseTo(1 / 6, 12);
     expect(report.rerollResources).toMatchObject({decisionCount:21,linkedCount:21,unresolvedCount:0});
     expect(report.events.find(e=>e.metadata.sourceId==="source-5188")!.metadata.treatmentReturn).toMatchObject({status:"observed",setup:{checkpointAfter:5302},playing:{checkpointAfter:5366},activation:{sourceId:"source-5397",actionCode:4,budget:{kind:"pass",headerCellTo:{x:13,y:8}}}});
     const returned=report.events.find(e=>e.metadata.sourceId==="source-5397")!;
@@ -35,7 +42,11 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(e.metadata.sourceId).toBe("source-548");expect(e.metadata.retainedCatchReaction).toMatchObject({beforeCheckpointAfter:538,waitingCheckpointAfter:545});
     expect(e.catchPossessionBounds).toMatchObject({policy:"kept_catch_failure_envelope",lower:-2/3,upper:0});
     expect(e.probabilitySuccess).toBe(1/3);expect(e.weightedDelta).toBeCloseTo(-11/30,12);
-    expect(e.metadata.preRoll).toBeUndefined();expect(report.teams.every(t=>t.impactCount===0)).toBe(true);
+    expect(e.metadata.preRoll).toBeUndefined();
+    const halftime = report.events.find(event => event.metadata.sourceId === "source-2901")!;
+    expect(halftime.metadata.scoringAttemptScore?.scores).toEqual([0, 0]);
+    expect(halftime.contextualImpact?.contribution).toBeCloseTo(-190 / 51, 12);
+    expect(report.teams.map(team => team.impactCount)).toEqual([1, 0]);
   },20000);
   it("keeps opt-in worker stage diagnostics separate from report data", async () => {
     vi.stubEnv("NUFFLIZIER_ANALYZER_TIMING", "1");
@@ -52,6 +63,10 @@ describe("POST /api/nufflizier/analyze", () => {
       const report = LuckReportSchema.parse(await response.json());
       expect(report.coverage.rollCandidates).toMatchObject({scoredCount:6,excludedCount:102,scoredRate:6/108});
       expect(report.coverage.diceRecords).toMatchObject({eventRecordCount:9,snapshotRecordCount:100,unresolvedCount:100});
+      expect(report.verdict).toMatchObject({
+        status: "partial_analysis", luckierTeam: "unknown",
+        evidence: { unscoredRollCandidates: 102, unresolvedDiceFields: 100 }
+      });
       const unapplied=report.events.find(e=>e.playerId==="142"&&e.type==="armor_break")!;
       expect(unapplied).toMatchObject({scoringStatus:"excluded",actualSuccess:null,probabilitySuccess:null,weightedDelta:0,metadata:{isRollCandidate:true,dice:[3,5]}});
       expect(unapplied.statusReason).toContain("not applied");
@@ -95,6 +110,24 @@ describe("POST /api/nufflizier/analyze", () => {
       falls = report.events.filter(
         (e) => e.metadata.movementFall?.combinedRushSourceId
       );
+    const keptPickup = report.events.find((e) => e.metadata.sourceId === "source-255")!;
+    expect(report.events.find((e) => e.metadata.sourceId === "source-3583")).toMatchObject({
+      label: "Bomb caught", scoringStatus: "excluded", weightedDelta: 0,
+      metadata: { bombCatch: { explosionSourceId: "source-3588", caught: true } }
+    });
+    const scoringRush = report.events.find((e) => e.metadata.sourceId === "source-3528")!;
+    expect(scoringRush.metadata.movementFall).toMatchObject({ diceContribution: -1.5,
+      ballPath: { waitingCheckpointAfter: 3524, aftermath: { status: "loose", checkpointAfter: 3546,
+        recovery: { pickupSourceId: "source-3685", confirmedCheckpointAfter: 3698, boardCount: 15 }
+      }, legs: [
+        { sourceId: "source-3534" }, { sourceId: "source-3536" },
+        { sourceId: "source-3538" }, { sourceId: "source-3540", to: { x: 12, y: 8 } }
+      ] }
+    });
+    expect(scoringRush.contextualImpact).toMatchObject({ policy: "committed_team_scoring_rush", contribution: -4 });
+    expect(keptPickup.possessionBounds?.policy).toBe("kept_pickup_possession");
+    expect(keptPickup.possessionBounds?.lower).toBeCloseTo(-17 / 12, 12);
+    expect(keptPickup.metadata.teamRerollsSpent).toBe(0);
     const newlyOwned = report.events.find(
       (e) => e.metadata.sourceId === "source-2737"
     )!;
@@ -129,15 +162,15 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(dodge.metadata.movementFall!.diceContribution).toBeCloseTo(-17/30,12);
     expect(dodge.contextualImpact).toBeUndefined();expect(dodge.probabilitySuccess).toBe(2/3);
     expect(rushes.map(e=>e.metadata.sourceId)).toEqual(["source-702","source-1091"]);
-    expect(rushes.map(e=>e.contextualBounds!.maximumMoves)).toEqual([5,6]);
+    expect(rushes.map(e=>e.contextualBounds)).toMatchObject([{maximumMoves:5},{maximumMoves:6}]);
     expect(rushes.every(e=>e.contextualBounds!.successChance===5/6 && e.probabilitySuccess===35/36 && e.contextualImpact===undefined)).toBe(true);
     const rescued=report.events.find(e=>e.metadata.sourceId==="source-702")!;
     expect(rescued.metadata.rerollDraws).toMatchObject({initialSourceId:"source-698",initialFace:1,baseSuccessChance:5/6,initialDelta:-5/6});
     expect(rescued.metadata.rerollDraws!.replacementDelta).toBeCloseTo(1/6,12);
     expect(rescued.actualSuccess).toBe(true);expect(rescued.delta).toBeCloseTo(-2/3,12);expect(rescued.weightedDelta).toBeCloseTo(-2/3,12);
     const components=report.contextComponents.find(t=>t.teamId==="1")!;
-    expect(components.componentCount).toBe(4);expect(components.byCategory.map(c=>c.type)).toEqual(["dodge","movement_risk"]);
-    expect(components.bounds!.lower).toBeCloseTo(-77/6,12);expect(components.bounds!.upper).toBeCloseTo(11/6,12);
+    expect(components.componentCount).toBe(5);expect(components.pointCount).toBe(1);expect(components.byCategory.map(c=>c.type)).toEqual(["dodge","movement_risk"]);
+    expect(components.bounds!.lower).toBeCloseTo(-101/6,12);expect(components.bounds!.upper).toBeCloseTo(-13/6,12);
     expect(falls.map((e) => e.metadata.locator?.replayStep)).toEqual([
       229, 259
     ]);
@@ -162,7 +195,7 @@ describe("POST /api/nufflizier/analyze", () => {
         (e) => e.actualSuccess === false && e.contextualImpact === undefined
       )
     ).toBe(true);
-    expect(report.teams.every((t) => t.impactCount === 0)).toBe(true);
+    expect(report.teams.map((t) => t.impactCount)).toEqual([0, 1]);
   }, 20000);
   it("retains the full-source Dodge budget without filling its missing period", async () => {
     const data = new FormData();
@@ -224,13 +257,16 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(e.metadata.preRoll?.activeTeamId).toBe("1");
     expect(e.metadata.preRoll?.period).toBeNull();
     const componentTeam=report.contextComponents.find(t=>t.teamId==="1")!;
-    expect(componentTeam).toMatchObject({componentCount:4,pointCount:0,boundedCount:4});
-    expect(componentTeam.bounds!.lower).toBeCloseTo(-14/3,12);expect(componentTeam.bounds!.upper).toBe(4);
-    expect(componentTeam.byCategory[0]!.eventIds).toEqual(["12-17-ResultRoll","12-25-ResultRoll","16-28-ResultRoll","35-75-ResultRoll"]);
-    expect(componentTeam.byAction).toHaveLength(4);expect(report.teams.every(t=>t.impactCount===0)).toBe(true);
+    expect(componentTeam).toMatchObject({componentCount:5,pointCount:0,boundedCount:5});
+    expect(componentTeam.bounds!.lower).toBeCloseTo(-25/4,12);expect(componentTeam.bounds!.upper).toBe(4);
+    expect(componentTeam.byCategory.find((entry) => entry.type === "dodge")?.eventIds).toEqual(["12-17-ResultRoll","12-25-ResultRoll","16-28-ResultRoll","35-75-ResultRoll"]);
+    const pickup = componentTeam.byCategory.find((entry) => entry.type === "ball_handling")!;
+    expect(pickup.eventIds).toEqual(["31-43-ResultRoll"]);
+    expect(pickup.bounds?.lower).toBeCloseTo(-19 / 12, 12);
+    expect(componentTeam.byAction).toHaveLength(5);expect(report.teams.every(t=>t.impactCount===0)).toBe(true);
     const terminalMoves=report.events.filter(e=>e.contextualBounds?.policy === "team_reroll_terminal_moves");
     expect(terminalMoves.map(e=>e.metadata.locator?.replayStep)).toEqual([194,249,430]);
-    expect(terminalMoves.map(e=>e.contextualBounds?.maximumMoves)).toEqual([6,3,4]);
+    expect(terminalMoves.map(e=>e.contextualBounds)).toMatchObject([{maximumMoves:6},{maximumMoves:3},{maximumMoves:4}]);
     expect(terminalMoves.every(e=>e.contextualBounds?.successChance===2/3 && e.contextualImpact===undefined)).toBe(true);
     expect(terminalMoves[1]!.contextualBounds!.lower).toBeCloseTo(-2,12);
     expect(report.events.find(e=>e.metadata.sourceId==="source-1954")?.metadata.activationEnd).toMatchObject({actorId:"46",followingPlayerId:"39",rosterCheckpointAfter:1939,teamTurn:6});
@@ -255,17 +291,55 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(response.status, JSON.stringify(payload).slice(0, 200)).toBe(200);
     const report = LuckReportSchema.parse(payload),
       moves = report.events.filter((e) => e.metadata.teamRerollMovement);
+    expect(report.events.find((e) => e.metadata.sourceId === "source-1125")).toMatchObject({
+      type: "activation_check", probabilitySuccess: 1 / 2, weightedDelta: -1 / 2
+    });
+    expect(report.events.find((e) => e.metadata.sourceId === "source-1129")).toMatchObject({
+      scoringStatus: "excluded", weightedDelta: 0,
+      metadata: {
+        animalSavageryOutcome: { victimId: "38", armorSourceId: "source-1135" },
+        animalSavageryContinuation: {
+          teamTurn: 4, followingActivationSourceId: "source-1141", actorRecordedCanAct: true,
+          victim: { afterRecordedCanAct: null, afterPitchLocation: "on_pitch" }
+        }
+      }
+    });
+    const rainPickup = report.events.find((event) => event.metadata.sourceId === "source-2409")!;
+    expect(rainPickup.metadata.pickupTurnEnd).toMatchObject({
+      kind: "bounce", bounceSourceId: "source-2411", endSourceId: "source-2412",
+      snapshot: {checkpointAfter: 2416, observedIsHeld: null, observedActiveGamerId: null}
+    });
+    expect(rainPickup.contextualImpact).toMatchObject({
+      policy: "exact_pickup_possession",
+      stage: "team_pickup_possession",
+      waitingCheckpointAfter: 2406,
+      successChance: 1 / 2,
+      offPitchPlayerCount: 4,
+      contribution: -1
+    });
     const push=report.events.find(e=>e.metadata.sourceId==="source-98")!.metadata.blockPush!;
     expect(push).toMatchObject({status:"modeled",questionSourceId:"source-101",checkpointAfter:98,pitchCheckpointAfter:0,selectedBranch:0,resultSourceIds:["source-103"]});
     if(push.status!=="modeled")throw new Error("missing ordinary push model");expect(push.destinations).toEqual([{x:14,y:9},{x:13,y:10}]);expect(push.branches).toHaveLength(4);
     expect(report.events.find(e=>e.metadata.sourceId==="source-101")).toMatchObject({label:"Recorded push destination choice",scoringStatus:"excluded",weightedDelta:0,metadata:{isRollCandidate:false,pushQuestion:{gamerId:0}}});
     expect(report.events.find(e=>e.metadata.sourceId==="source-3270")!.metadata.activationEnd).toMatchObject({kind:"ordinary_block_completed",actorId:"41",followingPlayerId:"45",teamTurn:13,periodCode:1,blockSourceId:"source-3265"});
     expect(report.events.find(e=>e.metadata.sourceId==="source-3272")!.metadata.preRoll!.ordinaryMoveAvailability!.unknownPlayerIds).not.toContain("41");
-    const skillPools=report.events.filter(e=>e.metadata.block?.skillModel);
+    const skilled=report.events.filter(e=>e.metadata.block?.skillModel);
+    expect(skilled).toHaveLength(57);
+    const skillPools=skilled.filter(e=>(e.metadata.sourceIndex ?? 0)<=987);
     expect(skillPools.filter(e=>!e.metadata.block!.skillModel!.nonKnockdownSkills).map(e=>e.metadata.sourceId)).toEqual(["source-98","source-132","source-367","source-386","source-409"]);
-    expect(skillPools.filter(e=>e.metadata.block!.skillModel!.nonKnockdownSkills).map(e=>e.metadata.sourceId)).toEqual(["source-116","source-338","source-438","source-579","source-634","source-638"]);
-    expect(report.schemaVersion).toBe("2.73");
-    expect(report.modelVersion).toBe("dice-only-37");
+    expect(skillPools.filter(e=>e.metadata.block!.skillModel!.nonKnockdownSkills).map(e=>e.metadata.sourceId)).toEqual(["source-116","source-338","source-438","source-579","source-634","source-638","source-682","source-703","source-987"]);
+    const recoveredArmor = report.events.find((event) => event.metadata.sourceId === "source-1002")!;
+    expect(recoveredArmor).toMatchObject({
+      teamId: "1",
+      playerId: "41",
+      type: "armor_break",
+      scoringStatus: "scored",
+      probabilitySuccess: 30 / 36,
+      actualSuccess: true
+    });
+    expect(recoveredArmor.weightedDelta).toBeCloseTo(1 / 6, 12);
+    expect(report.schemaVersion).toBe("2.103");
+    expect(report.modelVersion).toBe("dice-only-48");
     const positive=report.events.find(e=>e.metadata.sourceId==="source-98")!;
     const negative=report.events.find(e=>e.metadata.sourceId==="source-132")!;
     expect(positive.metadata.blockScoring).toMatchObject({policy:"fixed_pool_knockdown_balance",observedValue:1,expectedValue:19/36});
@@ -274,9 +348,25 @@ describe("POST /api/nufflizier/analyze", () => {
     for(const e of [positive,negative]) {
       expect(e.scoringStatus).toBe("scored");expect(e.actualSuccess).toBeNull();expect(e.probabilitySuccess).toBeNull();
     }
-    const unknownPool=report.events.find(e=>e.metadata.sourceId==="source-1324")!;
+    const unknownPool=report.events.find(e=>e.metadata.sourceId==="source-261")!;
     expect(unknownPool).toMatchObject({scoringStatus:"excluded",weightedDelta:0,actualSuccess:null,probabilitySuccess:null});
     expect(unknownPool.metadata.blockResolution).toMatchObject({unscoredPool:true,unscoredDamageRolls:2});
+    const restoredPool=report.events.find(e=>e.metadata.sourceId==="source-1152")!;
+    expect(restoredPool.metadata.blockScoring).toMatchObject({observedValue:1,expectedValue:5/18});
+    expect(restoredPool.weightedDelta).toBeCloseTo(13/24,12);
+    expect(report.events.find(e=>e.metadata.sourceId==="source-1011")).toMatchObject({
+      playerId: "6", scoringStatus: "scored",
+      metadata: { blockScoring: {observedValue: 1, expectedValue: 19 / 36} }
+    });
+    expect(report.events.find((e) => e.metadata.sourceId === "source-2025")).toMatchObject({
+      playerId: "38",
+      scoringStatus: "excluded",
+      probabilitySuccess: null,
+      metadata: { block: { traitEvidence: { attacker: {
+        playerId: "38", observedCheckpointAfter: 0, currentCheckpointAfter: 2018
+      } } } }
+    });
+    expect(report.events.find(e=>e.metadata.sourceId==="source-1344")?.weightedDelta).toBe(5/8);
     expect(report.events.find(e=>e.metadata.sourceId==="source-367")!.metadata.blockPush).toMatchObject({status:"modeled"});
     expect(report.events.find(e=>e.metadata.sourceId==="source-402")!.metadata.injuryTable?.traitEvidence).toMatchObject({observedCheckpointAfter:0});
     const injuryTableEvent=report.events.find(e=>e.metadata.sourceId==="source-110")!;
@@ -293,8 +383,7 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(release).toMatchObject({holderId:"40",holderTeamId:"1",beforeCheckpointAfter:1336,from:{x:13,y:2},to:{x:14,y:2},bounceSourceId:"source-1346",after:{checkpointAfter:1347,carrierId:null,isHeld:null}});
     expect(report.events.find(e=>e.metadata.sourceId===release.bounceSourceId)).toMatchObject({scoringStatus:"excluded",probabilitySuccess:null,weightedDelta:0,metadata:{ballTravel:{from:{x:13,y:2},to:{x:14,y:2}}}});
     for(const pool of skillPools) {
-      // Preserve the earlier five literal table expectations. The six new
-      // tables have independent full-source rational joins in the source gate.
+      // The outside-skill tables have independent raw and rational joins.
       if(!pool.metadata.block!.skillModel!.nonKnockdownSkills){
         expect(pool.metadata.block!.skillModel!.expectedValue).toBeCloseTo(["source-98","source-132"].includes(pool.metadata.sourceId!)?19/36:1/6,12);
         expect(pool.metadata.block!.skillModel!.positiveChance).toBeCloseTo(["source-98","source-132"].includes(pool.metadata.sourceId!)?5/9:1/3,12);
@@ -315,7 +404,21 @@ describe("POST /api/nufflizier/analyze", () => {
       x: 25,
       y: 12
     });
-    expect(report.teams.every((t) => t.impactCount === 0)).toBe(true);
+    expect(moves[1]!.contextualImpact).toMatchObject({
+      policy: "committed_team_scoring_rush",
+      evidence: { periodBasis: "opening_turn_counters", teamTurns: [3, 2] }
+    });
+    expect(moves[1]!.contextualImpact!.contribution).toBeCloseTo(5 / 7, 12);
+    const late = report.events.find((event) => event.metadata.sourceId === "source-3997")!;
+    expect(late.metadata.scoringAttemptScore).toMatchObject({
+      scores: [2, 0], ownRoster: 1, checkpointAfter: 3970
+    });
+    expect(late.contextualImpact).toBeUndefined();
+    expect(late.contextualBounds).toMatchObject({
+      policy: "final_turn_scoring_rush_envelope", lower: 0, upper: 2 / 3,
+      observedTeamRerolls: 1, confirmedGoal: { sourceIndex: 4001, confirmedCheckpointAfter: 4007 }
+    });
+    expect(report.teams.map((t) => t.impactCount)).toEqual([1, 1]);
   }, 20000);
   it("returns a valid report including the resumed real Catch and its two draws", async () => {
     const formData = new FormData();
@@ -350,6 +453,14 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(payload).toHaveProperty("howScoredSummary");
 
     const report=LuckReportSchema.parse(payload),catchRoll=report.events.find(e=>e.metadata.sourceId==="source-1722")!;
+    const pickup = report.events.find((event) => event.metadata.sourceId === "source-4192")!;
+    expect(pickup.possessionBounds).toMatchObject({
+      policy: "team_pickup_possession",
+      waitingCheckpointAfter: 4189,
+      successChance: 2 / 3,
+      upper: 0
+    });
+    expect(pickup.possessionBounds?.lower).toBeCloseTo(-4 / 3, 12);
     expect(catchRoll.scoringStatus).toBe("scored");expect(catchRoll.probabilitySuccess).toBeCloseTo(8/9,12);expect(catchRoll.weightedDelta).toBeCloseTo(-11/30,12);
     expect(catchRoll.metadata.catchRerollResume).toMatchObject({readySourceIndex:1717,timerSourceIndex:1718,menu:{checkpointAfter:1715,activeGamerId:1,activePlayerId:46,teamTurns:[5,6],periodCode:null,teamRerolls:1},resumed:{checkpointAfter:1718,periodCode:null,teamRerolls:1}});
     expect(catchRoll.metadata.teamRerollsSpent).toBe(1);expect(catchRoll.metadata.preRoll).toBeUndefined();expect(catchRoll.contextualImpact).toBeUndefined();
@@ -411,8 +522,8 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(
       report.events.find(
         (e) => e.metadata.locator?.replayStep === 94 && e.contextualBounds
-      )?.contextualBounds?.activeContinuation
-    ).toEqual({ minimum: 1, maximum: 1 });
+      )?.contextualBounds
+    ).toMatchObject({ activeContinuation: { minimum: 1, maximum: 1 } });
     expect(
       report.events.find(
         (e) => e.metadata.locator?.replayStep === 94 && e.metadata.dodgeMovement
@@ -430,7 +541,7 @@ describe("POST /api/nufflizier/analyze", () => {
       )
     ).toBe(true);
   }, 20000);
-  it("exports both source-backed Sure Hands possession ranges without invented clocks or point totals", async () => {
+  it("exports the demo6 Sure Hands point and remaining range without invented clocks", async () => {
     const data = new FormData();
     data.append(
       "replay",
@@ -451,25 +562,35 @@ describe("POST /api/nufflizier/analyze", () => {
     const classifiedBlock=report.events.find(e=>e.metadata.sourceId==="source-188")!;
     expect(classifiedBlock.weightedDelta).toBeCloseTo(-13/24,12);
     expect(classifiedBlock.metadata.block!.skillModel!.nonKnockdownSkills).toEqual({policy:"outside_current_pool_knockdowns",attacker:[],defender:[52,59]});
+    const recoveredBlock = report.events.find((e) => e.metadata.sourceId === "source-505")!;
+    expect(recoveredBlock.metadata.blockScoring).toMatchObject({ observedValue: 1, expectedValue: 13 / 18 });
+    expect(recoveredBlock.weightedDelta).toBeCloseTo(5 / 24, 12);
+    const recoveredInjury = report.events.find((e) => e.metadata.sourceId === "source-517")!;
+    expect(recoveredInjury).toMatchObject({ playerId: "42", teamId: "1", scoringStatus: "scored", weightedDelta: 7 / 8 });
+    expect(report.events.find((e) => e.metadata.sourceId === "source-2254")?.weightedDelta).toBe(5 / 8);
     expect(report.rerollResources.decisions.find(d=>d.decisionSourceId==="source-971")).toMatchObject({status:"linked", teamId:"1", decisionWait:{controller:null,activeGamerSourceId:"source-967",pauseSourceId:"source-968",timerSourceId:"source-969",resumedStepSourceId:"source-970"}});
-    expect(ranges.map((e) => e.metadata.locator?.replayStep)).toEqual([
-      99, 306
-    ]);
+    expect(ranges.map((e) => e.metadata.locator?.replayStep)).toEqual([99]);
     expect(ranges[0]!.possessionBounds!.upper).toBeCloseTo(7 / 8, 12);
     expect(ranges[0]!.metadata.pickupResolution).toMatchObject({
       cell: { x: 11, y: 10 },
       movementRemaining: 4
     });
-    expect(ranges[1]!.metadata.pickupResolution).toBeUndefined();
-    expect(ranges[1]!.possessionBounds!.lower).toBeCloseTo(-4 / 3, 12);
+    const settled = report.events.find((event) => event.metadata.sourceId === "source-2151")!;
+    expect(settled.metadata.pickupResolution).toBeUndefined();
+    expect(settled.contextualImpact).toMatchObject({
+      policy: "exact_pickup_possession",
+      stage: "sure_hands_reroll",
+      contribution: -4 / 3,
+      offPitchPlayerCount: 5
+    });
     expect(
-      ranges.every(
+      [...ranges, settled].every(
         (e) =>
           e.metadata.preRoll?.activeTeamId === null &&
           e.metadata.preRoll.actorCarriesBall === null
       )
     ).toBe(true);
-    expect(report.coverage.contextEvidence.boundedCount).toBe(3);
+    expect(report.coverage.contextEvidence.boundedCount).toBe(2);
     const decision = report.events.find(
       (e) =>
         e.metadata.locator?.replayStep === 345 && e.metadata.teamRerollCounter
@@ -480,7 +601,7 @@ describe("POST /api/nufflizier/analyze", () => {
       spent: 1,
       reconciliation: "matched"
     });
-    expect(report.teams.every((t) => t.impactCount === 0)).toBe(true);
+    expect(report.teams.map((t) => t.impactCount)).toEqual([1, 0]);
   }, 20000);
   it("exports a source-backed fresh catch envelope through the production worker", async () => {
     const data = new FormData();
@@ -548,7 +669,7 @@ describe("POST /api/nufflizier/analyze", () => {
         .filter((e) => e.metadata.teamRerollMovement?.zonePenalty)
         .map((e) => e.metadata.locator?.replayStep)
     ).toEqual([273, 401]);
-    const pickup = r.events.find((e) => e.metadata.pickupTurnEnd)!;
+    const pickup = r.events.find((e) => e.metadata.pickupTurnEnd?.kind === "catch")!;
     expect(pickup.metadata.pickupTurnEnd!.ordinaryMoves).toEqual({
       knownAvailablePlayerIds: [],
       unknownPlayerIds: [
@@ -577,6 +698,43 @@ describe("POST /api/nufflizier/analyze", () => {
     const response=await POST(new Request("http://localhost/api/nufflizier/analyze",{method:"POST",body:form}));
     const body=await response.json();expect(response.status,JSON.stringify(body).slice(0,200)).toBe(200);
     const report=LuckReportSchema.parse(body),e=report.events.find(e=>e.metadata.sourceId==="source-3098")!;
+    const activation = report.events.find((event) => event.metadata.sourceId === "source-2691")!;
+    expect(activation).toMatchObject({
+      type: "activation_check",
+      scoringStatus: "scored",
+      actualSuccess: false,
+      probabilitySuccess: 5 / 6,
+      metadata: { activationCheck: { skillId: 51 } }
+    });
+    expect(activation.weightedDelta).toBeCloseTo(-5 / 6, 12);
+    const first = report.events.find((event) => event.metadata.sourceId === "source-714")!;
+    const replacement = report.events.find((event) => event.metadata.sourceId === "source-720")!;
+    expect(first).toMatchObject({
+      actualSuccess: false, probabilitySuccess: 5 / 6,
+      metadata: { activationCheck: { draw: "original" } }
+    });
+    expect(replacement).toMatchObject({
+      actualSuccess: true, probabilitySuccess: 5 / 6,
+      metadata: {
+        activationCheck: { draw: "replacement" },
+        teamDiceIdentity: {
+          questionSourceId: "source-714", decisionSourceId: "source-717",
+          gateSourceId: "source-719", teamUsed: true, gatePassed: true
+        }
+      }
+    });
+    expect(first.weightedDelta + replacement.weightedDelta).toBeCloseTo(-2 / 3, 12);
+    const gate = report.events.find((event) => event.metadata.sourceId === "source-719")!;
+    expect(gate).toMatchObject({
+      type: "activation_check",
+      probabilitySuccess: 2 / 3,
+      metadata: {
+        teamRerollsSpent: 1,
+        numericRetryAccess: { originalSourceId: "source-714", terminalSourceId: "source-720" }
+      }
+    });
+    expect(gate.weightedDelta).toBeCloseTo(5 / 18, 12);
+    expect(first.weightedDelta + gate.weightedDelta + replacement.weightedDelta).toBeCloseTo(-7 / 18, 12);
     expect(report.rerollResources.decisions.find(d=>d.decisionSourceId==="source-5448")).toMatchObject({status:"linked",teamId:"1",decisionWait:{controller:null,activeGamerSourceId:"source-5444",pauseSourceId:"source-5445",timerSourceId:"source-5446",resumedStepSourceId:"source-5447"}});
     const recovery=report.events.find(e=>e.metadata.sourceId==="source-1746")!;
     expect(recovery.weightedDelta).toBe(-0.75);expect(recovery.metadata.regenerationAftermath).toMatchObject({checkpointAfter:1747,controlSourceIds:["source-1747"],observation:{cell:{x:-1,y:-1},situationCode:4,statusCode:4,canAct:null}});
@@ -584,7 +742,7 @@ describe("POST /api/nufflizier/analyze", () => {
     expect(report.events.find(e=>e.metadata.sourceId==="source-1747")?.metadata.recoveryControl).toEqual({kind:"standby",phase:5,gamerId:null});
     expect(e.metadata.preRoll?.ordinaryMoveAvailability?.unknownPlayerIds).toEqual(["41","42","44"]);
     expect(e.metadata.preRoll?.endedActivationSourceIds).toEqual(["source-3065","source-3090"]);
-    expect(e.contextualBounds?.maximumMoves).toBe(3);expect(e.contextualBounds?.upper).toBeCloseTo(1/2,12);
+    expect(e.contextualBounds).toMatchObject({maximumMoves:3});expect(e.contextualBounds?.upper).toBeCloseTo(1/2,12);
     expect(report.events.find(e=>e.metadata.sourceId==="source-3065")?.metadata.activationEnd?.completionCheckpointAfter).toBe(3062);
     expect(report.events.find(e=>e.metadata.sourceId==="source-3090")?.metadata.activationEnd?.completionCheckpointAfter).toBe(3087);
     expect(report.coverage.modelVersion).toBe("dice-evidence-2");expect(report.diceRecords.filter(d=>d.parentKind==="event")).toHaveLength(478);expect(report.coverage.diceRecords.snapshotRecordCount).toBe(1264);
