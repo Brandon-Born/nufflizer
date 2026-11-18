@@ -48,7 +48,7 @@ it("[cli-worker] exports the original Stunty/Right Stuff source and explains its
       }
     });
     expect(r.verdict.luckierTeam).toBe("unknown");
-    expect(r.teams.every((t) => t.impactCount === 0)).toBe(true);
+    expect(r.teams.map((t) => t.impactCount)).toEqual([1, 0]);
     expect(
       r.events.find((e) => e.metadata.sourceId === "source-248")?.metadata
         .injuryScoring?.sppSourceId
